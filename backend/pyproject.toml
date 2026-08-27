@@ -1,0 +1,123 @@
+[project]
+name = "astroimage"
+version = "0.1.0"
+description = "REST API for spatial image processing (FITS, astroquery)."
+readme = "README.md"
+authors = [
+    { name = "Agüero, Fernando", email = "64812685+AFernandoDan@users.noreply.github.com" },
+]
+requires-python = ">=3.12"
+dependencies = [
+    "alembic>=1.16",
+    "astropy>=7.0",
+    "astroquery>=0.4",
+    "fastapi[standard]>=0.116",
+    "gunicorn>=23.0",
+    "numpy>=2.2",
+    "opentelemetry-api>=1.36",
+    "opentelemetry-exporter-otlp>=1.36",
+    "opentelemetry-instrumentation-fastapi>=0.57b0",
+    "opentelemetry-instrumentation-sqlalchemy>=0.57b0",
+    "opentelemetry-sdk>=1.36",
+    "prometheus-fastapi-instrumentator>=7.1",
+    "psycopg[binary]>=3.2",
+    "pydantic-settings>=2.10",
+    "scipy>=1.15",
+    "sqlalchemy[asyncio]>=2.0",
+    "asyncpg>=0.30",
+    "structlog>=25.4",
+    "uvicorn[standard]>=0.35",
+]
+
+[dependency-groups]
+dev = [
+    "httpx>=0.28",
+    "hypothesis>=6.135",
+    "import-linter>=2.3",
+    "mypy>=1.17",
+    "pre-commit>=4.2",
+    "pytest>=8.4",
+    "pytest-asyncio>=1.1",
+    "pytest-cov>=6.2",
+    "pytestarch>=4.0",
+    "ruff>=0.12",
+    "schemathesis>=4.1",
+    "types-requests>=2.32",
+]
+
+[build-system]
+requires = ["uv_build>=0.11.20,<0.12.0"]
+build-backend = "uv_build"
+
+[tool.uv]
+package = true
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "W", "F", "I", "B", "UP", "N", "SIM", "ASYNC", "RUF"]
+
+[tool.ruff.format]
+quote-style = "double"
+docstring-code-format = true
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+pretty = true
+mypy_path = "src"
+files = ["src", "tests"]
+exclude = ["alembic"]
+plugins = ["pydantic.mypy"]
+warn_unused_ignores = true
+
+[[tool.mypy.overrides]]
+module = [
+    "astroquery.*",
+    "prometheus_fastapi_instrumentator.*",
+    "opentelemetry.*",
+    "pytestarch.*",
+]
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+testpaths = ["tests"]
+addopts = [
+    "--strict-config",
+    "--strict-markers",
+    "--cov=astroimage",
+    "--cov-report=term-missing",
+]
+filterwarnings = [
+    "ignore::DeprecationWarning",
+]
+
+[tool.coverage.run]
+branch = true
+source = ["astroimage"]
+
+[tool.coverage.report]
+omit = [
+    "*/alembic/*",
+]
+show_missing = true
+
+[tool.importlinter]
+root_package = "astroimage"
+exclude_type_checking_imports = true
+
+[[tool.importlinter.contracts]]
+id = "layers"
+name = "Layered architecture (API → services → domain → infrastructure)"
+type = "layers"
+layers = [
+    "astroimage.api",
+    "astroimage.services",
+    "astroimage.domain",
+    "astroimage.infrastructure",
+]

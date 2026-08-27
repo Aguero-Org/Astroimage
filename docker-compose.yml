@@ -1,0 +1,38 @@
+services:
+  api:
+    build:
+      context: ./backend
+    command: ["uvicorn", "astroimage.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: postgresql+asyncpg://astroimage:astroimage@postgres:5432/astroimage
+      CORS_ORIGINS: '["http://localhost:5173"]'
+      LOG_LEVEL: info
+      ENVIRONMENT: development
+    volumes:
+      - ./backend:/app
+      - api_venv:/app/.venv
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: astroimage
+      POSTGRES_PASSWORD: astroimage
+      POSTGRES_DB: astroimage
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U astroimage -d astroimage"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  postgres_data:
+  api_venv:

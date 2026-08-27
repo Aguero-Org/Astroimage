@@ -1,0 +1,1 @@
+"""Astroimage API package."""
