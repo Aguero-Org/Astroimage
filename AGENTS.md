@@ -24,17 +24,77 @@ This repository is opinionated. Do not introduce libraries, layers, or patterns 
 - Scientific: Astropy, astroquery, NumPy, SciPy
 - Docker multi-stage for the API
 
-## Backend layers (enforced)
+## Backend architecture (feature-based, enforced)
 
-`API → services → domain → infrastructure`
+Organize `astroimage` by **feature/module**, not by global technical layers.
 
-- `astroimage.api` — routers, HTTP deps, request middleware
-- `astroimage.services` — application orchestration
-- `astroimage.domain` — domain/scientific logic
-- `astroimage.infrastructure` — DB, logging, metrics, tracing, external IO
-- `astroimage.main` and `astroimage.config` are composition-root / settings, not layers
+```text
+src/astroimage/
+├── health/                 # feature
+│   ├── controller.py       # HTTP endpoints
+│   ├── schema.py           # request/response DTOs
+│   ├── service.py          # business orchestration (when needed)
+│   ├── dao.py              # persistence access (when needed)
+│   └── model.py            # ORM / persistence models (when needed)
+├── shared/                 # cross-cutting infrastructure only
+│   ├── database.py
+│   ├── deps.py
+│   ├── logging.py
+│   ├── metrics.py
+│   ├── middleware.py
+│   └── telemetry.py
+├── config.py               # settings (composition root)
+└── main.py                 # app factory + router composition
+```
 
-Lower layers must not import higher layers. No circular dependencies.
+### Responsibility rules
+
+Intra-feature dependency direction:
+
+`controller → service → dao/repository → model`
+
+- `controller` — HTTP only; delegates to `service`; may use `schema`
+- `service` — business logic; uses `dao` / `model` / `schema`
+- `dao` / `repository` — data access only; uses `model`
+- `model` — persistence representation; no service/controller/dao imports
+- `schema` — Pydantic DTOs; no imports from controller/service/dao/model
+
+### Cross-cutting rules
+
+- Features may use `astroimage.shared` and `astroimage.config`
+- `shared` must **not** import any feature
+- Features must **not** import `main` (composition root imports features)
+- Features must **not** depend on other features by default
+- If a cross-feature dependency is required, prefer the other feature's **service**
+  (public API), never its `dao` or `model`; document it in architecture tests
+- Do **not** reintroduce global layer packages (`api/`, `services/`, `domain/`,
+  `infrastructure/`, `models/`, `controllers/`, `daos/`, …)
+- File names use Python-safe role modules (`controller.py`), not dotted names
+  (`user.controller.py`)
+
+Enforced by `tests/architecture/test_modules_architecture.py` (pytestarch) and
+import-linter contracts in `backend/pyproject.toml`.
+
+## Backend tests layout
+
+```text
+tests/
+├── architecture/
+│   ├── test_modules_architecture.py   # global feature-based rules
+│   └── <feature>/                     # feature-specific arch rules (optional)
+├── unit/
+│   ├── <feature>/test_<component>.py
+│   ├── shared/                        # shared infrastructure unit tests
+│   └── config/                        # composition-root unit tests
+└── integration/
+    ├── <feature>/test_<component>.py
+    ├── shared/
+    └── test_openapi_contract.py       # cross-cutting contract suite
+```
+
+Mirror rule: `src/astroimage/<module>/<component>.py` →
+`tests/<unit|integration>/<module>/test_<component>.py`.
+Do not create empty test files for symmetry.
 
 ## Allowed frontend stack
 

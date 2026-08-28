@@ -1,10 +1,6 @@
 from fastapi import APIRouter
-from pydantic import BaseModel, Field
 
-
-class HealthResponse(BaseModel):
-    status: str = Field(examples=["ok"])
-
+from astroimage.health.schema import HealthResponse
 
 router = APIRouter(tags=["health"])
 

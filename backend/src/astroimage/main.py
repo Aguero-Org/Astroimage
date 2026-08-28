@@ -1,16 +1,23 @@
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import APIRouter, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from astroimage.api.middleware import RequestContextMiddleware
-from astroimage.api.router import api_router
 from astroimage.config import Settings, get_settings
-from astroimage.infrastructure.db import create_engine_from_settings, create_session_factory
-from astroimage.infrastructure.logging import setup_logging
-from astroimage.infrastructure.metrics import setup_metrics
-from astroimage.infrastructure.telemetry import setup_tracing
+from astroimage.health.controller import router as health_router
+from astroimage.shared.database import create_engine_from_settings, create_session_factory
+from astroimage.shared.logging import setup_logging
+from astroimage.shared.metrics import setup_metrics
+from astroimage.shared.middleware import RequestContextMiddleware
+from astroimage.shared.telemetry import setup_tracing
+
+
+def build_api_router() -> APIRouter:
+    """Compose feature controllers at the application root."""
+    api_router = APIRouter()
+    api_router.include_router(health_router)
+    return api_router
 
 
 @asynccontextmanager
@@ -40,7 +47,7 @@ def create_app() -> FastAPI:
         allow_methods=["*"],
         allow_headers=["*"],
     )
-    application.include_router(api_router)
+    application.include_router(build_api_router())
     setup_metrics(application)
     setup_tracing(
         application,

@@ -2,7 +2,7 @@
 
 Self-hosted REST API and React SPA for spatial image processing (FITS, astroquery). This repository currently contains the **toolchain and project skeleton** — not product features.
 
-See [AGENTS.md](./AGENTS.md) for the opinionated stack and layer rules.
+See [AGENTS.md](./AGENTS.md) for the opinionated stack and feature-based architecture rules.
 
 ## Layout
 

@@ -112,12 +112,23 @@ root_package = "astroimage"
 exclude_type_checking_imports = true
 
 [[tool.importlinter.contracts]]
-id = "layers"
-name = "Layered architecture (API → services → domain → infrastructure)"
-type = "layers"
-layers = [
-    "astroimage.api",
-    "astroimage.services",
-    "astroimage.domain",
-    "astroimage.infrastructure",
+id = "shared-independent-of-features"
+name = "shared must not import feature packages"
+type = "forbidden"
+source_modules = [
+    "astroimage.shared",
+]
+forbidden_modules = [
+    "astroimage.health",
+]
+
+[[tool.importlinter.contracts]]
+id = "features-independent-of-main"
+name = "features must not import the composition root"
+type = "forbidden"
+source_modules = [
+    "astroimage.health",
+]
+forbidden_modules = [
+    "astroimage.main",
 ]

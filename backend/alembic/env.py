@@ -4,7 +4,7 @@ from alembic import context
 from sqlalchemy import engine_from_config, pool
 
 from astroimage.config import get_settings
-from astroimage.infrastructure.db import Base
+from astroimage.shared.database import Base
 
 config = context.config
 if config.config_file_name is not None:
