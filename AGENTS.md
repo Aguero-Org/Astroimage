@@ -75,6 +75,8 @@ Intra-feature dependency direction:
 Enforced by `tests/architecture/test_modules_architecture.py` (pytestarch) and
 import-linter contracts in `backend/pyproject.toml`.
 
+Agent skill (on-demand workflow): `.agents/skills/backend-architecture/SKILL.md`.
+
 ## Backend tests layout
 
 ```text
