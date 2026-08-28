@@ -31,6 +31,12 @@ jobs:
         run: uv run lint-imports
       - name: Tests
         run: uv run pytest
+      - name: Upload backend coverage
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-coverage
+          path: backend/coverage.xml
+          if-no-files-found: error
 
   frontend:
     runs-on: ubuntu-latest
@@ -55,11 +61,65 @@ jobs:
         run: pnpm lint
       - name: Type check
         run: pnpm typecheck
-      - name: Unit tests
-        run: pnpm test
+      - name: Unit tests with coverage
+        run: pnpm test:coverage
+      - name: Upload frontend coverage
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-coverage
+          path: frontend/coverage/lcov.info
+          if-no-files-found: error
       - name: Build
         run: pnpm build
       - name: Install Playwright browsers
         run: pnpm exec playwright install --with-deps chromium
       - name: End-to-end tests
         run: pnpm test:e2e
+
+  sonar:
+    name: SonarQube
+    runs-on: ubuntu-latest
+    needs: [backend, frontend]
+    # Opt-in: set repository variable SONAR_ENABLED=true and secret SONAR_TOKEN.
+    if: ${{ vars.SONAR_ENABLED == 'true' }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Download backend coverage
+        uses: actions/download-artifact@v4
+        with:
+          name: backend-coverage
+          path: backend
+
+      - name: Download frontend coverage
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-coverage
+          path: frontend/coverage
+
+      - name: Build scanner args
+        id: sonar_args
+        shell: bash
+        run: |
+          args=()
+          if [[ -n "${{ vars.SONAR_ORGANIZATION }}" ]]; then
+            args+=("-Dsonar.organization=${{ vars.SONAR_ORGANIZATION }}")
+          fi
+          echo "args=${args[*]}" >> "$GITHUB_OUTPUT"
+
+      - name: SonarQube scan
+        uses: SonarSource/sonarqube-scan-action@v5
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ vars.SONAR_HOST_URL }}
+        with:
+          args: ${{ steps.sonar_args.outputs.args }}
+
+      - name: SonarQube quality gate
+        uses: SonarSource/sonarqube-quality-gate-action@v1
+        timeout-minutes: 5
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ vars.SONAR_HOST_URL }}

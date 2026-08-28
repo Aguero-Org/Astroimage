@@ -7,7 +7,9 @@ This repository is opinionated. Do not introduce libraries, layers, or patterns 
 - `backend/` — FastAPI API (`src/` layout, package `astroimage`)
 - `frontend/` — Vite + React SPA
 - `monitoring/` — external observability compose (not part of the app image)
+- `sonar/` — external SonarQube compose (code quality; not part of the app image)
 - Root `docker-compose.yml` — API + PostgreSQL only
+- Root `sonar-project.properties` — SonarQube/SonarCloud monorepo analysis config
 
 ## Allowed backend stack
 
@@ -137,5 +139,9 @@ Do not mix TanStack Query with a global client store for server data.
 
 Every change must pass:
 
-1. Backend: `ruff format`, `ruff check`, `mypy`, `lint-imports`, `pytest` (unit + integration + architecture)
-2. Frontend: `biome check`, `tsc`, `vitest`, Playwright for critical flows
+1. Backend: `ruff format`, `ruff check`, `mypy`, `lint-imports`, `pytest` (unit + integration + architecture; writes `coverage.xml`)
+2. Frontend: `biome check`, `tsc`, `vitest` / `pnpm test:coverage`, Playwright for critical flows
+3. SonarQube (when `SONAR_ENABLED=true`): scan via `sonar-project.properties` + Quality Gate
+
+Do not commit `.scannerwork/` or coverage artifacts. Keep generated paths excluded from Sonar
+(`frontend/src/api/generated/**`, `routeTree.gen.ts`, `backend/alembic/**`).

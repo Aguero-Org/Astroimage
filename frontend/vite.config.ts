@@ -31,5 +31,22 @@ export default defineConfig({
     setupFiles: ["./src/test/setup.ts"],
     globals: true,
     exclude: ["**/node_modules/**", "**/dist/**", "**/e2e/**"],
+    coverage: {
+      provider: "v8",
+      reporter: ["text", "lcov"],
+      reportsDirectory: "./coverage",
+      include: ["src/**/*.{ts,tsx}"],
+      exclude: [
+        "src/test/**",
+        "src/api/generated/**",
+        "src/routeTree.gen.ts",
+        "src/main.tsx",
+        "src/vite-env.d.ts",
+        "**/*.gen.ts",
+        "**/*.gen.tsx",
+        "**/*.test.ts",
+        "**/*.test.tsx",
+      ],
+    },
   },
 });

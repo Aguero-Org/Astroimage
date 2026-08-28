@@ -92,6 +92,7 @@ addopts = [
     "--strict-markers",
     "--cov=astroimage",
     "--cov-report=term-missing",
+    "--cov-report=xml:coverage.xml",
 ]
 filterwarnings = [
     "ignore::DeprecationWarning",

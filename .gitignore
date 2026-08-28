@@ -14,6 +14,10 @@ htmlcov/
 dist/
 build/
 
+# SonarQube / scanner
+.scannerwork/
+.sonar/
+
 # Node
 node_modules/
 dist-ssr/
