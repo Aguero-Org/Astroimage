@@ -16,6 +16,26 @@ Do not reintroduce `api/`, `services/`, `domain/`, `infrastructure/`,
 `models/`, `controllers/`, `daos/`, `schemas/`, or `repositories/` as
 top-level packages under `astroimage/`.
 
+## Comments policy (mandatory)
+
+**Do not add explanatory comments** about:
+
+- why a fix was made (Sonar, lint, review, bug workaround narrative);
+- what code was added, removed, or changed;
+- restating the obvious next line of code;
+- changelog-style notes in source (`# fixed X`, `# no longer does Y`, `# required by Z tool`).
+
+Prefer clear names, small functions, and tests over commentary.
+
+Allowed only when strictly necessary:
+
+- `# type: ignore[...]` / `# noqa: ...` with the required code, no essay;
+- short non-obvious constraint that cannot be expressed in types or names
+  (e.g. a protocol/interop quirk),
+  never a history of the change.
+
+Never leave dead commented-out code. Delete it.
+
 ## Canonical layout
 
 ```text

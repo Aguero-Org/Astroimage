@@ -3,7 +3,6 @@ from __future__ import annotations
 import os
 from collections.abc import AsyncIterator
 
-# Provide a credential-free URL for tests before the app loads settings.
 os.environ.setdefault(
     "DATABASE_URL",
     "postgresql+asyncpg://localhost:5432/astroimage",

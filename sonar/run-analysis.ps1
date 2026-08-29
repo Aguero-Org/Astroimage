@@ -1,9 +1,3 @@
-# Full monorepo SonarQube analysis (backend + frontend + coverage).
-# Prerequisites: SonarQube up, sonar/.env with SONAR_TOKEN, Docker available.
-#
-# Usage (from repo root):
-#   powershell -ExecutionPolicy Bypass -File sonar/run-analysis.ps1
-
 $ErrorActionPreference = "Stop"
 $RepoRoot = Resolve-Path (Join-Path $PSScriptRoot "..")
 Set-Location $RepoRoot
@@ -23,13 +17,11 @@ if (-not $env:SONAR_TOKEN) {
     throw "SONAR_TOKEN is empty in sonar/.env"
 }
 
-# Scanner container must reach the host-published Sonar port
 $env:SONAR_HOST_URL = "http://host.docker.internal:9000"
 
 Write-Host "==> Backend tests + coverage"
 Push-Location (Join-Path $RepoRoot "backend")
 uv run pytest -q
-# Monorepo path prefix so Sonar can map coverage to backend/src/...
 $cov = Get-Content "coverage.xml" -Raw
 $cov = $cov -replace 'filename="src/', 'filename="backend/src/'
 Set-Content -Path "coverage.xml" -Value $cov -NoNewline

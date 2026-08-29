@@ -14,7 +14,6 @@ class Settings(BaseSettings):
     app_name: str = "astroimage"
     environment: str = "development"
     log_level: str = "info"
-    # No credentials in source defaults — provide DATABASE_URL via env / .env.
     database_url: str = Field(min_length=1)
     cors_origins: list[str] = Field(default_factory=lambda: ["http://localhost:5173"])
     otlp_endpoint: str | None = None

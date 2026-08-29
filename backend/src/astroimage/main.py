@@ -14,7 +14,6 @@ from astroimage.shared.telemetry import setup_tracing
 
 
 def build_api_router() -> APIRouter:
-    """Compose feature controllers at the application root."""
     api_router = APIRouter()
     api_router.include_router(health_router)
     return api_router

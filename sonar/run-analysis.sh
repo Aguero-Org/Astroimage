@@ -1,6 +1,4 @@
 #!/usr/bin/env bash
-# Full monorepo SonarQube analysis (backend + frontend + coverage).
-# Usage from repo root: bash sonar/run-analysis.sh
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -14,14 +12,12 @@ if [[ -z "${SONAR_TOKEN:-}" ]]; then
   exit 1
 fi
 
-# Scanner container reaches host-mapped Sonar port
 export SONAR_HOST_URL="${SONAR_HOST_URL_SCANNER:-http://host.docker.internal:9000}"
 
 echo "==> Backend tests + coverage"
 (
   cd backend
   uv run pytest -q
-  # Prefix paths so Sonar maps files under backend/src/...
   python -c "
 from pathlib import Path
 p = Path('coverage.xml')
@@ -45,7 +41,6 @@ p.write_text(text, encoding='utf-8')
 echo "==> SonarScanner"
 export MSYS_NO_PATHCONV=1
 REPO="${ROOT}"
-# Git Bash on Windows: prefer Windows path for Docker Desktop mounts
 if command -v cygpath >/dev/null 2>&1; then
   REPO="$(cygpath -m "$ROOT")"
 elif [[ -n "${WINDIR:-}" ]]; then
