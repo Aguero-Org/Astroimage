@@ -36,6 +36,19 @@ Allowed only when strictly necessary:
 
 Never leave dead commented-out code. Delete it.
 
+## Naming style (mandatory)
+
+**Do not use single-letter variable names** in application or test code.
+
+- Forbidden as identifiers: `i`, `j`, `k`, `n`, `x`, `y`, `e`, `f`, `v`, `t`, …
+- Prefer descriptive names: `index`, `row_count`, `coordinate_x`, `exc`,
+  `fits_file`, `value`, `elapsed_s`.
+- Loop targets and comprehensions included (`for item in items`, not `for x in items`).
+- Exception only for **mathematical** local bindings that match a standard formula
+  and are immediately obvious in a tiny pure function (e.g. `a, b` in a quadratic),
+  still prefer domain names when they exist.
+- `_` is allowed solely for intentionally unused values.
+
 ## Canonical layout
 
 ```text

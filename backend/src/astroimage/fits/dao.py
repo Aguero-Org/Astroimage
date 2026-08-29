@@ -59,11 +59,11 @@ def _filter_name(header: fits.Header) -> str | None:
 
 
 def _float_list(values: Any) -> list[float]:
-    return [float(v) for v in values]
+    return [float(value) for value in values]
 
 
 def _str_list(values: Any) -> list[str]:
-    return [str(v).strip() for v in values]
+    return [str(value).strip() for value in values]
 
 
 def _wcs_info(header: fits.Header) -> FitsWcsInfo:
@@ -94,7 +94,7 @@ def _wcs_info(header: fits.Header) -> FitsWcsInfo:
 def _image_info(header: fits.Header, data: np.ndarray) -> FitsImageInfo:
     return FitsImageInfo.model_validate(
         {
-            "shape": [int(n) for n in data.shape],
+            "shape": [int(axis_size) for axis_size in data.shape],
             "unit": header.get("BUNIT"),
             "datamin": header.get("DATAMIN"),
             "datamax": header.get("DATAMAX"),
