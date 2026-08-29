@@ -28,35 +28,34 @@ export SONAR_TOKEN=squ_...
 export SONAR_HOST_URL=http://localhost:9000
 ```
 
-## Produce coverage, then scan
+## Produce coverage and scan (recommended)
+
+Create `sonar/.env` (gitignored):
+
+```env
+SONAR_TOKEN=sqp_...
+SONAR_HOST_URL=http://localhost:9000
+```
 
 From the repository root:
 
-```bash
-# Backend coverage (writes backend/coverage.xml)
-cd backend && uv run pytest && cd ..
-
-# Frontend coverage (writes frontend/coverage/lcov.info)
-cd frontend && pnpm test:coverage && cd ..
-
-# Run the official scanner against the local server
-docker run --rm \
-  --network host \
-  -e SONAR_HOST_URL="${SONAR_HOST_URL:-http://localhost:9000}" \
-  -e SONAR_TOKEN="${SONAR_TOKEN}" \
-  -v "${PWD}:/usr/src" \
-  sonarsource/sonar-scanner-cli:11
+```powershell
+# Windows
+powershell -ExecutionPolicy Bypass -File sonar/run-analysis.ps1
 ```
 
-On Docker Desktop (Windows/macOS), if `--network host` does not reach the host, use:
-
 ```bash
-docker run --rm \
-  -e SONAR_HOST_URL=http://host.docker.internal:9000 \
-  -e SONAR_TOKEN="${SONAR_TOKEN}" \
-  -v "${PWD}:/usr/src" \
-  sonarsource/sonar-scanner-cli:11
+# Git Bash / Linux / macOS
+bash sonar/run-analysis.sh
 ```
+
+The script runs backend + frontend tests with coverage, fixes monorepo report
+paths, and uploads the analysis with `sonarsource/sonar-scanner-cli`.
+
+Dashboard: http://localhost:9000/dashboard?id=Astroimage
+
+> Project key is **case-sensitive** and must match the SonarQube project
+> (`Astroimage` in `sonar-project.properties`).
 
 ## CI / SonarCloud
 

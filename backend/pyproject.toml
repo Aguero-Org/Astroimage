@@ -101,6 +101,7 @@ filterwarnings = [
 [tool.coverage.run]
 branch = true
 source = ["astroimage"]
+relative_files = true
 
 [tool.coverage.report]
 omit = [
