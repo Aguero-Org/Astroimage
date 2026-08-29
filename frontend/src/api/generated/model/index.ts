@@ -5,4 +5,17 @@
  * OpenAPI spec version: 0.1.0
  */
 
+export * from './bodyExtractFitsMetadata';
+export * from './extractFitsMetadataParams';
+export * from './fitsHduInfoSchema';
+export * from './fitsImageInfoSchema';
+export * from './fitsInstrumentInfoSchema';
+export * from './fitsMetadataSchema';
+export * from './fitsMetadataSchemaHeader';
+export * from './fitsPhotometryInfoSchema';
+export * from './fitsTableInfoSchema';
+export * from './fitsWcsInfoSchema';
 export * from './healthResponse';
+export * from './hTTPValidationError';
+export * from './validationError';
+export * from './validationErrorCtx';
