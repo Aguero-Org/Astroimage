@@ -73,9 +73,12 @@ files = ["src", "tests"]
 exclude = ["alembic"]
 plugins = ["pydantic.mypy"]
 warn_unused_ignores = true
+explicit_package_bases = true
 
 [[tool.mypy.overrides]]
 module = [
+    "astropy",
+    "astropy.*",
     "astroquery.*",
     "prometheus_fastapi_instrumentator.*",
     "opentelemetry.*",
@@ -122,6 +125,7 @@ source_modules = [
 ]
 forbidden_modules = [
     "astroimage.health",
+    "astroimage.fits",
 ]
 
 [[tool.importlinter.contracts]]
@@ -130,6 +134,7 @@ name = "features must not import the composition root"
 type = "forbidden"
 source_modules = [
     "astroimage.health",
+    "astroimage.fits",
 ]
 forbidden_modules = [
     "astroimage.main",

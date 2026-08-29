@@ -5,6 +5,7 @@ from fastapi import APIRouter, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from astroimage.config import Settings, get_settings
+from astroimage.fits.controller import router as fits_router
 from astroimage.health.controller import router as health_router
 from astroimage.shared.database import create_engine_from_settings, create_session_factory
 from astroimage.shared.logging import setup_logging
@@ -16,6 +17,7 @@ from astroimage.shared.telemetry import setup_tracing
 def build_api_router() -> APIRouter:
     api_router = APIRouter()
     api_router.include_router(health_router)
+    api_router.include_router(fits_router)
     return api_router
 
 

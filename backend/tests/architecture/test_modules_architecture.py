@@ -192,6 +192,9 @@ def test_features_do_not_import_other_features_internals(
             if source == target:
                 continue
             for role in internal_roles:
+                target_path = PACKAGE_PATH / target / f"{role}.py"
+                if not target_path.is_file():
+                    continue
                 (
                     Rule()
                     .modules_that()
