@@ -22,6 +22,12 @@ repos:
         language: system
         pass_filenames: false
         files: ^backend/src/
+      - id: openapi-export
+        name: openapi export
+        entry: uv run --directory backend astroimage openapi export
+        language: system
+        pass_filenames: false
+        files: ^backend/src/
       - id: biome
         name: biome
         entry: pnpm --dir frontend exec biome check --write

@@ -2,8 +2,15 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches:
+      - main
+      - develop
+      - "feature/*"
   pull_request:
+    branches:
+      - main
+      - develop
+      - "feature/*"
 
 jobs:
   backend:
@@ -11,6 +18,8 @@ jobs:
     defaults:
       run:
         working-directory: backend
+    env:
+      DATABASE_URL: postgresql+asyncpg://astroimage:astroimage@localhost:5432/astroimage
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v6
@@ -31,6 +40,10 @@ jobs:
         run: uv run lint-imports
       - name: Tests
         run: uv run pytest
+      - name: Export OpenAPI
+        run: uv run astroimage openapi export
+      - name: Check OpenAPI is up to date
+        run: git diff --exit-code openapi.json
       - name: Upload backend coverage
         uses: actions/upload-artifact@v4
         with:

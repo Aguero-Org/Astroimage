@@ -54,6 +54,7 @@ backend/src/astroimage/
 │   ├── metrics.py
 │   ├── middleware.py
 │   └── telemetry.py
+├── cli.py                     # project operations CLI (composition root)
 ├── config.py                  # settings (composition root)
 └── main.py                    # app factory + router composition
 ```
@@ -140,7 +141,7 @@ uv run ruff check src tests
 uv run mypy
 uv run lint-imports
 uv run pytest
-uv run python scripts/export_openapi.py   # if HTTP contract changed
+uv run astroimage openapi export          # if HTTP contract changed
 ```
 
 If OpenAPI changed, regenerate the frontend client:

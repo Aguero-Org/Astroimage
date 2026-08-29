@@ -29,7 +29,7 @@ astroimage/
 cd backend
 uv sync --all-groups
 cp ../.env.example ../.env
-uv run uvicorn astroimage.main:app --reload --app-dir src
+uv run astroimage serve --reload
 ```
 
 API docs: http://localhost:8000/docs  
@@ -37,14 +37,23 @@ Health: http://localhost:8000/health
 Metrics: http://localhost:8000/metrics  
 OpenAPI: http://localhost:8000/openapi.json
 
+Project operations (`uv run astroimage …`):
+
+```bash
+uv run astroimage serve --reload
+uv run astroimage openapi export
+uv run astroimage db upgrade
+uv run astroimage db revision -m "message" --autogenerate
+```
+
+Toolchain (`uv run <tool>`):
+
 ```bash
 uv run ruff check src tests
 uv run ruff format src tests
 uv run mypy
 uv run lint-imports
 uv run pytest                  # also writes coverage.xml for Sonar
-uv run python scripts/export_openapi.py
-uv run alembic upgrade head
 ```
 
 ## Frontend
@@ -98,7 +107,10 @@ Root config: [`sonar-project.properties`](./sonar-project.properties) (backend P
 
 ## CI
 
-GitHub Actions runs backend (uv + Ruff + mypy + import-linter + pytest + coverage) and frontend (Biome + tsc + Vitest coverage + Playwright + build) in parallel.
+GitHub Actions runs on pushes and pull requests to `main`, `develop`, and `feature/*`.
+
+Backend: Ruff + mypy + import-linter + pytest + `astroimage openapi export` (drift check) + coverage.  
+Frontend: Biome + tsc + Vitest coverage + Playwright + build (in parallel with backend).
 
 When repository variable `SONAR_ENABLED=true` is set, a **SonarQube** job uploads analysis and enforces the Quality Gate:
 

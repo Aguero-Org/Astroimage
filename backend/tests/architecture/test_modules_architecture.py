@@ -19,9 +19,9 @@ PACKAGE_NAME = "astroimage"
 
 NON_FEATURE_PACKAGES = frozenset({"shared"})
 
-COMPOSITION_ROOT_MODULES = frozenset({"main", "config"})
+COMPOSITION_ROOT_MODULES = frozenset({"main", "config", "cli"})
 
-ALLOWED_NON_FEATURE_TEST_PACKAGES = frozenset({"shared", "config", "main"})
+ALLOWED_NON_FEATURE_TEST_PACKAGES = frozenset({"shared", "config", "main", "cli"})
 
 FORBIDDEN_GLOBAL_LAYER_PACKAGES = frozenset(
     {

@@ -45,6 +45,7 @@ src/astroimage/
 │   ├── metrics.py
 │   ├── middleware.py
 │   └── telemetry.py
+├── cli.py                  # project operations CLI (composition root)
 ├── config.py               # settings (composition root)
 └── main.py                 # app factory + router composition
 ```

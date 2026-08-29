@@ -4,11 +4,12 @@ FastAPI API for spatial image processing. See the repository root `README.md` an
 
 ```bash
 uv sync --all-groups
-uv run uvicorn astroimage.main:app --reload --app-dir src
+uv run astroimage serve --reload
+uv run astroimage openapi export
+uv run astroimage db upgrade
 uv run ruff check src tests
 uv run ruff format src tests
 uv run mypy
 uv run lint-imports
 uv run pytest
-uv run alembic upgrade head
 ```
