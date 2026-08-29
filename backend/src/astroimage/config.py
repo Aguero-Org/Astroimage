@@ -14,7 +14,8 @@ class Settings(BaseSettings):
     app_name: str = "astroimage"
     environment: str = "development"
     log_level: str = "info"
-    database_url: str = "postgresql+asyncpg://astroimage:astroimage@localhost:5432/astroimage"
+    # No credentials in source defaults — provide DATABASE_URL via env / .env.
+    database_url: str = Field(min_length=1)
     cors_origins: list[str] = Field(default_factory=lambda: ["http://localhost:5173"])
     otlp_endpoint: str | None = None
 
