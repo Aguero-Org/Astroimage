@@ -106,23 +106,29 @@
         ],
         "title": "Body_extractFitsMetadata"
       },
-      "FitsMetadataSchema": {
+      "FitsHduInfoSchema": {
         "properties": {
-          "source_name": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Source Name"
-          },
-          "hdu_index": {
+          "selected": {
             "type": "integer",
-            "title": "Hdu Index"
+            "title": "Selected"
           },
+          "image_indices": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Image Indices"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "selected"
+        ],
+        "title": "FitsHduInfoSchema"
+      },
+      "FitsImageInfoSchema": {
+        "properties": {
           "shape": {
             "anyOf": [
               {
@@ -137,6 +143,79 @@
             ],
             "title": "Shape"
           },
+          "unit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit"
+          },
+          "datamin": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Datamin"
+          },
+          "datamax": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Datamax"
+          },
+          "datamean": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Datamean"
+          },
+          "median": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Median"
+          },
+          "background": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Background"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "FitsImageInfoSchema"
+      },
+      "FitsInstrumentInfoSchema": {
+        "properties": {
           "telescope": {
             "anyOf": [
               {
@@ -213,7 +292,62 @@
               }
             ],
             "title": "Time Obs"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "FitsInstrumentInfoSchema"
+      },
+      "FitsMetadataSchema": {
+        "properties": {
+          "source_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Name"
           },
+          "image": {
+            "$ref": "#/components/schemas/FitsImageInfoSchema"
+          },
+          "instrument": {
+            "$ref": "#/components/schemas/FitsInstrumentInfoSchema"
+          },
+          "photometry": {
+            "$ref": "#/components/schemas/FitsPhotometryInfoSchema"
+          },
+          "wcs": {
+            "$ref": "#/components/schemas/FitsWcsInfoSchema"
+          },
+          "hdus": {
+            "$ref": "#/components/schemas/FitsHduInfoSchema"
+          },
+          "tables": {
+            "items": {
+              "$ref": "#/components/schemas/FitsTableInfoSchema"
+            },
+            "type": "array",
+            "title": "Tables"
+          },
+          "header": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Header"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "hdus"
+        ],
+        "title": "FitsMetadataSchema"
+      },
+      "FitsPhotometryInfoSchema": {
+        "properties": {
           "photflam": {
             "anyOf": [
               {
@@ -246,198 +380,11 @@
               }
             ],
             "title": "Photbw"
-          },
-          "naxis": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Naxis"
-          },
-          "naxis1": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Naxis1"
-          },
-          "naxis2": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Naxis2"
-          },
-          "crval1": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Crval1"
-          },
-          "crval2": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Crval2"
-          },
-          "crpix1": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Crpix1"
-          },
-          "crpix2": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Crpix2"
-          },
-          "ctype1": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Ctype1"
-          },
-          "ctype2": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Ctype2"
-          },
-          "cd1_1": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Cd1 1"
-          },
-          "cd1_2": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Cd1 2"
-          },
-          "cd2_1": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Cd2 1"
-          },
-          "cd2_2": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Cd2 2"
-          },
-          "cdelt1": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Cdelt1"
-          },
-          "cdelt2": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Cdelt2"
-          },
-          "image_hdus": {
-            "items": {
-              "type": "integer"
-            },
-            "type": "array",
-            "title": "Image Hdus"
-          },
-          "tables": {
-            "items": {
-              "$ref": "#/components/schemas/FitsTableInfoSchema"
-            },
-            "type": "array",
-            "title": "Tables"
-          },
-          "header": {
-            "additionalProperties": true,
-            "type": "object",
-            "title": "Header"
           }
         },
         "additionalProperties": false,
         "type": "object",
-        "required": [
-          "hdu_index"
-        ],
-        "title": "FitsMetadataSchema"
+        "title": "FitsPhotometryInfoSchema"
       },
       "FitsTableInfoSchema": {
         "properties": {
@@ -470,6 +417,116 @@
           "columns"
         ],
         "title": "FitsTableInfoSchema"
+      },
+      "FitsWcsInfoSchema": {
+        "properties": {
+          "present": {
+            "type": "boolean",
+            "title": "Present",
+            "default": false
+          },
+          "naxis": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Naxis"
+          },
+          "crval": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "number"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Crval"
+          },
+          "crpix": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "number"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Crpix"
+          },
+          "ctype": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ctype"
+          },
+          "cunit": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cunit"
+          },
+          "cd": {
+            "anyOf": [
+              {
+                "items": {
+                  "items": {
+                    "type": "number"
+                  },
+                  "type": "array"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cd"
+          },
+          "cdelt": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "number"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cdelt"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "FitsWcsInfoSchema"
       },
       "HTTPValidationError": {
         "properties": {

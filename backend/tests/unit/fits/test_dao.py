@@ -5,6 +5,7 @@ import pytest
 from astropy.io import fits
 
 from astroimage.fits.dao import FitsDao
+from astroimage.fits.model import FitsMetadata
 
 
 def _write_sample_fits(path: Path) -> None:
@@ -15,6 +16,23 @@ def _write_sample_fits(path: Path) -> None:
     primary.header["FILTER"] = "R"
     primary.header["EXPTIME"] = 12.5
     primary.header["DATE-OBS"] = "2024-01-02"
+    primary.header["BUNIT"] = "count"
+    primary.header["DATAMIN"] = 0.0
+    primary.header["DATAMAX"] = 15.0
+    primary.header["DATAMEAN"] = 7.5
+    primary.header["MEDIAN"] = 7.5
+    primary.header["BACKGRND"] = 1.0
+    primary.header["PHOTFLAM"] = 1e-19
+    primary.header["CRVAL1"] = 150.0
+    primary.header["CRVAL2"] = 2.5
+    primary.header["CRPIX1"] = 2.0
+    primary.header["CRPIX2"] = 2.0
+    primary.header["CTYPE1"] = "RA---TAN"
+    primary.header["CTYPE2"] = "DEC--TAN"
+    primary.header["CD1_1"] = -0.001
+    primary.header["CD1_2"] = 0.0
+    primary.header["CD2_1"] = 0.0
+    primary.header["CD2_2"] = 0.001
     primary.writeto(path, overwrite=True)
 
 
@@ -24,18 +42,31 @@ def test_read_metadata_from_path(tmp_path: Path) -> None:
 
     metadata = FitsDao().read_metadata_from_path(fits_path)
 
+    assert isinstance(metadata, FitsMetadata)
     assert metadata.source_name == "sample.fits"
-    assert metadata.hdu_index == 0
-    assert metadata.shape == (4, 4)
-    assert metadata.telescope == "TEST"
-    assert metadata.instrument == "CAM"
-    assert metadata.filter_name == "R"
-    assert metadata.exptime == 12.5
-    assert metadata.date_obs == "2024-01-02"
-    assert metadata.naxis1 == 4
-    assert metadata.naxis2 == 4
-    assert metadata.image_hdus == (0,)
+    assert metadata.hdus.selected == 0
+    assert metadata.hdus.image_indices == [0]
+    assert metadata.image.shape == [4, 4]
+    assert metadata.image.unit == "count"
+    assert metadata.image.datamin == 0.0
+    assert metadata.image.datamax == 15.0
+    assert metadata.image.datamean == 7.5
+    assert metadata.image.median == 7.5
+    assert metadata.image.background == 1.0
+    assert metadata.instrument.telescope == "TEST"
+    assert metadata.instrument.instrument == "CAM"
+    assert metadata.instrument.filter_name == "R"
+    assert metadata.instrument.exptime == 12.5
+    assert metadata.instrument.date_obs == "2024-01-02"
+    assert metadata.photometry.photflam == 1e-19
     assert metadata.header["TELESCOP"] == "TEST"
+    assert metadata.wcs.present is True
+    assert metadata.wcs.crval == [150.0, 2.5]
+    assert metadata.wcs.crpix == [2.0, 2.0]
+    assert metadata.wcs.ctype == ["RA---TAN", "DEC--TAN"]
+    assert metadata.wcs.cd is not None
+    assert metadata.wcs.cd[0][0] == -0.001
+    assert metadata.wcs.cd[1][1] == 0.001
 
 
 def test_read_metadata_from_bytes(tmp_path: Path) -> None:
@@ -46,8 +77,8 @@ def test_read_metadata_from_bytes(tmp_path: Path) -> None:
     metadata = FitsDao().read_metadata_from_bytes(payload, source_name="upload.fits")
 
     assert metadata.source_name == "upload.fits"
-    assert metadata.telescope == "TEST"
-    assert isinstance(metadata, type(FitsDao().read_metadata_from_path(fits_path)))
+    assert metadata.instrument.telescope == "TEST"
+    assert metadata.wcs.crval == [150.0, 2.5]
 
 
 def test_missing_file_raises(tmp_path: Path) -> None:
@@ -60,3 +91,15 @@ def test_invalid_hdu_raises(tmp_path: Path) -> None:
     _write_sample_fits(fits_path)
     with pytest.raises(ValueError, match="not a 2D image"):
         FitsDao().read_metadata_from_path(fits_path, hdu_index=9)
+
+
+def test_wcs_absent(tmp_path: Path) -> None:
+    fits_path = tmp_path / "plain.fits"
+    fits.PrimaryHDU(np.ones((3, 3))).writeto(fits_path, overwrite=True)
+
+    metadata = FitsDao().read_metadata_from_path(fits_path)
+
+    assert metadata.wcs.present is False
+    assert metadata.wcs.crval is None
+    assert metadata.wcs.cd is None
+    assert metadata.wcs.cdelt is None

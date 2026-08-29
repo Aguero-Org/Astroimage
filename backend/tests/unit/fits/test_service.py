@@ -23,7 +23,7 @@ def test_service_returns_model_and_schema(tmp_path: Path) -> None:
     schema = service.to_schema(model)
 
     assert isinstance(model, FitsMetadata)
-    assert model.telescope == "KECK"
-    assert schema.telescope == "KECK"
-    assert schema.shape == [2, 3]
-    assert schema.hdu_index == 0
+    assert model.instrument.telescope == "KECK"
+    assert schema.instrument.telescope == "KECK"
+    assert schema.image.shape == [2, 3]
+    assert schema.hdus.selected == model.hdus.selected

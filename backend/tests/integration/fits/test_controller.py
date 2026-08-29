@@ -28,13 +28,17 @@ async def test_extract_fits_metadata_upload(client: AsyncClient) -> None:
     assert response.status_code == 200
     body = response.json()
     assert body["source_name"] == "vlt.fits"
-    assert body["telescope"] == "VLT"
-    assert body["instrument"] == "FORS2"
-    assert body["filter_name"] == "B"
-    assert body["exptime"] == 30.0
-    assert body["shape"] == [5, 5]
-    assert body["hdu_index"] == 0
+    assert body["instrument"]["telescope"] == "VLT"
+    assert body["instrument"]["instrument"] == "FORS2"
+    assert body["instrument"]["filter_name"] == "B"
+    assert body["instrument"]["exptime"] == 30.0
+    assert body["image"]["shape"] == [5, 5]
+    assert body["hdus"]["selected"] == 0
+    assert body["hdus"]["image_indices"] == [0]
     assert "TELESCOP" in body["header"]
+    assert "wcs" in body
+    assert "photometry" in body
+    assert "tables" in body
 
 
 @pytest.mark.asyncio
