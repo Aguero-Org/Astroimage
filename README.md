@@ -1,6 +1,6 @@
 <h1 style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; text-align: center;">
-  <img src="/frontend/public/favicon.svg" width="128" height="128" alt="Astroimage logo">
   <span>Astroimage</span>
+  <img src="frontend/public/favicon.svg" width="128" height="128" alt="Astroimage logo">
 </h1>
 
 Self-hosted REST API and React SPA for spatial image processing (FITS, astroquery). This repository currently contains the **toolchain and project skeleton** — not product features.
