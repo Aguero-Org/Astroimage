@@ -1,30 +1,14 @@
-from astroimage.fits.model import (
-    FitsHduInfo,
-    FitsImageInfo,
-    FitsInstrumentInfo,
-    FitsMetadata,
-    FitsTableInfo,
-    FitsWcsInfo,
-)
+from astroimage.fits.model import FitsRecord
 
 
-def test_fits_metadata_nested_groups() -> None:
-    metadata = FitsMetadata(
-        source_name="sample.fits",
-        image=FitsImageInfo(shape=[4, 4], unit="electron/s", datamin=0.0, datamax=10.0),
-        instrument=FitsInstrumentInfo(telescope="HST", instrument="WFC3", filter_name="F814W"),
-        hdus=FitsHduInfo(selected=0, image_indices=[0]),
-        tables=[FitsTableInfo(index=1, name="CAT", rows=2, columns=["RA", "DEC"])],
-        wcs=FitsWcsInfo(present=False),
-        header={"TELESCOP": "HST"},
+def test_fits_record_persists_object_key_and_filename() -> None:
+    record = FitsRecord(
+        object_key="fits/sample.fits",
+        original_filename="sample.fits",
+        size_bytes=128,
+        metadata_payload={"source_name": "sample.fits"},
     )
-    assert metadata.instrument.telescope == "HST"
-    assert metadata.image.shape == [4, 4]
-    assert metadata.tables[0].columns == ["RA", "DEC"]
-    assert metadata.hdus.selected == 0
-
-
-def test_instrument_coerces_values() -> None:
-    instrument = FitsInstrumentInfo.model_validate({"telescope": "  VLT  ", "exptime": "12.5"})
-    assert instrument.telescope == "VLT"
-    assert instrument.exptime == 12.5
+    assert record.object_key == "fits/sample.fits"
+    assert record.original_filename == "sample.fits"
+    assert record.size_bytes == 128
+    assert record.metadata_payload["source_name"] == "sample.fits"
