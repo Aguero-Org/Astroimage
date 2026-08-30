@@ -18,6 +18,13 @@ build/
 .scannerwork/
 .sonar/
 
+# Runtime logs
+logs/
+*.jsonl
+
+# Oxlint local/editor config (frontend uses Biome)
+.oxlintrc.json
+
 # Node
 node_modules/
 dist-ssr/
