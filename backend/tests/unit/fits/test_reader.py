@@ -4,8 +4,8 @@ import numpy as np
 import pytest
 from astropy.io import fits
 
-from astroimage.fits.dao import FitsDao
 from astroimage.fits.model import FitsMetadata
+from astroimage.fits.reader import FitsReader
 
 
 def _write_sample_fits(path: Path) -> None:
@@ -40,7 +40,7 @@ def test_read_metadata_from_path(tmp_path: Path) -> None:
     fits_path = tmp_path / "sample.fits"
     _write_sample_fits(fits_path)
 
-    metadata = FitsDao().read_metadata_from_path(fits_path)
+    metadata = FitsReader().read_metadata_from_path(fits_path)
 
     assert isinstance(metadata, FitsMetadata)
     assert metadata.source_name == "sample.fits"
@@ -74,7 +74,7 @@ def test_read_metadata_from_bytes(tmp_path: Path) -> None:
     _write_sample_fits(fits_path)
     payload = fits_path.read_bytes()
 
-    metadata = FitsDao().read_metadata_from_bytes(payload, source_name="upload.fits")
+    metadata = FitsReader().read_metadata_from_bytes(payload, source_name="upload.fits")
 
     assert metadata.source_name == "upload.fits"
     assert metadata.instrument.telescope == "TEST"
@@ -83,21 +83,21 @@ def test_read_metadata_from_bytes(tmp_path: Path) -> None:
 
 def test_missing_file_raises(tmp_path: Path) -> None:
     with pytest.raises(FileNotFoundError):
-        FitsDao().read_metadata_from_path(tmp_path / "missing.fits")
+        FitsReader().read_metadata_from_path(tmp_path / "missing.fits")
 
 
 def test_invalid_hdu_raises(tmp_path: Path) -> None:
     fits_path = tmp_path / "sample.fits"
     _write_sample_fits(fits_path)
     with pytest.raises(ValueError, match="not a 2D image"):
-        FitsDao().read_metadata_from_path(fits_path, hdu_index=9)
+        FitsReader().read_metadata_from_path(fits_path, hdu_index=9)
 
 
 def test_wcs_absent(tmp_path: Path) -> None:
     fits_path = tmp_path / "plain.fits"
     fits.PrimaryHDU(np.ones((3, 3))).writeto(fits_path, overwrite=True)
 
-    metadata = FitsDao().read_metadata_from_path(fits_path)
+    metadata = FitsReader().read_metadata_from_path(fits_path)
 
     assert metadata.wcs.present is False
     assert metadata.wcs.crval is None

@@ -159,7 +159,7 @@ def _tables(hdul: fits.HDUList) -> list[FitsTableInfo]:
             columns=list(hdu.columns.names or ()),
         )
         for index, hdu in enumerate(hdul)
-        if isinstance(hdu, (fits.BinTableHDU, fits.TableHDU)) and hdu.data is not None
+        if isinstance(hdu, (fits.BinTableHDU | fits.TableHDU)) and hdu.data is not None
     ]
 
 
@@ -184,7 +184,7 @@ def _read(hdul: fits.HDUList, *, source_name: str | None, hdu_index: int | None)
     )
 
 
-class FitsDao:
+class FitsReader:
     def read_metadata_from_path(
         self,
         path: Path | str,

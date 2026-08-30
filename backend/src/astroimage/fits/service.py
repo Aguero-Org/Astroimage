@@ -2,14 +2,14 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from astroimage.fits.dao import FitsDao
 from astroimage.fits.model import FitsMetadata
+from astroimage.fits.reader import FitsReader
 from astroimage.fits.schema import FitsMetadataSchema
 
 
 class FitsService:
-    def __init__(self, dao: FitsDao | None = None) -> None:
-        self._dao = dao or FitsDao()
+    def __init__(self, reader: FitsReader | None = None) -> None:
+        self._reader = reader or FitsReader()
 
     def metadata_from_path(
         self,
@@ -17,7 +17,7 @@ class FitsService:
         *,
         hdu_index: int | None = None,
     ) -> FitsMetadata:
-        return self._dao.read_metadata_from_path(path, hdu_index=hdu_index)
+        return self._reader.read_metadata_from_path(path, hdu_index=hdu_index)
 
     def metadata_from_bytes(
         self,
@@ -28,7 +28,7 @@ class FitsService:
     ) -> FitsMetadata:
         if not payload:
             raise ValueError("Empty FITS payload")
-        return self._dao.read_metadata_from_bytes(
+        return self._reader.read_metadata_from_bytes(
             payload,
             source_name=source_name,
             hdu_index=hdu_index,
