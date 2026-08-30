@@ -38,6 +38,7 @@ export default defineConfig({
       include: ["src/**/*.{ts,tsx}"],
       exclude: [
         "src/test/**",
+        "src/mocks/**",
         "src/api/generated/**",
         "src/routeTree.gen.ts",
         "src/main.tsx",
