@@ -51,12 +51,12 @@ describe("image mock contract", () => {
 
   it("GET /image/:id returns binary data", async () => {
     const result = await customFetch<{
-      data: { size: number };
+      data: ArrayBuffer;
       status: number;
     }>("/image/m42");
 
     expect(result.status).toBe(200);
-    expect(result.data.size).toBeGreaterThan(0);
+    expect(result.data.byteLength).toBeGreaterThan(0);
   });
 
   it("GET /image/:id returns 404 for unknown id", async () => {

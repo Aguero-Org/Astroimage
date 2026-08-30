@@ -17,6 +17,10 @@ async function parseResponseBody(response: Response): Promise<unknown> {
     return response.text();
   }
 
+  if (contentType.includes("application/fits")) {
+    return response.arrayBuffer();
+  }
+
   return response.blob();
 }
 

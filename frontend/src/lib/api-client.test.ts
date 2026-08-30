@@ -40,25 +40,25 @@ describe("customFetch — JSON", () => {
 });
 
 describe("customFetch — binary", () => {
-  it("returns a Blob for application/octet-stream", async () => {
+  it("returns an ArrayBuffer for application/fits", async () => {
     const payload = new Uint8Array([0x53, 0x49, 0x4d, 0x50, 0x4c, 0x45]);
     server.use(
       http.get(`${baseUrl}/image/abc`, () => {
         return new HttpResponse(payload, {
           status: 200,
-          headers: { "content-type": "application/octet-stream" },
+          headers: { "content-type": "application/fits" },
         });
       }),
     );
 
     const result = await customFetch<{
-      data: Blob;
+      data: ArrayBuffer;
       status: number;
     }>("/image/abc");
 
     expect(result.status).toBe(200);
-    expect(result.data).toBeTypeOf("object");
-    expect(result.data.size).toBe(payload.length);
+    expect(result.data).toBeInstanceOf(ArrayBuffer);
+    expect(result.data.byteLength).toBe(payload.length);
   });
 });
 

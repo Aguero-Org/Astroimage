@@ -32,7 +32,7 @@ export const imageHandlers = [
     return new HttpResponse(header, {
       status: 200,
       headers: {
-        "content-type": "application/octet-stream",
+        "content-type": "application/fits",
         "content-disposition": `inline; filename="${image.id}.fits"`,
       },
     });
