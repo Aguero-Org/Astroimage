@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import Annotated, Any
 
+import numpy as np
 from pydantic import BaseModel, BeforeValidator, ConfigDict, Field
 
 
@@ -33,6 +35,13 @@ def _optional_str(value: object) -> str | None:
 
 OptStr = Annotated[str | None, BeforeValidator(_optional_str)]
 OptFloat = Annotated[float | None, BeforeValidator(_optional_float)]
+
+
+@dataclass(frozen=True)
+class FitsImageData:
+    data: np.ndarray
+    hdu_index: int
+    source_name: str | None = None
 
 
 class FitsImageInfo(BaseModel):

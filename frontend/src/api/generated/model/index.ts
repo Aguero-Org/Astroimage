@@ -5,7 +5,12 @@
  * OpenAPI spec version: 0.1.0
  */
 
+export * from './bodyDetectSources';
 export * from './bodyExtractFitsMetadata';
+export * from './bodyRenderFitsImage';
+export * from './detectionSummarySchema';
+export * from './detectSourcesParams';
+export * from './extendedSourceSchema';
 export * from './extractFitsMetadataParams';
 export * from './fitsHduInfoSchema';
 export * from './fitsImageInfoSchema';
@@ -17,5 +22,8 @@ export * from './fitsTableInfoSchema';
 export * from './fitsWcsInfoSchema';
 export * from './healthResponse';
 export * from './hTTPValidationError';
+export * from './pointSourceSchema';
+export * from './renderFitsImageParams';
+export * from './sourceDetectionResponse';
 export * from './validationError';
 export * from './validationErrorCtx';

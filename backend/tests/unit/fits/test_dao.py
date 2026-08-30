@@ -5,7 +5,7 @@ import pytest
 from astropy.io import fits
 
 from astroimage.fits.dao import FitsDao
-from astroimage.fits.model import FitsMetadata
+from astroimage.fits.model import FitsImageData, FitsMetadata
 
 
 def _write_sample_fits(path: Path) -> None:
@@ -103,3 +103,62 @@ def test_wcs_absent(tmp_path: Path) -> None:
     assert metadata.wcs.crval is None
     assert metadata.wcs.cd is None
     assert metadata.wcs.cdelt is None
+
+
+def test_read_image_data_from_path(tmp_path: Path) -> None:
+    fits_path = tmp_path / "sample.fits"
+    _write_sample_fits(fits_path)
+
+    image = FitsDao().read_image_data_from_path(fits_path)
+
+    assert isinstance(image, FitsImageData)
+    assert image.source_name == "sample.fits"
+    assert image.hdu_index == 0
+    assert image.data.shape == (4, 4)
+    assert np.allclose(image.data, np.arange(16, dtype=float).reshape(4, 4))
+
+
+def test_read_image_data_from_bytes(tmp_path: Path) -> None:
+    fits_path = tmp_path / "sample.fits"
+    _write_sample_fits(fits_path)
+
+    image = FitsDao().read_image_data_from_bytes(
+        fits_path.read_bytes(),
+        source_name="upload.fits",
+        hdu_index=0,
+    )
+
+    assert image.source_name == "upload.fits"
+    assert image.hdu_index == 0
+    assert image.data.shape == (4, 4)
+    assert np.issubdtype(image.data.dtype, np.floating)
+
+
+def test_read_image_data_selects_explicit_hdu(tmp_path: Path) -> None:
+    primary = fits.PrimaryHDU(np.zeros((8, 8)))
+    science = fits.ImageHDU(np.ones((16, 16)))
+    fits_path = tmp_path / "multi.fits"
+    fits.HDUList([primary, science]).writeto(fits_path)
+
+    image = FitsDao().read_image_data_from_path(fits_path, hdu_index=1)
+
+    assert image.hdu_index == 1
+    assert image.data.shape == (16, 16)
+
+
+def test_read_image_data_invalid_hdu_raises(tmp_path: Path) -> None:
+    fits_path = tmp_path / "sample.fits"
+    _write_sample_fits(fits_path)
+
+    with pytest.raises(ValueError, match="not a 2D image"):
+        FitsDao().read_image_data_from_path(fits_path, hdu_index=9)
+
+
+def test_read_image_data_missing_file_raises(tmp_path: Path) -> None:
+    with pytest.raises(FileNotFoundError):
+        FitsDao().read_image_data_from_path(tmp_path / "missing.fits")
+
+
+def test_read_image_data_garbage_raises() -> None:
+    with pytest.raises(OSError):
+        FitsDao().read_image_data_from_bytes(b"not-a-fits-file")

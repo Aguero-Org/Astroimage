@@ -11,6 +11,7 @@ from astropy.wcs import WCS, FITSFixedWarning
 
 from astroimage.fits.model import (
     FitsHduInfo,
+    FitsImageData,
     FitsImageInfo,
     FitsInstrumentInfo,
     FitsMetadata,
@@ -184,6 +185,23 @@ def _read(hdul: fits.HDUList, *, source_name: str | None, hdu_index: int | None)
     )
 
 
+def _read_image_data(
+    hdul: fits.HDUList,
+    *,
+    source_name: str | None,
+    hdu_index: int | None,
+) -> FitsImageData:
+    selected = _choose_hdu(_image_hdus(hdul), hdu_index)
+    hdu = hdul[selected]
+    if hdu.data is None:
+        raise ValueError(f"HDU {selected} has no data")
+    return FitsImageData(
+        data=np.asarray(hdu.data, dtype=float),
+        hdu_index=selected,
+        source_name=source_name,
+    )
+
+
 class FitsDao:
     def read_metadata_from_path(
         self,
@@ -206,3 +224,25 @@ class FitsDao:
     ) -> FitsMetadata:
         with fits.open(io.BytesIO(payload)) as hdul:
             return _read(hdul, source_name=source_name, hdu_index=hdu_index)
+
+    def read_image_data_from_path(
+        self,
+        path: Path | str,
+        *,
+        hdu_index: int | None = None,
+    ) -> FitsImageData:
+        fits_path = Path(path)
+        if not fits_path.is_file():
+            raise FileNotFoundError(f"FITS file not found: {fits_path}")
+        with fits.open(fits_path) as hdul:
+            return _read_image_data(hdul, source_name=fits_path.name, hdu_index=hdu_index)
+
+    def read_image_data_from_bytes(
+        self,
+        payload: bytes,
+        *,
+        source_name: str | None = None,
+        hdu_index: int | None = None,
+    ) -> FitsImageData:
+        with fits.open(io.BytesIO(payload)) as hdul:
+            return _read_image_data(hdul, source_name=source_name, hdu_index=hdu_index)

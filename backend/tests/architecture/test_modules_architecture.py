@@ -43,7 +43,12 @@ DAO_MODULES = frozenset({"dao", "repository"})
 MODEL_MODULES = frozenset({"model"})
 SCHEMA_MODULES = frozenset({"schema"})
 
-ALLOWED_FEATURE_DEPENDENCIES: frozenset[tuple[str, str]] = frozenset()
+ALLOWED_FEATURE_DEPENDENCIES: frozenset[tuple[str, str]] = frozenset(
+    {
+        ("sources", "fits"),
+        ("render", "fits"),
+    }
+)
 
 TEST_TYPE_DIRS = ("architecture", "unit", "integration")
 

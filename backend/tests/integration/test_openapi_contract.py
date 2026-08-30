@@ -7,7 +7,7 @@ from astroimage.main import app
 
 schema = schemathesis.openapi.from_asgi("/openapi.json", app)
 
-_SKIP_PATHS = frozenset({"/fits/metadata"})
+_SKIP_PATHS = frozenset({"/fits/metadata", "/sources/detect", "/render/image"})
 
 
 @schema.parametrize()

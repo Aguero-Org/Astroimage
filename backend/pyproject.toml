@@ -27,6 +27,8 @@ dependencies = [
     "asyncpg>=0.30",
     "structlog>=25.4",
     "uvicorn[standard]>=0.35",
+    "photutils>=2.1",
+    "pandas>=2.2",
 ]
 
 [dependency-groups]
@@ -86,6 +88,12 @@ module = [
     "prometheus_fastapi_instrumentator.*",
     "opentelemetry.*",
     "pytestarch.*",
+    "pandas",
+    "pandas.*",
+    "photutils",
+    "photutils.*",
+    "scipy",
+    "scipy.*",
 ]
 ignore_missing_imports = true
 
@@ -129,6 +137,8 @@ source_modules = [
 forbidden_modules = [
     "astroimage.health",
     "astroimage.fits",
+    "astroimage.sources",
+    "astroimage.render",
 ]
 
 [[tool.importlinter.contracts]]
@@ -138,6 +148,8 @@ type = "forbidden"
 source_modules = [
     "astroimage.health",
     "astroimage.fits",
+    "astroimage.sources",
+    "astroimage.render",
 ]
 forbidden_modules = [
     "astroimage.main",

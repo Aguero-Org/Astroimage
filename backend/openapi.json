@@ -87,10 +87,204 @@
           }
         }
       }
+    },
+    "/sources/detect": {
+      "post": {
+        "tags": [
+          "sources"
+        ],
+        "summary": "Detect Sources",
+        "operationId": "detectSources",
+        "parameters": [
+          {
+            "name": "hdu",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional image HDU index; defaults to the first 2D image HDU",
+              "title": "Hdu"
+            },
+            "description": "Optional image HDU index; defaults to the first 2D image HDU"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_detectSources"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SourceDetectionResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/render/image": {
+      "post": {
+        "tags": [
+          "render"
+        ],
+        "summary": "Render Fits Image",
+        "operationId": "renderFitsImage",
+        "parameters": [
+          {
+            "name": "hdu",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional image HDU index; defaults to the first 2D image HDU",
+              "title": "Hdu"
+            },
+            "description": "Optional image HDU index; defaults to the first 2D image HDU"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_renderFitsImage"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              },
+              "image/png": {}
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
     "schemas": {
+      "Body_detectSources": {
+        "properties": {
+          "file": {
+            "type": "string",
+            "contentMediaType": "application/octet-stream",
+            "title": "File",
+            "description": "FITS file to analyze"
+          },
+          "fwhm": {
+            "type": "number",
+            "minimum": 0.5,
+            "title": "Fwhm",
+            "default": 5.5
+          },
+          "sigma": {
+            "type": "number",
+            "minimum": 1.0,
+            "title": "Sigma",
+            "default": 9.0
+          },
+          "min_snr": {
+            "type": "number",
+            "minimum": 0.0,
+            "title": "Min Snr",
+            "default": 6.0
+          },
+          "min_score": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Min Score",
+            "default": 0.18
+          },
+          "min_distance": {
+            "type": "number",
+            "minimum": 0.0,
+            "title": "Min Distance",
+            "default": 4.0
+          },
+          "visual_weight": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Visual Weight",
+            "default": 0.8
+          },
+          "visual_area_radius": {
+            "type": "number",
+            "minimum": 1.0,
+            "title": "Visual Area Radius",
+            "default": 7.0
+          },
+          "visual_area_sigma": {
+            "type": "number",
+            "minimum": 0.0,
+            "title": "Visual Area Sigma",
+            "default": 2.0
+          },
+          "max_sources": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Max Sources",
+            "default": 50
+          }
+        },
+        "type": "object",
+        "required": [
+          "file"
+        ],
+        "title": "Body_detectSources"
+      },
       "Body_extractFitsMetadata": {
         "properties": {
           "file": {
@@ -105,6 +299,90 @@
           "file"
         ],
         "title": "Body_extractFitsMetadata"
+      },
+      "Body_renderFitsImage": {
+        "properties": {
+          "file": {
+            "type": "string",
+            "contentMediaType": "application/octet-stream",
+            "title": "File",
+            "description": "FITS file to render"
+          },
+          "stretch": {
+            "type": "string",
+            "pattern": "^(sqrt|log|asinh)$",
+            "title": "Stretch",
+            "default": "sqrt"
+          },
+          "pmin": {
+            "type": "number",
+            "exclusiveMaximum": 100.0,
+            "minimum": 0.0,
+            "title": "Pmin",
+            "default": 1.0
+          },
+          "pmax": {
+            "type": "number",
+            "maximum": 100.0,
+            "exclusiveMinimum": 0.0,
+            "title": "Pmax",
+            "default": 99.0
+          },
+          "gamma": {
+            "type": "number",
+            "maximum": 5.0,
+            "minimum": 0.1,
+            "title": "Gamma",
+            "default": 1.0
+          }
+        },
+        "type": "object",
+        "required": [
+          "file"
+        ],
+        "title": "Body_renderFitsImage"
+      },
+      "DetectionSummarySchema": {
+        "properties": {
+          "point_count": {
+            "type": "integer",
+            "title": "Point Count",
+            "default": 0
+          },
+          "extended_count": {
+            "type": "integer",
+            "title": "Extended Count",
+            "default": 0
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "DetectionSummarySchema"
+      },
+      "ExtendedSourceSchema": {
+        "properties": {
+          "source_id": {
+            "type": "integer",
+            "title": "Source Id"
+          },
+          "rank": {
+            "type": "integer",
+            "title": "Rank"
+          },
+          "object_type": {
+            "type": "string",
+            "const": "extended",
+            "title": "Object Type",
+            "default": "extended"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "source_id",
+          "rank"
+        ],
+        "title": "ExtendedSourceSchema"
       },
       "FitsHduInfoSchema": {
         "properties": {
@@ -556,6 +834,111 @@
           "status"
         ],
         "title": "HealthResponse"
+      },
+      "PointSourceSchema": {
+        "properties": {
+          "source_id": {
+            "type": "integer",
+            "title": "Source Id"
+          },
+          "rank": {
+            "type": "integer",
+            "title": "Rank"
+          },
+          "xcentroid": {
+            "type": "number",
+            "title": "Xcentroid"
+          },
+          "ycentroid": {
+            "type": "number",
+            "title": "Ycentroid"
+          },
+          "snr": {
+            "type": "number",
+            "title": "Snr"
+          },
+          "relevance_score": {
+            "type": "number",
+            "title": "Relevance Score"
+          },
+          "peak": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Peak"
+          },
+          "flux": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Flux"
+          },
+          "object_type": {
+            "type": "string",
+            "const": "point",
+            "title": "Object Type",
+            "default": "point"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "source_id",
+          "rank",
+          "xcentroid",
+          "ycentroid",
+          "snr",
+          "relevance_score"
+        ],
+        "title": "PointSourceSchema"
+      },
+      "SourceDetectionResponse": {
+        "properties": {
+          "source_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Name"
+          },
+          "summary": {
+            "$ref": "#/components/schemas/DetectionSummarySchema"
+          },
+          "point_sources": {
+            "items": {
+              "$ref": "#/components/schemas/PointSourceSchema"
+            },
+            "type": "array",
+            "title": "Point Sources"
+          },
+          "extended_sources": {
+            "items": {
+              "$ref": "#/components/schemas/ExtendedSourceSchema"
+            },
+            "type": "array",
+            "title": "Extended Sources"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "summary"
+        ],
+        "title": "SourceDetectionResponse"
       },
       "ValidationError": {
         "properties": {
