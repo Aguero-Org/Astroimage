@@ -20,6 +20,25 @@ jobs:
         working-directory: backend
     env:
       DATABASE_URL: postgresql+asyncpg://astroimage:astroimage@localhost:5432/astroimage
+      MINIO_ENDPOINT: localhost:9000
+      MINIO_ACCESS_KEY: minioadmin
+      MINIO_SECRET_KEY: minioadmin
+      MINIO_BUCKET: astroimage-test
+      MINIO_SECURE: "false"
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: astroimage
+          POSTGRES_PASSWORD: astroimage
+          POSTGRES_DB: astroimage
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U astroimage -d astroimage"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v6
@@ -28,6 +47,23 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version-file: backend/.python-version
+      - name: Start MinIO
+        working-directory: .
+        run: |
+          docker run -d --name minio \
+            -p 9000:9000 \
+            -e MINIO_ROOT_USER=minioadmin \
+            -e MINIO_ROOT_PASSWORD=minioadmin \
+            minio/minio:latest server /data --console-address :9001
+          for _ in $(seq 1 30); do
+            if curl -sf http://127.0.0.1:9000/minio/health/live; then
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "MinIO did not become ready" >&2
+          docker logs minio >&2
+          exit 1
       - name: Install dependencies
         run: uv sync --frozen --all-groups
       - name: Ruff format
