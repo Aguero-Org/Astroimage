@@ -8,25 +8,14 @@ type ImageSummary = {
 };
 
 describe("image mock contract", () => {
-  it("GET /image returns the full list when no query", async () => {
-    const result = await customFetch<{
-      data: ImageSummary[];
-      status: number;
-    }>("/image");
-
-    expect(result.status).toBe(200);
-    expect(result.data.length).toBeGreaterThan(0);
-    expect(result.data[0]?.id).toBeDefined();
-  });
-
-  it("GET /image?query=m31 filters by query", async () => {
+  it("GET /image returns the full list and ignores query params", async () => {
     const result = await customFetch<{
       data: ImageSummary[];
       status: number;
     }>("/image?query=m31");
 
-    expect(result.data).toHaveLength(1);
-    expect(result.data[0]?.object).toBe("M31");
+    expect(result.status).toBe(200);
+    expect(result.data.length).toBeGreaterThan(1);
   });
 
   it("GET /image/search?query=orion returns matching images", async () => {

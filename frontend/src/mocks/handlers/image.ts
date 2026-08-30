@@ -1,14 +1,11 @@
 import { HttpResponse, http } from "msw";
-import { findImage, searchImages } from "../data/image";
+import { findImage, mockImages, searchImages } from "../data/image";
 
 const apiBaseUrl = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000";
 
 export const imageHandlers = [
-  http.get(`${apiBaseUrl}/image`, ({ request }) => {
-    const url = new URL(request.url);
-    const query = url.searchParams.get("query") ?? "";
-    const results = searchImages(query);
-    return HttpResponse.json(results);
+  http.get(`${apiBaseUrl}/image`, () => {
+    return HttpResponse.json(mockImages);
   }),
 
   http.get(`${apiBaseUrl}/image/search`, ({ request }) => {
