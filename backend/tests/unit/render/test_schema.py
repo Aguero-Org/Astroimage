@@ -9,6 +9,8 @@ from astroimage.render.schema import RenderConfigSchema
 def test_defaults() -> None:
     config = RenderConfigSchema()
     assert config.stretch == "sqrt"
+    assert config.limits == "percentiles"
+    assert config.colormap == "grey"
     assert config.pmin == 1.0
     assert config.pmax == 99.0
     assert config.gamma == 1.0

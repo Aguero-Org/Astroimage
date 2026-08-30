@@ -210,6 +210,68 @@
           }
         }
       }
+    },
+    "/render/histogram": {
+      "post": {
+        "tags": [
+          "render"
+        ],
+        "summary": "Render Fits Histogram",
+        "operationId": "renderFitsHistogram",
+        "parameters": [
+          {
+            "name": "hdu",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional image HDU index; defaults to the first 2D image HDU",
+              "title": "Hdu"
+            },
+            "description": "Optional image HDU index; defaults to the first 2D image HDU"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_renderFitsHistogram"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HistogramResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -300,6 +362,28 @@
         ],
         "title": "Body_extractFitsMetadata"
       },
+      "Body_renderFitsHistogram": {
+        "properties": {
+          "file": {
+            "type": "string",
+            "contentMediaType": "application/octet-stream",
+            "title": "File",
+            "description": "FITS file to render"
+          },
+          "bins": {
+            "type": "integer",
+            "maximum": 4096.0,
+            "minimum": 2.0,
+            "title": "Bins",
+            "default": 256
+          }
+        },
+        "type": "object",
+        "required": [
+          "file"
+        ],
+        "title": "Body_renderFitsHistogram"
+      },
       "Body_renderFitsImage": {
         "properties": {
           "file": {
@@ -310,9 +394,21 @@
           },
           "stretch": {
             "type": "string",
-            "pattern": "^(sqrt|log|asinh)$",
+            "pattern": "^(linear|sqrt|log|asinh)$",
             "title": "Stretch",
             "default": "sqrt"
+          },
+          "limits": {
+            "type": "string",
+            "pattern": "^(percentiles|zscale)$",
+            "title": "Limits",
+            "default": "percentiles"
+          },
+          "colormap": {
+            "type": "string",
+            "pattern": "^(grey|inverse|heat|rainbow|cube_helix)$",
+            "title": "Colormap",
+            "default": "grey"
           },
           "pmin": {
             "type": "number",
@@ -834,6 +930,41 @@
           "status"
         ],
         "title": "HealthResponse"
+      },
+      "HistogramResponse": {
+        "properties": {
+          "bin_centers": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Bin Centers"
+          },
+          "counts": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Counts"
+          },
+          "minimum": {
+            "type": "number",
+            "title": "Minimum"
+          },
+          "maximum": {
+            "type": "number",
+            "title": "Maximum"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "bin_centers",
+          "counts",
+          "minimum",
+          "maximum"
+        ],
+        "title": "HistogramResponse"
       },
       "PointSourceSchema": {
         "properties": {

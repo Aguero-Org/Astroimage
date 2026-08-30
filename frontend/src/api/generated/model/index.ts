@@ -7,6 +7,7 @@
 
 export * from './bodyDetectSources';
 export * from './bodyExtractFitsMetadata';
+export * from './bodyRenderFitsHistogram';
 export * from './bodyRenderFitsImage';
 export * from './detectionSummarySchema';
 export * from './detectSourcesParams';
@@ -21,8 +22,10 @@ export * from './fitsPhotometryInfoSchema';
 export * from './fitsTableInfoSchema';
 export * from './fitsWcsInfoSchema';
 export * from './healthResponse';
+export * from './histogramResponse';
 export * from './hTTPValidationError';
 export * from './pointSourceSchema';
+export * from './renderFitsHistogramParams';
 export * from './renderFitsImageParams';
 export * from './sourceDetectionResponse';
 export * from './validationError';

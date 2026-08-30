@@ -8,8 +8,12 @@
 export interface BodyRenderFitsImage {
   /** FITS file to render */
   file: Blob;
-  /** @pattern ^(sqrt|log|asinh)$ */
+  /** @pattern ^(linear|sqrt|log|asinh)$ */
   stretch?: string;
+  /** @pattern ^(percentiles|zscale)$ */
+  limits?: string;
+  /** @pattern ^(grey|inverse|heat|rainbow|cube_helix)$ */
+  colormap?: string;
   /**
      * @minimum 0
      * @exclusiveMaximum 100

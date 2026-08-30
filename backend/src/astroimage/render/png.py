@@ -17,18 +17,14 @@ def _chunk(tag: bytes, payload: bytes) -> bytes:
     )
 
 
-def encode_greyscale_png(frame: np.ndarray) -> bytes:
-    image = np.asarray(frame, dtype=np.uint8)
-    if image.ndim != 2:
-        raise ValueError(f"la imagen debe ser 2D, se recibió {image.ndim}D")
-
-    height, width = image.shape
+def _encode_png(image: np.ndarray, color_type: int) -> bytes:
+    height, width = image.shape[:2]
     header = struct.pack(
         ">IIBBBBB",
         width,
         height,
         8,
-        0,
+        color_type,
         0,
         0,
         0,
@@ -41,3 +37,17 @@ def encode_greyscale_png(frame: np.ndarray) -> bytes:
         + _chunk(b"IDAT", compressed)
         + _chunk(b"IEND", b"")
     )
+
+
+def encode_greyscale_png(frame: np.ndarray) -> bytes:
+    image = np.asarray(frame, dtype=np.uint8)
+    if image.ndim != 2:
+        raise ValueError(f"la imagen debe ser 2D, se recibió {image.ndim}D")
+    return _encode_png(image, color_type=0)
+
+
+def encode_rgb_png(frame: np.ndarray) -> bytes:
+    image = np.asarray(frame, dtype=np.uint8)
+    if image.ndim != 3 or image.shape[2] != 3:
+        raise ValueError("la imagen debe ser (alto, ancho, 3)")
+    return _encode_png(image, color_type=2)

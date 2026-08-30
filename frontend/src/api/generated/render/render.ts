@@ -15,8 +15,11 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
+  BodyRenderFitsHistogram,
   BodyRenderFitsImage,
   HTTPValidationError,
+  HistogramResponse,
+  RenderFitsHistogramParams,
   RenderFitsImageParams
 } from '../model';
 
@@ -75,6 +78,12 @@ export const renderFitsImage = async (bodyRenderFitsImage: BodyRenderFitsImage,
 formData.append(`file`, bodyRenderFitsImage.file);
 if(bodyRenderFitsImage.stretch !== undefined) {
  formData.append(`stretch`, bodyRenderFitsImage.stretch);
+ }
+if(bodyRenderFitsImage.limits !== undefined) {
+ formData.append(`limits`, bodyRenderFitsImage.limits);
+ }
+if(bodyRenderFitsImage.colormap !== undefined) {
+ formData.append(`colormap`, bodyRenderFitsImage.colormap);
  }
 if(bodyRenderFitsImage.pmin !== undefined) {
  formData.append(`pmin`, bodyRenderFitsImage.pmin.toString())
@@ -143,4 +152,107 @@ export const useRenderFitsImage = <TError = HTTPValidationError,
         TContext
       > => {
       return useMutation(getRenderFitsImageMutationOptions(options), queryClient);
+    }
+    export type renderFitsHistogramResponse200 = {
+  data: HistogramResponse
+  status: 200
+}
+
+export type renderFitsHistogramResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+
+export type renderFitsHistogramResponseSuccess = (renderFitsHistogramResponse200) & {
+  headers: Headers;
+};
+export type renderFitsHistogramResponseError = (renderFitsHistogramResponse422) & {
+  headers: Headers;
+};
+
+export type renderFitsHistogramResponse = (renderFitsHistogramResponseSuccess | renderFitsHistogramResponseError)
+
+export const getRenderFitsHistogramUrl = (params?: RenderFitsHistogramParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/render/histogram?${stringifiedParams}` : `/render/histogram`
+}
+
+/**
+ * @summary Render Fits Histogram
+ */
+export const renderFitsHistogram = async (bodyRenderFitsHistogram: BodyRenderFitsHistogram,
+    params?: RenderFitsHistogramParams, options?: Parameters<typeof customFetch>[1]): Promise<renderFitsHistogramResponse> => {
+    const formData = new FormData();
+formData.append(`file`, bodyRenderFitsHistogram.file);
+if(bodyRenderFitsHistogram.bins !== undefined) {
+ formData.append(`bins`, bodyRenderFitsHistogram.bins.toString())
+ }
+
+  return customFetch<renderFitsHistogramResponse>(getRenderFitsHistogramUrl(params),
+  {
+    ...options,
+    method: 'POST'
+    ,
+    body: formData
+  }
+);}
+
+
+
+
+
+export const getRenderFitsHistogramMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof renderFitsHistogram>>, TError,RenderFitsHistogramMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof renderFitsHistogram>>, TError,RenderFitsHistogramMutationVariables, TContext> => {
+
+const mutationKey = ['renderFitsHistogram'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof renderFitsHistogram>>, RenderFitsHistogramMutationVariables> = (props) => {
+          const {data,params} = props ?? {};
+
+          return  renderFitsHistogram(data,params,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RenderFitsHistogramMutationResult = NonNullable<Awaited<ReturnType<typeof renderFitsHistogram>>>
+    export type RenderFitsHistogramMutationBody = BodyRenderFitsHistogram
+    export type RenderFitsHistogramMutationError = HTTPValidationError
+    export type RenderFitsHistogramMutationVariables = {data: BodyRenderFitsHistogram;params?: RenderFitsHistogramParams}
+
+    /**
+ * @summary Render Fits Histogram
+ */
+export const useRenderFitsHistogram = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof renderFitsHistogram>>, TError,RenderFitsHistogramMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof renderFitsHistogram>>,
+        TError,
+        RenderFitsHistogramMutationVariables,
+        TContext
+      > => {
+      return useMutation(getRenderFitsHistogramMutationOptions(options), queryClient);
     }
