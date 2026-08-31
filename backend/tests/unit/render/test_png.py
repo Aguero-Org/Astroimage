@@ -1,10 +1,11 @@
 from __future__ import annotations
 
 import struct
-import zlib
+from io import BytesIO
 
 import numpy as np
 import pytest
+from PIL import Image
 
 from astroimage.render.png import encode_greyscale_png, encode_rgb_png
 
@@ -30,47 +31,26 @@ def test_ihdr_carries_image_dimensions() -> None:
     assert (width, height) == (6, 8)
 
 
-def test_roundtrip_decompression_matches_frame() -> None:
+def test_greyscale_roundtrip_matches_frame() -> None:
     rng = np.random.default_rng(seed=9)
     frame = rng.integers(0, 256, size=(7, 5), dtype=np.uint8)
     png = encode_greyscale_png(frame)
-    width, height = _png_dimensions(png)
 
-    idat_offset = 33
-    length = struct.unpack(">I", png[idat_offset : idat_offset + 4])[0]
-    assert png[idat_offset + 4 : idat_offset + 8] == b"IDAT"
-    payload = png[idat_offset + 8 : idat_offset + 8 + length]
-    raw = zlib.decompress(payload)
+    decoded = np.asarray(Image.open(BytesIO(png)).convert("L"), dtype=np.uint8)
 
-    row_stride = width + 1
-    rows = [raw[row : row + row_stride] for row in range(0, len(raw), row_stride)]
-
-    assert len(rows) == height
-    for row, expected in zip(rows, frame, strict=True):
-        assert row[0] == 0
-        assert np.array_equal(np.frombuffer(row[1:], dtype=np.uint8), expected)
+    assert decoded.shape == frame.shape
+    assert np.array_equal(decoded, frame)
 
 
-def test_rgb_roundtrip_decompression_matches_frame() -> None:
+def test_rgb_roundtrip_matches_frame() -> None:
     rng = np.random.default_rng(seed=4)
     frame = rng.integers(0, 256, size=(6, 4, 3), dtype=np.uint8)
     png = encode_rgb_png(frame)
-    width, height = _png_dimensions(png)
 
-    idat_offset = 33
-    length = struct.unpack(">I", png[idat_offset : idat_offset + 4])[0]
-    assert png[idat_offset + 4 : idat_offset + 8] == b"IDAT"
-    payload = png[idat_offset + 8 : idat_offset + 8 + length]
-    raw = zlib.decompress(payload)
+    decoded = np.asarray(Image.open(BytesIO(png)).convert("RGB"), dtype=np.uint8)
 
-    row_stride = width * 3 + 1
-    rows = [raw[row : row + row_stride] for row in range(0, len(raw), row_stride)]
-
-    assert len(rows) == height
-    for row, expected in zip(rows, frame, strict=True):
-        assert row[0] == 0
-        decoded = np.frombuffer(row[1:], dtype=np.uint8).reshape(width, 3)
-        assert np.array_equal(decoded, expected)
+    assert decoded.shape == frame.shape
+    assert np.array_equal(decoded, frame)
 
 
 def test_non_2d_frame_raises() -> None:

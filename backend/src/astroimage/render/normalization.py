@@ -22,7 +22,7 @@ def _apply_stretch(values: np.ndarray, stretch: StretchType) -> np.ndarray:
     if stretch == "asinh":
         values_asinh: np.ndarray = np.arcsinh(_ASINH_SCALE * values) / np.arcsinh(_ASINH_SCALE)
         return values_asinh
-    raise ValueError(f"stretch desconocido: {stretch}")
+    raise ValueError(f"Unknown stretch: {stretch}")
 
 
 def _display_bounds(

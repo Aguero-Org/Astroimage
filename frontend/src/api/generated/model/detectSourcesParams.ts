@@ -10,4 +10,42 @@ export type DetectSourcesParams = {
  * Optional image HDU index; defaults to the first 2D image HDU
  */
 hdu?: number | null;
+/**
+ * @minimum 0.5
+ */
+fwhm?: number;
+/**
+ * @minimum 1
+ */
+sigma?: number;
+/**
+ * @minimum 0
+ */
+min_snr?: number;
+/**
+ * @minimum 0
+ * @maximum 1
+ */
+min_score?: number;
+/**
+ * @minimum 0
+ */
+min_distance?: number;
+/**
+ * @minimum 0
+ * @maximum 1
+ */
+visual_weight?: number;
+/**
+ * @minimum 1
+ */
+visual_area_radius?: number;
+/**
+ * @minimum 0
+ */
+visual_area_sigma?: number;
+/**
+ * @minimum 0
+ */
+max_sources?: number;
 };

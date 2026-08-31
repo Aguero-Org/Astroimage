@@ -10,4 +10,9 @@ export type RenderFitsHistogramParams = {
  * Optional image HDU index; defaults to the first 2D image HDU
  */
 hdu?: number | null;
+/**
+ * @minimum 2
+ * @maximum 4096
+ */
+bins?: number;
 };

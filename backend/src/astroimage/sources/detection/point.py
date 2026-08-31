@@ -30,7 +30,7 @@ def _find_column(table: Table, candidates: list[str]) -> str | None:
 def _scalar_rms(background_rms: np.ndarray) -> float:
     rms = float(np.nanmedian(background_rms))
     if not np.isfinite(rms) or rms <= 0:
-        raise ValueError(f"Background RMS inválido: {rms}")
+        raise ValueError(f"Invalid background RMS: {rms}")
     return rms
 
 
@@ -43,7 +43,7 @@ def _table_to_frame(table: Table) -> pd.DataFrame:
     coordinate_x = _find_column(table, ["xcentroid", "x_centroid", "x"])
     coordinate_y = _find_column(table, ["ycentroid", "y_centroid", "y"])
     if coordinate_x is None or coordinate_y is None:
-        raise RuntimeError(f"No se encontraron coordenadas X/Y. Columnas: {list(table.colnames)}")
+        raise RuntimeError(f"Could not find X/Y coordinates. Columns: {list(table.colnames)}")
 
     data: dict[str, np.ndarray] = {
         "source_id": np.arange(1, len(table) + 1),

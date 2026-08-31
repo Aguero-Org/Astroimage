@@ -10,4 +10,31 @@ export type RenderFitsImageParams = {
  * Optional image HDU index; defaults to the first 2D image HDU
  */
 hdu?: number | null;
+/**
+ * @pattern ^(linear|sqrt|log|asinh)$
+ */
+stretch?: string;
+/**
+ * @pattern ^(percentiles|zscale)$
+ */
+limits?: string;
+/**
+ * @pattern ^(grey|inverse|heat|rainbow|cube_helix)$
+ */
+colormap?: string;
+/**
+ * @minimum 0
+ * @exclusiveMaximum 100
+ */
+pmin?: number;
+/**
+ * @maximum 100
+ * @exclusiveMinimum 0
+ */
+pmax?: number;
+/**
+ * @minimum 0.1
+ * @maximum 5
+ */
+gamma?: number;
 };

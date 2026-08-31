@@ -34,10 +34,7 @@ def _compute_sigma(residuals: np.ndarray, good_pixels: np.ndarray) -> float:
     count = good.size
     if count <= 1:
         return 0.0
-    sum_values = float(good.sum())
-    sum_squared = float((good * good).sum())
-    temporary = sum_squared / (count - 1) - sum_values * sum_values / (count * (count - 1))
-    return 0.0 if temporary < 0.0 else math.sqrt(temporary)
+    return float(np.std(good, ddof=1)) if count > 1 else 0.0
 
 
 def _window_sum(bad_pixels: np.ndarray, window: int) -> np.ndarray:
@@ -95,7 +92,7 @@ def _fit_line(
 def zscale_bounds(data: np.ndarray) -> tuple[float, float]:
     image = np.asarray(data, dtype=float)
     if image.ndim != 2:
-        raise ValueError(f"la imagen debe ser 2D, se recibió {image.ndim}D")
+        raise ValueError(f"The image must be 2D, received {image.ndim}D")
 
     samples = _sample_pixels(image, MAX_SAMPLES)
     if samples.size == 0:

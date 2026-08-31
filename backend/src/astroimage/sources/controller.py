@@ -1,31 +1,38 @@
 from __future__ import annotations
 
+import time
 from typing import Annotated
+from uuid import UUID
 
-from fastapi import APIRouter, File, Form, HTTPException, Query, UploadFile
+import structlog
+from fastapi import APIRouter, Depends, HTTPException, Path, Query
 
+from astroimage.sources.deps import source_service_dependency
 from astroimage.sources.schema import PointDetectionConfigSchema, SourceDetectionResponse
 from astroimage.sources.service import SourceDetectionService
 
-router = APIRouter(prefix="/sources", tags=["sources"])
-_service = SourceDetectionService()
+router = APIRouter(prefix="/image", tags=["sources"])
 _DEFAULTS = PointDetectionConfigSchema()
+_log = structlog.get_logger("astroimage.sources.controller")
 
-SourceFile = Annotated[UploadFile, File(description="FITS file to analyze")]
+RecordId = Annotated[
+    UUID,
+    Path(description="Stored FITS record id"),
+]
 HduIndex = Annotated[
     int | None,
     Query(ge=0, description="Optional image HDU index; defaults to the first 2D image HDU"),
 ]
 
-FwhmParam = Annotated[float, Form(ge=0.5)]
-SigmaParam = Annotated[float, Form(ge=1.0)]
-MinSnrParam = Annotated[float, Form(ge=0.0)]
-MinScoreParam = Annotated[float, Form(ge=0.0, le=1.0)]
-MinDistanceParam = Annotated[float, Form(ge=0.0)]
-VisualWeightParam = Annotated[float, Form(ge=0.0, le=1.0)]
-VisualAreaRadiusParam = Annotated[float, Form(ge=1.0)]
-VisualAreaSigmaParam = Annotated[float, Form(ge=0.0)]
-MaxSourcesParam = Annotated[int, Form(ge=0)]
+FwhmParam = Annotated[float, Query(ge=0.5)]
+SigmaParam = Annotated[float, Query(ge=1.0)]
+MinSnrParam = Annotated[float, Query(ge=0.0)]
+MinScoreParam = Annotated[float, Query(ge=0.0, le=1.0)]
+MinDistanceParam = Annotated[float, Query(ge=0.0)]
+VisualWeightParam = Annotated[float, Query(ge=0.0, le=1.0)]
+VisualAreaRadiusParam = Annotated[float, Query(ge=1.0)]
+VisualAreaSigmaParam = Annotated[float, Query(ge=0.0)]
+MaxSourcesParam = Annotated[int, Query(ge=0)]
 
 
 def _config(
@@ -52,13 +59,14 @@ def _config(
     )
 
 
-@router.post(
-    "/detect",
+@router.get(
+    "/{record_id}/sources",
     response_model=SourceDetectionResponse,
     operation_id="detectSources",
 )
 async def detect_sources(
-    file: SourceFile,
+    record_id: RecordId,
+    service: Annotated[SourceDetectionService, Depends(source_service_dependency)],
     hdu: HduIndex = None,
     fwhm: FwhmParam = _DEFAULTS.fwhm,
     sigma: SigmaParam = _DEFAULTS.sigma,
@@ -70,11 +78,17 @@ async def detect_sources(
     visual_area_sigma: VisualAreaSigmaParam = _DEFAULTS.visual_area_sigma,
     max_sources: MaxSourcesParam = _DEFAULTS.max_sources,
 ) -> SourceDetectionResponse:
-    payload = await file.read()
+    _log.info(
+        "detect_start",
+        record_id=str(record_id),
+        fwhm=fwhm,
+        sigma=sigma,
+        min_snr=min_snr,
+    )
+    start = time.perf_counter()
     try:
-        result = _service.detect(
-            payload,
-            source_name=file.filename,
+        result = await service.detect_from_record(
+            record_id,
             hdu_index=hdu,
             config=_config(
                 fwhm,
@@ -88,6 +102,18 @@ async def detect_sources(
                 max_sources,
             ),
         )
+    except LookupError as exc:
+        _log.warning("detect_not_found", record_id=str(record_id))
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
     except (ValueError, OSError) as exc:
+        _log.warning("detect_error", record_id=str(record_id), detail=str(exc))
         raise HTTPException(status_code=400, detail=str(exc)) from exc
-    return _service.to_schema(result)
+    elapsed_ms = round((time.perf_counter() - start) * 1000, 2)
+    _log.info(
+        "detect_complete",
+        record_id=str(record_id),
+        point_count=len(result.point_sources),
+        extended_count=len(result.extended_sources),
+        elapsed_ms=elapsed_ms,
+    )
+    return service.to_schema(result)

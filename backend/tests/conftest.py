@@ -5,13 +5,14 @@ from collections.abc import AsyncIterator
 
 os.environ.setdefault(
     "DATABASE_URL",
-    "postgresql+asyncpg://astroimage:astroimage@localhost:5432/astroimage",
+    "postgresql+asyncpg://astroimage:astroimage@localhost:5432/astroimage_test",
 )
 os.environ.setdefault("MINIO_ENDPOINT", "localhost:9000")
 os.environ.setdefault("MINIO_ACCESS_KEY", "minioadmin")
 os.environ.setdefault("MINIO_SECRET_KEY", "minioadmin")
 os.environ.setdefault("MINIO_BUCKET", "astroimage-test")
 os.environ.setdefault("MINIO_SECURE", "false")
+os.environ.setdefault("OTEL_TRACES_EXPORTER", "none")
 
 import pytest
 from fastapi import FastAPI

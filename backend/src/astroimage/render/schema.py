@@ -22,7 +22,7 @@ class RenderConfigSchema(BaseModel):
     @model_validator(mode="after")
     def _validate_percentile_range(self) -> RenderConfigSchema:
         if self.pmin >= self.pmax:
-            raise ValueError("pmin debe ser menor que pmax")
+            raise ValueError("pmin must be lower than pmax")
         return self
 
 

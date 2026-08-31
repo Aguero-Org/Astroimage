@@ -5,17 +5,21 @@
  * OpenAPI spec version: 0.1.0
  */
 import {
-  useMutation
+  useQuery
 } from '@tanstack/react-query';
 import type {
-  MutationFunction,
+  DataTag,
+  DefinedInitialDataOptions,
+  DefinedUseQueryResult,
   QueryClient,
-  UseMutationOptions,
-  UseMutationResult
+  QueryFunction,
+  QueryKey,
+  UndefinedInitialDataOptions,
+  UseQueryOptions,
+  UseQueryResult
 } from '@tanstack/react-query';
 
 import type {
-  BodyDetectSources,
   DetectSourcesParams,
   HTTPValidationError,
   SourceDetectionResponse
@@ -27,6 +31,21 @@ import { customFetch } from '../../../lib/api-client';
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
 
+
+const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKey: K } => {
+  const result = { queryKey } as T & { queryKey: K };
+  for (const key of Object.keys(query)) {
+    // The explicit queryKey always wins, matching the previous
+    // `{ ...query, queryKey }` spread where it was set last.
+    if (key === 'queryKey') continue;
+    Object.defineProperty(result, key, {
+      enumerable: true,
+      configurable: true,
+      get: () => (query as Record<string, unknown>)[key],
+    });
+  }
+  return result;
+};
 
 export type detectSourcesResponse200 = {
   data: SourceDetectionResponse
@@ -47,7 +66,8 @@ export type detectSourcesResponseError = (detectSourcesResponse422) & {
 
 export type detectSourcesResponse = (detectSourcesResponseSuccess | detectSourcesResponseError)
 
-export const getDetectSourcesUrl = (params?: DetectSourcesParams,) => {
+export const getDetectSourcesUrl = (recordId: string,
+    params?: DetectSourcesParams,) => {
   const normalizedParams = new URLSearchParams();
 
   Object.entries(params || {}).forEach(([key, value]) => {
@@ -59,50 +79,21 @@ export const getDetectSourcesUrl = (params?: DetectSourcesParams,) => {
 
   const stringifiedParams = normalizedParams.toString();
 
-  return stringifiedParams.length > 0 ? `/sources/detect?${stringifiedParams}` : `/sources/detect`
+  return stringifiedParams.length > 0 ? `/image/${recordId}/sources?${stringifiedParams}` : `/image/${recordId}/sources`
 }
 
 /**
  * @summary Detect Sources
  */
-export const detectSources = async (bodyDetectSources: BodyDetectSources,
+export const detectSources = async (recordId: string,
     params?: DetectSourcesParams, options?: Parameters<typeof customFetch>[1]): Promise<detectSourcesResponse> => {
-    const formData = new FormData();
-formData.append(`file`, bodyDetectSources.file);
-if(bodyDetectSources.fwhm !== undefined) {
- formData.append(`fwhm`, bodyDetectSources.fwhm.toString())
- }
-if(bodyDetectSources.sigma !== undefined) {
- formData.append(`sigma`, bodyDetectSources.sigma.toString())
- }
-if(bodyDetectSources.min_snr !== undefined) {
- formData.append(`min_snr`, bodyDetectSources.min_snr.toString())
- }
-if(bodyDetectSources.min_score !== undefined) {
- formData.append(`min_score`, bodyDetectSources.min_score.toString())
- }
-if(bodyDetectSources.min_distance !== undefined) {
- formData.append(`min_distance`, bodyDetectSources.min_distance.toString())
- }
-if(bodyDetectSources.visual_weight !== undefined) {
- formData.append(`visual_weight`, bodyDetectSources.visual_weight.toString())
- }
-if(bodyDetectSources.visual_area_radius !== undefined) {
- formData.append(`visual_area_radius`, bodyDetectSources.visual_area_radius.toString())
- }
-if(bodyDetectSources.visual_area_sigma !== undefined) {
- formData.append(`visual_area_sigma`, bodyDetectSources.visual_area_sigma.toString())
- }
-if(bodyDetectSources.max_sources !== undefined) {
- formData.append(`max_sources`, bodyDetectSources.max_sources.toString())
- }
 
-  return customFetch<detectSourcesResponse>(getDetectSourcesUrl(params),
+  return customFetch<detectSourcesResponse>(getDetectSourcesUrl(recordId,params),
   {
     ...options,
-    method: 'POST'
-    ,
-    body: formData
+    method: 'GET'
+
+
   }
 );}
 
@@ -110,48 +101,83 @@ if(bodyDetectSources.max_sources !== undefined) {
 
 
 
-export const getDetectSourcesMutationOptions = <TError = HTTPValidationError,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof detectSources>>, TError,DetectSourcesMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof detectSources>>, TError,DetectSourcesMutationVariables, TContext> => {
-
-const mutationKey = ['detectSources'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
+export const getDetectSourcesQueryKey = (recordId: string,
+    params?: DetectSourcesParams,) => {
+    return [
+    `/image/${recordId}/sources`, ...(params ? [params] : [])
+    ] as const;
+    }
 
 
+export const getDetectSourcesQueryOptions = <TData = Awaited<ReturnType<typeof detectSources>>, TError = HTTPValidationError>(recordId: string,
+    params?: DetectSourcesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof detectSources>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getDetectSourcesQueryKey(recordId,params);
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof detectSources>>, DetectSourcesMutationVariables> = (props) => {
-          const {data,params} = props ?? {};
 
-          return  detectSources(data,params,requestOptions)
-        }
-
-
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof detectSources>>> = ({ signal }) => detectSources(recordId,params, { signal, ...requestOptions });
 
 
 
 
-  return  { mutationFn, ...mutationOptions }}
 
-    export type DetectSourcesMutationResult = NonNullable<Awaited<ReturnType<typeof detectSources>>>
-    export type DetectSourcesMutationBody = BodyDetectSources
-    export type DetectSourcesMutationError = HTTPValidationError
-    export type DetectSourcesMutationVariables = {data: BodyDetectSources;params?: DetectSourcesParams}
+   return  { queryKey, queryFn, enabled: recordId !== null && recordId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof detectSources>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
 
-    /**
+export type DetectSourcesQueryResult = NonNullable<Awaited<ReturnType<typeof detectSources>>>
+export type DetectSourcesQueryError = HTTPValidationError
+
+
+export function useDetectSources<TData = Awaited<ReturnType<typeof detectSources>>, TError = HTTPValidationError>(
+ recordId: string,
+    params: undefined |  DetectSourcesParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof detectSources>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof detectSources>>,
+          TError,
+          Awaited<ReturnType<typeof detectSources>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useDetectSources<TData = Awaited<ReturnType<typeof detectSources>>, TError = HTTPValidationError>(
+ recordId: string,
+    params?: DetectSourcesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof detectSources>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof detectSources>>,
+          TError,
+          Awaited<ReturnType<typeof detectSources>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useDetectSources<TData = Awaited<ReturnType<typeof detectSources>>, TError = HTTPValidationError>(
+ recordId: string,
+    params?: DetectSourcesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof detectSources>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
  * @summary Detect Sources
  */
-export const useDetectSources = <TError = HTTPValidationError,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof detectSources>>, TError,DetectSourcesMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof detectSources>>,
-        TError,
-        DetectSourcesMutationVariables,
-        TContext
-      > => {
-      return useMutation(getDetectSourcesMutationOptions(options), queryClient);
-    }
+
+export function useDetectSources<TData = Awaited<ReturnType<typeof detectSources>>, TError = HTTPValidationError>(
+ recordId: string,
+    params?: DetectSourcesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof detectSources>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getDetectSourcesQueryOptions(recordId,params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+

@@ -12,7 +12,6 @@ class BackgroundModel:
     background: np.ndarray
     background_rms: np.ndarray
     data_sub: np.ndarray
-    clean_data: np.ndarray
 
 
 class PointSource(BaseModel):

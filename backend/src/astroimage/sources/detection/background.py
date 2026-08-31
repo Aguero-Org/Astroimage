@@ -18,7 +18,7 @@ def estimate_background(
     finite = np.isfinite(clean)
 
     if not np.any(finite):
-        raise ValueError("No hay valores finitos en la imagen.")
+        raise ValueError("No finite values found in the image.")
 
     median = float(np.nanmedian(clean))
     clean[~finite] = median
@@ -33,11 +33,10 @@ def estimate_background(
 
     rms = float(np.nanmedian(background.background_rms))
     if not np.isfinite(rms) or rms <= 0:
-        raise ValueError(f"Background RMS inválido: {rms}")
+        raise ValueError(f"Invalid background RMS: {rms}")
 
     return BackgroundModel(
         background=background.background,
         background_rms=background.background_rms,
         data_sub=clean - background.background,
-        clean_data=clean,
     )

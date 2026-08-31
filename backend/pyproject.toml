@@ -30,6 +30,7 @@ dependencies = [
     "uvicorn[standard]>=0.35",
     "photutils>=2.1",
     "pandas>=2.2",
+    "pillow>=11.0",
 ]
 
 [dependency-groups]
@@ -140,6 +141,7 @@ source_modules = [
 forbidden_modules = [
     "astroimage.health",
     "astroimage.fits",
+    "astroimage.hub",
     "astroimage.sources",
     "astroimage.render",
 ]
@@ -151,6 +153,7 @@ type = "forbidden"
 source_modules = [
     "astroimage.health",
     "astroimage.fits",
+    "astroimage.hub",
     "astroimage.sources",
     "astroimage.render",
 ]

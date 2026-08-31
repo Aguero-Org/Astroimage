@@ -1,11 +1,15 @@
 from __future__ import annotations
 
 from io import BytesIO
+from uuid import uuid4
 
 import numpy as np
 import pytest
 from astropy.io import fits
 from httpx import AsyncClient
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from astroimage.fits.service import FitsService
 
 _PNG_SIGNATURE = b"\x89PNG\r\n\x1a\n"
 
@@ -17,148 +21,176 @@ def _gradient_fits_bytes() -> bytes:
     return buffer.getvalue()
 
 
-def _gradient_files() -> dict[str, tuple[str, bytes, str]]:
-    return {"file": ("gradient.fits", _gradient_fits_bytes(), "application/fits")}
+async def _store_gradient(
+    fits_service: FitsService,
+    db_session: AsyncSession,
+) -> str:
+    record = await fits_service.store_bytes(_gradient_fits_bytes(), source_name="gradient.fits")
+    await db_session.commit()
+    return str(record.id)
 
 
-@pytest.mark.asyncio
-async def test_render_fits_image_returns_png(client: AsyncClient) -> None:
-    response = await client.post("/render/image", files=_gradient_files())
+class TestRenderFitsImage:
+    @pytest.mark.asyncio
+    async def test_returns_png(
+        self,
+        client: AsyncClient,
+        fits_service: FitsService,
+        db_session: AsyncSession,
+    ) -> None:
+        record_id = await _store_gradient(fits_service, db_session)
 
-    assert response.status_code == 200
-    assert response.headers["content-type"] == "image/png"
-    assert response.content.startswith(_PNG_SIGNATURE)
+        response = await client.get(f"/image/{record_id}")
 
+        assert response.status_code == 200
+        assert response.headers["content-type"] == "image/png"
+        assert response.content.startswith(_PNG_SIGNATURE)
 
-@pytest.mark.asyncio
-async def test_render_fits_image_accepts_config_params(client: AsyncClient) -> None:
-    response = await client.post(
-        "/render/image",
-        files=_gradient_files(),
-        data={"stretch": "asinh", "pmin": "5.0", "pmax": "95.0", "gamma": "1.4"},
-    )
+    @pytest.mark.asyncio
+    async def test_accepts_config_params(
+        self,
+        client: AsyncClient,
+        fits_service: FitsService,
+        db_session: AsyncSession,
+    ) -> None:
+        record_id = await _store_gradient(fits_service, db_session)
 
-    assert response.status_code == 200
-    assert response.headers["content-type"] == "image/png"
+        response = await client.get(
+            f"/image/{record_id}",
+            params={"stretch": "asinh", "pmin": "5.0", "pmax": "95.0", "gamma": "1.4"},
+        )
 
+        assert response.status_code == 200
+        assert response.headers["content-type"] == "image/png"
 
-@pytest.mark.asyncio
-async def test_render_fits_image_accepts_linear_stretch_and_zscale_limits(
-    client: AsyncClient,
-) -> None:
-    response = await client.post(
-        "/render/image",
-        files=_gradient_files(),
-        data={"stretch": "linear", "limits": "zscale"},
-    )
+    @pytest.mark.asyncio
+    async def test_accepts_linear_stretch_and_zscale_limits(
+        self,
+        client: AsyncClient,
+        fits_service: FitsService,
+        db_session: AsyncSession,
+    ) -> None:
+        record_id = await _store_gradient(fits_service, db_session)
 
-    assert response.status_code == 200
-    assert response.headers["content-type"] == "image/png"
+        response = await client.get(
+            f"/image/{record_id}",
+            params={"stretch": "linear", "limits": "zscale"},
+        )
 
+        assert response.status_code == 200
+        assert response.headers["content-type"] == "image/png"
 
-@pytest.mark.parametrize("colormap", ["inverse", "heat", "rainbow", "cube_helix"])
-@pytest.mark.asyncio
-async def test_render_fits_image_accepts_colormaps(client: AsyncClient, colormap: str) -> None:
-    response = await client.post(
-        "/render/image",
-        files=_gradient_files(),
-        data={"colormap": colormap},
-    )
+    @pytest.mark.parametrize("colormap", ["inverse", "heat", "rainbow", "cube_helix"])
+    @pytest.mark.asyncio
+    async def test_accepts_colormaps(
+        self,
+        client: AsyncClient,
+        fits_service: FitsService,
+        db_session: AsyncSession,
+        colormap: str,
+    ) -> None:
+        record_id = await _store_gradient(fits_service, db_session)
 
-    assert response.status_code == 200
-    assert response.headers["content-type"] == "image/png"
+        response = await client.get(f"/image/{record_id}", params={"colormap": colormap})
 
+        assert response.status_code == 200
+        assert response.headers["content-type"] == "image/png"
 
-@pytest.mark.asyncio
-async def test_render_fits_image_rejects_unknown_stretch(client: AsyncClient) -> None:
-    response = await client.post(
-        "/render/image",
-        files=_gradient_files(),
-        data={"stretch": "exp"},
-    )
+    @pytest.mark.asyncio
+    async def test_rejects_unknown_stretch(
+        self,
+        client: AsyncClient,
+        fits_service: FitsService,
+        db_session: AsyncSession,
+    ) -> None:
+        record_id = await _store_gradient(fits_service, db_session)
 
-    assert response.status_code == 422
+        response = await client.get(f"/image/{record_id}", params={"stretch": "exp"})
 
+        assert response.status_code == 422
 
-@pytest.mark.asyncio
-async def test_render_fits_image_rejects_unknown_limits(client: AsyncClient) -> None:
-    response = await client.post(
-        "/render/image",
-        files=_gradient_files(),
-        data={"limits": "minmax"},
-    )
+    @pytest.mark.asyncio
+    async def test_rejects_unknown_limits(
+        self,
+        client: AsyncClient,
+        fits_service: FitsService,
+        db_session: AsyncSession,
+    ) -> None:
+        record_id = await _store_gradient(fits_service, db_session)
 
-    assert response.status_code == 422
+        response = await client.get(f"/image/{record_id}", params={"limits": "minmax"})
 
+        assert response.status_code == 422
 
-@pytest.mark.asyncio
-async def test_render_fits_image_rejects_unknown_colormap(client: AsyncClient) -> None:
-    response = await client.post(
-        "/render/image",
-        files=_gradient_files(),
-        data={"colormap": "magma"},
-    )
+    @pytest.mark.asyncio
+    async def test_rejects_unknown_colormap(
+        self,
+        client: AsyncClient,
+        fits_service: FitsService,
+        db_session: AsyncSession,
+    ) -> None:
+        record_id = await _store_gradient(fits_service, db_session)
 
-    assert response.status_code == 422
+        response = await client.get(f"/image/{record_id}", params={"colormap": "magma"})
 
+        assert response.status_code == 422
 
-@pytest.mark.asyncio
-async def test_render_fits_image_rejects_empty(client: AsyncClient) -> None:
-    response = await client.post(
-        "/render/image",
-        files={"file": ("empty.fits", b"", "application/fits")},
-    )
+    @pytest.mark.asyncio
+    async def test_missing_record_returns_not_found(self, client: AsyncClient) -> None:
+        response = await client.get(f"/image/{uuid4()}")
 
-    assert response.status_code == 400
-
-
-@pytest.mark.asyncio
-async def test_render_fits_image_rejects_garbage(client: AsyncClient) -> None:
-    response = await client.post(
-        "/render/image",
-        files={"file": ("bad.fits", b"not-a-fits-file", "application/octet-stream")},
-    )
-
-    assert response.status_code == 400
-
-
-@pytest.mark.asyncio
-async def test_render_fits_histogram_returns_bin_stats(client: AsyncClient) -> None:
-    response = await client.post("/render/histogram", files=_gradient_files(), data={"bins": "32"})
-
-    assert response.status_code == 200
-    assert response.headers["content-type"] == "application/json"
-    payload = response.json()
-    assert len(payload["bin_centers"]) == 32
-    assert len(payload["counts"]) == 32
-    assert sum(payload["counts"]) == 16 * 16
-    assert payload["minimum"] <= payload["maximum"]
+        assert response.status_code == 404
 
 
-@pytest.mark.asyncio
-async def test_render_fits_histogram_uses_default_bins(client: AsyncClient) -> None:
-    response = await client.post("/render/histogram", files=_gradient_files())
+class TestRenderFitsHistogram:
+    @pytest.mark.asyncio
+    async def test_returns_bin_stats(
+        self,
+        client: AsyncClient,
+        fits_service: FitsService,
+        db_session: AsyncSession,
+    ) -> None:
+        record_id = await _store_gradient(fits_service, db_session)
 
-    assert response.status_code == 200
-    assert len(response.json()["counts"]) == 256
+        response = await client.get(f"/image/{record_id}/histogram", params={"bins": "32"})
 
+        assert response.status_code == 200
+        assert response.headers["content-type"] == "application/json"
+        payload = response.json()
+        assert len(payload["bin_centers"]) == 32
+        assert len(payload["counts"]) == 32
+        assert sum(payload["counts"]) == 16 * 16
+        assert payload["minimum"] <= payload["maximum"]
 
-@pytest.mark.asyncio
-async def test_render_fits_histogram_rejects_invalid_bins(client: AsyncClient) -> None:
-    response = await client.post(
-        "/render/histogram",
-        files=_gradient_files(),
-        data={"bins": "4097"},
-    )
+    @pytest.mark.asyncio
+    async def test_uses_default_bins(
+        self,
+        client: AsyncClient,
+        fits_service: FitsService,
+        db_session: AsyncSession,
+    ) -> None:
+        record_id = await _store_gradient(fits_service, db_session)
 
-    assert response.status_code == 422
+        response = await client.get(f"/image/{record_id}/histogram")
 
+        assert response.status_code == 200
+        assert len(response.json()["counts"]) == 256
 
-@pytest.mark.asyncio
-async def test_render_fits_histogram_rejects_garbage(client: AsyncClient) -> None:
-    response = await client.post(
-        "/render/histogram",
-        files={"file": ("bad.fits", b"not-a-fits-file", "application/octet-stream")},
-    )
+    @pytest.mark.asyncio
+    async def test_rejects_invalid_bins(
+        self,
+        client: AsyncClient,
+        fits_service: FitsService,
+        db_session: AsyncSession,
+    ) -> None:
+        record_id = await _store_gradient(fits_service, db_session)
 
-    assert response.status_code == 400
+        response = await client.get(f"/image/{record_id}/histogram", params={"bins": "4097"})
+
+        assert response.status_code == 422
+
+    @pytest.mark.asyncio
+    async def test_missing_record_returns_not_found(self, client: AsyncClient) -> None:
+        response = await client.get(f"/image/{uuid4()}/histogram")
+
+        assert response.status_code == 404

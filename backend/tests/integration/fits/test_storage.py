@@ -1,3 +1,5 @@
+from uuid import uuid4
+
 import pytest
 
 from astroimage.fits.storage import FitsStorage
@@ -28,5 +30,11 @@ async def test_put_at_overwrites(
 
 def test_new_object_key_without_suffix(fits_storage: FitsStorage) -> None:
     key = fits_storage.new_object_key("no-extension")
+    assert key.startswith("fits/")
+    assert key.endswith(".fits")
+
+
+def test_object_key_for_uses_record_id(fits_storage: FitsStorage) -> None:
+    key = fits_storage.object_key_for(uuid4(), "hst.fits")
     assert key.startswith("fits/")
     assert key.endswith(".fits")

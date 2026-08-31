@@ -13,8 +13,8 @@ def build_histogram(data: np.ndarray, bins: int) -> HistogramResponse:
     counts, edges = np.histogram(values, bins=bins)
     centers = (edges[:-1] + edges[1:]) / 2.0
     return HistogramResponse(
-        bin_centers=[float(center) for center in centers],
-        counts=[int(count) for count in counts],
+        bin_centers=centers.tolist(),
+        counts=counts.tolist(),
         minimum=float(np.min(values)),
         maximum=float(np.max(values)),
     )

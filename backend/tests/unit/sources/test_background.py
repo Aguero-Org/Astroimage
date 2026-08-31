@@ -31,5 +31,5 @@ def test_background_median_like_level() -> None:
 def test_all_nan_image_raises() -> None:
     image = np.full((64, 64), np.nan)
 
-    with pytest.raises(ValueError, match="valores finitos"):
+    with pytest.raises(ValueError, match="No finite values"):
         estimate_background(image)

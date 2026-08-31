@@ -6,11 +6,10 @@ from io import BytesIO
 import numpy as np
 import pytest
 from astropy.io import fits
-from sqlalchemy import text
+from sqlalchemy import create_engine, text
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession
 
 from astroimage.config import Settings, get_settings
-from astroimage.fits.model import FitsRecord
 from astroimage.fits.reader import FitsReader
 from astroimage.fits.repository import FitsRepository
 from astroimage.fits.service import FitsService
@@ -22,8 +21,6 @@ from astroimage.shared.minio_storage import (
     ensure_bucket,
 )
 from astroimage.shared.object_storage import ObjectStorage
-
-_ = FitsRecord
 
 
 def sample_fits_bytes(*, telescope: str = "KECK") -> bytes:
@@ -50,8 +47,35 @@ def other_fits_bytes() -> bytes:
     return sample_fits_bytes(telescope="HST")
 
 
+@pytest.fixture(scope="session", autouse=True)
+def ensure_test_database() -> None:
+    from astroimage.config import get_settings
+
+    settings = get_settings()
+    dbname = settings.database_url.rsplit("/", 1)[-1]
+    admin_url = settings.sync_database_url.rsplit("/", 1)[0] + "/postgres"
+    engine = create_engine(
+        admin_url,
+        isolation_level="AUTOCOMMIT",
+        pool_pre_ping=True,
+    )
+    try:
+        with engine.connect() as connection:
+            exists = connection.execute(
+                text("SELECT 1 FROM pg_database WHERE datname = :name"),
+                {"name": dbname},
+            ).scalar()
+            if not exists:
+                connection.execute(text(f'CREATE DATABASE "{dbname}"'))
+    finally:
+        engine.dispose()
+
+
 @pytest.fixture
-async def db_engine(settings: Settings) -> AsyncIterator[AsyncEngine]:
+async def db_engine(
+    ensure_test_database: None,
+    settings: Settings,
+) -> AsyncIterator[AsyncEngine]:
     engine = create_engine_from_settings(settings)
     async with engine.begin() as connection:
         await connection.run_sync(Base.metadata.create_all)

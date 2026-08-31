@@ -88,14 +88,165 @@
         }
       }
     },
-    "/sources/detect": {
-      "post": {
+    "/image": {
+      "get": {
+        "tags": [
+          "hub"
+        ],
+        "summary": "List Astro Images",
+        "operationId": "listHubbleImages",
+        "parameters": [
+          {
+            "name": "cuerpo_celeste",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cuerpo Celeste"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListRecordsResponseSchema"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/image/search": {
+      "get": {
+        "tags": [
+          "hub"
+        ],
+        "summary": "Search Astro Image",
+        "operationId": "fetchHubbleImage",
+        "parameters": [
+          {
+            "name": "query",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Celestial body to fetch from Hubble",
+              "title": "Query"
+            },
+            "description": "Celestial body to fetch from Hubble"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FetchImageResponseSchema"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/image/{record_id}/info": {
+      "get": {
+        "tags": [
+          "hub"
+        ],
+        "summary": "Get Image Info",
+        "operationId": "getImageInfo",
+        "parameters": [
+          {
+            "name": "record_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Stored FITS record id",
+              "title": "Record Id"
+            },
+            "description": "Stored FITS record id"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FitsMetadataSchema"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/image/{record_id}/sources": {
+      "get": {
         "tags": [
           "sources"
         ],
         "summary": "Detect Sources",
         "operationId": "detectSources",
         "parameters": [
+          {
+            "name": "record_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Stored FITS record id",
+              "title": "Record Id"
+            },
+            "description": "Stored FITS record id"
+          },
           {
             "name": "hdu",
             "in": "query",
@@ -114,18 +265,109 @@
               "title": "Hdu"
             },
             "description": "Optional image HDU index; defaults to the first 2D image HDU"
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "multipart/form-data": {
-              "schema": {
-                "$ref": "#/components/schemas/Body_detectSources"
-              }
+          },
+          {
+            "name": "fwhm",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number",
+              "minimum": 0.5,
+              "default": 5.5,
+              "title": "Fwhm"
+            }
+          },
+          {
+            "name": "sigma",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number",
+              "minimum": 1.0,
+              "default": 9.0,
+              "title": "Sigma"
+            }
+          },
+          {
+            "name": "min_snr",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number",
+              "minimum": 0.0,
+              "default": 6.0,
+              "title": "Min Snr"
+            }
+          },
+          {
+            "name": "min_score",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number",
+              "maximum": 1.0,
+              "minimum": 0.0,
+              "default": 0.18,
+              "title": "Min Score"
+            }
+          },
+          {
+            "name": "min_distance",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number",
+              "minimum": 0.0,
+              "default": 4.0,
+              "title": "Min Distance"
+            }
+          },
+          {
+            "name": "visual_weight",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number",
+              "maximum": 1.0,
+              "minimum": 0.0,
+              "default": 0.8,
+              "title": "Visual Weight"
+            }
+          },
+          {
+            "name": "visual_area_radius",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number",
+              "minimum": 1.0,
+              "default": 7.0,
+              "title": "Visual Area Radius"
+            }
+          },
+          {
+            "name": "visual_area_sigma",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number",
+              "minimum": 0.0,
+              "default": 2.0,
+              "title": "Visual Area Sigma"
+            }
+          },
+          {
+            "name": "max_sources",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 50,
+              "title": "Max Sources"
             }
           }
-        },
+        ],
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -150,14 +392,26 @@
         }
       }
     },
-    "/render/image": {
-      "post": {
+    "/image/{record_id}": {
+      "get": {
         "tags": [
           "render"
         ],
         "summary": "Render Fits Image",
         "operationId": "renderFitsImage",
         "parameters": [
+          {
+            "name": "record_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Stored FITS record id",
+              "title": "Record Id"
+            },
+            "description": "Stored FITS record id"
+          },
           {
             "name": "hdu",
             "in": "query",
@@ -176,18 +430,77 @@
               "title": "Hdu"
             },
             "description": "Optional image HDU index; defaults to the first 2D image HDU"
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "multipart/form-data": {
-              "schema": {
-                "$ref": "#/components/schemas/Body_renderFitsImage"
-              }
+          },
+          {
+            "name": "stretch",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^(linear|sqrt|log|asinh)$",
+              "default": "sqrt",
+              "title": "Stretch"
+            }
+          },
+          {
+            "name": "limits",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^(percentiles|zscale)$",
+              "default": "percentiles",
+              "title": "Limits"
+            }
+          },
+          {
+            "name": "colormap",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^(grey|inverse|heat|rainbow|cube_helix)$",
+              "default": "grey",
+              "title": "Colormap"
+            }
+          },
+          {
+            "name": "pmin",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number",
+              "minimum": 0.0,
+              "exclusiveMaximum": 100.0,
+              "default": 1.0,
+              "title": "Pmin"
+            }
+          },
+          {
+            "name": "pmax",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number",
+              "maximum": 100.0,
+              "exclusiveMinimum": 0.0,
+              "default": 99.0,
+              "title": "Pmax"
+            }
+          },
+          {
+            "name": "gamma",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number",
+              "maximum": 5.0,
+              "minimum": 0.1,
+              "default": 1.0,
+              "title": "Gamma"
             }
           }
-        },
+        ],
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -211,14 +524,26 @@
         }
       }
     },
-    "/render/histogram": {
-      "post": {
+    "/image/{record_id}/histogram": {
+      "get": {
         "tags": [
           "render"
         ],
         "summary": "Render Fits Histogram",
         "operationId": "renderFitsHistogram",
         "parameters": [
+          {
+            "name": "record_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Stored FITS record id",
+              "title": "Record Id"
+            },
+            "description": "Stored FITS record id"
+          },
           {
             "name": "hdu",
             "in": "query",
@@ -237,18 +562,20 @@
               "title": "Hdu"
             },
             "description": "Optional image HDU index; defaults to the first 2D image HDU"
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "multipart/form-data": {
-              "schema": {
-                "$ref": "#/components/schemas/Body_renderFitsHistogram"
-              }
+          },
+          {
+            "name": "bins",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 4096,
+              "minimum": 2,
+              "default": 256,
+              "title": "Bins"
             }
           }
-        },
+        ],
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -276,77 +603,6 @@
   },
   "components": {
     "schemas": {
-      "Body_detectSources": {
-        "properties": {
-          "file": {
-            "type": "string",
-            "contentMediaType": "application/octet-stream",
-            "title": "File",
-            "description": "FITS file to analyze"
-          },
-          "fwhm": {
-            "type": "number",
-            "minimum": 0.5,
-            "title": "Fwhm",
-            "default": 5.5
-          },
-          "sigma": {
-            "type": "number",
-            "minimum": 1.0,
-            "title": "Sigma",
-            "default": 9.0
-          },
-          "min_snr": {
-            "type": "number",
-            "minimum": 0.0,
-            "title": "Min Snr",
-            "default": 6.0
-          },
-          "min_score": {
-            "type": "number",
-            "maximum": 1.0,
-            "minimum": 0.0,
-            "title": "Min Score",
-            "default": 0.18
-          },
-          "min_distance": {
-            "type": "number",
-            "minimum": 0.0,
-            "title": "Min Distance",
-            "default": 4.0
-          },
-          "visual_weight": {
-            "type": "number",
-            "maximum": 1.0,
-            "minimum": 0.0,
-            "title": "Visual Weight",
-            "default": 0.8
-          },
-          "visual_area_radius": {
-            "type": "number",
-            "minimum": 1.0,
-            "title": "Visual Area Radius",
-            "default": 7.0
-          },
-          "visual_area_sigma": {
-            "type": "number",
-            "minimum": 0.0,
-            "title": "Visual Area Sigma",
-            "default": 2.0
-          },
-          "max_sources": {
-            "type": "integer",
-            "minimum": 0.0,
-            "title": "Max Sources",
-            "default": 50
-          }
-        },
-        "type": "object",
-        "required": [
-          "file"
-        ],
-        "title": "Body_detectSources"
-      },
       "Body_extractFitsMetadata": {
         "properties": {
           "file": {
@@ -361,82 +617,6 @@
           "file"
         ],
         "title": "Body_extractFitsMetadata"
-      },
-      "Body_renderFitsHistogram": {
-        "properties": {
-          "file": {
-            "type": "string",
-            "contentMediaType": "application/octet-stream",
-            "title": "File",
-            "description": "FITS file to render"
-          },
-          "bins": {
-            "type": "integer",
-            "maximum": 4096.0,
-            "minimum": 2.0,
-            "title": "Bins",
-            "default": 256
-          }
-        },
-        "type": "object",
-        "required": [
-          "file"
-        ],
-        "title": "Body_renderFitsHistogram"
-      },
-      "Body_renderFitsImage": {
-        "properties": {
-          "file": {
-            "type": "string",
-            "contentMediaType": "application/octet-stream",
-            "title": "File",
-            "description": "FITS file to render"
-          },
-          "stretch": {
-            "type": "string",
-            "pattern": "^(linear|sqrt|log|asinh)$",
-            "title": "Stretch",
-            "default": "sqrt"
-          },
-          "limits": {
-            "type": "string",
-            "pattern": "^(percentiles|zscale)$",
-            "title": "Limits",
-            "default": "percentiles"
-          },
-          "colormap": {
-            "type": "string",
-            "pattern": "^(grey|inverse|heat|rainbow|cube_helix)$",
-            "title": "Colormap",
-            "default": "grey"
-          },
-          "pmin": {
-            "type": "number",
-            "exclusiveMaximum": 100.0,
-            "minimum": 0.0,
-            "title": "Pmin",
-            "default": 1.0
-          },
-          "pmax": {
-            "type": "number",
-            "maximum": 100.0,
-            "exclusiveMinimum": 0.0,
-            "title": "Pmax",
-            "default": 99.0
-          },
-          "gamma": {
-            "type": "number",
-            "maximum": 5.0,
-            "minimum": 0.1,
-            "title": "Gamma",
-            "default": 1.0
-          }
-        },
-        "type": "object",
-        "required": [
-          "file"
-        ],
-        "title": "Body_renderFitsImage"
       },
       "DetectionSummarySchema": {
         "properties": {
@@ -480,6 +660,93 @@
         ],
         "title": "ExtendedSourceSchema"
       },
+      "FetchImageResponseSchema": {
+        "properties": {
+          "record_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Record Id"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "record_id"
+        ],
+        "title": "FetchImageResponseSchema"
+      },
+      "FitsHduDetailSchema": {
+        "properties": {
+          "index": {
+            "type": "integer",
+            "title": "Index"
+          },
+          "extname": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Extname"
+          },
+          "shape": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "integer"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Shape"
+          },
+          "kind": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Kind"
+          },
+          "ra": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ra"
+          },
+          "dec": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dec"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "index"
+        ],
+        "title": "FitsHduDetailSchema"
+      },
       "FitsHduInfoSchema": {
         "properties": {
           "selected": {
@@ -492,6 +759,13 @@
             },
             "type": "array",
             "title": "Image Indices"
+          },
+          "images": {
+            "items": {
+              "$ref": "#/components/schemas/FitsHduDetailSchema"
+            },
+            "type": "array",
+            "title": "Images"
           }
         },
         "additionalProperties": false,
@@ -760,6 +1034,26 @@
         "type": "object",
         "title": "FitsPhotometryInfoSchema"
       },
+      "FitsRecordSummarySchema": {
+        "properties": {
+          "record_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Record Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "record_id",
+          "name"
+        ],
+        "title": "FitsRecordSummarySchema"
+      },
       "FitsTableInfoSchema": {
         "properties": {
           "index": {
@@ -965,6 +1259,23 @@
           "maximum"
         ],
         "title": "HistogramResponse"
+      },
+      "ListRecordsResponseSchema": {
+        "properties": {
+          "records": {
+            "items": {
+              "$ref": "#/components/schemas/FitsRecordSummarySchema"
+            },
+            "type": "array",
+            "title": "Records"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "records"
+        ],
+        "title": "ListRecordsResponseSchema"
       },
       "PointSourceSchema": {
         "properties": {

@@ -55,5 +55,14 @@ class MinioObjectStorage:
             response.close()
             response.release_conn()
 
+    async def list_object_keys(self, prefix: str) -> list[str]:
+        objects = await asyncio.to_thread(
+            self._client.list_objects,
+            self._bucket,
+            prefix=prefix,
+            recursive=True,
+        )
+        return [obj.object_name for obj in objects]
+
     async def remove(self, object_key: str) -> None:
         await asyncio.to_thread(self._client.remove_object, self._bucket, object_key)

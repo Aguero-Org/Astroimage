@@ -4,8 +4,10 @@
  * astroimage
  * OpenAPI spec version: 0.1.0
  */
+import type { FitsHduDetailSchema } from './fitsHduDetailSchema';
 
 export interface FitsHduInfoSchema {
   selected: number;
   image_indices?: number[];
+  images?: FitsHduDetailSchema[];
 }
