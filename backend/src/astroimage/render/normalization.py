@@ -59,7 +59,7 @@ def normalize_to_uint8(
     if not np.all(np.isfinite(image)):
         image[~np.isfinite(image)] = 0.0
 
-    if not high > low:
+    if high <= low:
         return np.full(image.shape, 128, dtype=np.uint8)
 
     scaled = np.clip((image - low) / (high - low), 0.0, 1.0)

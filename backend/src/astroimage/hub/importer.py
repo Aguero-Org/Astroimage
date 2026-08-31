@@ -108,6 +108,27 @@ def _best_science_product(products: list[HubbleProduct]) -> HubbleProduct | None
     return None
 
 
+def _product_from_row(product: Any, hst_rows: Any) -> HubbleProduct | None:
+    if not _is_science_fits(product):
+        return None
+    observation = next(
+        (row for row in hst_rows if str(row["obs_id"]) == str(product["obs_id"])),
+        None,
+    )
+    if observation is None:
+        return None
+    return HubbleProduct(
+        product_filename=str(product["productFilename"]),
+        data_uri=str(product["dataURI"]),
+        size_bytes=_row_int(product, "size"),
+        observation_id=str(observation["obs_id"]),
+        proposal_id=str(observation["proposal_id"]),
+        instrument=_row_str(observation, "instrument_name"),
+        ra_deg=_row_float(observation, "s_ra"),
+        dec_deg=_row_float(observation, "s_dec"),
+    )
+
+
 def _download_url(data_uri: str) -> str:
     return f"{MAST_DOWNLOAD_URL}?uri={quote(data_uri, safe=':/')}"
 
@@ -207,26 +228,9 @@ class HubbleImporter:
 
             product_rows = self._mast.get_product_list(hst_rows)
             for product in product_rows:
-                if not _is_science_fits(product):
-                    continue
-                observation = next(
-                    (row for row in hst_rows if str(row["obs_id"]) == str(product["obs_id"])),
-                    None,
-                )
-                if observation is None:
-                    continue
-                products.append(
-                    HubbleProduct(
-                        product_filename=str(product["productFilename"]),
-                        data_uri=str(product["dataURI"]),
-                        size_bytes=_row_int(product, "size"),
-                        observation_id=str(observation["obs_id"]),
-                        proposal_id=str(observation["proposal_id"]),
-                        instrument=_row_str(observation, "instrument_name"),
-                        ra_deg=_row_float(observation, "s_ra"),
-                        dec_deg=_row_float(observation, "s_dec"),
-                    )
-                )
+                hubble_product = _product_from_row(product, hst_rows)
+                if hubble_product is not None:
+                    products.append(hubble_product)
             if any(
                 product.size_bytes is not None and product.size_bytes >= MIN_PRODUCT_SIZE_BYTES
                 for product in products

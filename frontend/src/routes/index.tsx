@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { type ReactNode, useEffect, useState } from "react";
 import {
   useFetchHubbleImage,
   useGetImageInfo,
@@ -96,34 +96,28 @@ function useRenderedImage(
   return objectUrl;
 }
 
-function RecordsSection(props: {
-  filter: string;
-  onFilterChange: (value: string) => void;
-  selectedRecord: string | null;
-  onSelect: (recordId: string) => void;
-}) {
+function RecordsSection(
+  props: Readonly<{
+    filter: string;
+    onFilterChange: (value: string) => void;
+    selectedRecord: string | null;
+    onSelect: (recordId: string) => void;
+  }>,
+) {
   const listQuery = useListHubbleImages(
     props.filter ? { cuerpo_celeste: props.filter } : undefined,
   );
 
-  return (
-    <section className="flex flex-col gap-2">
-      <h2 className="text-lg font-medium">FITS records in database</h2>
-      <label className="flex items-center gap-2">
-        Filter by name
-        <input
-          className="rounded border px-2 py-1"
-          value={props.filter}
-          onChange={(event) => props.onFilterChange(event.target.value)}
-        />
-      </label>
-      {listQuery.isLoading ? (
-        <p>Loading…</p>
-      ) : listQuery.isError ? (
-        <p className="text-destructive">{String(listQuery.error)}</p>
-      ) : (
-        <ul className="list-disc pl-6">
-          {listQuery.data?.data.records.map((record) => (
+  let records: ReactNode;
+  if (listQuery.isLoading) {
+    records = <p>Loading…</p>;
+  } else if (listQuery.isError) {
+    records = <p className="text-destructive">{String(listQuery.error)}</p>;
+  } else if (listQuery.data?.status === 200) {
+    records = (
+      <ul className="list-disc pl-6">
+        {listQuery.data.data.records.map(
+          (record: { record_id: string; name: string }) => (
             <li key={record.record_id}>
               <button
                 type="button"
@@ -137,18 +131,37 @@ function RecordsSection(props: {
                 <code>{record.record_id}</code> — {record.name}
               </button>
             </li>
-          ))}
-        </ul>
-      )}
+          ),
+        )}
+      </ul>
+    );
+  } else {
+    records = null;
+  }
+
+  return (
+    <section className="flex flex-col gap-2">
+      <h2 className="text-lg font-medium">FITS records in database</h2>
+      <label className="flex items-center gap-2">
+        <span>Filter by name</span>
+        <input
+          className="rounded border px-2 py-1"
+          value={props.filter}
+          onChange={(event) => props.onFilterChange(event.target.value)}
+        />
+      </label>
+      {records}
     </section>
   );
 }
 
-function HduSection(props: {
-  recordId: string | null;
-  selectedHdu: number | null;
-  onSelectHdu: (hdu: number | null) => void;
-}) {
+function HduSection(
+  props: Readonly<{
+    recordId: string | null;
+    selectedHdu: number | null;
+    onSelectHdu: (hdu: number | null) => void;
+  }>,
+) {
   const metadataQuery = useGetImageInfo(props.recordId ?? "", {
     query: { enabled: props.recordId !== null },
   });
@@ -157,16 +170,20 @@ function HduSection(props: {
     return null;
   }
 
-  return (
-    <section className="flex flex-col gap-2">
-      <h2 className="text-lg font-medium">Image HDUs</h2>
-      {metadataQuery.isLoading ? (
-        <p>Loading…</p>
-      ) : metadataQuery.isError ? (
-        <p className="text-destructive">{String(metadataQuery.error)}</p>
-      ) : (
-        <ul className="flex flex-wrap gap-2">
-          {metadataQuery.data?.data.hdus.images?.map((hdu) => (
+  let hdus: ReactNode;
+  if (metadataQuery.isLoading) {
+    hdus = <p>Loading…</p>;
+  } else if (metadataQuery.isError) {
+    hdus = <p className="text-destructive">{String(metadataQuery.error)}</p>;
+  } else if (metadataQuery.data?.status === 200) {
+    hdus = (
+      <ul className="flex flex-wrap gap-2">
+        {metadataQuery.data.data.hdus.images?.map(
+          (hdu: {
+            index: number;
+            kind?: string | null;
+            shape?: number[] | null;
+          }) => (
             <li key={hdu.index}>
               <button
                 type="button"
@@ -181,23 +198,51 @@ function HduSection(props: {
                 {hdu.shape ? `${hdu.shape[1]}×${hdu.shape[0]}` : "no data"}
               </button>
             </li>
-          ))}
-        </ul>
-      )}
+          ),
+        )}
+      </ul>
+    );
+  } else {
+    hdus = null;
+  }
+
+  return (
+    <section className="flex flex-col gap-2">
+      <h2 className="text-lg font-medium">Image HDUs</h2>
+      {hdus}
     </section>
   );
 }
 
-function FetchSection(props: {
-  query: string;
-  onQueryChange: (value: string) => void;
-  onSubmit: (value: string) => void;
-  submittedQuery: string;
-}) {
+function FetchSection(
+  props: Readonly<{
+    query: string;
+    onQueryChange: (value: string) => void;
+    onSubmit: (value: string) => void;
+    submittedQuery: string;
+  }>,
+) {
   const fetchQuery = useFetchHubbleImage(
     { query: props.submittedQuery },
     { query: { enabled: props.submittedQuery !== "" } },
   );
+
+  let result: ReactNode;
+  if (props.submittedQuery === "") {
+    result = null;
+  } else if (fetchQuery.isLoading) {
+    result = <p>Fetching…</p>;
+  } else if (fetchQuery.isError) {
+    result = <p className="text-destructive">{String(fetchQuery.error)}</p>;
+  } else if (fetchQuery.data?.status === 200) {
+    result = (
+      <p>
+        record_id: <code>{fetchQuery.data.data.record_id}</code>
+      </p>
+    );
+  } else {
+    result = null;
+  }
 
   return (
     <section className="flex flex-col gap-2">
@@ -217,16 +262,7 @@ function FetchSection(props: {
         />
         <Button type="submit">Fetch</Button>
       </form>
-      {props.submittedQuery !== "" &&
-        (fetchQuery.isLoading ? (
-          <p>Fetching…</p>
-        ) : fetchQuery.isError ? (
-          <p className="text-destructive">{String(fetchQuery.error)}</p>
-        ) : (
-          <p>
-            record_id: <code>{fetchQuery.data?.data.record_id}</code>
-          </p>
-        ))}
+      {result}
     </section>
   );
 }

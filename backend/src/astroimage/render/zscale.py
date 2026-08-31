@@ -103,7 +103,7 @@ def zscale_bounds(data: np.ndarray) -> tuple[float, float]:
     sample_max = float(sorted_samples[-1])
     if sorted_samples.size < MIN_NPIXELS:
         return sample_min, sample_max
-    if not sample_max > sample_min:
+    if sample_max <= sample_min:
         return sample_min - 0.5, sample_max + 0.5
 
     center_pixel = (sorted_samples.size - 1) // 2

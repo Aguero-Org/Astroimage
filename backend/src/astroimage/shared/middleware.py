@@ -31,7 +31,7 @@ def _decode_body(body: bytes, content_type: str) -> Any:
         return None
     try:
         return json.loads(body.decode("utf-8"))
-    except (ValueError, UnicodeDecodeError):
+    except ValueError:
         return body.decode("utf-8", errors="replace")
 
 
