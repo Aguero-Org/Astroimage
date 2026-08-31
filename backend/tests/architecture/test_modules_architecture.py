@@ -39,9 +39,14 @@ FORBIDDEN_GLOBAL_LAYER_PACKAGES = frozenset(
 
 CONTROLLER_MODULES = frozenset({"controller"})
 SERVICE_MODULES = frozenset({"service"})
+READER_MODULES = frozenset({"reader"})
+DEPS_MODULES = frozenset({"deps"})
 DAO_MODULES = frozenset({"dao", "repository"})
+STORAGE_MODULES = frozenset({"storage"})
 MODEL_MODULES = frozenset({"model"})
 SCHEMA_MODULES = frozenset({"schema"})
+
+MINIO_ADAPTER_MODULE = f"{PACKAGE_NAME}.shared.minio_storage"
 
 ALLOWED_FEATURE_DEPENDENCIES: frozenset[tuple[str, str]] = frozenset(
     {
@@ -191,7 +196,7 @@ def test_features_do_not_import_other_features_internals(
     evaluable: EvaluableArchitecture,
     features: list[str],
 ) -> None:
-    internal_roles = sorted(DAO_MODULES | MODEL_MODULES)
+    internal_roles = sorted(DAO_MODULES | MODEL_MODULES | STORAGE_MODULES)
     for source in features:
         for target in features:
             if source == target:
@@ -272,14 +277,18 @@ def test_intra_feature_layer_dependencies(
 ) -> None:
     controllers = _existing_role_modules(features, CONTROLLER_MODULES)
     services = _existing_role_modules(features, SERVICE_MODULES)
+    readers = _existing_role_modules(features, READER_MODULES)
     daos = _existing_role_modules(features, DAO_MODULES)
+    storages = _existing_role_modules(features, STORAGE_MODULES)
     models = _existing_role_modules(features, MODEL_MODULES)
     schemas = _existing_role_modules(features, SCHEMA_MODULES)
 
     layers: list[tuple[str, list[str]]] = [
         ("controller", controllers),
         ("service", services),
+        ("reader", readers),
         ("dao", daos),
+        ("storage", storages),
         ("model", models),
         ("schema", schemas),
     ]
@@ -305,11 +314,13 @@ def test_intra_feature_layer_dependencies(
             .are_named(existing_targets if len(existing_targets) > 1 else existing_targets[0])
         ).assert_applies(evaluable)
 
-    forbid("model", "controller", "service", "dao", "schema")
-    forbid("dao", "controller", "service", "schema")
+    forbid("model", "controller", "service", "reader", "dao", "storage", "schema")
+    forbid("dao", "controller", "service", "reader", "schema")
+    forbid("storage", "controller", "service", "reader", "schema")
+    forbid("reader", "controller", "service", "dao", "storage", "schema")
     forbid("service", "controller")
-    forbid("controller", "dao", "model")
-    forbid("schema", "controller", "service", "dao", "model")
+    forbid("controller", "dao", "storage", "model", "reader")
+    forbid("schema", "controller", "service", "reader", "dao", "storage", "model")
 
 
 def test_controllers_do_not_import_dao_or_model_modules(
@@ -320,7 +331,7 @@ def test_controllers_do_not_import_dao_or_model_modules(
         controller = PACKAGE_PATH / feature / "controller.py"
         if not controller.is_file():
             continue
-        for role in sorted(DAO_MODULES | MODEL_MODULES):
+        for role in sorted(DAO_MODULES | STORAGE_MODULES | MODEL_MODULES | READER_MODULES):
             for target_feature in features:
                 target_path = PACKAGE_PATH / target_feature / f"{role}.py"
                 if not target_path.is_file():
@@ -339,7 +350,14 @@ def test_models_do_not_import_upper_layers(
     evaluable: EvaluableArchitecture,
     features: list[str],
 ) -> None:
-    upper = sorted(CONTROLLER_MODULES | SERVICE_MODULES | DAO_MODULES | SCHEMA_MODULES)
+    upper = sorted(
+        CONTROLLER_MODULES
+        | SERVICE_MODULES
+        | READER_MODULES
+        | DAO_MODULES
+        | STORAGE_MODULES
+        | SCHEMA_MODULES
+    )
     for feature in features:
         model_path = PACKAGE_PATH / feature / "model.py"
         if not model_path.is_file():
@@ -363,9 +381,9 @@ def test_daos_do_not_import_service_or_controller(
     evaluable: EvaluableArchitecture,
     features: list[str],
 ) -> None:
-    upper = sorted(CONTROLLER_MODULES | SERVICE_MODULES)
+    upper = sorted(CONTROLLER_MODULES | SERVICE_MODULES | READER_MODULES | DEPS_MODULES)
     for feature in features:
-        for dao_role in sorted(DAO_MODULES):
+        for dao_role in sorted(DAO_MODULES | STORAGE_MODULES):
             dao_path = PACKAGE_PATH / feature / f"{dao_role}.py"
             if not dao_path.is_file():
                 continue
@@ -382,3 +400,91 @@ def test_daos_do_not_import_service_or_controller(
                         .import_modules_that()
                         .are_named(_role_module(target_feature, role))
                     ).assert_applies(evaluable)
+
+
+def test_readers_do_not_import_upper_or_persistence(
+    evaluable: EvaluableArchitecture,
+    features: list[str],
+) -> None:
+    forbidden = sorted(
+        CONTROLLER_MODULES
+        | SERVICE_MODULES
+        | DEPS_MODULES
+        | DAO_MODULES
+        | STORAGE_MODULES
+        | SCHEMA_MODULES
+    )
+    for feature in features:
+        reader_path = PACKAGE_PATH / feature / "reader.py"
+        if not reader_path.is_file():
+            continue
+        for role in forbidden:
+            for target_feature in features:
+                target_path = PACKAGE_PATH / target_feature / f"{role}.py"
+                if not target_path.is_file():
+                    continue
+                (
+                    Rule()
+                    .modules_that()
+                    .are_named(_role_module(feature, "reader"))
+                    .should_not()
+                    .import_modules_that()
+                    .are_named(_role_module(target_feature, role))
+                ).assert_applies(evaluable)
+
+
+def test_services_do_not_import_deps(
+    evaluable: EvaluableArchitecture,
+    features: list[str],
+) -> None:
+    for feature in features:
+        if not (PACKAGE_PATH / feature / "service.py").is_file():
+            continue
+        for target_feature in features:
+            if not (PACKAGE_PATH / target_feature / "deps.py").is_file():
+                continue
+            (
+                Rule()
+                .modules_that()
+                .are_named(_role_module(feature, "service"))
+                .should_not()
+                .import_modules_that()
+                .are_named(_role_module(target_feature, "deps"))
+            ).assert_applies(evaluable)
+
+
+def test_deps_do_not_import_controller_or_model(
+    evaluable: EvaluableArchitecture,
+    features: list[str],
+) -> None:
+    forbidden = sorted(CONTROLLER_MODULES | MODEL_MODULES)
+    for feature in features:
+        if not (PACKAGE_PATH / feature / "deps.py").is_file():
+            continue
+        for role in forbidden:
+            for target_feature in features:
+                if not (PACKAGE_PATH / target_feature / f"{role}.py").is_file():
+                    continue
+                (
+                    Rule()
+                    .modules_that()
+                    .are_named(_role_module(feature, "deps"))
+                    .should_not()
+                    .import_modules_that()
+                    .are_named(_role_module(target_feature, role))
+                ).assert_applies(evaluable)
+
+
+def test_features_do_not_import_minio_adapter_or_library(
+    evaluable: EvaluableArchitecture,
+    features: list[str],
+) -> None:
+    for feature in features:
+        (
+            Rule()
+            .modules_that()
+            .are_sub_modules_of(_feature_module(feature))
+            .should_not()
+            .import_modules_that()
+            .are_named(MINIO_ADAPTER_MODULE)
+        ).assert_applies(evaluable)

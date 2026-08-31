@@ -12,7 +12,7 @@ _PNG_SIGNATURE = b"\x89PNG\r\n\x1a\n"
 
 
 def _png_dimensions(png: bytes) -> tuple[int, int]:
-    return struct.unpack(">II", png[16:24])  # type: ignore[no-any-return]
+    return struct.unpack(">II", png[16:24])
 
 
 def test_encodes_png_signature() -> None:

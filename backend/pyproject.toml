@@ -13,6 +13,7 @@ dependencies = [
     "astroquery>=0.4",
     "fastapi[standard]>=0.116",
     "gunicorn>=23.0",
+    "minio>=7.2",
     "numpy>=2.2",
     "opentelemetry-api>=1.36",
     "opentelemetry-exporter-otlp>=1.36",
@@ -88,12 +89,14 @@ module = [
     "prometheus_fastapi_instrumentator.*",
     "opentelemetry.*",
     "pytestarch.*",
-    "pandas",
+"pandas",
     "pandas.*",
     "photutils",
     "photutils.*",
     "scipy",
     "scipy.*",
+    "minio",
+    "minio.*",
 ]
 ignore_missing_imports = true
 

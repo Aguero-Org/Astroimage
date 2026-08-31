@@ -12,6 +12,7 @@ from astroimage.shared.database import create_engine_from_settings, create_sessi
 from astroimage.shared.logging import setup_logging
 from astroimage.shared.metrics import setup_metrics
 from astroimage.shared.middleware import RequestContextMiddleware
+from astroimage.shared.minio_storage import create_object_storage_client, ensure_bucket
 from astroimage.shared.telemetry import setup_tracing
 from astroimage.sources.controller import router as sources_router
 
@@ -31,6 +32,9 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     engine = create_engine_from_settings(settings)
     app.state.engine = engine
     app.state.session_factory = create_session_factory(engine)
+    minio_client = create_object_storage_client(settings)
+    ensure_bucket(minio_client, settings.minio_bucket)
+    app.state.minio_client = minio_client
     yield
     await engine.dispose()
 

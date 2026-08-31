@@ -104,7 +104,7 @@ Local server (separate stack):
 docker compose -f sonar/docker-compose.yml up -d
 ```
 
-UI: http://localhost:9000 — see [sonar/README.md](./sonar/README.md) for tokens, coverage, and scanner usage.
+UI: http://localhost:9002 — see [sonar/README.md](./sonar/README.md) for tokens, coverage, and scanner usage. Host port 9002 leaves 9000 free for MinIO.
 
 Root config: [`sonar-project.properties`](./sonar-project.properties) (backend Python + frontend TypeScript, coverage paths, exclusions for generated code).
 

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from astroimage.fits.service import FitsService
+from astroimage.fits.reader import FitsReader
 from astroimage.render.colormap import apply_colormap
 from astroimage.render.histogram import build_histogram
 from astroimage.render.normalization import normalize_to_uint8
@@ -9,8 +9,8 @@ from astroimage.render.schema import HistogramResponse, RenderConfigSchema
 
 
 class RenderService:
-    def __init__(self, fits_service: FitsService | None = None) -> None:
-        self._fits = fits_service or FitsService()
+    def __init__(self, reader: FitsReader | None = None) -> None:
+        self._reader = reader or FitsReader()
 
     def render_png_from_bytes(
         self,
@@ -20,7 +20,7 @@ class RenderService:
         hdu_index: int | None = None,
     ) -> bytes:
         render_config = config or RenderConfigSchema()
-        image = self._fits.image_data_from_bytes(payload, hdu_index=hdu_index)
+        image = self._reader.read_image_data_from_bytes(payload, hdu_index=hdu_index)
         frame = normalize_to_uint8(
             image.data,
             stretch=render_config.stretch,
@@ -39,5 +39,5 @@ class RenderService:
         bins: int = 256,
         hdu_index: int | None = None,
     ) -> HistogramResponse:
-        image = self._fits.image_data_from_bytes(payload, hdu_index=hdu_index)
+        image = self._reader.read_image_data_from_bytes(payload, hdu_index=hdu_index)
         return build_histogram(image.data, bins)

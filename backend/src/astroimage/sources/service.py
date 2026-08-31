@@ -4,7 +4,7 @@ import math
 
 import pandas as pd
 
-from astroimage.fits.service import FitsService
+from astroimage.fits.reader import FitsReader
 from astroimage.sources.detection.background import estimate_background
 from astroimage.sources.detection.filtering import select_point_sources
 from astroimage.sources.detection.point import detect_point_sources
@@ -28,8 +28,8 @@ def _optional_float(value: float | None) -> float | None:
 
 
 class SourceDetectionService:
-    def __init__(self, fits_service: FitsService | None = None) -> None:
-        self._fits = fits_service or FitsService()
+    def __init__(self, reader: FitsReader | None = None) -> None:
+        self._reader = reader or FitsReader()
 
     def detect(
         self,
@@ -40,7 +40,7 @@ class SourceDetectionService:
         config: PointDetectionConfigSchema | None = None,
     ) -> SourceDetectionResult:
         detection_config = config or PointDetectionConfigSchema()
-        image = self._fits.image_data_from_bytes(
+        image = self._reader.read_image_data_from_bytes(
             payload,
             source_name=source_name,
             hdu_index=hdu_index,

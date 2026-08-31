@@ -5,8 +5,13 @@ from collections.abc import AsyncIterator
 
 os.environ.setdefault(
     "DATABASE_URL",
-    "postgresql+asyncpg://localhost:5432/astroimage",
+    "postgresql+asyncpg://astroimage:astroimage@localhost:5432/astroimage",
 )
+os.environ.setdefault("MINIO_ENDPOINT", "localhost:9000")
+os.environ.setdefault("MINIO_ACCESS_KEY", "minioadmin")
+os.environ.setdefault("MINIO_SECRET_KEY", "minioadmin")
+os.environ.setdefault("MINIO_BUCKET", "astroimage-test")
+os.environ.setdefault("MINIO_SECURE", "false")
 
 import pytest
 from fastapi import FastAPI
@@ -25,6 +30,7 @@ def asgi_app() -> FastAPI:
 
 @pytest.fixture
 async def client(asgi_app: FastAPI) -> AsyncIterator[AsyncClient]:
-    transport = ASGITransport(app=asgi_app)
-    async with AsyncClient(transport=transport, base_url="http://test") as async_client:
-        yield async_client
+    async with asgi_app.router.lifespan_context(asgi_app):
+        transport = ASGITransport(app=asgi_app)
+        async with AsyncClient(transport=transport, base_url="http://test") as async_client:
+            yield async_client

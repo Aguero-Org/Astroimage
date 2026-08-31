@@ -12,7 +12,7 @@ if [[ -z "${SONAR_TOKEN:-}" ]]; then
   exit 1
 fi
 
-export SONAR_HOST_URL="${SONAR_HOST_URL_SCANNER:-http://host.docker.internal:9000}"
+export SONAR_HOST_URL="${SONAR_HOST_URL_SCANNER:-http://host.docker.internal:9002}"
 
 echo "==> Backend tests + coverage"
 (
@@ -55,4 +55,4 @@ docker run --rm \
   sonarsource/sonar-scanner-cli:11
 
 echo
-echo "Dashboard: http://localhost:9000/dashboard?id=Astroimage"
+echo "Dashboard: http://localhost:9002/dashboard?id=Astroimage"

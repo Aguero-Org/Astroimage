@@ -17,6 +17,11 @@ class Settings(BaseSettings):
     database_url: str = Field(min_length=1)
     cors_origins: list[str] = Field(default_factory=lambda: ["http://localhost:5173"])
     otlp_endpoint: str | None = None
+    minio_endpoint: str = "localhost:9000"
+    minio_access_key: str = "minioadmin"
+    minio_secret_key: str = "minioadmin"
+    minio_bucket: str = "astroimage"
+    minio_secure: bool = False
 
     @computed_field  # type: ignore[prop-decorator]
     @property
