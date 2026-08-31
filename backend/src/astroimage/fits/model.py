@@ -1,109 +1,32 @@
 from __future__ import annotations
 
-from typing import Annotated, Any
+from datetime import datetime
+from typing import Any
+from uuid import UUID, uuid4
 
-from pydantic import BaseModel, BeforeValidator, ConfigDict, Field
+from sqlalchemy import DateTime, Integer, String, Uuid, func
+from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.orm import Mapped, mapped_column
 
-
-def _none_if_blank(value: object) -> object | None:
-    if value is None:
-        return None
-    if isinstance(value, str):
-        text = value.strip()
-        return text or None
-    return value
+from astroimage.shared.database import Base
 
 
-def _optional_float(value: object) -> float | None:
-    value = _none_if_blank(value)
-    if value is None:
-        return None
-    try:
-        return float(str(value))
-    except (TypeError, ValueError):
-        return None
+class FitsRecord(Base):
+    __tablename__ = "fits_records"
 
-
-def _optional_str(value: object) -> str | None:
-    value = _none_if_blank(value)
-    if value is None:
-        return None
-    return str(value)
-
-
-OptStr = Annotated[str | None, BeforeValidator(_optional_str)]
-OptFloat = Annotated[float | None, BeforeValidator(_optional_float)]
-
-
-class FitsImageInfo(BaseModel):
-    model_config = ConfigDict(frozen=True, extra="forbid")
-
-    shape: list[int] | None = None
-    unit: OptStr = None
-    datamin: OptFloat = None
-    datamax: OptFloat = None
-    datamean: OptFloat = None
-    median: OptFloat = None
-    background: OptFloat = None
-
-
-class FitsInstrumentInfo(BaseModel):
-    model_config = ConfigDict(frozen=True, extra="forbid")
-
-    telescope: OptStr = None
-    instrument: OptStr = None
-    detector: OptStr = None
-    filter_name: OptStr = None
-    exptime: OptFloat = None
-    date_obs: OptStr = None
-    time_obs: OptStr = None
-
-
-class FitsPhotometryInfo(BaseModel):
-    model_config = ConfigDict(frozen=True, extra="forbid")
-
-    photflam: OptFloat = None
-    photplam: OptFloat = None
-    photbw: OptFloat = None
-
-
-class FitsWcsInfo(BaseModel):
-    model_config = ConfigDict(frozen=True, extra="forbid")
-
-    present: bool = False
-    naxis: int | None = None
-    crval: list[float] | None = None
-    crpix: list[float] | None = None
-    ctype: list[str] | None = None
-    cunit: list[str] | None = None
-    cd: list[list[float]] | None = None
-    cdelt: list[float] | None = None
-
-
-class FitsHduInfo(BaseModel):
-    model_config = ConfigDict(frozen=True, extra="forbid")
-
-    selected: int
-    image_indices: list[int] = Field(default_factory=list)
-
-
-class FitsTableInfo(BaseModel):
-    model_config = ConfigDict(frozen=True, extra="forbid")
-
-    index: int
-    name: str
-    rows: int
-    columns: list[str]
-
-
-class FitsMetadata(BaseModel):
-    model_config = ConfigDict(frozen=True, extra="forbid")
-
-    source_name: OptStr = None
-    image: FitsImageInfo = Field(default_factory=FitsImageInfo)
-    instrument: FitsInstrumentInfo = Field(default_factory=FitsInstrumentInfo)
-    photometry: FitsPhotometryInfo = Field(default_factory=FitsPhotometryInfo)
-    wcs: FitsWcsInfo = Field(default_factory=FitsWcsInfo)
-    hdus: FitsHduInfo
-    tables: list[FitsTableInfo] = Field(default_factory=list)
-    header: dict[str, Any] = Field(default_factory=dict)
+    id: Mapped[UUID] = mapped_column(Uuid(as_uuid=True), primary_key=True, default=uuid4)
+    object_key: Mapped[str] = mapped_column(String(512), unique=True, nullable=False)
+    original_filename: Mapped[str] = mapped_column(String(512), nullable=False)
+    size_bytes: Mapped[int] = mapped_column(Integer, nullable=False)
+    metadata_payload: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        nullable=False,
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        onupdate=func.now(),
+        nullable=False,
+    )

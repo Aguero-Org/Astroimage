@@ -4,8 +4,15 @@ import numpy as np
 import pytest
 from astropy.io import fits
 
-from astroimage.fits.dao import FitsDao
-from astroimage.fits.model import FitsMetadata
+from astroimage.fits.reader import (
+    FitsHduInfo,
+    FitsImageInfo,
+    FitsInstrumentInfo,
+    FitsMetadata,
+    FitsReader,
+    FitsTableInfo,
+    FitsWcsInfo,
+)
 
 
 def _write_sample_fits(path: Path) -> None:
@@ -40,7 +47,7 @@ def test_read_metadata_from_path(tmp_path: Path) -> None:
     fits_path = tmp_path / "sample.fits"
     _write_sample_fits(fits_path)
 
-    metadata = FitsDao().read_metadata_from_path(fits_path)
+    metadata = FitsReader().read_metadata_from_path(fits_path)
 
     assert isinstance(metadata, FitsMetadata)
     assert metadata.source_name == "sample.fits"
@@ -74,7 +81,7 @@ def test_read_metadata_from_bytes(tmp_path: Path) -> None:
     _write_sample_fits(fits_path)
     payload = fits_path.read_bytes()
 
-    metadata = FitsDao().read_metadata_from_bytes(payload, source_name="upload.fits")
+    metadata = FitsReader().read_metadata_from_bytes(payload, source_name="upload.fits")
 
     assert metadata.source_name == "upload.fits"
     assert metadata.instrument.telescope == "TEST"
@@ -83,23 +90,45 @@ def test_read_metadata_from_bytes(tmp_path: Path) -> None:
 
 def test_missing_file_raises(tmp_path: Path) -> None:
     with pytest.raises(FileNotFoundError):
-        FitsDao().read_metadata_from_path(tmp_path / "missing.fits")
+        FitsReader().read_metadata_from_path(tmp_path / "missing.fits")
 
 
 def test_invalid_hdu_raises(tmp_path: Path) -> None:
     fits_path = tmp_path / "sample.fits"
     _write_sample_fits(fits_path)
     with pytest.raises(ValueError, match="not a 2D image"):
-        FitsDao().read_metadata_from_path(fits_path, hdu_index=9)
+        FitsReader().read_metadata_from_path(fits_path, hdu_index=9)
 
 
 def test_wcs_absent(tmp_path: Path) -> None:
     fits_path = tmp_path / "plain.fits"
     fits.PrimaryHDU(np.ones((3, 3))).writeto(fits_path, overwrite=True)
 
-    metadata = FitsDao().read_metadata_from_path(fits_path)
+    metadata = FitsReader().read_metadata_from_path(fits_path)
 
     assert metadata.wcs.present is False
     assert metadata.wcs.crval is None
     assert metadata.wcs.cd is None
     assert metadata.wcs.cdelt is None
+
+
+def test_fits_metadata_nested_groups() -> None:
+    metadata = FitsMetadata(
+        source_name="sample.fits",
+        image=FitsImageInfo(shape=[4, 4], unit="electron/s", datamin=0.0, datamax=10.0),
+        instrument=FitsInstrumentInfo(telescope="HST", instrument="WFC3", filter_name="F814W"),
+        hdus=FitsHduInfo(selected=0, image_indices=[0]),
+        tables=[FitsTableInfo(index=1, name="CAT", rows=2, columns=["RA", "DEC"])],
+        wcs=FitsWcsInfo(present=False),
+        header={"TELESCOP": "HST"},
+    )
+    assert metadata.instrument.telescope == "HST"
+    assert metadata.image.shape == [4, 4]
+    assert metadata.tables[0].columns == ["RA", "DEC"]
+    assert metadata.hdus.selected == 0
+
+
+def test_instrument_coerces_values() -> None:
+    instrument = FitsInstrumentInfo.model_validate({"telescope": "  VLT  ", "exptime": "12.5"})
+    assert instrument.telescope == "VLT"
+    assert instrument.exptime == 12.5
