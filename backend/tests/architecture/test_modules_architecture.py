@@ -48,7 +48,13 @@ SCHEMA_MODULES = frozenset({"schema"})
 
 MINIO_ADAPTER_MODULE = f"{PACKAGE_NAME}.shared.minio_storage"
 
-ALLOWED_FEATURE_DEPENDENCIES: frozenset[tuple[str, str]] = frozenset()
+ALLOWED_FEATURE_DEPENDENCIES: frozenset[tuple[str, str]] = frozenset(
+    {
+        ("sources", "fits"),
+        ("render", "fits"),
+        ("hub", "fits"),
+    }
+)
 
 TEST_TYPE_DIRS = ("architecture", "unit", "integration")
 

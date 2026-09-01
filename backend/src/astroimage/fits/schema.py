@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from typing import Any
+from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -50,11 +51,23 @@ class FitsWcsInfoSchema(BaseModel):
     cdelt: list[float] | None = None
 
 
+class FitsHduDetailSchema(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    index: int
+    extname: str | None = None
+    shape: list[int] | None = None
+    kind: str | None = None
+    ra: float | None = None
+    dec: float | None = None
+
+
 class FitsHduInfoSchema(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     selected: int
     image_indices: list[int] = Field(default_factory=list)
+    images: list[FitsHduDetailSchema] = Field(default_factory=list)
 
 
 class FitsTableInfoSchema(BaseModel):
@@ -77,3 +90,10 @@ class FitsMetadataSchema(BaseModel):
     hdus: FitsHduInfoSchema
     tables: list[FitsTableInfoSchema] = Field(default_factory=list)
     header: dict[str, Any] = Field(default_factory=dict)
+
+
+class FitsRecordSummarySchema(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    record_id: UUID
+    name: str
