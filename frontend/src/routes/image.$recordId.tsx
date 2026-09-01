@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { useGetImageInfo } from "@/api/generated/hub/hub";
 import { useRenderFitsImage } from "@/api/generated/render/render";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -12,6 +13,11 @@ function ImageDetailPage() {
   const { recordId } = Route.useParams();
 
   const renderQuery = useRenderFitsImage(recordId);
+  const infoQuery = useGetImageInfo(recordId);
+  const sourceName =
+    infoQuery.data?.status === 200
+      ? infoQuery.data.data.source_name
+      : undefined;
 
   const blob =
     renderQuery.data?.status === 200
@@ -23,7 +29,7 @@ function ImageDetailPage() {
     <main className="flex min-h-svh justify-center p-6">
       <Card className="w-full max-w-4xl">
         <CardHeader>
-          <CardTitle className="text-2xl">{recordId}</CardTitle>
+          <CardTitle className="text-2xl">{sourceName ?? recordId}</CardTitle>
         </CardHeader>
 
         <CardContent className="flex flex-col gap-6">
@@ -43,7 +49,7 @@ function ImageDetailPage() {
             ) : objectUrl ? (
               <img
                 src={objectUrl}
-                alt={recordId}
+                alt={sourceName ?? recordId}
                 className="max-w-full rounded border"
               />
             ) : (
