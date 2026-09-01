@@ -1,3 +1,4 @@
+import { Search } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -33,6 +34,7 @@ export function ImageSearch({ value, onSearch, isFetching }: ImageSearchProps) {
         disabled={isFetching}
       />
       <Button type="submit" disabled={isFetching}>
+        <Search className="size-4" />
         {isFetching ? "Buscando…" : "Buscar"}
       </Button>
     </form>
