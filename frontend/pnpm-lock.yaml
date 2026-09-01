@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      '@cellbytes/react-openseadragon':
+        specifier: ^1.1.1
+        version: 1.1.1(openseadragon@6.1.0)(react@19.2.8)
       '@hookform/resolvers':
         specifier: ^5.9.1
         version: 5.9.1(@standard-schema/spec@1.1.0)(ajv@8.20.0)(react-hook-form@7.86.0(react@19.2.8))(zod@4.4.3)
@@ -35,6 +38,9 @@ importers:
       lucide-react:
         specifier: ^1.34.0
         version: 1.34.0(react@19.2.8)
+      openseadragon:
+        specifier: ^6.1.0
+        version: 6.1.0
       radix-ui:
         specifier: ^1.6.7
         version: 1.6.7(@types/react-dom@19.2.5(@types/react@19.2.18))(@types/react@19.2.18)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
@@ -266,6 +272,13 @@ packages:
   '@bramus/specificity@2.4.2':
     resolution: {integrity: sha512-ctxtJ/eA+t+6q2++vj5j7FYX3nRu311q1wfYH3xjlLOsczhlhxAg2FWNUXhpGvAw3BWo1xBcvOV6/YLc2r5FJw==}
     hasBin: true
+
+  '@cellbytes/react-openseadragon@1.1.1':
+    resolution: {integrity: sha512-vk22mm2PdMyzABPPVSGoDmmseVeThQObQuEoDNuIVGOyJzaunH34tdXuggg8Zjp/ozUlby/xJIqXEHOXKs43sQ==}
+    engines: {node: '>=24'}
+    peerDependencies:
+      openseadragon: '>=6'
+      react: '>=19'
 
   '@commander-js/extra-typings@15.0.0':
     resolution: {integrity: sha512-yeJlba62xqmkgELUsn7356MEnzLLu/fw2x4lofFqGnXh6YysRdEs2BaLeLtg1+KU0AXvMeqQvTTp+3hBEBK+EA==}
@@ -2632,6 +2645,9 @@ packages:
     resolution: {integrity: sha512-4a+OsYv9UktOJKE+l1A4OufDgdRF9PifWj+tJnHURo/P+WOxpG4GzUFL9qCalmWauao6ogiG+QvnCovwPoyAWA==}
     engines: {node: '>=12.20.0'}
 
+  openseadragon@6.1.0:
+    resolution: {integrity: sha512-S2kEBO6zd2pbUByMVZ6PkEldvXHbB2kemL3tAhSltnHyjpArJPgXeM/AH/g8qsoXHy9pMHzx63XyJftE556MbA==}
+
   orval@8.26.0:
     resolution: {integrity: sha512-7mqHCS9+L05em1rrwHtp7g60E5PNmN8GWSr1KLrilNOPHwGZyV7CJrp7NPYBLG2HW9rPxbGQL2XisvNINJx3Gg==}
     engines: {node: '>=22.18.0'}
@@ -3394,6 +3410,11 @@ snapshots:
   '@bramus/specificity@2.4.2':
     dependencies:
       css-tree: 3.2.1
+
+  '@cellbytes/react-openseadragon@1.1.1(openseadragon@6.1.0)(react@19.2.8)':
+    dependencies:
+      openseadragon: 6.1.0
+      react: 19.2.8
 
   '@commander-js/extra-typings@15.0.0(commander@15.0.0)':
     dependencies:
@@ -5547,6 +5568,8 @@ snapshots:
       unicorn-magic: 0.3.0
 
   obug@2.1.4: {}
+
+  openseadragon@6.1.0: {}
 
   orval@8.26.0(prettier@3.9.6)(supports-color@7.2.0)(typescript@7.0.2):
     dependencies:

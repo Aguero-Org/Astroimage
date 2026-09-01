@@ -4,6 +4,7 @@ import { useGetImageInfo } from "@/api/generated/hub/hub";
 import { useRenderFitsImage } from "@/api/generated/render/render";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { FitsImageViewer } from "@/features/images/components/fits-image-viewer";
 
 export const Route = createFileRoute("/image/$recordId")({
   component: ImageDetailPage,
@@ -27,7 +28,7 @@ function ImageDetailPage() {
 
   return (
     <main className="flex min-h-svh justify-center p-6">
-      <Card className="w-full max-w-4xl">
+      <Card className="w-full max-w-6xl">
         <CardHeader>
           <CardTitle className="text-2xl">{sourceName ?? recordId}</CardTitle>
         </CardHeader>
@@ -37,7 +38,7 @@ function ImageDetailPage() {
             <h2 className="text-lg font-medium">Imagen renderizada</h2>
             {renderQuery.isPending ? (
               <div className="flex flex-col gap-2">
-                <Skeleton className="h-96 w-full rounded-xl" />
+                <Skeleton className="h-[min(70vh,40rem)] w-full rounded-xl" />
                 <p className="text-sm text-muted-foreground">
                   Renderizando imagen…
                 </p>
@@ -47,10 +48,9 @@ function ImageDetailPage() {
                 Error al renderizar: {String(renderQuery.error)}
               </p>
             ) : objectUrl ? (
-              <img
-                src={objectUrl}
-                alt={sourceName ?? recordId}
-                className="max-w-full rounded border"
+              <FitsImageViewer
+                imageUrl={objectUrl}
+                label={sourceName ?? `Render FITS ${recordId}`}
               />
             ) : (
               <p className="text-sm text-muted-foreground">
