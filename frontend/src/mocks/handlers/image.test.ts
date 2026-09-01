@@ -56,6 +56,20 @@ describe("image mock contract", () => {
     );
   });
 
+  it("GET /image/:id/sources returns point detections", async () => {
+    const result = await customFetch<{
+      data: {
+        summary: { point_count: number };
+        point_sources: { xcentroid: number }[];
+      };
+      status: number;
+    }>("/image/m31/sources");
+
+    expect(result.status).toBe(200);
+    expect(result.data.summary.point_count).toBe(1);
+    expect(result.data.point_sources[0]?.xcentroid).toBe(12.5);
+  });
+
   it("GET /image/:id returns a PNG blob", async () => {
     const result = await customFetch<{
       data: Blob;

@@ -16,6 +16,11 @@ vi.mock("@cellbytes/react-openseadragon", () => ({
   ),
   useViewer: () => ({ viewer: null }),
   useViewerEvent: vi.fn(),
+  useCoordinates: () => ({
+    tiledImage: undefined,
+    imageToViewport: vi.fn(),
+    viewportToPixel: vi.fn(),
+  }),
 }));
 
 describe("FitsImageViewer", () => {

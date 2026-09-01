@@ -23,6 +23,29 @@ export const imageHandlers = [
     return HttpResponse.json({ record_id: match.record_id });
   }),
 
+  http.get(`${apiBaseUrl}/image/:recordId/sources`, ({ params }) => {
+    const record = findRecord(params.recordId as string);
+    if (!record) {
+      return HttpResponse.json({ detail: "Image not found" }, { status: 404 });
+    }
+    return HttpResponse.json({
+      source_name: record.name,
+      summary: { point_count: 1, extended_count: 0 },
+      point_sources: [
+        {
+          source_id: 1,
+          rank: 1,
+          xcentroid: 12.5,
+          ycentroid: 8.25,
+          snr: 11.2,
+          relevance_score: 0.64,
+          object_type: "point",
+        },
+      ],
+      extended_sources: [],
+    });
+  }),
+
   http.get(`${apiBaseUrl}/image/:recordId/info`, ({ params }) => {
     const record = findRecord(params.recordId as string);
     if (!record) {
