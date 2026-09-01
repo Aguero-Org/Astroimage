@@ -6,6 +6,7 @@ from astropy.io import fits
 
 from astroimage.fits.reader import (
     FitsHduInfo,
+    FitsImageData,
     FitsImageInfo,
     FitsInstrumentInfo,
     FitsMetadata,
@@ -53,6 +54,12 @@ def test_read_metadata_from_path(tmp_path: Path) -> None:
     assert metadata.source_name == "sample.fits"
     assert metadata.hdus.selected == 0
     assert metadata.hdus.image_indices == [0]
+    assert len(metadata.hdus.images) == 1
+    detail = metadata.hdus.images[0]
+    assert detail.index == 0
+    assert detail.shape == [4, 4]
+    assert detail.ra is not None
+    assert detail.dec is not None
     assert metadata.image.shape == [4, 4]
     assert metadata.image.unit == "count"
     assert metadata.image.datamin == 0.0
@@ -110,6 +117,88 @@ def test_wcs_absent(tmp_path: Path) -> None:
     assert metadata.wcs.crval is None
     assert metadata.wcs.cd is None
     assert metadata.wcs.cdelt is None
+
+
+def test_read_image_data_from_path(tmp_path: Path) -> None:
+    fits_path = tmp_path / "sample.fits"
+    _write_sample_fits(fits_path)
+
+    image = FitsReader().read_image_data_from_path(fits_path)
+
+    assert isinstance(image, FitsImageData)
+    assert image.source_name == "sample.fits"
+    assert image.hdu_index == 0
+    assert image.data.shape == (4, 4)
+    assert np.allclose(image.data, np.arange(16, dtype=float).reshape(4, 4))
+
+
+def test_read_image_data_from_bytes(tmp_path: Path) -> None:
+    fits_path = tmp_path / "sample.fits"
+    _write_sample_fits(fits_path)
+
+    image = FitsReader().read_image_data_from_bytes(
+        fits_path.read_bytes(),
+        source_name="upload.fits",
+        hdu_index=0,
+    )
+
+    assert image.source_name == "upload.fits"
+    assert image.hdu_index == 0
+    assert image.data.shape == (4, 4)
+    assert np.issubdtype(image.data.dtype, np.floating)
+
+
+def test_read_image_data_selects_explicit_hdu(tmp_path: Path) -> None:
+    primary = fits.PrimaryHDU(np.zeros((8, 8)))
+    science = fits.ImageHDU(np.ones((16, 16)))
+    fits_path = tmp_path / "multi.fits"
+    fits.HDUList([primary, science]).writeto(fits_path)
+
+    image = FitsReader().read_image_data_from_path(fits_path, hdu_index=1)
+
+    assert image.hdu_index == 1
+    assert image.data.shape == (16, 16)
+
+
+def test_metadata_lists_image_hdu_details(tmp_path: Path) -> None:
+    primary = fits.PrimaryHDU(np.zeros((32, 64)))
+    science = fits.ImageHDU(np.ones((16, 32)))
+    science.header["EXTNAME"] = "SCI"
+    error = fits.ImageHDU(np.full((16, 32), 2.0))
+    error.header["EXTNAME"] = "ERR"
+    fits_path = tmp_path / "multi-sci.fits"
+    fits.HDUList([primary, science, error]).writeto(fits_path)
+
+    metadata = FitsReader().read_metadata_from_path(fits_path)
+
+    assert metadata.hdus.image_indices == [0, 1, 2]
+    assert [detail.index for detail in metadata.hdus.images] == [0, 1, 2]
+    assert [detail.shape for detail in metadata.hdus.images] == [
+        [32, 64],
+        [16, 32],
+        [16, 32],
+    ]
+    assert [detail.kind for detail in metadata.hdus.images] == [None, "sci", "err"]
+    assert metadata.hdus.images[1].extname == "SCI"
+    assert metadata.hdus.selected == 0
+
+
+def test_read_image_data_invalid_hdu_raises(tmp_path: Path) -> None:
+    fits_path = tmp_path / "sample.fits"
+    _write_sample_fits(fits_path)
+
+    with pytest.raises(ValueError, match="not a 2D image"):
+        FitsReader().read_image_data_from_path(fits_path, hdu_index=9)
+
+
+def test_read_image_data_missing_file_raises(tmp_path: Path) -> None:
+    with pytest.raises(FileNotFoundError):
+        FitsReader().read_image_data_from_path(tmp_path / "missing.fits")
+
+
+def test_read_image_data_garbage_raises() -> None:
+    with pytest.raises(OSError):
+        FitsReader().read_image_data_from_bytes(b"not-a-fits-file")
 
 
 def test_fits_metadata_nested_groups() -> None:

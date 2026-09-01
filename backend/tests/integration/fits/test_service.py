@@ -31,8 +31,7 @@ async def test_store_get_list_and_payload(
     record = await fits_service.store_bytes(fits_bytes, source_name="keck.fits")
 
     loaded = await fits_service.get_record(record.id)
-    assert loaded.object_key.startswith("fits/")
-    assert loaded.object_key.endswith(".fits")
+    assert loaded.object_key == f"fits/{record.id}.fits"
     assert loaded.original_filename == "keck.fits"
     assert loaded.size_bytes == len(fits_bytes)
     assert loaded.metadata_payload["instrument"]["telescope"] == "KECK"

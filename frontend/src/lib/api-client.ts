@@ -44,8 +44,10 @@ export async function customFetch<T>(
 ): Promise<T> {
   const { body, headers: customHeaders, ...restOptions } = options ?? {};
 
+  const isFormData = body instanceof FormData;
+  const isSearchParams = body instanceof URLSearchParams;
   const headers = new Headers(customHeaders);
-  if (!(body instanceof FormData) && !headers.has("Content-Type")) {
+  if (!isFormData && !isSearchParams && !headers.has("Content-Type")) {
     headers.set("Content-Type", "application/json");
   }
 

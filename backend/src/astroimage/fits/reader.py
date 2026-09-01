@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import io
 import warnings
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Annotated, Any
 
@@ -86,11 +87,23 @@ class FitsWcsInfo(BaseModel):
     cdelt: list[float] | None = None
 
 
+class FitsHduDetail(BaseModel):
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    index: int
+    extname: str | None = None
+    shape: list[int] | None = None
+    kind: str | None = None
+    ra: float | None = None
+    dec: float | None = None
+
+
 class FitsHduInfo(BaseModel):
     model_config = ConfigDict(frozen=True, extra="forbid")
 
     selected: int
     image_indices: list[int] = Field(default_factory=list)
+    images: list[FitsHduDetail] = Field(default_factory=list)
 
 
 class FitsTableInfo(BaseModel):
@@ -113,6 +126,13 @@ class FitsMetadata(BaseModel):
     hdus: FitsHduInfo
     tables: list[FitsTableInfo] = Field(default_factory=list)
     header: dict[str, Any] = Field(default_factory=dict)
+
+
+@dataclass(frozen=True)
+class FitsImageData:
+    data: np.ndarray
+    hdu_index: int
+    source_name: str | None = None
 
 
 _FILTER_KEYS = ("FILTER", "FILTER1", "FILTER2")
@@ -246,6 +266,47 @@ def _choose_hdu(image_hdus: list[int], requested: int | None) -> int:
     return requested
 
 
+def _hdu_kind(header: fits.Header) -> str | None:
+    extname = str(header.get("EXTNAME") or "")
+    return extname.lower() or None
+
+
+def _hdu_center(header: fits.Header, shape: list[int]) -> tuple[float | None, float | None]:
+    if not _WCS_HINTS.intersection(header.keys()) or len(shape) < 2:
+        return None, None
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", FITSFixedWarning)
+        wcs = WCS(header, naxis=2, relax=True)
+    try:
+        center = wcs.pixel_to_world(shape[1] / 2, shape[0] / 2)
+        ra = float(center.ra.deg)
+        dec = float(center.dec.deg)
+    except Exception:
+        return None, None
+    if ra < 0:
+        ra += 360.0
+    return ra, dec
+
+
+def _image_detail(index: int, hdu: fits.ImageHDU) -> FitsHduDetail:
+    if hdu.data is None:
+        return FitsHduDetail(index=index, extname=str(hdu.name or ""))
+    shape = [int(axis_size) for axis_size in hdu.data.shape]
+    ra, dec = _hdu_center(hdu.header, shape)
+    return FitsHduDetail(
+        index=index,
+        extname=str(hdu.name or ""),
+        shape=shape,
+        kind=_hdu_kind(hdu.header),
+        ra=ra,
+        dec=dec,
+    )
+
+
+def _image_details(hdul: fits.HDUList, image_hdus: list[int]) -> list[FitsHduDetail]:
+    return [_image_detail(index, hdul[index]) for index in image_hdus]
+
+
 def _tables(hdul: fits.HDUList) -> list[FitsTableInfo]:
     return [
         FitsTableInfo(
@@ -274,9 +335,30 @@ def _read(hdul: fits.HDUList, *, source_name: str | None, hdu_index: int | None)
         instrument=_instrument_info(header),
         photometry=_photometry_info(header),
         wcs=_wcs_info(header),
-        hdus=FitsHduInfo(selected=selected, image_indices=image_indices),
+        hdus=FitsHduInfo(
+            selected=selected,
+            image_indices=image_indices,
+            images=_image_details(hdul, image_indices),
+        ),
         tables=_tables(hdul),
         header=_header_dict(header),
+    )
+
+
+def _read_image_data(
+    hdul: fits.HDUList,
+    *,
+    source_name: str | None,
+    hdu_index: int | None,
+) -> FitsImageData:
+    selected = _choose_hdu(_image_hdus(hdul), hdu_index)
+    hdu = hdul[selected]
+    if hdu.data is None:
+        raise ValueError(f"HDU {selected} has no data")
+    return FitsImageData(
+        data=np.asarray(hdu.data, dtype=float),
+        hdu_index=selected,
+        source_name=source_name,
     )
 
 
@@ -302,3 +384,36 @@ class FitsReader:
     ) -> FitsMetadata:
         with fits.open(io.BytesIO(payload)) as hdul:
             return _read(hdul, source_name=source_name, hdu_index=hdu_index)
+
+    def read_image_data_from_path(
+        self,
+        path: Path | str,
+        *,
+        hdu_index: int | None = None,
+    ) -> FitsImageData:
+        fits_path = Path(path)
+        if not fits_path.is_file():
+            raise FileNotFoundError(f"FITS file not found: {fits_path}")
+        with fits.open(fits_path) as hdul:
+            return _read_image_data(hdul, source_name=fits_path.name, hdu_index=hdu_index)
+
+    def read_image_data_from_bytes(
+        self,
+        payload: bytes,
+        *,
+        source_name: str | None = None,
+        hdu_index: int | None = None,
+    ) -> FitsImageData:
+        if not payload:
+            raise ValueError("Empty FITS payload")
+        with fits.open(io.BytesIO(payload)) as hdul:
+            return _read_image_data(hdul, source_name=source_name, hdu_index=hdu_index)
+
+    def source_filename_from_bytes(self, payload: bytes) -> str | None:
+        if not payload:
+            raise ValueError("Empty FITS payload")
+        with fits.open(io.BytesIO(payload)) as hdul:
+            value = hdul[0].header.get("FILENAME")
+            if isinstance(value, str) and value:
+                return value
+            return None

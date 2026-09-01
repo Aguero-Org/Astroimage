@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 from astroimage.shared.object_storage import ObjectStorage
 
@@ -17,6 +17,10 @@ class FitsStorage:
         suffix = Path(source_name).suffix or ".fits"
         return f"{_OBJECT_PREFIX}{uuid4()}{suffix}"
 
+    def object_key_for(self, record_id: UUID, source_name: str) -> str:
+        suffix = Path(source_name).suffix or ".fits"
+        return f"{_OBJECT_PREFIX}{record_id}{suffix}"
+
     async def put(self, payload: bytes, *, source_name: str) -> str:
         object_key = self.new_object_key(source_name)
         await self.put_at(object_key, payload)
@@ -30,3 +34,6 @@ class FitsStorage:
 
     async def remove(self, object_key: str) -> None:
         await self._objects.remove(object_key)
+
+    async def list_fits_keys(self) -> list[str]:
+        return await self._objects.list_object_keys(_OBJECT_PREFIX)

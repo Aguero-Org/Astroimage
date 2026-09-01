@@ -63,6 +63,55 @@ def cmd_db_revision(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_db_reconcile(args: argparse.Namespace) -> int:
+    import asyncio
+
+    from astroimage.config import get_settings
+    from astroimage.fits.reader import FitsReader
+    from astroimage.fits.repository import FitsRepository
+    from astroimage.fits.service import FitsService, ReconcileReport
+    from astroimage.fits.storage import FitsStorage
+    from astroimage.shared.database import (
+        create_engine_from_settings,
+        create_session_factory,
+    )
+    from astroimage.shared.minio_storage import (
+        MinioObjectStorage,
+        create_object_storage_client,
+    )
+
+    async def _run() -> ReconcileReport:
+        settings = get_settings()
+        engine = create_engine_from_settings(settings)
+        session_factory = create_session_factory(engine)
+        client = create_object_storage_client(settings)
+        objects = MinioObjectStorage(client, settings.minio_bucket)
+        storage = FitsStorage(objects)
+        try:
+            async with session_factory() as session:
+                repository = FitsRepository(session)
+                service = FitsService(FitsReader(), repository, storage)
+                report = await service.reconcile_records()
+                await session.commit()
+                return report
+        finally:
+            await engine.dispose()
+
+    report = asyncio.run(_run())
+    print(
+        f"reconcile: created={len(report.created)} "
+        f"updated={len(report.updated)} skipped={len(report.skipped)} "
+        f"failed={len(report.failed)}"
+    )
+    for key in report.created:
+        print(f"  created: {key}")
+    for key in report.updated:
+        print(f"  updated: {key}")
+    for key in report.failed:
+        print(f"  failed:  {key}")
+    return 1 if report.failed else 0
+
+
 def cmd_openapi_export(args: argparse.Namespace) -> int:
     from astroimage.main import app
 
@@ -101,6 +150,12 @@ def build_parser() -> argparse.ArgumentParser:
     revision.add_argument("-m", "--message", required=True)
     revision.add_argument("--autogenerate", action="store_true")
     revision.set_defaults(handler=cmd_db_revision)
+
+    reconcile = db_sub.add_parser(
+        "reconcile",
+        help="Recreate fits_records rows from stored FITS objects",
+    )
+    reconcile.set_defaults(handler=cmd_db_reconcile)
 
     openapi = subparsers.add_parser("openapi", help="OpenAPI contract operations")
     openapi_sub = openapi.add_subparsers(dest="openapi_command", required=True)

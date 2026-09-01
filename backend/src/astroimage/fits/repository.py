@@ -40,6 +40,23 @@ class FitsRepository:
         result = await self._session.execute(statement)
         return result.scalars().all()
 
+    async def list_by_name(
+        self,
+        name: str,
+        *,
+        offset: int = 0,
+        limit: int = 100,
+    ) -> Sequence[FitsRecord]:
+        statement = (
+            select(FitsRecord)
+            .where(FitsRecord.original_filename.ilike(f"%{name}%"))
+            .order_by(FitsRecord.created_at.desc())
+            .offset(offset)
+            .limit(limit)
+        )
+        result = await self._session.execute(statement)
+        return result.scalars().all()
+
     async def update(self, record: FitsRecord) -> FitsRecord:
         await self._session.flush()
         await self._session.refresh(record)
