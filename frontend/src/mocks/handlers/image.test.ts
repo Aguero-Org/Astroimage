@@ -56,14 +56,15 @@ describe("image mock contract", () => {
     );
   });
 
-  it("GET /image/:id returns binary data", async () => {
+  it("GET /image/:id returns a PNG blob", async () => {
     const result = await customFetch<{
-      data: ArrayBuffer;
+      data: Blob;
       status: number;
     }>("/image/m42");
 
     expect(result.status).toBe(200);
-    expect(result.data.byteLength).toBeGreaterThan(0);
+    expect(result.data.size).toBeGreaterThan(0);
+    expect(result.data.type).toBe("image/png");
   });
 
   it("GET /image/:id returns 404 for unknown id", async () => {

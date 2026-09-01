@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { ImageList } from "@/features/images/components/image-list";
 import { ImageSearch } from "@/features/images/components/image-search";
+import { useImageFetch } from "@/features/images/use-image-fetch";
 
 export const Route = createFileRoute("/")({
   validateSearch: (search: Record<string, unknown>) => ({
@@ -12,6 +13,14 @@ export const Route = createFileRoute("/")({
 function HomePage() {
   const { query } = Route.useSearch();
   const navigate = Route.useNavigate();
+  const fetchMutation = useImageFetch();
+
+  function handleSearch(q: string) {
+    navigate({ to: "/", search: { query: q } });
+    if (q.trim().length > 0) {
+      fetchMutation.mutate(q);
+    }
+  }
 
   return (
     <main className="flex min-h-svh flex-col items-center gap-6 p-6">
@@ -21,9 +30,14 @@ function HomePage() {
       </div>
       <ImageSearch
         value={query}
-        onSearch={(q) => navigate({ to: "/", search: { query: q } })}
+        onSearch={handleSearch}
+        isFetching={fetchMutation.isPending}
       />
-      <ImageList query={query} />
+      <ImageList
+        query={query}
+        isFetching={fetchMutation.isPending}
+        fetchError={fetchMutation.error}
+      />
     </main>
   );
 }
