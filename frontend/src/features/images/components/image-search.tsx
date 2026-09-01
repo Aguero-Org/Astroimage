@@ -25,7 +25,7 @@ export function ImageSearch({ value, onSearch }: ImageSearchProps) {
   return (
     <Input
       type="search"
-      placeholder="Search by object name, e.g. M31, Orion…"
+      placeholder="Search by celestial body, e.g. M31, Orion…"
       value={local}
       onChange={(e) => setLocal(e.target.value)}
       className="mx-auto max-w-lg"

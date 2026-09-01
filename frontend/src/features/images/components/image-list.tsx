@@ -1,5 +1,5 @@
 import { Skeleton } from "@/components/ui/skeleton";
-import { useImageSearch } from "../api";
+import { useImageRecords } from "../api";
 import { ImageListItem } from "./image-list-item";
 
 type ImageListProps = {
@@ -7,11 +7,7 @@ type ImageListProps = {
 };
 
 export function ImageList({ query }: ImageListProps) {
-  const { data, isPending, isError } = useImageSearch(query);
-
-  if (query.trim().length === 0) {
-    return null;
-  }
+  const { data: response, isPending, isError } = useImageRecords(query);
 
   if (isPending) {
     return (
@@ -31,7 +27,9 @@ export function ImageList({ query }: ImageListProps) {
     );
   }
 
-  if (data == null || data.length === 0) {
+  const records = response?.status === 200 ? response.data.records : [];
+
+  if (records.length === 0) {
     return (
       <p className="mx-auto max-w-lg text-sm text-muted-foreground">
         No images found.
@@ -41,8 +39,8 @@ export function ImageList({ query }: ImageListProps) {
 
   return (
     <div className="mx-auto flex max-w-lg flex-col gap-2">
-      {data.map((image) => (
-        <ImageListItem key={image.id} image={image} />
+      {records.map((record) => (
+        <ImageListItem key={record.record_id} record={record} />
       ))}
     </div>
   );

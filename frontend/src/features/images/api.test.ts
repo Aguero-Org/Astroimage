@@ -1,33 +1,53 @@
 import { describe, expect, it, vi } from "vitest";
 import { renderHookWithQuery } from "@/test/render";
-import { useImageSearch } from "./api";
+import { useImageRecords } from "./api";
 
-describe("useImageSearch", () => {
-  it("returns matching images for a query", async () => {
-    const { result } = renderHookWithQuery(() => useImageSearch("orion"));
-
-    await vi.waitFor(() => {
-      expect(result.current.isSuccess).toBe(true);
-    });
-
-    expect(result.current.data).toHaveLength(1);
-    expect(result.current.data?.[0]?.id).toBe("m42");
-  });
-
-  it("is not enabled when query is empty", () => {
-    const { result } = renderHookWithQuery(() => useImageSearch(""));
-
-    expect(result.current.isPending).toBe(true);
-    expect(result.current.data).toBeUndefined();
-  });
-
-  it("returns empty array for no matches", async () => {
-    const { result } = renderHookWithQuery(() => useImageSearch("nonexistent"));
+describe("useImageRecords", () => {
+  it("returns filtered records for a query", async () => {
+    const { result } = renderHookWithQuery(() => useImageRecords("orion"));
 
     await vi.waitFor(() => {
       expect(result.current.isSuccess).toBe(true);
     });
 
-    expect(result.current.data).toEqual([]);
+    expect(result.current.data?.status).toBe(200);
+    const records =
+      result.current.data?.status === 200
+        ? result.current.data.data.records
+        : [];
+    expect(records).toHaveLength(1);
+    expect(records[0]?.record_id).toBe("m42");
+  });
+
+  it("returns all records when query is empty", async () => {
+    const { result } = renderHookWithQuery(() => useImageRecords(""));
+
+    await vi.waitFor(() => {
+      expect(result.current.isSuccess).toBe(true);
+    });
+
+    expect(result.current.data?.status).toBe(200);
+    const records =
+      result.current.data?.status === 200
+        ? result.current.data.data.records
+        : [];
+    expect(records).toHaveLength(4);
+  });
+
+  it("returns empty records for no matches", async () => {
+    const { result } = renderHookWithQuery(() =>
+      useImageRecords("nonexistent"),
+    );
+
+    await vi.waitFor(() => {
+      expect(result.current.isSuccess).toBe(true);
+    });
+
+    expect(result.current.data?.status).toBe(200);
+    const records =
+      result.current.data?.status === 200
+        ? result.current.data.data.records
+        : [];
+    expect(records).toEqual([]);
   });
 });
