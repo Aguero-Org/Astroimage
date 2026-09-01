@@ -26,7 +26,7 @@ export function ImageList({ query, isFetching, fetchError }: ImageListProps) {
   if (isError) {
     return (
       <p className="mx-auto max-w-lg text-sm text-destructive">
-        Something went wrong.
+        Algo salió mal.
       </p>
     );
   }
@@ -36,7 +36,7 @@ export function ImageList({ query, isFetching, fetchError }: ImageListProps) {
       <div className="mx-auto flex max-w-lg flex-col items-center gap-3">
         <Skeleton className="h-16 w-full rounded-xl" />
         <p className="text-sm text-muted-foreground">
-          Fetching from Hubble archive…
+          Obteniendo del archivo Hubble…
         </p>
       </div>
     );
@@ -45,7 +45,7 @@ export function ImageList({ query, isFetching, fetchError }: ImageListProps) {
   if (fetchError) {
     return (
       <p className="mx-auto max-w-lg text-sm text-destructive">
-        Failed to fetch: {fetchError.message}
+        Error al obtener: {fetchError.message}
       </p>
     );
   }
@@ -55,7 +55,7 @@ export function ImageList({ query, isFetching, fetchError }: ImageListProps) {
   if (records.length === 0) {
     return (
       <p className="mx-auto max-w-lg text-sm text-muted-foreground">
-        No images found. Try searching for a celestial body (e.g. M31).
+        No se encontraron imágenes. Intenta buscar un cuerpo celeste (ej. M31).
       </p>
     );
   }

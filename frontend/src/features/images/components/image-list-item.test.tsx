@@ -15,7 +15,7 @@ describe("ImageListItem", () => {
 
     expect(screen.getByText("m31")).toBeInTheDocument();
     expect(screen.getByText("b6693c65…")).toBeInTheDocument();
-    expect(screen.getByText(/View image/)).toBeInTheDocument();
+    expect(screen.getByText(/Ver imagen/)).toBeInTheDocument();
   });
 
   it("calls onSelect with record_id on click", async () => {

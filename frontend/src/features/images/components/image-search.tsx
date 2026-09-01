@@ -25,15 +25,15 @@ export function ImageSearch({ value, onSearch, isFetching }: ImageSearchProps) {
     >
       <Input
         type="search"
-        placeholder="Search by celestial body, e.g. M31, Orion…"
+        placeholder="Buscar por cuerpo celeste, ej. M31, Orión…"
         value={local}
         onChange={(e) => setLocal(e.target.value)}
         className="flex-1"
-        aria-label="Search images"
+        aria-label="Buscar imágenes"
         disabled={isFetching}
       />
       <Button type="submit" disabled={isFetching}>
-        {isFetching ? "Searching…" : "Search"}
+        {isFetching ? "Buscando…" : "Buscar"}
       </Button>
     </form>
   );

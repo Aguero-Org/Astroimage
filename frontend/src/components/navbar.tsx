@@ -34,15 +34,15 @@ export function Navbar() {
         >
           <Input
             type="search"
-            placeholder="Search by celestial body…"
+            placeholder="Buscar por cuerpo celeste…"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             className="w-64"
-            aria-label="Search images"
+            aria-label="Buscar imágenes"
             disabled={fetchMutation.isPending}
           />
           <Button type="submit" size="sm" disabled={fetchMutation.isPending}>
-            {fetchMutation.isPending ? "Searching…" : "Search"}
+            {fetchMutation.isPending ? "Buscando…" : "Buscar"}
           </Button>
         </form>
       </div>

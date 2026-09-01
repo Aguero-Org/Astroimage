@@ -26,7 +26,7 @@ export function ImageListItem({ record, onSelect }: ImageListItemProps) {
       </CardHeader>
       <CardContent className="flex items-center gap-2 px-4">
         <Badge variant="outline">{record.record_id.slice(0, 8)}…</Badge>
-        <span className="text-xs text-muted-foreground">View image →</span>
+        <span className="text-xs text-muted-foreground">Ver imagen →</span>
       </CardContent>
     </Card>
   );
