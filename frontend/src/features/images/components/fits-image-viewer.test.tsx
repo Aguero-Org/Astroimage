@@ -27,7 +27,9 @@ describe("FitsImageViewer", () => {
       />,
     );
 
-    expect(screen.getByRole("img", { name: "m31 render" })).toBeInTheDocument();
+    const canvas = screen.getByRole("img", { name: "m31 render" });
+    expect(canvas).toBeInTheDocument();
+    expect(canvas.className).toContain("bg-transparent");
     expect(screen.getByRole("button", { name: "Acercar" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Alejar" })).toBeInTheDocument();
     expect(

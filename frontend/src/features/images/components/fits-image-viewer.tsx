@@ -26,6 +26,7 @@ export function FitsImageViewer({
       showNavigationControl: false,
       showNavigator: true,
       navigatorId,
+      navigatorBackground: "transparent",
       navigatorAutoFade: false,
       animationTime: 0.4,
       minZoomImageRatio: 0.8,
@@ -54,7 +55,7 @@ export function FitsImageViewer({
     <ViewerStateProvider state={state}>
       <div
         className={cn(
-          "relative overflow-hidden rounded-xl border bg-card",
+          "relative overflow-hidden rounded-xl border bg-transparent",
           className,
         )}
       >
@@ -62,11 +63,11 @@ export function FitsImageViewer({
           ref={state.setContainerElement}
           role="img"
           aria-label={label}
-          className="h-[min(70vh,40rem)] w-full bg-black"
+          className="fits-osd h-[min(70vh,40rem)] w-full bg-transparent"
         />
         <div
           id={navigatorId}
-          className="pointer-events-auto absolute right-3 bottom-3 h-28 w-40 overflow-hidden rounded-md border bg-card shadow-sm"
+          className="pointer-events-auto absolute right-3 bottom-3 h-28 w-40 overflow-hidden rounded-md border bg-transparent shadow-sm"
         />
         <FitsImageViewerToolbar />
       </div>

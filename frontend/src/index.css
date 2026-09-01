@@ -80,3 +80,7 @@
     margin: 0;
   }
 }
+
+.fits-osd canvas {
+  background-color: transparent;
+}
