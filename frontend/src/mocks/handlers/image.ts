@@ -1,5 +1,10 @@
 import { HttpResponse, http } from "msw";
-import { filterRecords, findRecord, mockRecords } from "../data/image";
+import {
+  filterRecords,
+  findRecord,
+  mockRecords,
+  mockSourceDetection,
+} from "../data/image";
 
 const apiBaseUrl = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000";
 
@@ -28,22 +33,7 @@ export const imageHandlers = [
     if (!record) {
       return HttpResponse.json({ detail: "Image not found" }, { status: 404 });
     }
-    return HttpResponse.json({
-      source_name: record.name,
-      summary: { point_count: 1, extended_count: 0 },
-      point_sources: [
-        {
-          source_id: 1,
-          rank: 1,
-          xcentroid: 12.5,
-          ycentroid: 8.25,
-          snr: 11.2,
-          relevance_score: 0.64,
-          object_type: "point",
-        },
-      ],
-      extended_sources: [],
-    });
+    return HttpResponse.json(mockSourceDetection(record));
   }),
 
   http.get(`${apiBaseUrl}/image/:recordId/info`, ({ params }) => {

@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { FitsImageViewer } from "@/features/images/components/fits-image-viewer";
 import { SourceDetectionForm } from "@/features/images/components/source-detection-form";
+import { DEFAULT_SOURCE_DETECTION_PARAMS } from "@/features/images/source-detection";
 
 export const Route = createFileRoute("/image/$recordId")({
   component: ImageDetailPage,
@@ -18,15 +19,10 @@ function ImageDetailPage() {
 
   const renderQuery = useRenderFitsImage(recordId);
   const infoQuery = useGetImageInfo(recordId);
-  const [detectionParams, setDetectionParams] =
-    useState<DetectSourcesParams | null>(null);
-  const sourcesQuery = useDetectSources(
-    recordId,
-    detectionParams ?? undefined,
-    {
-      query: { enabled: detectionParams !== null },
-    },
+  const [detectionParams, setDetectionParams] = useState<DetectSourcesParams>(
+    DEFAULT_SOURCE_DETECTION_PARAMS,
   );
+  const sourcesQuery = useDetectSources(recordId, detectionParams);
   const sourceName =
     infoQuery.data?.status === 200
       ? infoQuery.data.data.source_name

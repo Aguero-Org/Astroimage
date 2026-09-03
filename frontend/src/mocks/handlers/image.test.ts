@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
+import type { SourceDetectionResponse } from "@/api/generated/model";
 import { customFetch } from "@/lib/api-client";
+import { MOCK_POINT_SOURCE } from "@/mocks/data/image";
 
 type ListRecordsResponse = {
   records: { record_id: string; name: string }[];
@@ -56,18 +58,34 @@ describe("image mock contract", () => {
     );
   });
 
-  it("GET /image/:id/sources returns point detections", async () => {
+  it("GET /image/:id/sources returns canned point detections", async () => {
     const result = await customFetch<{
-      data: {
-        summary: { point_count: number };
-        point_sources: { xcentroid: number }[];
-      };
+      data: SourceDetectionResponse;
       status: number;
     }>("/image/m31/sources");
 
     expect(result.status).toBe(200);
     expect(result.data.summary.point_count).toBe(1);
-    expect(result.data.point_sources[0]?.xcentroid).toBe(12.5);
+    expect(result.data.point_sources?.[0]).toEqual(MOCK_POINT_SOURCE);
+  });
+
+  it("GET /image/:id/sources ignores detection query params", async () => {
+    const result = await customFetch<{
+      data: SourceDetectionResponse;
+      status: number;
+    }>("/image/m31/sources?fwhm=99&sigma=99&max_sources=1");
+
+    expect(result.data.point_sources?.[0]).toEqual(MOCK_POINT_SOURCE);
+  });
+
+  it("GET /image/:id/sources returns 404 for unknown id", async () => {
+    await expect(customFetch("/image/unknown/sources")).rejects.toSatisfy(
+      (error: unknown) => {
+        return (
+          error instanceof Error && "status" in error && error.status === 404
+        );
+      },
+    );
   });
 
   it("GET /image/:id returns a PNG blob", async () => {
