@@ -9,6 +9,8 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 from starlette.responses import Response, StreamingResponse
 
+from astroimage.shared.telemetry import current_trace_ids
+
 logger = structlog.get_logger("astroimage.http")
 
 _BINARY_CONTENT_TYPES = (
@@ -49,8 +51,13 @@ class RequestContextMiddleware(BaseHTTPMiddleware):
         call_next: Callable[[Request], Awaitable[Response]],
     ) -> Response:
         request_id = request.headers.get("x-request-id") or str(uuid.uuid4())
+        settings = getattr(request.app.state, "settings", None)
+        service_name = getattr(settings, "app_name", None)
         structlog.contextvars.clear_contextvars()
-        structlog.contextvars.bind_contextvars(request_id=request_id)
+        context: dict[str, str] = {"request_id": request_id}
+        if isinstance(service_name, str) and service_name:
+            context["service_name"] = service_name
+        structlog.contextvars.bind_contextvars(**context)
 
         request_body = b""
         if request.method in {"POST", "PUT", "PATCH"}:
@@ -66,6 +73,11 @@ class RequestContextMiddleware(BaseHTTPMiddleware):
         response_body_bytes = None if streaming else len(response_body)
 
         response.headers["x-request-id"] = request_id
+        trace_id, span_id = current_trace_ids()
+        if trace_id is not None:
+            structlog.contextvars.bind_contextvars(trace_id=trace_id)
+        if span_id is not None:
+            structlog.contextvars.bind_contextvars(span_id=span_id)
 
         request_content_type = request.headers.get("content-type", "")
         logger.info(
@@ -74,6 +86,10 @@ class RequestContextMiddleware(BaseHTTPMiddleware):
             path=request.url.path,
             status=response.status_code,
             latency_ms=latency_ms,
+            request_id=request_id,
+            service_name=service_name,
+            trace_id=trace_id,
+            span_id=span_id,
             request_body=_decode_body(request_body, request_content_type),
             request_body_bytes=len(request_body),
             response_body=_decode_body(response_body, response_content_type),

@@ -13,6 +13,13 @@ from opentelemetry.sdk.trace.export import BatchSpanProcessor
 _NON_EXPORTING_SDK = frozenset({"none", "noop"})
 
 
+def current_trace_ids() -> tuple[str | None, str | None]:
+    span_context = trace.get_current_span().get_span_context()
+    if span_context is None or not span_context.is_valid:
+        return None, None
+    return format(span_context.trace_id, "032x"), format(span_context.span_id, "016x")
+
+
 def setup_tracing(app: FastAPI, *, service_name: str, otlp_endpoint: str | None) -> None:
     resource = Resource.create({"service.name": service_name})
     provider = TracerProvider(resource=resource)
