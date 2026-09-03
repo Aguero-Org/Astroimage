@@ -31,4 +31,40 @@ describe("SourceDetectionForm", () => {
       screen.getByRole("button", { name: "Ayuda: Máximo de fuentes" }),
     ).toBeInTheDocument();
   });
+
+  it("allows clearing a numeric field without restoring zero", async () => {
+    const user = userEvent.setup();
+    render(<SourceDetectionForm isPending={false} onSubmit={vi.fn()} />);
+
+    const fwhm = screen.getByLabelText("FWHM");
+    await user.clear(fwhm);
+
+    expect(fwhm).toHaveValue(null);
+  });
+
+  it("does not submit while a field is empty", async () => {
+    const onSubmit = vi.fn();
+    const user = userEvent.setup();
+    render(<SourceDetectionForm isPending={false} onSubmit={onSubmit} />);
+
+    await user.clear(screen.getByLabelText("FWHM"));
+    await user.click(screen.getByRole("button", { name: "Detectar fuentes" }));
+
+    expect(onSubmit).not.toHaveBeenCalled();
+  });
+
+  it("submits the typed value after clearing a field", async () => {
+    const onSubmit = vi.fn();
+    const user = userEvent.setup();
+    render(<SourceDetectionForm isPending={false} onSubmit={onSubmit} />);
+
+    const fwhm = screen.getByLabelText("FWHM");
+    await user.clear(fwhm);
+    await user.type(fwhm, "3.2");
+    await user.click(screen.getByRole("button", { name: "Detectar fuentes" }));
+
+    expect(onSubmit).toHaveBeenCalledWith(
+      expect.objectContaining({ fwhm: 3.2 }),
+    );
+  });
 });

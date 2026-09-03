@@ -75,18 +75,58 @@ const FIELDS: { key: FieldKey; label: string; step: string; help: string }[] = [
   },
 ];
 
+function paramsToDraft(
+  params: typeof DEFAULT_SOURCE_DETECTION_PARAMS,
+): Record<FieldKey, string> {
+  return {
+    fwhm: String(params.fwhm),
+    sigma: String(params.sigma),
+    min_snr: String(params.min_snr),
+    min_score: String(params.min_score),
+    min_distance: String(params.min_distance),
+    visual_weight: String(params.visual_weight),
+    visual_area_radius: String(params.visual_area_radius),
+    visual_area_sigma: String(params.visual_area_sigma),
+    max_sources: String(params.max_sources),
+  };
+}
+
+function parseDraft(
+  draft: Record<FieldKey, string>,
+): typeof DEFAULT_SOURCE_DETECTION_PARAMS | null {
+  const parsed: Partial<typeof DEFAULT_SOURCE_DETECTION_PARAMS> = {};
+  for (const field of FIELDS) {
+    const raw = draft[field.key].trim();
+    if (raw === "") {
+      return null;
+    }
+    const numeric = Number(raw);
+    if (!Number.isFinite(numeric)) {
+      return null;
+    }
+    parsed[field.key] = numeric;
+  }
+  return {
+    ...(parsed as typeof DEFAULT_SOURCE_DETECTION_PARAMS),
+    max_sources: Math.round(parsed.max_sources ?? 0),
+  };
+}
+
 export function SourceDetectionForm({
   isPending,
   onSubmit,
 }: SourceDetectionFormProps) {
-  const [values, setValues] = useState(DEFAULT_SOURCE_DETECTION_PARAMS);
+  const [draft, setDraft] = useState(() =>
+    paramsToDraft(DEFAULT_SOURCE_DETECTION_PARAMS),
+  );
 
   function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
-    onSubmit({
-      ...values,
-      max_sources: Math.round(values.max_sources ?? 0),
-    });
+    const values = parseDraft(draft);
+    if (values === null) {
+      return;
+    }
+    onSubmit(values);
   }
 
   return (
@@ -118,11 +158,11 @@ export function SourceDetectionForm({
                 id={field.key}
                 type="number"
                 step={field.step}
-                value={values[field.key]}
+                value={draft[field.key]}
                 disabled={isPending}
                 onChange={(event) => {
-                  const nextValue = Number(event.target.value);
-                  setValues((current) => ({
+                  const nextValue = event.target.value;
+                  setDraft((current) => ({
                     ...current,
                     [field.key]: nextValue,
                   }));
