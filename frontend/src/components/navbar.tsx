@@ -1,22 +1,10 @@
-import { useNavigate } from "@tanstack/react-router";
-import { Search } from "lucide-react";
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { useImageFetch } from "@/features/images/use-image-fetch";
+import { useNavigate, useSearch } from "@tanstack/react-router";
+import { ImageSearch } from "@/features/images/components/image-search";
 
 export function Navbar() {
   const navigate = useNavigate();
-  const fetchMutation = useImageFetch();
-  const [query, setQuery] = useState("");
-
-  function handleSubmit(event: React.FormEvent) {
-    event.preventDefault();
-    if (query.trim().length > 0) {
-      fetchMutation.mutate(query);
-    }
-    navigate({ to: "/", search: { query } });
-  }
+  const search = useSearch({ strict: false });
+  const urlQuery = typeof search.query === "string" ? search.query : "";
 
   return (
     <header className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur">
@@ -29,24 +17,11 @@ export function Navbar() {
           <img src="/favicon.svg" alt="astroimage" className="h-8 w-8" />
           <span className="text-lg font-semibold">Astroimage</span>
         </button>
-        <form
-          className="flex min-w-0 items-center gap-2"
-          onSubmit={handleSubmit}
-        >
-          <Input
-            type="search"
-            placeholder="Buscar por cuerpo celeste…"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            className="w-36 sm:w-52 md:w-64 lg:w-72"
-            aria-label="Buscar imágenes"
-            disabled={fetchMutation.isPending}
-          />
-          <Button type="submit" size="sm" disabled={fetchMutation.isPending}>
-            <Search className="size-4" />
-            {fetchMutation.isPending ? "Buscando…" : "Buscar"}
-          </Button>
-        </form>
+        <ImageSearch
+          variant="navbar"
+          value={urlQuery}
+          onSearch={(query) => navigate({ to: "/", search: { query } })}
+        />
       </div>
     </header>
   );

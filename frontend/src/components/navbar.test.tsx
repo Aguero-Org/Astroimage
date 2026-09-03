@@ -4,10 +4,7 @@ import { Navbar } from "./navbar";
 
 vi.mock("@tanstack/react-router", () => ({
   useNavigate: () => vi.fn(),
-}));
-
-vi.mock("@/features/images/use-image-fetch", () => ({
-  useImageFetch: () => ({ isPending: false, mutate: vi.fn() }),
+  useSearch: () => ({}),
 }));
 
 describe("Navbar", () => {

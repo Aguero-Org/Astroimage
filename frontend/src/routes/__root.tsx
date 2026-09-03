@@ -13,7 +13,7 @@ function RootLayout() {
 
   return (
     <>
-      {!isHome && <Navbar />}
+      {isHome ? null : <Navbar />}
       <Outlet />
       <TanStackRouterDevtools />
       <ReactQueryDevtools buttonPosition="bottom-left" />

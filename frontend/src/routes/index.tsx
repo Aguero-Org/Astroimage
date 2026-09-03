@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useEffect } from "react";
 import { ImageList } from "@/features/images/components/image-list";
 import { ImageSearch } from "@/features/images/components/image-search";
 import { useImageFetch } from "@/features/images/use-image-fetch";
@@ -14,13 +15,14 @@ function HomePage() {
   const { query } = Route.useSearch();
   const navigate = Route.useNavigate();
   const fetchMutation = useImageFetch();
+  const trimmedQuery = query.trim();
 
-  function handleSearch(q: string) {
-    navigate({ to: "/", search: { query: q } });
-    if (q.trim().length > 0) {
-      fetchMutation.mutate(q);
+  useEffect(() => {
+    if (trimmedQuery.length === 0) {
+      return;
     }
-  }
+    fetchMutation.mutate(trimmedQuery);
+  }, [trimmedQuery, fetchMutation.mutate]);
 
   return (
     <main className="flex min-h-svh flex-col items-center gap-6 p-6">
@@ -29,8 +31,11 @@ function HomePage() {
         <h1 className="text-2xl font-semibold">Astroimage</h1>
       </div>
       <ImageSearch
+        variant="hero"
         value={query}
-        onSearch={handleSearch}
+        onSearch={(nextQuery) => {
+          navigate({ to: "/", search: { query: nextQuery } });
+        }}
         isFetching={fetchMutation.isPending}
       />
       <ImageList
