@@ -3,6 +3,10 @@ auth_enabled: false
 server:
   http_listen_port: 3100
 
+ingester:
+  lifecycler:
+    min_ready_duration: 0s
+
 common:
   ring:
     instance_addr: 127.0.0.1

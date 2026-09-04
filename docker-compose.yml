@@ -11,6 +11,7 @@ services:
       LOG_LEVEL: info
       ENVIRONMENT: development
       OTLP_ENDPOINT: http://host.docker.internal:4318/v1/traces
+      OTEL_SERVICE_NAME: astroimage
       MINIO_ENDPOINT: minio:9000
       MINIO_ACCESS_KEY: minioadmin
       MINIO_SECRET_KEY: minioadmin
