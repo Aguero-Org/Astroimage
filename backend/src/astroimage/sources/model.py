@@ -12,6 +12,7 @@ class BackgroundModel:
     background: np.ndarray
     background_rms: np.ndarray
     data_sub: np.ndarray
+    mask: np.ndarray
 
 
 class PointSource(BaseModel):
@@ -33,6 +34,11 @@ class ExtendedSource(BaseModel):
 
     source_id: int
     rank: int
+    xcentroid: float
+    ycentroid: float
+    snr: float
+    peak: float | None = None
+    flux: float | None = None
     object_type: Literal["extended"] = "extended"
 
 

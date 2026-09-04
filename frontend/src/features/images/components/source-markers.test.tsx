@@ -36,4 +36,36 @@ describe("SourceMarkers", () => {
       screen.getByRole("img", { name: "Fuente 2, SNR 9.4" }),
     ).toBeInTheDocument();
   });
+
+  it("marks an extended source over the image", () => {
+    render(
+      <SourceMarkers
+        sources={[
+          {
+            source_id: 7,
+            rank: 2,
+            xcentroid: 40,
+            ycentroid: 15,
+            snr: 9.4,
+            relevance_score: 0.5,
+            object_type: "point",
+          },
+        ]}
+        extendedSources={[
+          {
+            source_id: 101,
+            rank: 1,
+            xcentroid: 90.25,
+            ycentroid: 55.5,
+            snr: 5400,
+            object_type: "extended",
+          },
+        ]}
+      />,
+    );
+
+    expect(
+      screen.getByRole("img", { name: "Extendida 1, SNR 5400.0" }),
+    ).toBeInTheDocument();
+  });
 });

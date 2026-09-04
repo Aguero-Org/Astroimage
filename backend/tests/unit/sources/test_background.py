@@ -33,3 +33,21 @@ def test_all_nan_image_raises() -> None:
 
     with pytest.raises(ValueError, match="No finite values"):
         estimate_background(image)
+
+
+def test_mask_marks_invalid_pixels() -> None:
+    rng = np.random.default_rng(0)
+    image = rng.normal(size=(128, 128))
+    image[:4, :] = np.nan
+    image[-4:, :] = np.nan
+    image[:, :4] = np.nan
+    image[:, -4:] = np.nan
+
+    model = estimate_background(image)
+
+    assert model.mask.shape == image.shape
+    assert model.mask.dtype == bool
+    assert model.mask[2, 2]
+    assert not model.mask[64, 64]
+    assert np.isnan(model.data_sub[2, 2])
+    assert np.isfinite(model.data_sub[64, 64])

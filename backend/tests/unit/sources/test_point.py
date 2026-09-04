@@ -61,3 +61,28 @@ def test_invalid_background_rms_raises() -> None:
 
     with pytest.raises(ValueError, match="RMS"):
         detect_point_sources(image, np.full((256, 256), 0.0))
+
+
+def test_mask_excludes_sources_in_masked_region() -> None:
+    size = 128
+    coordinates = np.mgrid[0:size, 0:size]
+    image = np.zeros((size, size))
+    sigma = 5.0 / 2.3548
+    for coordinate_x, coordinate_y in ((30.5, 30.5), (90.5, 60.5), (60.5, 90.5)):
+        distance_sq = (coordinates[1] - coordinate_x) ** 2 + (coordinates[0] - coordinate_y) ** 2
+        image += 3000.0 * np.exp(-distance_sq / (2.0 * sigma**2))
+    noise = np.full((size, size), 8.0)
+    mask = np.zeros((size, size), dtype=bool)
+    mask[:50, :] = True
+
+    detected = detect_point_sources(
+        image,
+        noise,
+        fwhm=5.0,
+        sigma=6.0,
+        min_distance=6.0,
+        mask=mask,
+    )
+
+    assert len(detected) >= 2
+    assert np.all(detected["ycentroid"] >= 50)

@@ -34,9 +34,15 @@ def _scalar_rms(background_rms: np.ndarray) -> float:
     return rms
 
 
-def _run_starfinder(data_sub: np.ndarray, rms: float, fwhm: float, sigma: float) -> Table | None:
+def _run_starfinder(
+    data_sub: np.ndarray,
+    rms: float,
+    fwhm: float,
+    sigma: float,
+    mask: np.ndarray | None,
+) -> Table | None:
     finder = DAOStarFinder(fwhm=fwhm, threshold=sigma * rms, exclude_border=True)
-    return finder(data_sub)
+    return finder.find_stars(data_sub, mask=mask)
 
 
 def _table_to_frame(table: Table) -> pd.DataFrame:
@@ -334,9 +340,10 @@ def detect_point_sources(
     visual_area_radius: float = 7.0,
     visual_area_sigma: float = 2.0,
     visual_weight: float = 0.80,
+    mask: np.ndarray | None = None,
 ) -> pd.DataFrame:
     rms = _scalar_rms(background_rms)
-    table = _run_starfinder(data_sub, rms, fwhm, sigma)
+    table = _run_starfinder(data_sub, rms, fwhm, sigma, mask)
 
     if table is None or len(table) == 0:
         return pd.DataFrame(columns=_EMPTY_COLUMNS)

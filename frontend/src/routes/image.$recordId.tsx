@@ -35,6 +35,10 @@ function ImageDetailPage() {
     sourcesQuery.data?.status === 200
       ? (sourcesQuery.data.data.point_sources ?? [])
       : [];
+  const extendedSources =
+    sourcesQuery.data?.status === 200
+      ? (sourcesQuery.data.data.extended_sources ?? [])
+      : [];
   const detectionSummary =
     sourcesQuery.data?.status === 200
       ? sourcesQuery.data.data.summary
@@ -72,6 +76,7 @@ function ImageDetailPage() {
                 imageUrl={objectUrl}
                 label={sourceName ?? `Render FITS ${recordId}`}
                 pointSources={pointSources}
+                extendedSources={extendedSources}
               />
             ) : (
               <p className="text-sm text-muted-foreground">

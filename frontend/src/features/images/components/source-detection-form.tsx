@@ -73,6 +73,18 @@ const FIELDS: { key: FieldKey; label: string; step: string; help: string }[] = [
     step: "1",
     help: "Tope de fuentes a devolver, ordenadas por relevancia. 0 significa sin límite.",
   },
+  {
+    key: "extended_min_snr",
+    label: "SNR mín. extendidas",
+    step: "100",
+    help: "SNR mínimo (peak/RMS) para reportar una región extendida. 0 no filtra; el ranking por relevancia prioriza regiones grandes y brillantes.",
+  },
+  {
+    key: "extended_max_sources",
+    label: "Máx. extendidas",
+    step: "1",
+    help: "Tope de fuentes extendidas a devolver. 0 significa sin límite.",
+  },
 ];
 
 export function SourceDetectionForm({
@@ -86,6 +98,7 @@ export function SourceDetectionForm({
     onSubmit({
       ...values,
       max_sources: Math.round(values.max_sources ?? 0),
+      extended_max_sources: Math.round(values.extended_max_sources ?? 0),
     });
   }
 

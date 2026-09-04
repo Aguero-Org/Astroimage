@@ -33,6 +33,8 @@ VisualWeightParam = Annotated[float, Query(ge=0.0, le=1.0)]
 VisualAreaRadiusParam = Annotated[float, Query(ge=1.0)]
 VisualAreaSigmaParam = Annotated[float, Query(ge=0.0)]
 MaxSourcesParam = Annotated[int, Query(ge=0)]
+ExtendedMinSnrParam = Annotated[float, Query(ge=0.0)]
+ExtendedMaxSourcesParam = Annotated[int, Query(ge=0)]
 
 
 def _config(
@@ -45,6 +47,8 @@ def _config(
     visual_area_radius: float,
     visual_area_sigma: float,
     max_sources: int,
+    extended_min_snr: float,
+    extended_max_sources: int,
 ) -> PointDetectionConfigSchema:
     return PointDetectionConfigSchema(
         fwhm=fwhm,
@@ -56,6 +60,8 @@ def _config(
         visual_area_radius=visual_area_radius,
         visual_area_sigma=visual_area_sigma,
         max_sources=max_sources,
+        extended_min_snr=extended_min_snr,
+        extended_max_sources=extended_max_sources,
     )
 
 
@@ -77,6 +83,8 @@ async def detect_sources(
     visual_area_radius: VisualAreaRadiusParam = _DEFAULTS.visual_area_radius,
     visual_area_sigma: VisualAreaSigmaParam = _DEFAULTS.visual_area_sigma,
     max_sources: MaxSourcesParam = _DEFAULTS.max_sources,
+    extended_min_snr: ExtendedMinSnrParam = _DEFAULTS.extended_min_snr,
+    extended_max_sources: ExtendedMaxSourcesParam = _DEFAULTS.extended_max_sources,
 ) -> SourceDetectionResponse:
     _log.info(
         "detect_start",
@@ -100,6 +108,8 @@ async def detect_sources(
                 visual_area_radius,
                 visual_area_sigma,
                 max_sources,
+                extended_min_snr,
+                extended_max_sources,
             ),
         )
     except LookupError as exc:

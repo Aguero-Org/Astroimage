@@ -4,7 +4,10 @@ import {
   ViewerStateProvider,
 } from "@cellbytes/react-openseadragon";
 import { useId, useMemo } from "react";
-import type { PointSourceSchema } from "@/api/generated/model";
+import type {
+  ExtendedSourceSchema,
+  PointSourceSchema,
+} from "@/api/generated/model";
 import { cn } from "@/lib/utils";
 import { FITS_RENDER_IMAGE_KEY } from "../source-detection";
 import { FitsImageViewerToolbar } from "./fits-image-viewer-toolbar";
@@ -15,6 +18,7 @@ type FitsImageViewerProps = {
   label: string;
   className?: string;
   pointSources?: PointSourceSchema[];
+  extendedSources?: ExtendedSourceSchema[];
 };
 
 export function FitsImageViewer({
@@ -22,6 +26,7 @@ export function FitsImageViewer({
   label,
   className,
   pointSources = [],
+  extendedSources = [],
 }: FitsImageViewerProps) {
   const viewerId = useId().replaceAll(":", "");
   const navigatorId = `fits-osd-nav-${viewerId}`;
@@ -74,7 +79,10 @@ export function FitsImageViewer({
           id={navigatorId}
           className="pointer-events-auto absolute right-3 bottom-3 h-28 w-40 overflow-hidden rounded-md border bg-transparent shadow-sm"
         />
-        <SourceMarkers sources={pointSources} />
+        <SourceMarkers
+          sources={pointSources}
+          extendedSources={extendedSources}
+        />
         <FitsImageViewerToolbar />
       </div>
       <TiledImage imageKey={FITS_RENDER_IMAGE_KEY} tileSource={tileSource} />

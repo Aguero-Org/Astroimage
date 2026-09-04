@@ -17,6 +17,8 @@ class PointDetectionConfigSchema(BaseModel):
     visual_area_radius: float = Field(default=7.0, ge=1.0)
     visual_area_sigma: float = Field(default=2.0, ge=0.0)
     max_sources: int = Field(default=50, ge=0)
+    extended_min_snr: float = Field(default=0.0, ge=0.0)
+    extended_max_sources: int = Field(default=50, ge=0)
 
 
 class PointSourceSchema(BaseModel):
@@ -38,6 +40,11 @@ class ExtendedSourceSchema(BaseModel):
 
     source_id: int
     rank: int
+    xcentroid: float
+    ycentroid: float
+    snr: float
+    peak: float | None = None
+    flux: float | None = None
     object_type: Literal["extended"] = "extended"
 
 

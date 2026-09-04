@@ -29,14 +29,20 @@ def estimate_background(
         filter_size=(filter_size, filter_size),
         sigma_clip=SigmaClip(sigma=sigma),
         bkg_estimator=MedianBackground(),
+        mask=~finite,
     )
 
     rms = float(np.nanmedian(background.background_rms))
     if not np.isfinite(rms) or rms <= 0:
         raise ValueError(f"Invalid background RMS: {rms}")
 
+    data_sub = clean - background.background
+    mask = ~finite | ~np.isfinite(data_sub)
+    masked_data_sub = np.where(mask, np.nan, data_sub)
+
     return BackgroundModel(
         background=background.background,
         background_rms=background.background_rms,
-        data_sub=clean - background.background,
+        data_sub=masked_data_sub,
+        mask=mask,
     )

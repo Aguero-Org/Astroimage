@@ -30,7 +30,7 @@ export const imageHandlers = [
     }
     return HttpResponse.json({
       source_name: record.name,
-      summary: { point_count: 1, extended_count: 0 },
+      summary: { point_count: 1, extended_count: 1 },
       point_sources: [
         {
           source_id: 1,
@@ -42,7 +42,17 @@ export const imageHandlers = [
           object_type: "point",
         },
       ],
-      extended_sources: [],
+      extended_sources: [
+        {
+          source_id: 101,
+          rank: 1,
+          xcentroid: 90.25,
+          ycentroid: 55.5,
+          snr: 5400,
+          peak: 42.1,
+          object_type: "extended",
+        },
+      ],
     });
   }),
 

@@ -48,4 +48,12 @@ visual_area_sigma?: number;
  * @minimum 0
  */
 max_sources?: number;
+/**
+ * @minimum 0
+ */
+extended_min_snr?: number;
+/**
+ * @minimum 0
+ */
+extended_max_sources?: number;
 };

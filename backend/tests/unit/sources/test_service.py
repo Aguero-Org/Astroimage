@@ -7,7 +7,7 @@ import numpy as np
 import pytest
 
 from astroimage.fits.model import FitsRecord
-from astroimage.sources.model import PointSource, SourceDetectionResult
+from astroimage.sources.model import ExtendedSource, PointSource, SourceDetectionResult
 from astroimage.sources.schema import PointDetectionConfigSchema
 from astroimage.sources.service import SourceDetectionService
 from tests.unit.sources.helpers import fits_bytes_from_image, synthetic_point_source_image
@@ -110,3 +110,42 @@ async def test_detect_from_missing_record_raises() -> None:
 
     with pytest.raises(LookupError):
         await service.detect_from_record(uuid4())
+
+
+def test_service_detects_extended_source_and_maps_schema() -> None:
+    image, _ = synthetic_point_source_image(size=600)
+    coordinate_y, coordinate_x = np.mgrid[0:600, 0:600]
+    cosine = np.cos(np.deg2rad(45.0))
+    sine = np.sin(np.deg2rad(45.0))
+    delta_x = coordinate_x - 300.0
+    delta_y = coordinate_y - 300.0
+    axis_x = cosine * delta_x + sine * delta_y
+    axis_y = -sine * delta_x + cosine * delta_y
+    bivariate = (axis_x / 14.0) ** 2 + (axis_y / 3.0) ** 2
+    image = image + 12000.0 * np.exp(-0.5 * bivariate)
+    payload = fits_bytes_from_image(image)
+
+    service = SourceDetectionService()
+    config = PointDetectionConfigSchema(
+        sigma=6.0,
+        fwhm=5.0,
+        extended_min_snr=100.0,
+        extended_max_sources=10,
+    )
+    result = service.detect(payload, source_name="survey.fits", config=config)
+
+    assert isinstance(result, SourceDetectionResult)
+    extended = [source for source in result.extended_sources if isinstance(source, ExtendedSource)]
+    near = [
+        source
+        for source in extended
+        if abs(source.xcentroid - 300.0) < 8.0 and abs(source.ycentroid - 300.0) < 8.0
+    ]
+    assert len(near) == 1
+    assert near[0].object_type == "extended"
+    assert near[0].rank == 1
+
+    schema = service.to_schema(result)
+    assert schema.summary.extended_count == len(result.extended_sources)
+    assert len(schema.extended_sources) == len(result.extended_sources)
+    assert schema.extended_sources[0].object_type == "extended"

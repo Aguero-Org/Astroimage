@@ -1,16 +1,55 @@
 import { useCoordinates, useViewerEvent } from "@cellbytes/react-openseadragon";
 import { useState } from "react";
-import type { PointSourceSchema } from "@/api/generated/model";
+import type {
+  ExtendedSourceSchema,
+  PointSourceSchema,
+} from "@/api/generated/model";
 import { FITS_RENDER_IMAGE_KEY } from "../source-detection";
 import { SourceMarker } from "./source-marker";
 
 type SourceMarkersProps = {
   sources: PointSourceSchema[];
+  extendedSources?: ExtendedSourceSchema[];
 };
 
-export function SourceMarkers({ sources }: SourceMarkersProps) {
+type MarkerEntry = {
+  key: string;
+  source: {
+    xcentroid: number;
+    ycentroid: number;
+    snr: number;
+    rank: number;
+    object_type?: string;
+  };
+};
+
+function toMarkerEntries(
+  points: PointSourceSchema[],
+  extended: ExtendedSourceSchema[],
+): MarkerEntry[] {
+  const entries: MarkerEntry[] = [];
+  for (const s of points) {
+    entries.push({
+      key: `point-${s.source_id}`,
+      source: s,
+    });
+  }
+  for (const s of extended) {
+    entries.push({
+      key: `extended-${s.source_id}`,
+      source: s,
+    });
+  }
+  return entries;
+}
+
+export function SourceMarkers({
+  sources,
+  extendedSources = [],
+}: SourceMarkersProps) {
   const coords = useCoordinates(FITS_RENDER_IMAGE_KEY);
   const [, setOverlayVersion] = useState(0);
+  const entries = toMarkerEntries(sources, extendedSources);
 
   function refreshOverlay() {
     setOverlayVersion((version) => version + 1);
@@ -20,21 +59,21 @@ export function SourceMarkers({ sources }: SourceMarkersProps) {
   useViewerEvent("animation-finish", refreshOverlay);
   useViewerEvent("resize", refreshOverlay);
 
-  if (!coords.tiledImage || sources.length === 0) {
+  if (!coords.tiledImage || entries.length === 0) {
     return null;
   }
 
   return (
     <ul className="pointer-events-none absolute inset-0 z-[5] overflow-hidden">
-      {sources.map((source) => {
+      {entries.map((entry) => {
         const viewport = coords.imageToViewport(
-          source.xcentroid,
-          source.ycentroid,
+          entry.source.xcentroid,
+          entry.source.ycentroid,
         );
         const pixel = coords.viewportToPixel(viewport);
         return (
           <li
-            key={source.source_id}
+            key={entry.key}
             className="absolute"
             style={{
               left: pixel.x,
@@ -42,7 +81,7 @@ export function SourceMarkers({ sources }: SourceMarkersProps) {
               transform: "translate(-50%, -50%)",
             }}
           >
-            <SourceMarker source={source} />
+            <SourceMarker source={entry.source} />
           </li>
         );
       })}

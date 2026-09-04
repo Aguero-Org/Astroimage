@@ -8,5 +8,10 @@
 export interface ExtendedSourceSchema {
   source_id: number;
   rank: number;
+  xcentroid: number;
+  ycentroid: number;
+  snr: number;
+  peak?: number | null;
+  flux?: number | null;
   object_type?: 'extended';
 }
