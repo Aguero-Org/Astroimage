@@ -1,124 +1,34 @@
 from __future__ import annotations
 
 import argparse
-import json
 import sys
 from collections.abc import Sequence
-from pathlib import Path
-from typing import TYPE_CHECKING
 
-if TYPE_CHECKING:
-    from alembic.config import Config
+from astroimage.scripts.db import cmd_db_reconcile, cmd_db_revision, cmd_db_upgrade
+from astroimage.scripts.openapi import cmd_openapi_export
+from astroimage.scripts.paths import backend_root
+from astroimage.scripts.seed import (
+    cmd_seed_delete,
+    cmd_seed_dump,
+    cmd_seed_list,
+    cmd_seed_load,
+)
+from astroimage.scripts.serve import cmd_serve
 
-
-def backend_root() -> Path:
-    package_root = Path(__file__).resolve().parent
-    candidates = (
-        package_root.parents[1],
-        package_root.parents[2],
-        Path.cwd(),
-    )
-    for candidate in candidates:
-        if (candidate / "alembic.ini").is_file():
-            return candidate
-    return package_root.parents[1]
-
-
-def _alembic_config() -> Config:
-    from alembic.config import Config
-
-    root = backend_root()
-    config = Config(str(root / "alembic.ini"))
-    config.set_main_option("script_location", str(root / "alembic"))
-    return config
-
-
-def cmd_serve(args: argparse.Namespace) -> int:
-    import uvicorn
-
-    uvicorn.run(
-        "astroimage.main:app",
-        host=args.host,
-        port=args.port,
-        reload=args.reload,
-    )
-    return 0
-
-
-def cmd_db_upgrade(args: argparse.Namespace) -> int:
-    from alembic import command
-
-    command.upgrade(_alembic_config(), args.revision)
-    return 0
-
-
-def cmd_db_revision(args: argparse.Namespace) -> int:
-    from alembic import command
-
-    command.revision(
-        _alembic_config(),
-        message=args.message,
-        autogenerate=args.autogenerate,
-    )
-    return 0
-
-
-def cmd_db_reconcile(args: argparse.Namespace) -> int:
-    import asyncio
-
-    from astroimage.config import get_settings
-    from astroimage.fits.reader import FitsReader
-    from astroimage.fits.repository import FitsRepository
-    from astroimage.fits.service import FitsService, ReconcileReport
-    from astroimage.fits.storage import FitsStorage
-    from astroimage.shared.database import (
-        create_engine_from_settings,
-        create_session_factory,
-    )
-    from astroimage.shared.minio_storage import (
-        MinioObjectStorage,
-        create_object_storage_client,
-    )
-
-    async def _run() -> ReconcileReport:
-        settings = get_settings()
-        engine = create_engine_from_settings(settings)
-        session_factory = create_session_factory(engine)
-        client = create_object_storage_client(settings)
-        objects = MinioObjectStorage(client, settings.minio_bucket)
-        storage = FitsStorage(objects)
-        try:
-            async with session_factory() as session:
-                repository = FitsRepository(session)
-                service = FitsService(FitsReader(), repository, storage)
-                report = await service.reconcile_records()
-                await session.commit()
-                return report
-        finally:
-            await engine.dispose()
-
-    report = asyncio.run(_run())
-    print(
-        f"reconcile: created={len(report.created)} "
-        f"updated={len(report.updated)} skipped={len(report.skipped)} "
-        f"failed={len(report.failed)}"
-    )
-    for key in report.created:
-        print(f"  created: {key}")
-    for key in report.updated:
-        print(f"  updated: {key}")
-    for key in report.failed:
-        print(f"  failed:  {key}")
-    return 1 if report.failed else 0
-
-
-def cmd_openapi_export(args: argparse.Namespace) -> int:
-    from astroimage.main import app
-
-    target = Path(args.output) if args.output else backend_root() / "openapi.json"
-    target.write_text(json.dumps(app.openapi(), indent=2) + "\n", encoding="utf-8")
-    print(f"Wrote {target}")
-    return 0
+__all__ = [
+    "backend_root",
+    "build_parser",
+    "cmd_db_reconcile",
+    "cmd_db_revision",
+    "cmd_db_upgrade",
+    "cmd_openapi_export",
+    "cmd_seed_delete",
+    "cmd_seed_dump",
+    "cmd_seed_list",
+    "cmd_seed_load",
+    "cmd_serve",
+    "main",
+]
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -156,6 +66,45 @@ def build_parser() -> argparse.ArgumentParser:
         help="Recreate fits_records rows from stored FITS objects",
     )
     reconcile.set_defaults(handler=cmd_db_reconcile)
+
+    seed = subparsers.add_parser(
+        "seed",
+        help="Dev: snapshot/restore MinIO+Postgres test data via GitHub Releases",
+    )
+    seed_sub = seed.add_subparsers(dest="seed_command", required=True)
+    seed_dump = seed_sub.add_parser("dump", help="Dump current MinIO objects and Postgres rows")
+    seed_dump.add_argument(
+        "-o",
+        "--output",
+        default=None,
+        help="Output path (default: seed-YYYY-MM-DD-HHMMSSZ.tar.gz)",
+    )
+    seed_dump.add_argument("--tag", default=None, help="Upload archive to this GitHub release tag")
+    seed_dump.add_argument("--owner", default="Aguero-Org")
+    seed_dump.add_argument("--repo", default="Astroimage")
+    seed_dump.set_defaults(handler=cmd_seed_dump)
+
+    seed_load = seed_sub.add_parser("load", help="Restore a snapshot into MinIO and Postgres")
+    seed_load.add_argument("-f", "--file", default=None, help="Local seed.tar.gz")
+    seed_load.add_argument("--tag", default=None, help="GitHub release tag containing the archive")
+    seed_load.add_argument("--owner", default="Aguero-Org")
+    seed_load.add_argument("--repo", default="Astroimage")
+    seed_load.set_defaults(handler=cmd_seed_load)
+
+    seed_list = seed_sub.add_parser("list", help="Show snapshot name, author and date")
+    seed_list.add_argument("-f", "--file", default=None, help="Local snapshot file")
+    seed_list.add_argument("--tag", default=None, help="GitHub release tag")
+    seed_list.add_argument("--owner", default="Aguero-Org")
+    seed_list.add_argument("--repo", default="Astroimage")
+    seed_list.set_defaults(handler=cmd_seed_list)
+
+    seed_delete = seed_sub.add_parser("delete", help="Delete a local or GitHub snapshot")
+    seed_delete.add_argument("-f", "--file", default=None, help="Local snapshot file")
+    seed_delete.add_argument("--tag", default=None, help="GitHub release tag")
+    seed_delete.add_argument("--name", default=None, help="Asset filename on the release")
+    seed_delete.add_argument("--owner", default="Aguero-Org")
+    seed_delete.add_argument("--repo", default="Astroimage")
+    seed_delete.set_defaults(handler=cmd_seed_delete)
 
     openapi = subparsers.add_parser("openapi", help="OpenAPI contract operations")
     openapi_sub = openapi.add_subparsers(dest="openapi_command", required=True)

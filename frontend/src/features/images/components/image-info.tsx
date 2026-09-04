@@ -5,7 +5,7 @@ type ImageInfoProps = {
   recordId: string;
 };
 
-export function ImageInfo({ recordId }: ImageInfoProps) {
+export function ImageInfo({ recordId }: Readonly<ImageInfoProps>) {
   const infoQuery = useGetImageInfo(recordId);
   const info = infoQuery.data?.status === 200 ? infoQuery.data.data : undefined;
 

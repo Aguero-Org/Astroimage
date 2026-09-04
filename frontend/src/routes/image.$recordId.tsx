@@ -1,7 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useGetImageInfo } from "@/api/generated/hub/hub";
-import type { DetectSourcesParams } from "@/api/generated/model";
+import type {
+  DetectSourcesParams,
+  PointSourceSchema,
+} from "@/api/generated/model";
 import { useRenderFitsImage } from "@/api/generated/render/render";
 import { useDetectSources } from "@/api/generated/sources/sources";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -52,28 +55,14 @@ function ImageDetailPage() {
         <CardContent className="flex flex-col gap-6">
           <section className="flex flex-col gap-3">
             <h2 className="text-lg font-medium">Imagen renderizada</h2>
-            {renderQuery.isPending ? (
-              <div className="flex flex-col gap-2">
-                <Skeleton className="h-[min(70vh,40rem)] w-full rounded-xl" />
-                <p className="text-sm text-muted-foreground">
-                  Renderizando imagen…
-                </p>
-              </div>
-            ) : renderQuery.isError ? (
-              <p className="text-sm text-destructive">
-                Error al renderizar: {String(renderQuery.error)}
-              </p>
-            ) : objectUrl ? (
-              <FitsImageViewer
-                imageUrl={objectUrl}
-                label={sourceName ?? `Render FITS ${recordId}`}
-                pointSources={pointSources}
-              />
-            ) : (
-              <p className="text-sm text-muted-foreground">
-                No hay imagen disponible.
-              </p>
-            )}
+            <RenderedFitsSection
+              isPending={renderQuery.isPending}
+              isError={renderQuery.isError}
+              error={renderQuery.error}
+              objectUrl={objectUrl}
+              label={sourceName ?? `Render FITS ${recordId}`}
+              pointSources={pointSources}
+            />
           </section>
           <section className="flex flex-col gap-3">
             <h2 className="text-lg font-medium">Detección de fuentes</h2>
@@ -87,7 +76,8 @@ function ImageDetailPage() {
             />
             {sourcesQuery.isError ? (
               <p className="text-sm text-destructive">
-                Error al detectar fuentes: {String(sourcesQuery.error)}
+                Error al detectar fuentes:{" "}
+                {formatQueryError(sourcesQuery.error)}
               </p>
             ) : null}
             {detectionSummary ? (
@@ -101,6 +91,54 @@ function ImageDetailPage() {
       </Card>
     </main>
   );
+}
+
+function RenderedFitsSection({
+  isPending,
+  isError,
+  error,
+  objectUrl,
+  label,
+  pointSources,
+}: Readonly<{
+  isPending: boolean;
+  isError: boolean;
+  error: unknown;
+  objectUrl: string | undefined;
+  label: string;
+  pointSources: PointSourceSchema[];
+}>) {
+  if (isPending) {
+    return (
+      <div className="flex flex-col gap-2">
+        <Skeleton className="h-[min(70vh,40rem)] w-full rounded-xl" />
+        <p className="text-sm text-muted-foreground">Renderizando imagen…</p>
+      </div>
+    );
+  }
+  if (isError) {
+    return (
+      <p className="text-sm text-destructive">
+        Error al renderizar: {formatQueryError(error)}
+      </p>
+    );
+  }
+  if (objectUrl) {
+    return (
+      <FitsImageViewer
+        imageUrl={objectUrl}
+        label={label}
+        pointSources={pointSources}
+      />
+    );
+  }
+  return (
+    <p className="text-sm text-muted-foreground">No hay imagen disponible.</p>
+  );
+}
+
+function formatQueryError(error: unknown): string {
+  return error instanceof Error ? error.message : "error desconocido";
 }
 
 function useObjectUrl(blob: Blob | undefined): string | undefined {

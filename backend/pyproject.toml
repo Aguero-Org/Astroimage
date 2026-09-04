@@ -160,4 +160,5 @@ source_modules = [
 forbidden_modules = [
     "astroimage.main",
     "astroimage.cli",
+    "astroimage.scripts",
 ]

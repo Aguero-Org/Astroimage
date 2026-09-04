@@ -16,7 +16,7 @@ export function ImageSearch({
   onSearch,
   isFetching = false,
   variant,
-}: ImageSearchProps) {
+}: Readonly<ImageSearchProps>) {
   const [local, setLocal] = useState(value);
   const isNavbar = variant === "navbar";
 
