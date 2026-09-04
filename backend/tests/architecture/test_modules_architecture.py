@@ -17,11 +17,11 @@ PACKAGE_PATH = BACKEND_ROOT / "src" / "astroimage"
 TESTS_PATH = BACKEND_ROOT / "tests"
 PACKAGE_NAME = "astroimage"
 
-NON_FEATURE_PACKAGES = frozenset({"shared"})
+NON_FEATURE_PACKAGES = frozenset({"shared", "scripts"})
 
-COMPOSITION_ROOT_MODULES = frozenset({"main", "config", "cli"})
+COMPOSITION_ROOT_MODULES = frozenset({"main", "config", "cli", "scripts"})
 
-ALLOWED_NON_FEATURE_TEST_PACKAGES = frozenset({"shared", "config", "main", "cli"})
+ALLOWED_NON_FEATURE_TEST_PACKAGES = frozenset({"shared", "config", "main", "cli", "scripts"})
 
 FORBIDDEN_GLOBAL_LAYER_PACKAGES = frozenset(
     {

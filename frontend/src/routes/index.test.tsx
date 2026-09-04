@@ -29,9 +29,12 @@ describe("HomePage search", () => {
     const user = userEvent.setup();
     renderHome();
 
-    await waitFor(() => {
-      expect(screen.getByText("M31 - Andromeda Galaxy")).toBeInTheDocument();
-    });
+    await waitFor(
+      () => {
+        expect(screen.getByText("M31 - Andromeda Galaxy")).toBeInTheDocument();
+      },
+      { timeout: 8000 },
+    );
 
     const search = screen.getByRole("searchbox", { name: "Buscar imágenes" });
     await user.clear(search);

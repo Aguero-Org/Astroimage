@@ -9,7 +9,11 @@ type ImageListProps = {
   fetchError: Error | null;
 };
 
-export function ImageList({ query, isFetching, fetchError }: ImageListProps) {
+export function ImageList({
+  query,
+  isFetching,
+  fetchError,
+}: Readonly<ImageListProps>) {
   const navigate = useNavigate();
   const { data: response, isPending, isError } = useImageRecords(query);
 

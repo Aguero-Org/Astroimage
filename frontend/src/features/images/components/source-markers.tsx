@@ -8,9 +8,9 @@ type SourceMarkersProps = {
   sources: PointSourceSchema[];
 };
 
-export function SourceMarkers({ sources }: SourceMarkersProps) {
+export function SourceMarkers({ sources }: Readonly<SourceMarkersProps>) {
   const coords = useCoordinates(FITS_RENDER_IMAGE_KEY);
-  const [, setOverlayVersion] = useState(0);
+  const [overlayVersion, setOverlayVersion] = useState(0);
 
   function refreshOverlay() {
     setOverlayVersion((version) => version + 1);
@@ -25,7 +25,10 @@ export function SourceMarkers({ sources }: SourceMarkersProps) {
   }
 
   return (
-    <ul className="pointer-events-none absolute inset-0 z-[5] overflow-hidden">
+    <ul
+      className="pointer-events-none absolute inset-0 z-[5] overflow-hidden"
+      data-overlay-version={overlayVersion}
+    >
       {sources.map((source) => {
         const viewport = coords.imageToViewport(
           source.xcentroid,

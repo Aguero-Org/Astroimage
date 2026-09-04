@@ -1,5 +1,5 @@
 import { CircleHelp } from "lucide-react";
-import { useState } from "react";
+import { type SyntheticEvent, useState } from "react";
 import type { DetectSourcesParams } from "@/api/generated/model";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -115,12 +115,12 @@ function parseDraft(
 export function SourceDetectionForm({
   isPending,
   onSubmit,
-}: SourceDetectionFormProps) {
+}: Readonly<SourceDetectionFormProps>) {
   const [draft, setDraft] = useState(() =>
     paramsToDraft(DEFAULT_SOURCE_DETECTION_PARAMS),
   );
 
-  function handleSubmit(event: React.FormEvent) {
+  function handleSubmit(event: SyntheticEvent<HTMLFormElement>) {
     event.preventDefault();
     const values = parseDraft(draft);
     if (values === null) {

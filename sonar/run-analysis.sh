@@ -32,6 +32,8 @@ echo "==> Frontend tests + coverage"
   python -c "
 from pathlib import Path
 p = Path('coverage/lcov.info')
+if not p.is_file():
+    raise SystemExit('frontend coverage/lcov.info was not produced')
 text = p.read_text(encoding='utf-8').replace('\\\\', '/')
 text = text.replace('SF:src/', 'SF:frontend/src/')
 p.write_text(text, encoding='utf-8')

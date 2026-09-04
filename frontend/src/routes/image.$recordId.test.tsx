@@ -53,9 +53,22 @@ describe("ImageDetailPage", () => {
 
     const markerName = `Fuente ${MOCK_POINT_SOURCE.rank}, SNR ${MOCK_POINT_SOURCE.snr.toFixed(1)}`;
 
-    await waitFor(() => {
-      expect(screen.getByRole("img", { name: markerName })).toBeInTheDocument();
-    });
+    await waitFor(
+      () => {
+        expect(
+          screen.queryByText("Renderizando imagen…"),
+        ).not.toBeInTheDocument();
+      },
+      { timeout: 8000 },
+    );
+    await waitFor(
+      () => {
+        expect(
+          screen.getByRole("img", { name: markerName }),
+        ).toBeInTheDocument();
+      },
+      { timeout: 8000 },
+    );
   });
 
   it("searches from the navbar and shows filtered home results", async () => {

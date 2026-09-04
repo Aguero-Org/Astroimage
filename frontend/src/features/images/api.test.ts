@@ -1,4 +1,5 @@
-import { describe, expect, it, vi } from "vitest";
+import { waitFor } from "@testing-library/react";
+import { describe, expect, it } from "vitest";
 import { renderHookWithQuery } from "@/test/render";
 import { useImageRecords } from "./api";
 
@@ -6,7 +7,7 @@ describe("useImageRecords", () => {
   it("returns filtered records for a query", async () => {
     const { result } = renderHookWithQuery(() => useImageRecords("orion"));
 
-    await vi.waitFor(() => {
+    await waitFor(() => {
       expect(result.current.isSuccess).toBe(true);
     });
 
@@ -22,7 +23,7 @@ describe("useImageRecords", () => {
   it("returns all records when query is empty", async () => {
     const { result } = renderHookWithQuery(() => useImageRecords(""));
 
-    await vi.waitFor(() => {
+    await waitFor(() => {
       expect(result.current.isSuccess).toBe(true);
     });
 
@@ -39,7 +40,7 @@ describe("useImageRecords", () => {
       useImageRecords("nonexistent"),
     );
 
-    await vi.waitFor(() => {
+    await waitFor(() => {
       expect(result.current.isSuccess).toBe(true);
     });
 

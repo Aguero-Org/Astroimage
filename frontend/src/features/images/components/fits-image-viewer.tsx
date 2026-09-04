@@ -22,7 +22,7 @@ export function FitsImageViewer({
   label,
   className,
   pointSources = [],
-}: FitsImageViewerProps) {
+}: Readonly<FitsImageViewerProps>) {
   const viewerId = useId().replaceAll(":", "");
   const navigatorId = `fits-osd-nav-${viewerId}`;
   const options = useMemo(
@@ -66,7 +66,7 @@ export function FitsImageViewer({
       >
         <div
           ref={state.setContainerElement}
-          role="img"
+          role="application"
           aria-label={label}
           className="fits-osd h-[min(70vh,40rem)] w-full bg-transparent"
         />

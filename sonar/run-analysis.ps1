@@ -37,13 +37,17 @@ Pop-Location
 Write-Host "==> Frontend tests + coverage"
 Push-Location (Join-Path $RepoRoot "frontend")
 pnpm test:coverage
-$lcovPath = "coverage\lcov.info"
-if (Test-Path $lcovPath) {
-    $lcov = Get-Content $lcovPath -Raw
-    $lcov = $lcov -replace '\\', '/'
-    $lcov = $lcov -replace 'SF:src/', 'SF:frontend/src/'
-    Set-Content -Path $lcovPath -Value $lcov -NoNewline
+if ($LASTEXITCODE -ne 0) {
+    throw "frontend vitest failed with exit $LASTEXITCODE"
 }
+$lcovPath = "coverage\lcov.info"
+if (-not (Test-Path $lcovPath)) {
+    throw "frontend coverage/lcov.info was not produced"
+}
+$lcov = Get-Content $lcovPath -Raw
+$lcov = $lcov -replace '\\', '/'
+$lcov = $lcov -replace 'SF:src/', 'SF:frontend/src/'
+Set-Content -Path $lcovPath -Value $lcov -NoNewline
 Pop-Location
 
 Write-Host "==> SonarScanner"
