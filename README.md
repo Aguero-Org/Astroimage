@@ -3,6 +3,22 @@
   <img src="frontend/public/favicon.svg" width="128" height="128" alt="Astroimage logo">
 </h1>
 
+# astroimage
+
+# Elevator Pitch
+
+La astronomía moderna genera una enorme cantidad de datos que están disponibles para cualquiera, pero acceder a ellos y, sobre todo, entenderlos, sigue siendo una barrera importante para quienes recién empiezan.
+
+Para un estudiante o un astrónomo aficionado, encontrarse por primera vez con un archivo FITS, un catálogo con millones de objetos o distintas fuentes de datos astronómicos puede ser abrumador. No alcanza con tener acceso al dato: hay que entender qué contiene, cómo está estructurado, cómo visualizarlo y cómo relacionarlo con otras fuentes.
+
+Astroimage nace para hacer ese proceso más accesible. La idea es construir una plataforma que permita explorar datos astronómicos de forma visual e intuitiva, empezando por un visor capaz de convertirse en una herramienta mucho más amplia.
+
+A futuro, Astroimage busca conectar imágenes, catálogos y distintas fuentes astronómicas en un mismo entorno, reduciendo la distancia entre el dato científico y la persona que quiere aprender, investigar o simplemente explorar el universo.
+
+En definitiva, queremos que trabajar con datos astronómicos deje de sentirse como entrar a un sistema diseñado exclusivamente para expertos y se convierta en una puerta de entrada para aprender astronomía haciendo.
+
+Self-hosted REST API and React SPA for spatial image processing (FITS, astroquery). This repository currently contains the **toolchain and project skeleton** — not product features.
+
 Self-hosted REST API and React SPA for spatial image processing and analysis (FITS, astroquery/SkyView, source detection with photutils, OpenSeadragon interactive viewer).
 
 See [AGENTS.md](./AGENTS.md) for the opinionated stack and feature-based architecture rules.
