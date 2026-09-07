@@ -1,14 +1,8 @@
-import { CircleHelp } from "lucide-react";
 import { type SyntheticEvent, useState } from "react";
 import type { DetectSourcesParams } from "@/api/generated/model";
 import { Button } from "@/components/ui/button";
+import { HelpHint } from "@/components/ui/help-hint";
 import { Input } from "@/components/ui/input";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 import { DEFAULT_SOURCE_DETECTION_PARAMS } from "../source-detection";
 
 type SourceDetectionFormProps = {
@@ -130,62 +124,48 @@ export function SourceDetectionForm({
   }
 
   return (
-    <TooltipProvider delayDuration={200}>
-      <form
-        data-testid="source-detection-form"
-        className="flex flex-col gap-4"
-        onSubmit={handleSubmit}
-      >
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          {FIELDS.map((field) => (
-            <div key={field.key} className="flex flex-col gap-1 text-sm">
-              <div className="flex items-center gap-1">
-                <label htmlFor={field.key} className="text-muted-foreground">
-                  {field.label}
-                </label>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <button
-                      type="button"
-                      data-testid={`source-help-${field.key}`}
-                      className="inline-flex size-4 cursor-help items-center justify-center rounded-full text-muted-foreground hover:text-foreground"
-                      aria-label={`Ayuda: ${field.label}`}
-                    >
-                      <CircleHelp className="size-3.5" />
-                    </button>
-                  </TooltipTrigger>
-                  <TooltipContent className="max-w-xs" side="top">
-                    {field.help}
-                  </TooltipContent>
-                </Tooltip>
-              </div>
-              <Input
-                id={field.key}
-                data-testid={`source-field-${field.key}`}
-                type="number"
-                step={field.step}
-                value={draft[field.key]}
-                disabled={isPending}
-                onChange={(event) => {
-                  const nextValue = event.target.value;
-                  setDraft((current) => ({
-                    ...current,
-                    [field.key]: nextValue,
-                  }));
-                }}
-              />
+    <form
+      data-testid="source-detection-form"
+      className="flex flex-col gap-4"
+      onSubmit={handleSubmit}
+    >
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        {FIELDS.map((field) => (
+          <div key={field.key} className="flex flex-col gap-1 text-sm">
+            <div className="flex items-center gap-1">
+              <label htmlFor={field.key} className="text-muted-foreground">
+                {field.label}
+              </label>
+              <HelpHint label={field.label} testId={`source-help-${field.key}`}>
+                {field.help}
+              </HelpHint>
             </div>
-          ))}
-        </div>
-        <Button
-          type="submit"
-          data-testid="source-detect-submit"
-          disabled={isPending}
-          className="self-start"
-        >
-          {isPending ? "Detectando…" : "Detectar fuentes"}
-        </Button>
-      </form>
-    </TooltipProvider>
+            <Input
+              id={field.key}
+              data-testid={`source-field-${field.key}`}
+              type="number"
+              step={field.step}
+              value={draft[field.key]}
+              disabled={isPending}
+              onChange={(event) => {
+                const nextValue = event.target.value;
+                setDraft((current) => ({
+                  ...current,
+                  [field.key]: nextValue,
+                }));
+              }}
+            />
+          </div>
+        ))}
+      </div>
+      <Button
+        type="submit"
+        data-testid="source-detect-submit"
+        disabled={isPending}
+        className="self-start"
+      >
+        {isPending ? "Detectando…" : "Detectar fuentes"}
+      </Button>
+    </form>
   );
 }

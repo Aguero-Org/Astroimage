@@ -9,7 +9,9 @@ import { useRenderFitsImage } from "@/api/generated/render/render";
 import { useDetectSources } from "@/api/generated/sources/sources";
 import { Skeleton } from "@/components/ui/skeleton";
 import { FitsImageViewer } from "@/features/images/components/fits-image-viewer";
+import { ImageInspector } from "@/features/images/components/image-inspector";
 import { SourceDetectionForm } from "@/features/images/components/source-detection-form";
+import { SourceMarkers } from "@/features/images/components/source-markers";
 import { DEFAULT_SOURCE_DETECTION_PARAMS } from "@/features/images/source-detection";
 
 export const Route = createFileRoute("/image/$recordId")({
@@ -55,7 +57,7 @@ function ImageDetailPage() {
         pointSources={pointSources}
       />
 
-      <header className="pointer-events-none absolute top-16 left-4 z-20 max-w-[min(100%-2rem,28rem)] sm:left-8">
+      <header className="pointer-events-none absolute top-16 left-16 z-20 max-w-[min(100%-5rem,28rem)] sm:left-20">
         <h1
           data-testid="image-detail-title"
           className="text-2xl font-semibold text-white drop-shadow-[0_1px_8px_rgba(0,0,0,0.8)]"
@@ -64,36 +66,38 @@ function ImageDetailPage() {
         </h1>
       </header>
 
-      <aside className="pointer-events-none absolute bottom-4 left-4 z-20 w-[min(100%-2rem,24rem)] sm:bottom-8 sm:left-8 sm:w-[28rem]">
-        <div className="pointer-events-auto max-h-[min(50vh,28rem)] overflow-y-auto rounded-xl border border-white/15 bg-background/80 p-4 shadow-lg backdrop-blur-md">
-          <h2 className="text-sm font-medium">Detección de fuentes</h2>
-          <p className="mb-3 text-xs text-muted-foreground">
-            Ajusta los parámetros y lanza el análisis. Los puntos se marcan
-            sobre la imagen.
-          </p>
-          <SourceDetectionForm
-            isPending={sourcesQuery.isFetching}
-            onSubmit={setDetectionParams}
-          />
-          {sourcesQuery.isError ? (
-            <p
-              data-testid="detect-error"
-              className="mt-2 text-sm text-destructive"
-            >
-              Error al detectar fuentes: {formatQueryError(sourcesQuery.error)}
+      <ImageInspector
+        sources={
+          <>
+            <p className="mb-3 text-xs text-muted-foreground">
+              Ajusta los parámetros y lanza el análisis. Los puntos se marcan
+              sobre la imagen.
             </p>
-          ) : null}
-          {detectionSummary ? (
-            <p
-              data-testid="detect-summary"
-              className="mt-2 text-sm text-muted-foreground"
-            >
-              {detectionSummary.point_count} puntuales,{" "}
-              {detectionSummary.extended_count} extendidas
-            </p>
-          ) : null}
-        </div>
-      </aside>
+            <SourceDetectionForm
+              isPending={sourcesQuery.isFetching}
+              onSubmit={setDetectionParams}
+            />
+            {sourcesQuery.isError ? (
+              <p
+                data-testid="detect-error"
+                className="mt-2 text-sm text-destructive"
+              >
+                Error al detectar fuentes:{" "}
+                {formatQueryError(sourcesQuery.error)}
+              </p>
+            ) : null}
+            {detectionSummary ? (
+              <p
+                data-testid="detect-summary"
+                className="mt-2 text-sm text-muted-foreground"
+              >
+                {detectionSummary.point_count} puntuales,{" "}
+                {detectionSummary.extended_count} extendidas
+              </p>
+            ) : null}
+          </>
+        }
+      />
     </main>
   );
 }
@@ -141,9 +145,10 @@ function RenderedFitsSection({
       <FitsImageViewer
         imageUrl={objectUrl}
         label={label}
-        pointSources={pointSources}
         className="h-full rounded-none border-0"
-      />
+      >
+        <SourceMarkers sources={pointSources} />
+      </FitsImageViewer>
     );
   }
   return (

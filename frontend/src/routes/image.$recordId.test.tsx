@@ -63,6 +63,7 @@ describe("ImageDetailPage", () => {
       () => {
         expect(screen.getByTestId("image-detail-title")).toBeInTheDocument();
         expect(screen.getByTestId("fits-viewer")).toBeInTheDocument();
+        expect(screen.getByTestId("inspector-toggle")).toBeInTheDocument();
         expect(screen.getByTestId("source-detection-form")).toBeInTheDocument();
         expect(screen.getByTestId("source-marker")).toHaveAttribute(
           "alt",
@@ -71,6 +72,19 @@ describe("ImageDetailPage", () => {
       },
       { timeout: 8000 },
     );
+  });
+
+  it("opens the inspector drawer from the hamburger control", async () => {
+    const user = userEvent.setup();
+    renderImageDetail("m31");
+
+    await waitFor(() => {
+      expect(screen.getByTestId("inspector-toggle")).toBeInTheDocument();
+    });
+    expect(screen.getByTestId("inspector-drawer")).not.toBeVisible();
+    await user.click(screen.getByTestId("inspector-toggle"));
+    expect(screen.getByTestId("inspector-drawer")).toBeVisible();
+    expect(screen.getByTestId("inspector-section-sources")).toBeInTheDocument();
   });
 
   it("searches from the navbar and shows filtered home results", async () => {
