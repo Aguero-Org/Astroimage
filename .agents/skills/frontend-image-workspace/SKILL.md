@@ -86,8 +86,9 @@ Use a select anyway when the list is **dynamic** (HDU indices, catalog names)
 even if the current length is 2–4 — the count will change per file.
 
 The option list of a native `<select>` is OS chrome and cannot be themed.
-Use `frontend/src/components/ui/select.tsx` (Radix). Scrollbars use the same
-tokens (`--border`, `--muted-foreground`, `--radius`) from `index.css`.
+Use `frontend/src/components/ui/select.tsx` (Radix). Scrollbars use
+`--scrollbar` / `--scrollbar-hover` from `index.css` (not `--border`: too
+faint on the light Apple gray).
 
 Brand colors live in `frontend/src/lib/palettes.ts` (five hexes, lightest to
 darkest) and map to `--palette-1`…`--palette-5`. Semantic shadcn tokens in
