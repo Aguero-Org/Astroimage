@@ -8,11 +8,13 @@ import { CollapsibleSection } from "./collapsible-section";
 type ImageInspectorProps = {
   view: ReactNode;
   sources: ReactNode;
+  archive: ReactNode;
 };
 
 export function ImageInspector({
   view,
   sources,
+  archive,
 }: Readonly<ImageInspectorProps>) {
   const [open, setOpen] = useState(false);
 
@@ -60,9 +62,7 @@ export function ImageInspector({
             </p>
           </CollapsibleSection>
           <CollapsibleSection id="archive" title="Archivo">
-            <p className="text-xs text-muted-foreground">
-              Metadatos del FITS (instrumento, WCS, HDUs) se agrupan acá.
-            </p>
+            {archive}
           </CollapsibleSection>
         </div>
       </aside>

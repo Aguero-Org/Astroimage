@@ -10,6 +10,7 @@ import { useRenderFitsImage } from "@/api/generated/render/render";
 import { useDetectSources } from "@/api/generated/sources/sources";
 import { Skeleton } from "@/components/ui/skeleton";
 import { FitsImageViewer } from "@/features/images/components/fits-image-viewer";
+import { ImageArchive } from "@/features/images/components/image-archive";
 import { ImageInspector } from "@/features/images/components/image-inspector";
 import { RenderViewForm } from "@/features/images/components/render-view-form";
 import { SourceDetectionForm } from "@/features/images/components/source-detection-form";
@@ -38,10 +39,9 @@ function ImageDetailPage() {
     DEFAULT_SOURCE_DETECTION_PARAMS,
   );
   const sourcesQuery = useDetectSources(recordId, detectionParams);
-  const sourceName =
-    infoQuery.data?.status === 200
-      ? infoQuery.data.data.source_name
-      : undefined;
+  const imageInfo =
+    infoQuery.data?.status === 200 ? infoQuery.data.data : undefined;
+  const sourceName = imageInfo?.source_name;
   const pointSources =
     sourcesQuery.data?.status === 200
       ? (sourcesQuery.data.data.point_sources ?? [])
@@ -113,6 +113,9 @@ function ImageDetailPage() {
               </p>
             ) : null}
           </>
+        }
+        archive={
+          <ImageArchive info={imageInfo} isPending={infoQuery.isPending} />
         }
       />
     </main>

@@ -85,6 +85,8 @@ describe("ImageDetailPage", () => {
     await user.click(screen.getByTestId("inspector-toggle"));
     expect(screen.getByTestId("inspector-drawer")).toBeVisible();
     expect(screen.getByTestId("inspector-section-sources")).toBeInTheDocument();
+    await user.click(screen.getByTestId("inspector-section-archive-toggle"));
+    expect(screen.getByTestId("meta-telescope")).toHaveTextContent("HST");
   });
 
   it("searches from the navbar and shows filtered home results", async () => {

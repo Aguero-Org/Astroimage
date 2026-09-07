@@ -28,7 +28,7 @@ dashboard of cards.
 | Vista | render form (stretch, colormap, limits, pmin/pmax, gamma) | histogram; presets/reset |
 | Fuentes | detection form | presets/reset later; still one form |
 | Selección | placeholder | clicked overlay item (point, extended, future kinds) and scientific metadata |
-| Archivo | placeholder | grouped `/image/{id}/info` fields; FITS header last and closed |
+| Archivo | grouped `/info` (instrumento, imagen, WCS, HDUs; header cerrado) | HDU selector |
 
 HDU is **workspace state**, not a field inside each form. Render, histogram,
 and detection share the same `hdu`. Show a selector only when

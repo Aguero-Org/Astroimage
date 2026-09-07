@@ -43,7 +43,22 @@ export const imageHandlers = [
     }
     return HttpResponse.json({
       source_name: record.name,
-      hdus: { selected: 0, image_indices: [0], images: [] },
+      instrument: {
+        telescope: "HST",
+        instrument: "WFC3",
+        filter_name: "F606W",
+        exptime: 580.0,
+      },
+      image: { shape: [1024, 1024], unit: "e-/s" },
+      wcs: { present: true, naxis: 2, ctype: ["RA---TAN", "DEC--TAN"] },
+      hdus: {
+        selected: 0,
+        image_indices: [0],
+        images: [
+          { index: 0, extname: "SCI", kind: "image", shape: [1024, 1024] },
+        ],
+      },
+      header: { TELESCOP: "HST", INSTRUME: "WFC3" },
     });
   }),
 
