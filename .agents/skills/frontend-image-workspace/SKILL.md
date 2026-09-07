@@ -25,8 +25,8 @@ dashboard of cards.
 
 | Section | Role now | Grows into |
 |---------|----------|------------|
-| Vista | render form + pixel histogram | presets/reset |
-| Fuentes | detection form | presets/reset later; still one form |
+| Vista | render form + histogram + named presets + reset | — |
+| Fuentes | detection form + named presets + reset | still one form |
 | Selección | clicked point source (SNR, score, peak, flux) | catalog matches / scientific metadata |
 | Archivo | grouped `/info` (instrumento, imagen, WCS, HDUs; header cerrado) | HDU selector |
 
@@ -98,12 +98,13 @@ Today: stretch (4) and limits (2) are radios; colormap (5) uses `Select`.
 
 ## Forms (render / detection)
 
-Contract: current values + submit. **Reset** and **named presets** (short
-“what this profile is for”) will attach later without changing the inspector
-layout. Do not add presets in the shell commit.
+Contract: current values + submit. Named presets fill the form; **Restablecer**
+reloads schema defaults. Copy describes the **result**, not the algorithm.
+Editing a field after a preset shows **Personalizado**; the last named hint stays.
+HDU is not part of a preset.
 
-Zustand holds client/UI workspace state (drawer, selected overlay, later
-`hdu` / draft params). TanStack Query remains the only server cache.
+Zustand holds client/UI workspace state (drawer, selected overlay).
+TanStack Query remains the only server cache.
 Query keys must include render/detection params when those are wired.
 
 ## Tests
@@ -123,7 +124,10 @@ frontend/src/features/images/components/
   source-markers.tsx         # point layer
   source-detection-form.tsx
   render-view-form.tsx
+  named-preset-field.tsx
 frontend/src/features/images/render-view.ts
+frontend/src/features/images/source-detection.ts
+frontend/src/features/images/named-preset.ts
 frontend/src/components/ui/help-hint.tsx
 ```
 

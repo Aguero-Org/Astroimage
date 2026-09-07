@@ -3,14 +3,20 @@ import type { DetectSourcesParams } from "@/api/generated/model";
 import { Button } from "@/components/ui/button";
 import { HelpHint } from "@/components/ui/help-hint";
 import { Input } from "@/components/ui/input";
-import { DEFAULT_SOURCE_DETECTION_PARAMS } from "../source-detection";
+import { CUSTOM_PRESET_ID, matchNamedPreset } from "../named-preset";
+import {
+  DEFAULT_SOURCE_DETECTION_PARAMS,
+  SOURCE_DETECTION_PRESETS,
+  type SourceDetectionParams,
+} from "../source-detection";
+import { NamedPresetField } from "./named-preset-field";
 
 type SourceDetectionFormProps = {
   isPending: boolean;
   onSubmit: (params: Omit<DetectSourcesParams, "hdu">) => void;
 };
 
-type FieldKey = keyof typeof DEFAULT_SOURCE_DETECTION_PARAMS;
+type FieldKey = keyof SourceDetectionParams;
 
 const FIELDS: { key: FieldKey; label: string; step: string; help: string }[] = [
   {
@@ -70,7 +76,7 @@ const FIELDS: { key: FieldKey; label: string; step: string; help: string }[] = [
 ];
 
 function paramsToDraft(
-  params: typeof DEFAULT_SOURCE_DETECTION_PARAMS,
+  params: SourceDetectionParams,
 ): Record<FieldKey, string> {
   return {
     fwhm: String(params.fwhm),
@@ -87,8 +93,8 @@ function paramsToDraft(
 
 function parseDraft(
   draft: Record<FieldKey, string>,
-): typeof DEFAULT_SOURCE_DETECTION_PARAMS | null {
-  const parsed: Partial<typeof DEFAULT_SOURCE_DETECTION_PARAMS> = {};
+): SourceDetectionParams | null {
+  const parsed: Partial<SourceDetectionParams> = {};
   for (const field of FIELDS) {
     const raw = draft[field.key].trim();
     if (raw === "") {
@@ -101,7 +107,7 @@ function parseDraft(
     parsed[field.key] = numeric;
   }
   return {
-    ...(parsed as typeof DEFAULT_SOURCE_DETECTION_PARAMS),
+    ...(parsed as SourceDetectionParams),
     max_sources: Math.round(parsed.max_sources ?? 0),
   };
 }
@@ -113,6 +119,34 @@ export function SourceDetectionForm({
   const [draft, setDraft] = useState(() =>
     paramsToDraft(DEFAULT_SOURCE_DETECTION_PARAMS),
   );
+  const [presetId, setPresetId] = useState(() =>
+    matchNamedPreset(SOURCE_DETECTION_PRESETS, DEFAULT_SOURCE_DETECTION_PARAMS),
+  );
+  const [lastNamedId, setLastNamedId] = useState("estandar");
+
+  function applyValues(values: SourceDetectionParams) {
+    setDraft(paramsToDraft(values));
+    const matched = matchNamedPreset(SOURCE_DETECTION_PRESETS, values);
+    setPresetId(matched);
+    if (matched !== CUSTOM_PRESET_ID) {
+      setLastNamedId(matched);
+    }
+  }
+
+  function updateField(key: FieldKey, nextValue: string) {
+    const nextDraft = { ...draft, [key]: nextValue };
+    setDraft(nextDraft);
+    const parsed = parseDraft(nextDraft);
+    if (parsed === null) {
+      setPresetId(CUSTOM_PRESET_ID);
+      return;
+    }
+    const matched = matchNamedPreset(SOURCE_DETECTION_PRESETS, parsed);
+    setPresetId(matched);
+    if (matched !== CUSTOM_PRESET_ID) {
+      setLastNamedId(matched);
+    }
+  }
 
   function handleSubmit(event: SyntheticEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -129,6 +163,17 @@ export function SourceDetectionForm({
       className="flex flex-col gap-4"
       onSubmit={handleSubmit}
     >
+      <NamedPresetField
+        label="Preset"
+        testId="source-preset"
+        presets={SOURCE_DETECTION_PRESETS}
+        value={presetId}
+        lastNamedId={lastNamedId}
+        disabled={isPending}
+        onSelect={(preset) => {
+          applyValues(preset.values);
+        }}
+      />
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         {FIELDS.map((field) => (
           <div key={field.key} className="flex flex-col gap-1 text-sm">
@@ -148,24 +193,32 @@ export function SourceDetectionForm({
               value={draft[field.key]}
               disabled={isPending}
               onChange={(event) => {
-                const nextValue = event.target.value;
-                setDraft((current) => ({
-                  ...current,
-                  [field.key]: nextValue,
-                }));
+                updateField(field.key, event.target.value);
               }}
             />
           </div>
         ))}
       </div>
-      <Button
-        type="submit"
-        data-testid="source-detect-submit"
-        disabled={isPending}
-        className="self-start"
-      >
-        {isPending ? "Detectando…" : "Detectar fuentes"}
-      </Button>
+      <div className="flex flex-wrap gap-2">
+        <Button
+          type="submit"
+          data-testid="source-detect-submit"
+          disabled={isPending}
+        >
+          {isPending ? "Detectando…" : "Detectar fuentes"}
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          data-testid="source-detect-reset"
+          disabled={isPending}
+          onClick={() => {
+            applyValues(DEFAULT_SOURCE_DETECTION_PARAMS);
+          }}
+        >
+          Restablecer
+        </Button>
+      </div>
     </form>
   );
 }

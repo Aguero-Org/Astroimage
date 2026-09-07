@@ -62,6 +62,47 @@ describe("RenderViewForm", () => {
     );
   });
 
+  it("fills the form from a named render preset", async () => {
+    const { onSubmit, user } = renderForm();
+
+    await user.click(screen.getByTestId("render-preset"));
+    await user.click(screen.getByTestId("render-preset-cielo-profundo"));
+    expect(screen.getByTestId("render-preset-outcome")).toHaveTextContent(
+      "nubes débiles",
+    );
+    await user.click(screen.getByTestId("render-view-submit"));
+    expect(onSubmit).toHaveBeenCalledWith({
+      stretch: "asinh",
+      limits: "percentiles",
+      colormap: "grey",
+      pmin: 0.5,
+      pmax: 99.5,
+      gamma: 1.2,
+    });
+  });
+
+  it("marks the preset as custom after a manual field change", async () => {
+    const { user } = renderForm();
+
+    await user.click(screen.getByTestId("render-field-stretch-log"));
+    expect(screen.getByTestId("render-preset")).toHaveTextContent(
+      "Personalizado",
+    );
+    expect(screen.getByTestId("render-preset-outcome")).toHaveTextContent(
+      "Estrellas y cielo",
+    );
+  });
+
+  it("restores the default render preset", async () => {
+    const { onSubmit, user } = renderForm();
+
+    await user.click(screen.getByTestId("render-preset"));
+    await user.click(screen.getByTestId("render-preset-nucleos"));
+    await user.click(screen.getByTestId("render-view-reset"));
+    await user.click(screen.getByTestId("render-view-submit"));
+    expect(onSubmit).toHaveBeenCalledWith(DEFAULT_RENDER_PARAMS);
+  });
+
   it("does not submit when pmin is not lower than pmax", async () => {
     const { onSubmit, user } = renderForm();
 

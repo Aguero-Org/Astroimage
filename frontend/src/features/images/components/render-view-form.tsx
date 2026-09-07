@@ -9,13 +9,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { CUSTOM_PRESET_ID, matchNamedPreset } from "../named-preset";
 import {
   COLORMAP_OPTIONS,
   DEFAULT_RENDER_PARAMS,
   LIMITS_OPTIONS,
+  RENDER_PRESETS,
   type RenderViewParams,
   STRETCH_OPTIONS,
 } from "../render-view";
+import { NamedPresetField } from "./named-preset-field";
 
 type RenderViewFormProps = {
   isPending: boolean;
@@ -27,6 +30,19 @@ export function RenderViewForm({
   onSubmit,
 }: Readonly<RenderViewFormProps>) {
   const [draft, setDraft] = useState<RenderViewParams>(DEFAULT_RENDER_PARAMS);
+  const [presetId, setPresetId] = useState(() =>
+    matchNamedPreset(RENDER_PRESETS, DEFAULT_RENDER_PARAMS),
+  );
+  const [lastNamedId, setLastNamedId] = useState("estandar");
+
+  function applyDraft(next: RenderViewParams) {
+    setDraft(next);
+    const matched = matchNamedPreset(RENDER_PRESETS, next);
+    setPresetId(matched);
+    if (matched !== CUSTOM_PRESET_ID) {
+      setLastNamedId(matched);
+    }
+  }
 
   function handleSubmit(event: SyntheticEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -47,6 +63,17 @@ export function RenderViewForm({
       className="flex flex-col gap-3"
       onSubmit={handleSubmit}
     >
+      <NamedPresetField
+        label="Preset"
+        testId="render-preset"
+        presets={RENDER_PRESETS}
+        value={presetId}
+        lastNamedId={lastNamedId}
+        disabled={isPending}
+        onSelect={(preset) => {
+          applyDraft(preset.values);
+        }}
+      />
       <Field
         label="Stretch"
         testId="render-stretch"
@@ -58,7 +85,7 @@ export function RenderViewForm({
           options={STRETCH_OPTIONS}
           disabled={isPending}
           onChange={(stretch) => {
-            setDraft((current) => ({ ...current, stretch }));
+            applyDraft({ ...draft, stretch });
           }}
         />
       </Field>
@@ -73,7 +100,7 @@ export function RenderViewForm({
           options={LIMITS_OPTIONS}
           disabled={isPending}
           onChange={(limits) => {
-            setDraft((current) => ({ ...current, limits }));
+            applyDraft({ ...draft, limits });
           }}
         />
       </Field>
@@ -88,7 +115,7 @@ export function RenderViewForm({
           options={COLORMAP_OPTIONS}
           disabled={isPending}
           onChange={(colormap) => {
-            setDraft((current) => ({ ...current, colormap }));
+            applyDraft({ ...draft, colormap });
           }}
         />
       </Field>
@@ -108,10 +135,10 @@ export function RenderViewForm({
             value={draft.pmin}
             disabled={isPending}
             onChange={(event) => {
-              setDraft((current) => ({
-                ...current,
+              applyDraft({
+                ...draft,
                 pmin: Number(event.target.value),
-              }));
+              });
             }}
           />
         </Field>
@@ -130,10 +157,10 @@ export function RenderViewForm({
             value={draft.pmax}
             disabled={isPending}
             onChange={(event) => {
-              setDraft((current) => ({
-                ...current,
+              applyDraft({
+                ...draft,
                 pmax: Number(event.target.value),
-              }));
+              });
             }}
           />
         </Field>
@@ -153,30 +180,42 @@ export function RenderViewForm({
           value={draft.gamma}
           disabled={isPending}
           onChange={(event) => {
-            setDraft((current) => ({
-              ...current,
+            applyDraft({
+              ...draft,
               gamma: Number(event.target.value),
-            }));
+            });
           }}
         />
       </Field>
-      <Button
-        type="submit"
-        data-testid="render-view-submit"
-        disabled={isPending}
-        className="self-start"
-      >
-        {isPending ? "Renderizando…" : "Aplicar vista"}
-      </Button>
+      <div className="flex flex-wrap gap-2">
+        <Button
+          type="submit"
+          data-testid="render-view-submit"
+          disabled={isPending}
+        >
+          {isPending ? "Renderizando…" : "Aplicar vista"}
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          data-testid="render-view-reset"
+          disabled={isPending}
+          onClick={() => {
+            applyDraft(DEFAULT_RENDER_PARAMS);
+          }}
+        >
+          Restablecer
+        </Button>
+      </div>
     </form>
   );
 }
 
 const SELECT_THRESHOLD = 5;
 
-type ChoiceOption = { value: string; label: string };
+type ChoiceOption<T extends string> = { value: T; label: string };
 
-function ExclusiveChoice({
+function ExclusiveChoice<T extends string>({
   name,
   value,
   options,
@@ -184,10 +223,10 @@ function ExclusiveChoice({
   onChange,
 }: Readonly<{
   name: string;
-  value: string;
-  options: readonly ChoiceOption[];
+  value: T;
+  options: readonly ChoiceOption<T>[];
   disabled: boolean;
-  onChange: (value: string) => void;
+  onChange: (value: T) => void;
 }>) {
   if (options.length >= SELECT_THRESHOLD) {
     return (
