@@ -162,7 +162,10 @@ export function ImageArchive({ info, isPending }: Readonly<ImageArchiveProps>) {
     ),
   ].filter((item) => item !== null);
 
-  const wcsPresent = info.wcs?.present ? "Sí" : info.wcs ? "No" : null;
+  let wcsPresent: string | null = null;
+  if (info.wcs) {
+    wcsPresent = info.wcs.present ? "Sí" : "No";
+  }
   const wcsRows = [
     row(
       "wcs-present",

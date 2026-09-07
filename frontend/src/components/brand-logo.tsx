@@ -12,11 +12,10 @@ export function BrandLogo({ className }: Readonly<BrandLogoProps>) {
     <svg
       xmlns="http://www.w3.org/2000/svg"
       viewBox="0 0 100 100"
-      role="img"
-      aria-label="astroimage"
+      aria-labelledby={`${maskId}-title`}
       className={cn("text-foreground", className)}
     >
-      <title>astroimage</title>
+      <title id={`${maskId}-title`}>astroimage</title>
       <defs>
         <mask id={maskId}>
           <rect width="100%" height="100%" fill="white" />

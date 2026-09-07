@@ -64,9 +64,9 @@ export function PixelHistogram({
         viewBox={`0 0 ${barCount} 1`}
         preserveAspectRatio="none"
         className="h-16 w-full rounded-md bg-muted"
-        role="img"
-        aria-label="Histograma de píxeles"
+        aria-labelledby="pixel-histogram-title"
       >
+        <title id="pixel-histogram-title">Histograma de píxeles</title>
         {histogram.counts.map((count, index) => {
           const height = count / maxCount;
           return (

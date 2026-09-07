@@ -15,9 +15,15 @@ afterAll(() => {
 });
 
 class ResizeObserverStub {
-  observe(): void {}
-  unobserve(): void {}
-  disconnect(): void {}
+  observe(): void {
+    // jsdom has no layout engine
+  }
+  unobserve(): void {
+    // jsdom has no layout engine
+  }
+  disconnect(): void {
+    // jsdom has no layout engine
+  }
 }
 
 window.ResizeObserver = ResizeObserverStub;

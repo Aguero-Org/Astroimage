@@ -30,8 +30,9 @@ describe("PixelHistogram", () => {
     expect(screen.getByTestId("histogram-max")).toHaveTextContent("3");
     expect(
       screen
-        .getByRole("img", { name: "Histograma de píxeles" })
-        .querySelectorAll("rect"),
+        .getByTitle("Histograma de píxeles")
+        .closest("svg")
+        ?.querySelectorAll("rect"),
     ).toHaveLength(4);
   });
 });
