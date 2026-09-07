@@ -2,7 +2,7 @@ import { type ReactNode, type SyntheticEvent, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { HelpHint } from "@/components/ui/help-hint";
 import { Input } from "@/components/ui/input";
-import { cn } from "@/lib/utils";
+import { Select } from "@/components/ui/select";
 import {
   COLORMAP_OPTIONS,
   DEFAULT_RENDER_PARAMS,
@@ -15,12 +15,6 @@ type RenderViewFormProps = {
   isPending: boolean;
   onSubmit: (params: RenderViewParams) => void;
 };
-
-const selectClassName = cn(
-  "h-9 w-full min-w-0 rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs outline-none",
-  "focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50",
-  "disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50",
-);
 
 export function RenderViewForm({
   isPending,
@@ -191,10 +185,9 @@ function ExclusiveChoice({
 }>) {
   if (options.length >= SELECT_THRESHOLD) {
     return (
-      <select
+      <Select
         id={`render-${name}`}
         data-testid={`render-field-${name}`}
-        className={selectClassName}
         value={value}
         disabled={disabled}
         onChange={(event) => {
@@ -206,7 +199,7 @@ function ExclusiveChoice({
             {option.label}
           </option>
         ))}
-      </select>
+      </Select>
     );
   }
 
