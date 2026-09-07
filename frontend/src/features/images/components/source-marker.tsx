@@ -10,6 +10,7 @@ export function SourceMarker({ source }: Readonly<SourceMarkerProps>) {
 
   return (
     <img
+      data-testid="source-marker"
       alt={label}
       title={label}
       src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"

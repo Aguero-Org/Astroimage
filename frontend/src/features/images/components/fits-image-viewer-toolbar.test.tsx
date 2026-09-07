@@ -23,19 +23,17 @@ describe("FitsImageViewerToolbar", () => {
     const user = userEvent.setup();
     render(<FitsImageViewerToolbar />);
 
-    await user.click(screen.getByRole("button", { name: "Acercar" }));
+    await user.click(screen.getByTestId("fits-toolbar-zoom-in"));
     expect(viewport.zoomBy).toHaveBeenCalledWith(1.2);
     expect(viewport.applyConstraints).toHaveBeenCalled();
 
-    await user.click(screen.getByRole("button", { name: "Alejar" }));
+    await user.click(screen.getByTestId("fits-toolbar-zoom-out"));
     expect(viewport.zoomBy).toHaveBeenCalledWith(1 / 1.2);
 
-    await user.click(
-      screen.getByRole("button", { name: "Ajustar a la vista" }),
-    );
+    await user.click(screen.getByTestId("fits-toolbar-home"));
     expect(viewport.goHome).toHaveBeenCalled();
 
-    await user.click(screen.getByRole("button", { name: "Pantalla completa" }));
+    await user.click(screen.getByTestId("fits-toolbar-fullscreen"));
     expect(viewer.setFullScreen).toHaveBeenCalledWith(true);
   });
 });

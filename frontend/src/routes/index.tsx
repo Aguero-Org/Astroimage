@@ -28,7 +28,9 @@ function HomePage() {
     <main className="flex min-h-svh flex-col items-center gap-6 p-6">
       <div className="flex flex-col items-center gap-2 pt-10">
         <img src="/favicon.svg" alt="astroimage" className="h-32 w-32" />
-        <h1 className="text-2xl font-semibold">Astroimage</h1>
+        <h1 data-testid="home-title" className="text-2xl font-semibold">
+          Astroimage
+        </h1>
       </div>
       <ImageSearch
         variant="hero"

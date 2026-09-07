@@ -37,6 +37,7 @@ export function ImageSearch({
     >
       <Input
         type="search"
+        data-testid="search-input"
         placeholder={
           isNavbar
             ? "Buscar por cuerpo celeste…"
@@ -50,6 +51,7 @@ export function ImageSearch({
       />
       <Button
         type="submit"
+        data-testid="search-submit"
         size={isNavbar ? "sm" : "default"}
         disabled={isFetching}
       >

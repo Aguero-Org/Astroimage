@@ -32,8 +32,8 @@ describe("SourceMarkers", () => {
       />,
     );
 
-    expect(
-      screen.getByRole("img", { name: "Fuente 2, SNR 9.4" }),
-    ).toBeInTheDocument();
+    const marker = screen.getByTestId("source-marker");
+    expect(marker).toBeInTheDocument();
+    expect(marker).toHaveAttribute("alt", "Fuente 2, SNR 9.4");
   });
 });

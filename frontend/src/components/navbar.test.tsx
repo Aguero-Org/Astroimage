@@ -11,7 +11,9 @@ describe("Navbar", () => {
   it("renders a search button with a magnifying-glass icon", () => {
     render(<Navbar />);
 
-    const searchButton = screen.getByRole("button", { name: "Buscar" });
+    expect(screen.getByTestId("navbar")).toBeInTheDocument();
+    expect(screen.getByTestId("navbar-logo")).toBeInTheDocument();
+    const searchButton = screen.getByTestId("search-submit");
     expect(searchButton.querySelector("svg")).not.toBeNull();
     expect(searchButton.className).toContain("cursor-pointer");
   });

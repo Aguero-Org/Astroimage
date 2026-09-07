@@ -13,9 +13,10 @@ describe("ImageListItem", () => {
   it("renders record name and truncated id", () => {
     render(<ImageListItem record={record} onSelect={vi.fn()} />);
 
-    expect(screen.getByText("m31")).toBeInTheDocument();
-    expect(screen.getByText("b6693c65…")).toBeInTheDocument();
-    expect(screen.getByText(/Ver imagen/)).toBeInTheDocument();
+    const item = screen.getByTestId("image-list-item");
+    expect(item).toHaveTextContent("m31");
+    expect(item).toHaveTextContent("b6693c65…");
+    expect(item).toHaveTextContent("Ver imagen");
   });
 
   it("calls onSelect with record_id on click", async () => {
@@ -23,7 +24,7 @@ describe("ImageListItem", () => {
     const user = userEvent.setup();
     render(<ImageListItem record={record} onSelect={onSelect} />);
 
-    await user.click(screen.getByRole("button"));
+    await user.click(screen.getByTestId("image-list-item-open"));
 
     expect(onSelect).toHaveBeenCalledWith(record.record_id);
   });

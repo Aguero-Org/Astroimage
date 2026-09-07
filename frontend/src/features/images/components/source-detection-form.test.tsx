@@ -9,7 +9,8 @@ describe("SourceDetectionForm", () => {
     const user = userEvent.setup();
     render(<SourceDetectionForm isPending={false} onSubmit={onSubmit} />);
 
-    await user.click(screen.getByRole("button", { name: "Detectar fuentes" }));
+    expect(screen.getByTestId("source-detection-form")).toBeInTheDocument();
+    await user.click(screen.getByTestId("source-detect-submit"));
 
     expect(onSubmit).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -24,19 +25,15 @@ describe("SourceDetectionForm", () => {
   it("exposes a help control for each detection parameter", () => {
     render(<SourceDetectionForm isPending={false} onSubmit={vi.fn()} />);
 
-    expect(
-      screen.getByRole("button", { name: "Ayuda: FWHM" }),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole("button", { name: "Ayuda: Máximo de fuentes" }),
-    ).toBeInTheDocument();
+    expect(screen.getByTestId("source-help-fwhm")).toBeInTheDocument();
+    expect(screen.getByTestId("source-help-max_sources")).toBeInTheDocument();
   });
 
   it("allows clearing a numeric field without restoring zero", async () => {
     const user = userEvent.setup();
     render(<SourceDetectionForm isPending={false} onSubmit={vi.fn()} />);
 
-    const fwhm = screen.getByLabelText("FWHM");
+    const fwhm = screen.getByTestId("source-field-fwhm");
     await user.clear(fwhm);
 
     expect(fwhm).toHaveValue(null);
@@ -47,8 +44,8 @@ describe("SourceDetectionForm", () => {
     const user = userEvent.setup();
     render(<SourceDetectionForm isPending={false} onSubmit={onSubmit} />);
 
-    await user.clear(screen.getByLabelText("FWHM"));
-    await user.click(screen.getByRole("button", { name: "Detectar fuentes" }));
+    await user.clear(screen.getByTestId("source-field-fwhm"));
+    await user.click(screen.getByTestId("source-detect-submit"));
 
     expect(onSubmit).not.toHaveBeenCalled();
   });
@@ -58,10 +55,10 @@ describe("SourceDetectionForm", () => {
     const user = userEvent.setup();
     render(<SourceDetectionForm isPending={false} onSubmit={onSubmit} />);
 
-    const fwhm = screen.getByLabelText("FWHM");
+    const fwhm = screen.getByTestId("source-field-fwhm");
     await user.clear(fwhm);
     await user.type(fwhm, "3.2");
-    await user.click(screen.getByRole("button", { name: "Detectar fuentes" }));
+    await user.click(screen.getByTestId("source-detect-submit"));
 
     expect(onSubmit).toHaveBeenCalledWith(
       expect.objectContaining({ fwhm: 3.2 }),

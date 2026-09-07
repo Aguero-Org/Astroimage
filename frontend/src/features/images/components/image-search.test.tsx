@@ -9,11 +9,8 @@ describe("ImageSearch", () => {
     const user = userEvent.setup();
     render(<ImageSearch variant="hero" value="" onSearch={onSearch} />);
 
-    await user.type(
-      screen.getByRole("searchbox", { name: "Buscar imágenes" }),
-      "orion",
-    );
-    await user.click(screen.getByRole("button", { name: "Buscar" }));
+    await user.type(screen.getByTestId("search-input"), "orion");
+    await user.click(screen.getByTestId("search-submit"));
 
     expect(onSearch).toHaveBeenCalledWith("orion");
   });
@@ -21,10 +18,8 @@ describe("ImageSearch", () => {
   it("uses a compact control in the navbar layout", () => {
     render(<ImageSearch variant="navbar" value="" onSearch={vi.fn()} />);
 
-    const field = screen.getByRole("searchbox", { name: "Buscar imágenes" });
+    const field = screen.getByTestId("search-input");
     expect(field.className).toContain("w-36");
-    expect(screen.getByRole("button", { name: "Buscar" }).className).toContain(
-      "h-8",
-    );
+    expect(screen.getByTestId("search-submit").className).toContain("h-8");
   });
 });

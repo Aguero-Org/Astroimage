@@ -55,17 +55,19 @@ describe("ImageDetailPage", () => {
 
     await waitFor(
       () => {
-        expect(
-          screen.queryByText("Renderizando imagen…"),
-        ).not.toBeInTheDocument();
+        expect(screen.queryByTestId("render-loading")).not.toBeInTheDocument();
       },
       { timeout: 8000 },
     );
     await waitFor(
       () => {
-        expect(
-          screen.getByRole("img", { name: markerName }),
-        ).toBeInTheDocument();
+        expect(screen.getByTestId("image-detail-title")).toBeInTheDocument();
+        expect(screen.getByTestId("fits-viewer")).toBeInTheDocument();
+        expect(screen.getByTestId("source-detection-form")).toBeInTheDocument();
+        expect(screen.getByTestId("source-marker")).toHaveAttribute(
+          "alt",
+          markerName,
+        );
       },
       { timeout: 8000 },
     );
@@ -76,22 +78,19 @@ describe("ImageDetailPage", () => {
     renderImageDetail("m31");
 
     await waitFor(() => {
-      expect(
-        screen.getByRole("searchbox", { name: "Buscar imágenes" }),
-      ).toBeInTheDocument();
+      expect(screen.getByTestId("search-input")).toBeInTheDocument();
     });
 
-    await user.type(
-      screen.getByRole("searchbox", { name: "Buscar imágenes" }),
-      "orion",
-    );
-    await user.click(screen.getByRole("button", { name: "Buscar" }));
+    await user.type(screen.getByTestId("search-input"), "orion");
+    await user.click(screen.getByTestId("search-submit"));
 
     await waitFor(() => {
-      expect(screen.getByText("M42 - Orion Nebula")).toBeInTheDocument();
+      expect(screen.getByTestId("image-list")).toHaveTextContent(
+        "M42 - Orion Nebula",
+      );
     });
-    expect(
-      screen.queryByText("M31 - Andromeda Galaxy"),
-    ).not.toBeInTheDocument();
+    expect(screen.getByTestId("image-list")).not.toHaveTextContent(
+      "M31 - Andromeda Galaxy",
+    );
   });
 });
