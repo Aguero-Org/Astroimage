@@ -2,12 +2,15 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { DEFAULT_SOURCE_DETECTION_PARAMS } from "../source-detection";
+import {
+  DEFAULT_SOURCE_DETECTION_PARAMS,
+  type SourceDetectionParams,
+} from "../source-detection";
 import { SourceDetectionForm } from "./source-detection-form";
 
 function renderForm(props: {
   isPending: boolean;
-  onSubmit: ReturnType<typeof vi.fn>;
+  onSubmit: (params: SourceDetectionParams) => void;
 }) {
   return render(
     <TooltipProvider delayDuration={0}>
