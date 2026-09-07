@@ -36,6 +36,19 @@ export const imageHandlers = [
     return HttpResponse.json(mockSourceDetection(record));
   }),
 
+  http.get(`${apiBaseUrl}/image/:recordId/histogram`, ({ params }) => {
+    const record = findRecord(params.recordId as string);
+    if (!record) {
+      return HttpResponse.json({ detail: "Image not found" }, { status: 404 });
+    }
+    return HttpResponse.json({
+      bin_centers: [0, 1, 2, 3, 4, 5, 6, 7],
+      counts: [2, 5, 12, 20, 18, 9, 4, 1],
+      minimum: 0,
+      maximum: 7,
+    });
+  }),
+
   http.get(`${apiBaseUrl}/image/:recordId/info`, ({ params }) => {
     const record = findRecord(params.recordId as string);
     if (!record) {

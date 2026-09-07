@@ -25,7 +25,7 @@ dashboard of cards.
 
 | Section | Role now | Grows into |
 |---------|----------|------------|
-| Vista | render form (stretch, colormap, limits, pmin/pmax, gamma) | histogram; presets/reset |
+| Vista | render form + pixel histogram | presets/reset |
 | Fuentes | detection form | presets/reset later; still one form |
 | Selección | placeholder | clicked overlay item (point, extended, future kinds) and scientific metadata |
 | Archivo | grouped `/info` (instrumento, imagen, WCS, HDUs; header cerrado) | HDU selector |

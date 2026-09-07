@@ -6,13 +6,17 @@ import type {
   DetectSourcesParams,
   PointSourceSchema,
 } from "@/api/generated/model";
-import { useRenderFitsImage } from "@/api/generated/render/render";
+import {
+  useRenderFitsHistogram,
+  useRenderFitsImage,
+} from "@/api/generated/render/render";
 import { useDetectSources } from "@/api/generated/sources/sources";
 import { Skeleton } from "@/components/ui/skeleton";
 import { FitsImageViewer } from "@/features/images/components/fits-image-viewer";
 import { HduSelector } from "@/features/images/components/hdu-selector";
 import { ImageArchive } from "@/features/images/components/image-archive";
 import { ImageInspector } from "@/features/images/components/image-inspector";
+import { PixelHistogram } from "@/features/images/components/pixel-histogram";
 import { RenderViewForm } from "@/features/images/components/render-view-form";
 import { SourceDetectionForm } from "@/features/images/components/source-detection-form";
 import { SourceMarkers } from "@/features/images/components/source-markers";
@@ -45,6 +49,8 @@ function ImageDetailPage() {
   const sourcesQueryParams =
     hdu === null ? detectionParams : { ...detectionParams, hdu };
   const sourcesQuery = useDetectSources(recordId, sourcesQueryParams);
+  const histogramParams = hdu === null ? { bins: 64 } : { bins: 64, hdu };
+  const histogramQuery = useRenderFitsHistogram(recordId, histogramParams);
   const imageInfo =
     infoQuery.data?.status === 200 ? infoQuery.data.data : undefined;
   const imageHdus = imageInfo?.hdus.images ?? [];
@@ -103,10 +109,24 @@ function ImageDetailPage() {
           <HduSelector images={imageHdus} value={hdu} onChange={setHdu} />
         }
         view={
-          <RenderViewForm
-            isPending={renderQuery.isFetching}
-            onSubmit={setRenderParams}
-          />
+          <>
+            <PixelHistogram
+              histogram={
+                histogramQuery.data?.status === 200
+                  ? histogramQuery.data.data
+                  : undefined
+              }
+              isPending={histogramQuery.isPending}
+              isError={histogramQuery.isError}
+              pmin={renderParams.pmin}
+              pmax={renderParams.pmax}
+              showPercentiles={renderParams.limits === "percentiles"}
+            />
+            <RenderViewForm
+              isPending={renderQuery.isFetching}
+              onSubmit={setRenderParams}
+            />
+          </>
         }
         sources={
           <>

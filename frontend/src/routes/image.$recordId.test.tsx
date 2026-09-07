@@ -86,6 +86,8 @@ describe("ImageDetailPage", () => {
     expect(screen.getByTestId("inspector-drawer")).toBeVisible();
     expect(screen.getByTestId("inspector-section-sources")).toBeInTheDocument();
     expect(screen.getByTestId("hdu-selector")).toBeInTheDocument();
+    await user.click(screen.getByTestId("inspector-section-view-toggle"));
+    expect(screen.getByTestId("pixel-histogram")).toBeInTheDocument();
     await user.click(screen.getByTestId("inspector-section-archive-toggle"));
     expect(screen.getByTestId("meta-telescope")).toHaveTextContent("HST");
   });
