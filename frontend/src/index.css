@@ -28,51 +28,51 @@
 }
 
 :root {
-  --palette-ice: #97dffc;
-  --palette-periwinkle: #858ae3;
-  --palette-violet: #613dc1;
-  --palette-grape: #4e148c;
-  --palette-void: #2c0735;
+  --palette-1: #97dffc;
+  --palette-2: #858ae3;
+  --palette-3: #613dc1;
+  --palette-4: #4e148c;
+  --palette-5: #2c0735;
   --radius: 0.625rem;
-  --background: color-mix(in srgb, var(--palette-ice) 16%, white);
-  --foreground: var(--palette-void);
+  --background: color-mix(in srgb, var(--palette-1) 16%, white);
+  --foreground: var(--palette-5);
   --card: white;
-  --card-foreground: var(--palette-void);
+  --card-foreground: var(--palette-5);
   --popover: white;
-  --popover-foreground: var(--palette-void);
-  --primary: var(--palette-violet);
-  --primary-foreground: #f4fbfe;
-  --secondary: color-mix(in srgb, var(--palette-periwinkle) 28%, white);
-  --secondary-foreground: var(--palette-void);
-  --muted: color-mix(in srgb, var(--palette-ice) 24%, white);
-  --muted-foreground: var(--palette-grape);
-  --accent: var(--palette-ice);
-  --accent-foreground: var(--palette-void);
+  --popover-foreground: var(--palette-5);
+  --primary: var(--palette-3);
+  --primary-foreground: color-mix(in srgb, var(--palette-1) 20%, white);
+  --secondary: color-mix(in srgb, var(--palette-2) 28%, white);
+  --secondary-foreground: var(--palette-5);
+  --muted: color-mix(in srgb, var(--palette-1) 24%, white);
+  --muted-foreground: var(--palette-4);
+  --accent: var(--palette-1);
+  --accent-foreground: var(--palette-5);
   --destructive: oklch(0.577 0.245 27.325);
-  --border: color-mix(in srgb, var(--palette-periwinkle) 42%, white);
-  --input: color-mix(in srgb, var(--palette-periwinkle) 42%, white);
-  --ring: var(--palette-violet);
+  --border: color-mix(in srgb, var(--palette-2) 42%, white);
+  --input: color-mix(in srgb, var(--palette-2) 42%, white);
+  --ring: var(--palette-3);
 }
 
 .dark {
-  --background: var(--palette-void);
-  --foreground: var(--palette-ice);
-  --card: var(--palette-grape);
-  --card-foreground: var(--palette-ice);
-  --popover: var(--palette-grape);
-  --popover-foreground: var(--palette-ice);
-  --primary: var(--palette-ice);
-  --primary-foreground: var(--palette-void);
-  --secondary: var(--palette-violet);
-  --secondary-foreground: var(--palette-ice);
-  --muted: color-mix(in srgb, var(--palette-grape) 72%, var(--palette-void));
-  --muted-foreground: var(--palette-periwinkle);
-  --accent: var(--palette-periwinkle);
-  --accent-foreground: var(--palette-void);
+  --background: var(--palette-5);
+  --foreground: var(--palette-1);
+  --card: var(--palette-4);
+  --card-foreground: var(--palette-1);
+  --popover: var(--palette-4);
+  --popover-foreground: var(--palette-1);
+  --primary: var(--palette-1);
+  --primary-foreground: var(--palette-5);
+  --secondary: var(--palette-3);
+  --secondary-foreground: var(--palette-1);
+  --muted: color-mix(in srgb, var(--palette-4) 72%, var(--palette-5));
+  --muted-foreground: var(--palette-2);
+  --accent: var(--palette-2);
+  --accent-foreground: var(--palette-5);
   --destructive: oklch(0.704 0.191 22.216);
-  --border: color-mix(in srgb, var(--palette-violet) 65%, transparent);
-  --input: color-mix(in srgb, var(--palette-violet) 65%, transparent);
-  --ring: var(--palette-ice);
+  --border: color-mix(in srgb, var(--palette-3) 65%, transparent);
+  --input: color-mix(in srgb, var(--palette-3) 65%, transparent);
+  --ring: var(--palette-1);
 }
 
 @layer base {

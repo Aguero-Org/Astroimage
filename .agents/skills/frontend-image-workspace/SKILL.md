@@ -88,9 +88,10 @@ The option list of a native `<select>` is OS chrome and cannot be themed.
 Use `frontend/src/components/ui/select.tsx` (Radix). Scrollbars use the same
 tokens (`--border`, `--muted-foreground`, `--radius`) from `index.css`.
 
-Brand colors live only in `frontend/src/index.css` as `--palette-*` mapped to
-shadcn semantic tokens. Light/dark is the `.dark` class on `<html>`. The FITS
-canvas may stay black; inspector/chrome must use theme tokens.
+Brand colors live in `frontend/src/lib/palettes.ts` (five hexes, lightest to
+darkest) and map to `--palette-1`…`--palette-5`. Semantic shadcn tokens in
+`index.css` derive from those stops. Light/dark is `.dark` on `<html>`. The
+FITS canvas may stay black; inspector/chrome must use theme tokens.
 
 Today: stretch (4) and limits (2) are radios; colormap (5) uses `Select`.
 

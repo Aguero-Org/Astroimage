@@ -138,9 +138,11 @@ Do not mix TanStack Query with a global client store for server data.
 
 Theming is shadcn CSS variables in `frontend/src/index.css` (`:root` / `.dark`).
 Do not hardcode brand colors on components; use tokens (`bg-background`,
-`text-primary`, `border-border`, …). Palette source: Coolors
-`97dffc-858ae3-613dc1-4e148c-2c0735`. Toggle `.dark` on `<html>` (Zustand +
-`localStorage` key `astroimage-theme`). Keep `--destructive` red.
+`text-primary`, `border-border`, …). Five brand stops live in
+`frontend/src/lib/palettes.ts` as `--palette-1` (lightest) … `--palette-5`
+(darkest). Add a palette by appending an entry with five hexes; the switcher
+appears when there is more than one. Toggle `.dark` on `<html>` (Zustand +
+`localStorage`). Keep `--destructive` red.
 
 Exclusive choices (one value from a fixed list):
 

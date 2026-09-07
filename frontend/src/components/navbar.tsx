@@ -1,5 +1,5 @@
 import { useNavigate, useSearch } from "@tanstack/react-router";
-import { ThemeToggle } from "@/components/theme-toggle";
+import { AppearanceControls } from "@/components/appearance-controls";
 import { ImageSearch } from "@/features/images/components/image-search";
 
 export function Navbar() {
@@ -28,7 +28,7 @@ export function Navbar() {
             value={urlQuery}
             onSearch={(query) => navigate({ to: "/", search: { query } })}
           />
-          <ThemeToggle />
+          <AppearanceControls />
         </div>
       </div>
     </header>

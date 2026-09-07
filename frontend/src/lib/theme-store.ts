@@ -1,5 +1,12 @@
 import { create } from "zustand";
 import {
+  applyPalette,
+  DEFAULT_PALETTE_ID,
+  isPaletteId,
+  PALETTE_STORAGE_KEY,
+  type PaletteId,
+} from "./palettes";
+import {
   applyThemeClass,
   readStoredTheme,
   resolveTheme,
@@ -9,7 +16,9 @@ import {
 
 type ThemeState = {
   theme: Theme;
+  paletteId: PaletteId;
   setTheme: (theme: Theme) => void;
+  setPalette: (paletteId: PaletteId) => void;
   toggleTheme: () => void;
 };
 
@@ -22,10 +31,16 @@ function currentTheme(): Theme {
 
 export const useThemeStore = create<ThemeState>((set, get) => ({
   theme: currentTheme(),
+  paletteId: DEFAULT_PALETTE_ID,
   setTheme: (theme) => {
     localStorage.setItem(THEME_STORAGE_KEY, theme);
     applyThemeClass(theme);
     set({ theme });
+  },
+  setPalette: (paletteId) => {
+    localStorage.setItem(PALETTE_STORAGE_KEY, paletteId);
+    applyPalette(paletteId);
+    set({ paletteId });
   },
   toggleTheme: () => {
     get().setTheme(get().theme === "dark" ? "light" : "dark");
@@ -35,5 +50,10 @@ export const useThemeStore = create<ThemeState>((set, get) => ({
 export function hydrateTheme(): void {
   const theme = resolveTheme(readStoredTheme());
   applyThemeClass(theme);
-  useThemeStore.setState({ theme });
+  const storedPalette = localStorage.getItem(PALETTE_STORAGE_KEY);
+  const paletteId = isPaletteId(storedPalette)
+    ? storedPalette
+    : DEFAULT_PALETTE_ID;
+  applyPalette(paletteId);
+  useThemeStore.setState({ theme, paletteId });
 }

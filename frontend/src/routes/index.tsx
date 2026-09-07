@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect } from "react";
-import { ThemeToggle } from "@/components/theme-toggle";
+import { AppearanceControls } from "@/components/appearance-controls";
 import { ImageList } from "@/features/images/components/image-list";
 import { ImageSearch } from "@/features/images/components/image-search";
 import { useImageFetch } from "@/features/images/use-image-fetch";
@@ -28,7 +28,7 @@ function HomePage() {
   return (
     <main className="relative flex min-h-svh flex-col items-center gap-6 p-6">
       <div className="absolute top-4 right-4">
-        <ThemeToggle />
+        <AppearanceControls />
       </div>
       <div className="flex flex-col items-center gap-2 pt-10">
         <img src="/favicon.svg" alt="astroimage" className="h-32 w-32" />
