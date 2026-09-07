@@ -9,16 +9,32 @@ type ImageInspectorProps = {
   view: ReactNode;
   sources: ReactNode;
   archive: ReactNode;
+  selection: ReactNode;
+  selectionOpen?: boolean;
   workspace?: ReactNode;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 };
 
 export function ImageInspector({
   view,
   sources,
   archive,
+  selection,
+  selectionOpen = false,
   workspace,
+  open,
+  onOpenChange,
 }: Readonly<ImageInspectorProps>) {
-  const [open, setOpen] = useState(false);
+  const [uncontrolledOpen, setUncontrolledOpen] = useState(false);
+  const isOpen = open ?? uncontrolledOpen;
+
+  function setOpen(next: boolean) {
+    onOpenChange?.(next);
+    if (open === undefined) {
+      setUncontrolledOpen(next);
+    }
+  }
 
   return (
     <>
@@ -28,18 +44,18 @@ export function ImageInspector({
         size="icon"
         data-testid="inspector-toggle"
         className="absolute top-16 left-4 z-30 shadow-md sm:left-8"
-        aria-expanded={open}
+        aria-expanded={isOpen}
         aria-controls="image-inspector-drawer"
-        aria-label={open ? "Cerrar inspector" : "Abrir inspector"}
-        onClick={() => setOpen((current) => !current)}
+        aria-label={isOpen ? "Cerrar inspector" : "Abrir inspector"}
+        onClick={() => setOpen(!isOpen)}
       >
-        {open ? <X className="size-4" /> : <Menu className="size-4" />}
+        {isOpen ? <X className="size-4" /> : <Menu className="size-4" />}
       </Button>
 
       <aside
         id="image-inspector-drawer"
         data-testid="inspector-drawer"
-        hidden={!open}
+        hidden={!isOpen}
         className={cn(
           "absolute top-28 bottom-4 left-4 z-30 flex w-[min(100%-2rem,22rem)] flex-col overflow-hidden rounded-xl border border-border bg-background/85 shadow-lg backdrop-blur-md sm:bottom-8 sm:left-8",
         )}
@@ -59,10 +75,13 @@ export function ImageInspector({
           <CollapsibleSection id="sources" title="Fuentes" defaultOpen>
             {sources}
           </CollapsibleSection>
-          <CollapsibleSection id="selection" title="Selección">
-            <p className="text-xs text-muted-foreground">
-              Al elegir un marcador en la imagen, su información aparece acá.
-            </p>
+          <CollapsibleSection
+            key={selectionOpen ? "selection-open" : "selection-idle"}
+            id="selection"
+            title="Selección"
+            defaultOpen={selectionOpen}
+          >
+            {selection}
           </CollapsibleSection>
           <CollapsibleSection id="archive" title="Archivo">
             {archive}

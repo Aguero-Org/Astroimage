@@ -34,6 +34,6 @@ describe("SourceMarkers", () => {
 
     const marker = screen.getByTestId("source-marker");
     expect(marker).toBeInTheDocument();
-    expect(marker).toHaveAttribute("alt", "Fuente 2, SNR 9.4");
+    expect(marker).toHaveAttribute("aria-label", "Fuente 2, SNR 9.4");
   });
 });

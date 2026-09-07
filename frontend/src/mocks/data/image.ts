@@ -15,6 +15,8 @@ export const MOCK_POINT_SOURCE: PointSourceSchema = {
   ycentroid: 8.25,
   snr: 11.2,
   relevance_score: 0.64,
+  peak: 42.1,
+  flux: 128.4,
   object_type: "point",
 };
 

@@ -14,6 +14,7 @@ describe("ImageInspector", () => {
             view={<p>Formulario de vista</p>}
             sources={<p>Formulario de fuentes</p>}
             archive={<p>Metadatos de archivo</p>}
+            selection={<p>Sin selección</p>}
           />
         </div>
       </TooltipProvider>,

@@ -27,7 +27,7 @@ dashboard of cards.
 |---------|----------|------------|
 | Vista | render form + pixel histogram | presets/reset |
 | Fuentes | detection form | presets/reset later; still one form |
-| Selección | placeholder | clicked overlay item (point, extended, future kinds) and scientific metadata |
+| Selección | clicked point source (SNR, score, peak, flux) | catalog matches / scientific metadata |
 | Archivo | grouped `/info` (instrumento, imagen, WCS, HDUs; header cerrado) | HDU selector |
 
 HDU is **workspace state** on the image page (not a field inside each form).

@@ -66,7 +66,7 @@ describe("ImageDetailPage", () => {
         expect(screen.getByTestId("inspector-toggle")).toBeInTheDocument();
         expect(screen.getByTestId("source-detection-form")).toBeInTheDocument();
         expect(screen.getByTestId("source-marker")).toHaveAttribute(
-          "alt",
+          "aria-label",
           markerName,
         );
       },
@@ -90,6 +90,21 @@ describe("ImageDetailPage", () => {
     expect(screen.getByTestId("pixel-histogram")).toBeInTheDocument();
     await user.click(screen.getByTestId("inspector-section-archive-toggle"));
     expect(screen.getByTestId("meta-telescope")).toHaveTextContent("HST");
+  });
+
+  it("fills Selección when a point marker is clicked", async () => {
+    const user = userEvent.setup();
+    renderImageDetail("m31");
+
+    await waitFor(
+      () => {
+        expect(screen.getByTestId("source-marker")).toBeInTheDocument();
+      },
+      { timeout: 8000 },
+    );
+    await user.click(screen.getByTestId("source-marker"));
+    expect(screen.getByTestId("inspector-drawer")).toBeVisible();
+    expect(screen.getByTestId("meta-sel-snr")).toHaveTextContent("11.20");
   });
 
   it("searches from the navbar and shows filtered home results", async () => {

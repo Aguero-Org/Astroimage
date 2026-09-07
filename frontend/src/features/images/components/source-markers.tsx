@@ -6,9 +6,15 @@ import { SourceMarker } from "./source-marker";
 
 type SourceMarkersProps = {
   sources: PointSourceSchema[];
+  selectedId?: number | null;
+  onSelect?: (source: PointSourceSchema) => void;
 };
 
-export function SourceMarkers({ sources }: Readonly<SourceMarkersProps>) {
+export function SourceMarkers({
+  sources,
+  selectedId = null,
+  onSelect,
+}: Readonly<SourceMarkersProps>) {
   const coords = useCoordinates(FITS_RENDER_IMAGE_KEY);
   const [overlayVersion, setOverlayVersion] = useState(0);
 
@@ -45,7 +51,11 @@ export function SourceMarkers({ sources }: Readonly<SourceMarkersProps>) {
               transform: "translate(-50%, -50%)",
             }}
           >
-            <SourceMarker source={source} />
+            <SourceMarker
+              source={source}
+              selected={source.source_id === selectedId}
+              onSelect={onSelect}
+            />
           </li>
         );
       })}

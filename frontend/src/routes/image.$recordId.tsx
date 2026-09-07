@@ -20,6 +20,7 @@ import { PixelHistogram } from "@/features/images/components/pixel-histogram";
 import { RenderViewForm } from "@/features/images/components/render-view-form";
 import { SourceDetectionForm } from "@/features/images/components/source-detection-form";
 import { SourceMarkers } from "@/features/images/components/source-markers";
+import { SourceSelection } from "@/features/images/components/source-selection";
 import {
   DEFAULT_RENDER_PARAMS,
   type RenderViewParams,
@@ -37,6 +38,9 @@ function ImageDetailPage() {
     DEFAULT_RENDER_PARAMS,
   );
   const [hdu, setHdu] = useState<number | null>(null);
+  const [inspectorOpen, setInspectorOpen] = useState(false);
+  const [selectedSource, setSelectedSource] =
+    useState<PointSourceSchema | null>(null);
   const renderQueryParams =
     hdu === null ? renderParams : { ...renderParams, hdu };
   const renderQuery = useRenderFitsImage(recordId, renderQueryParams, {
@@ -84,6 +88,12 @@ function ImageDetailPage() {
       : undefined;
   const objectUrl = useObjectUrl(blob);
 
+  useEffect(() => {
+    if (recordId || detectionParams || hdu !== undefined) {
+      setSelectedSource(null);
+    }
+  }, [recordId, detectionParams, hdu]);
+
   return (
     <main className="relative h-svh w-full overflow-hidden bg-black">
       <RenderedFitsSection
@@ -93,6 +103,11 @@ function ImageDetailPage() {
         objectUrl={objectUrl}
         label={sourceName ?? `Render FITS ${recordId}`}
         pointSources={pointSources}
+        selectedId={selectedSource?.source_id}
+        onSelectSource={(source) => {
+          setSelectedSource(source);
+          setInspectorOpen(true);
+        }}
       />
 
       <header className="pointer-events-none absolute top-16 left-16 z-20 max-w-[min(100%-5rem,28rem)] sm:left-20">
@@ -105,6 +120,10 @@ function ImageDetailPage() {
       </header>
 
       <ImageInspector
+        open={inspectorOpen}
+        onOpenChange={setInspectorOpen}
+        selectionOpen={selectedSource !== null}
+        selection={<SourceSelection source={selectedSource} />}
         workspace={
           <HduSelector images={imageHdus} value={hdu} onChange={setHdu} />
         }
@@ -173,6 +192,8 @@ function RenderedFitsSection({
   objectUrl,
   label,
   pointSources,
+  selectedId,
+  onSelectSource,
 }: Readonly<{
   isPending: boolean;
   isError: boolean;
@@ -180,6 +201,8 @@ function RenderedFitsSection({
   objectUrl: string | undefined;
   label: string;
   pointSources: PointSourceSchema[];
+  selectedId?: number;
+  onSelectSource?: (source: PointSourceSchema) => void;
 }>) {
   if (isPending) {
     return (
@@ -211,7 +234,11 @@ function RenderedFitsSection({
         label={label}
         className="h-full rounded-none border-0"
       >
-        <SourceMarkers sources={pointSources} />
+        <SourceMarkers
+          sources={pointSources}
+          selectedId={selectedId}
+          onSelect={onSelectSource}
+        />
       </FitsImageViewer>
     );
   }
