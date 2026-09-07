@@ -25,7 +25,7 @@ dashboard of cards.
 
 | Section | Role now | Grows into |
 |---------|----------|------------|
-| Vista | placeholder | render params (stretch, colormap, limits, gamma, histogram) |
+| Vista | render form (stretch, colormap, limits, pmin/pmax, gamma) | histogram; presets/reset |
 | Fuentes | detection form | presets/reset later; still one form |
 | Selección | placeholder | clicked overlay item (point, extended, future kinds) and scientific metadata |
 | Archivo | placeholder | grouped `/image/{id}/info` fields; FITS header last and closed |
@@ -95,6 +95,8 @@ frontend/src/features/images/components/
   collapsible-section.tsx
   source-markers.tsx         # point layer
   source-detection-form.tsx
+  render-view-form.tsx
+frontend/src/features/images/render-view.ts
 frontend/src/components/ui/help-hint.tsx
 ```
 

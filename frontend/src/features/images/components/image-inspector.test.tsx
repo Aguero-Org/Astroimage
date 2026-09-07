@@ -10,7 +10,10 @@ describe("ImageInspector", () => {
     render(
       <TooltipProvider delayDuration={0}>
         <div className="relative h-96">
-          <ImageInspector sources={<p>Formulario de fuentes</p>} />
+          <ImageInspector
+            view={<p>Formulario de vista</p>}
+            sources={<p>Formulario de fuentes</p>}
+          />
         </div>
       </TooltipProvider>,
     );
@@ -19,6 +22,7 @@ describe("ImageInspector", () => {
     await user.click(screen.getByTestId("inspector-toggle"));
     expect(screen.getByTestId("inspector-drawer")).toBeVisible();
     expect(screen.getByText("Formulario de fuentes")).toBeVisible();
+    expect(screen.getByText("Formulario de vista")).not.toBeVisible();
     expect(screen.getByTestId("inspector-section-view")).toBeInTheDocument();
     expect(
       screen.getByTestId("inspector-section-selection"),

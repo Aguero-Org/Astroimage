@@ -6,10 +6,14 @@ import { cn } from "@/lib/utils";
 import { CollapsibleSection } from "./collapsible-section";
 
 type ImageInspectorProps = {
+  view: ReactNode;
   sources: ReactNode;
 };
 
-export function ImageInspector({ sources }: Readonly<ImageInspectorProps>) {
+export function ImageInspector({
+  view,
+  sources,
+}: Readonly<ImageInspectorProps>) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -45,9 +49,7 @@ export function ImageInspector({ sources }: Readonly<ImageInspectorProps>) {
         </header>
         <div className="flex-1 overflow-y-auto px-4 py-1">
           <CollapsibleSection id="view" title="Vista">
-            <p className="text-xs text-muted-foreground">
-              Stretch, colormap y límites de render se configuran acá.
-            </p>
+            {view}
           </CollapsibleSection>
           <CollapsibleSection id="sources" title="Fuentes" defaultOpen>
             {sources}

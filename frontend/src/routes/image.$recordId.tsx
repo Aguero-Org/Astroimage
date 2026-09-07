@@ -1,3 +1,4 @@
+import { keepPreviousData } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useGetImageInfo } from "@/api/generated/hub/hub";
@@ -10,8 +11,13 @@ import { useDetectSources } from "@/api/generated/sources/sources";
 import { Skeleton } from "@/components/ui/skeleton";
 import { FitsImageViewer } from "@/features/images/components/fits-image-viewer";
 import { ImageInspector } from "@/features/images/components/image-inspector";
+import { RenderViewForm } from "@/features/images/components/render-view-form";
 import { SourceDetectionForm } from "@/features/images/components/source-detection-form";
 import { SourceMarkers } from "@/features/images/components/source-markers";
+import {
+  DEFAULT_RENDER_PARAMS,
+  type RenderViewParams,
+} from "@/features/images/render-view";
 import { DEFAULT_SOURCE_DETECTION_PARAMS } from "@/features/images/source-detection";
 
 export const Route = createFileRoute("/image/$recordId")({
@@ -21,7 +27,12 @@ export const Route = createFileRoute("/image/$recordId")({
 function ImageDetailPage() {
   const { recordId } = Route.useParams();
 
-  const renderQuery = useRenderFitsImage(recordId);
+  const [renderParams, setRenderParams] = useState<RenderViewParams>(
+    DEFAULT_RENDER_PARAMS,
+  );
+  const renderQuery = useRenderFitsImage(recordId, renderParams, {
+    query: { placeholderData: keepPreviousData },
+  });
   const infoQuery = useGetImageInfo(recordId);
   const [detectionParams, setDetectionParams] = useState<DetectSourcesParams>(
     DEFAULT_SOURCE_DETECTION_PARAMS,
@@ -67,6 +78,12 @@ function ImageDetailPage() {
       </header>
 
       <ImageInspector
+        view={
+          <RenderViewForm
+            isPending={renderQuery.isFetching}
+            onSubmit={setRenderParams}
+          />
+        }
         sources={
           <>
             <p className="mb-3 text-xs text-muted-foreground">
