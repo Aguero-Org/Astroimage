@@ -2,6 +2,24 @@
 
 This repository is opinionated. Do not introduce libraries, layers, or patterns outside this document. CI, linters, architecture tests, and pre-commit hooks must stay green.
 
+## Report unsolicited decisions
+
+The user will not specify every UI, API, or implementation choice. When something is
+underspecified and you must pick a path to keep moving, **do not stop to ask** unless
+the choice would violate this file, a skill, or the stated goal.
+
+Keep going, then **notify the user in the same turn's summary** under a heading
+`Decisiones no pedidas` (or `Unsolicited decisions` if the conversation is in English).
+For each item, state:
+
+1. What was not specified
+2. What you chose
+3. Why (one line, tied to existing constraints)
+4. How to change it if they disagree
+
+Do not hide these choices in source comments. Do not skip the report because the
+choice felt "obvious". If there were none, omit the heading.
+
 ## Layout
 
 - `backend/` — FastAPI API (`src/` layout, package `astroimage`)
