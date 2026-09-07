@@ -52,72 +52,45 @@ export function RenderViewForm({
         testId="render-stretch"
         help="Cómo se comprime el brillo de los píxeles. Lineal deja el rango crudo; raíz y log resaltan estructura débil."
       >
-        <select
-          id="render-stretch"
-          data-testid="render-field-stretch"
-          className={selectClassName}
+        <ExclusiveChoice
+          name="stretch"
           value={draft.stretch}
+          options={STRETCH_OPTIONS}
           disabled={isPending}
-          onChange={(event) => {
-            setDraft((current) => ({
-              ...current,
-              stretch: event.target.value,
-            }));
+          onChange={(stretch) => {
+            setDraft((current) => ({ ...current, stretch }));
           }}
-        >
-          {STRETCH_OPTIONS.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </select>
+        />
       </Field>
       <Field
         label="Límites"
         testId="render-limits"
         help="Cómo se elige el rango de intensidad. Percentiles recorta colas; ZScale se adapta al ruido local."
       >
-        <select
-          id="render-limits"
-          data-testid="render-field-limits"
-          className={selectClassName}
+        <ExclusiveChoice
+          name="limits"
           value={draft.limits}
+          options={LIMITS_OPTIONS}
           disabled={isPending}
-          onChange={(event) => {
-            setDraft((current) => ({ ...current, limits: event.target.value }));
+          onChange={(limits) => {
+            setDraft((current) => ({ ...current, limits }));
           }}
-        >
-          {LIMITS_OPTIONS.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </select>
+        />
       </Field>
       <Field
         label="Mapa de color"
         testId="render-colormap"
         help="Paleta con la que se pinta el PNG. Gris es el default astronómico; las otras paletas resaltan contraste."
       >
-        <select
-          id="render-colormap"
-          data-testid="render-field-colormap"
-          className={selectClassName}
+        <ExclusiveChoice
+          name="colormap"
           value={draft.colormap}
+          options={COLORMAP_OPTIONS}
           disabled={isPending}
-          onChange={(event) => {
-            setDraft((current) => ({
-              ...current,
-              colormap: event.target.value,
-            }));
+          onChange={(colormap) => {
+            setDraft((current) => ({ ...current, colormap }));
           }}
-        >
-          {COLORMAP_OPTIONS.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </select>
+        />
       </Field>
       <div className="grid grid-cols-2 gap-3">
         <Field
@@ -199,6 +172,78 @@ export function RenderViewForm({
   );
 }
 
+const SELECT_THRESHOLD = 5;
+
+type ChoiceOption = { value: string; label: string };
+
+function ExclusiveChoice({
+  name,
+  value,
+  options,
+  disabled,
+  onChange,
+}: Readonly<{
+  name: string;
+  value: string;
+  options: readonly ChoiceOption[];
+  disabled: boolean;
+  onChange: (value: string) => void;
+}>) {
+  if (options.length >= SELECT_THRESHOLD) {
+    return (
+      <select
+        id={`render-${name}`}
+        data-testid={`render-field-${name}`}
+        className={selectClassName}
+        value={value}
+        disabled={disabled}
+        onChange={(event) => {
+          onChange(event.target.value);
+        }}
+      >
+        {options.map((option) => (
+          <option key={option.value} value={option.value}>
+            {option.label}
+          </option>
+        ))}
+      </select>
+    );
+  }
+
+  return (
+    <div
+      role="radiogroup"
+      data-testid={`render-field-${name}`}
+      className="flex flex-col gap-1"
+    >
+      {options.map((option) => {
+        const optionId = `render-${name}-${option.value}`;
+        return (
+          <label
+            key={option.value}
+            htmlFor={optionId}
+            className="flex cursor-pointer items-center gap-2 text-sm"
+          >
+            <input
+              id={optionId}
+              data-testid={`render-field-${name}-${option.value}`}
+              type="radio"
+              name={name}
+              value={option.value}
+              checked={value === option.value}
+              disabled={disabled}
+              onChange={() => {
+                onChange(option.value);
+              }}
+            />
+            {option.label}
+          </label>
+        );
+      })}
+    </div>
+  );
+}
+
 function Field({
   label,
   testId,
@@ -211,19 +256,17 @@ function Field({
   children: ReactNode;
 }>) {
   return (
-    <div className="flex flex-col gap-1 text-sm">
-      <div className="flex items-center gap-1">
-        <label htmlFor={testId} className="text-muted-foreground">
-          {label}
-        </label>
+    <fieldset className="flex flex-col gap-1 text-sm">
+      <legend className="mb-1 flex items-center gap-1">
+        <span className="text-muted-foreground">{label}</span>
         <HelpHint
           label={label}
           testId={`render-help-${testId.replace("render-", "")}`}
         >
           {help}
         </HelpHint>
-      </div>
+      </legend>
       {children}
-    </div>
+    </fieldset>
   );
 }

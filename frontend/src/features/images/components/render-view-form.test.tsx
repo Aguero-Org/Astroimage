@@ -25,6 +25,29 @@ describe("RenderViewForm", () => {
     expect(onSubmit).toHaveBeenCalledWith(DEFAULT_RENDER_PARAMS);
   });
 
+  it("uses radios for stretch and a select for colormap", () => {
+    renderForm();
+
+    expect(screen.getByTestId("render-field-stretch-sqrt")).toHaveAttribute(
+      "type",
+      "radio",
+    );
+    expect(
+      screen.getByTestId("render-field-limits-percentiles"),
+    ).toHaveAttribute("type", "radio");
+    expect(screen.getByTestId("render-field-colormap").tagName).toBe("SELECT");
+  });
+
+  it("submits a changed stretch from the radio group", async () => {
+    const { onSubmit, user } = renderForm();
+
+    await user.click(screen.getByTestId("render-field-stretch-log"));
+    await user.click(screen.getByTestId("render-view-submit"));
+    expect(onSubmit).toHaveBeenCalledWith(
+      expect.objectContaining({ stretch: "log" }),
+    );
+  });
+
   it("submits a changed colormap", async () => {
     const { onSubmit, user } = renderForm();
 
