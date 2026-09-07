@@ -36,6 +36,19 @@ export const imageHandlers = [
     return HttpResponse.json(mockSourceDetection(record));
   }),
 
+  http.get(`${apiBaseUrl}/image/:recordId/histogram`, ({ params }) => {
+    const record = findRecord(params.recordId as string);
+    if (!record) {
+      return HttpResponse.json({ detail: "Image not found" }, { status: 404 });
+    }
+    return HttpResponse.json({
+      bin_centers: [0, 1, 2, 3, 4, 5, 6, 7],
+      counts: [2, 5, 12, 20, 18, 9, 4, 1],
+      minimum: 0,
+      maximum: 7,
+    });
+  }),
+
   http.get(`${apiBaseUrl}/image/:recordId/info`, ({ params }) => {
     const record = findRecord(params.recordId as string);
     if (!record) {
@@ -43,7 +56,23 @@ export const imageHandlers = [
     }
     return HttpResponse.json({
       source_name: record.name,
-      hdus: { selected: 0, image_indices: [0], images: [] },
+      instrument: {
+        telescope: "HST",
+        instrument: "WFC3",
+        filter_name: "F606W",
+        exptime: 580.0,
+      },
+      image: { shape: [1024, 1024], unit: "e-/s" },
+      wcs: { present: true, naxis: 2, ctype: ["RA---TAN", "DEC--TAN"] },
+      hdus: {
+        selected: 1,
+        image_indices: [1, 2],
+        images: [
+          { index: 1, extname: "SCI", kind: "image", shape: [1024, 1024] },
+          { index: 2, extname: "ERR", kind: "image", shape: [1024, 1024] },
+        ],
+      },
+      header: { TELESCOP: "HST", INSTRUME: "WFC3" },
     });
   }),
 

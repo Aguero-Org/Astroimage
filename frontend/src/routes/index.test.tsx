@@ -31,21 +31,26 @@ describe("HomePage search", () => {
 
     await waitFor(
       () => {
-        expect(screen.getByText("M31 - Andromeda Galaxy")).toBeInTheDocument();
+        expect(screen.getByTestId("home-title")).toBeInTheDocument();
+        expect(screen.getByTestId("image-list")).toHaveTextContent(
+          "M31 - Andromeda Galaxy",
+        );
       },
       { timeout: 8000 },
     );
 
-    const search = screen.getByRole("searchbox", { name: "Buscar imágenes" });
+    const search = screen.getByTestId("search-input");
     await user.clear(search);
     await user.type(search, "orion");
-    await user.click(screen.getByRole("button", { name: "Buscar" }));
+    await user.click(screen.getByTestId("search-submit"));
 
     await waitFor(() => {
-      expect(screen.getByText("M42 - Orion Nebula")).toBeInTheDocument();
+      expect(screen.getByTestId("image-list")).toHaveTextContent(
+        "M42 - Orion Nebula",
+      );
     });
-    expect(
-      screen.queryByText("M31 - Andromeda Galaxy"),
-    ).not.toBeInTheDocument();
+    expect(screen.getByTestId("image-list")).not.toHaveTextContent(
+      "M31 - Andromeda Galaxy",
+    );
   });
 });

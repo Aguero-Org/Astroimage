@@ -14,10 +14,14 @@ export function ImageListItem({
   return (
     <button
       type="button"
+      data-testid="image-list-item-open"
       className="w-full cursor-pointer text-left"
       onClick={() => onSelect(record.record_id)}
     >
-      <Card className="pointer-events-none gap-3 py-4 transition-colors hover:bg-accent/50">
+      <Card
+        data-testid="image-list-item"
+        className="pointer-events-none gap-3 py-4 transition-colors hover:bg-accent/50"
+      >
         <CardHeader className="px-4">
           <CardTitle className="text-sm">{record.name}</CardTitle>
         </CardHeader>

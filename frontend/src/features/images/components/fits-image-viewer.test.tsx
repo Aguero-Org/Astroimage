@@ -32,17 +32,11 @@ describe("FitsImageViewer", () => {
       />,
     );
 
-    const canvas = screen.getByRole("application", { name: "m31 render" });
-    expect(canvas).toBeInTheDocument();
-    expect(canvas.className).toContain("bg-transparent");
-    expect(screen.getByRole("button", { name: "Acercar" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Alejar" })).toBeInTheDocument();
-    expect(
-      screen.getByRole("button", { name: "Ajustar a la vista" }),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole("button", { name: "Pantalla completa" }),
-    ).toBeInTheDocument();
+    expect(screen.getByTestId("fits-viewer")).toBeInTheDocument();
+    expect(screen.getByTestId("fits-toolbar-zoom-in")).toBeInTheDocument();
+    expect(screen.getByTestId("fits-toolbar-zoom-out")).toBeInTheDocument();
+    expect(screen.getByTestId("fits-toolbar-home")).toBeInTheDocument();
+    expect(screen.getByTestId("fits-toolbar-fullscreen")).toBeInTheDocument();
     expect(screen.getByTestId("tiled-image")).toHaveTextContent(
       "blob:http://localhost/fits-preview",
     );

@@ -55,20 +55,56 @@ describe("ImageDetailPage", () => {
 
     await waitFor(
       () => {
-        expect(
-          screen.queryByText("Renderizando imagen…"),
-        ).not.toBeInTheDocument();
+        expect(screen.queryByTestId("render-loading")).not.toBeInTheDocument();
       },
       { timeout: 8000 },
     );
     await waitFor(
       () => {
-        expect(
-          screen.getByRole("img", { name: markerName }),
-        ).toBeInTheDocument();
+        expect(screen.getByTestId("image-detail-title")).toBeInTheDocument();
+        expect(screen.getByTestId("fits-viewer")).toBeInTheDocument();
+        expect(screen.getByTestId("inspector-toggle")).toBeInTheDocument();
+        expect(screen.getByTestId("source-detection-form")).toBeInTheDocument();
+        expect(screen.getByTestId("source-marker")).toHaveAttribute(
+          "aria-label",
+          markerName,
+        );
       },
       { timeout: 8000 },
     );
+  });
+
+  it("opens the inspector drawer from the hamburger control", async () => {
+    const user = userEvent.setup();
+    renderImageDetail("m31");
+
+    await waitFor(() => {
+      expect(screen.getByTestId("inspector-toggle")).toBeInTheDocument();
+    });
+    expect(screen.getByTestId("inspector-drawer")).not.toBeVisible();
+    await user.click(screen.getByTestId("inspector-toggle"));
+    expect(screen.getByTestId("inspector-drawer")).toBeVisible();
+    expect(screen.getByTestId("inspector-section-sources")).toBeInTheDocument();
+    expect(screen.getByTestId("hdu-selector")).toBeInTheDocument();
+    await user.click(screen.getByTestId("inspector-section-view-toggle"));
+    expect(screen.getByTestId("pixel-histogram")).toBeInTheDocument();
+    await user.click(screen.getByTestId("inspector-section-archive-toggle"));
+    expect(screen.getByTestId("meta-telescope")).toHaveTextContent("HST");
+  });
+
+  it("fills Selección when a point marker is clicked", async () => {
+    const user = userEvent.setup();
+    renderImageDetail("m31");
+
+    await waitFor(
+      () => {
+        expect(screen.getByTestId("source-marker")).toBeInTheDocument();
+      },
+      { timeout: 8000 },
+    );
+    await user.click(screen.getByTestId("source-marker"));
+    expect(screen.getByTestId("inspector-drawer")).toBeVisible();
+    expect(screen.getByTestId("meta-sel-snr")).toHaveTextContent("11.20");
   });
 
   it("searches from the navbar and shows filtered home results", async () => {
@@ -76,22 +112,19 @@ describe("ImageDetailPage", () => {
     renderImageDetail("m31");
 
     await waitFor(() => {
-      expect(
-        screen.getByRole("searchbox", { name: "Buscar imágenes" }),
-      ).toBeInTheDocument();
+      expect(screen.getByTestId("search-input")).toBeInTheDocument();
     });
 
-    await user.type(
-      screen.getByRole("searchbox", { name: "Buscar imágenes" }),
-      "orion",
-    );
-    await user.click(screen.getByRole("button", { name: "Buscar" }));
+    await user.type(screen.getByTestId("search-input"), "orion");
+    await user.click(screen.getByTestId("search-submit"));
 
     await waitFor(() => {
-      expect(screen.getByText("M42 - Orion Nebula")).toBeInTheDocument();
+      expect(screen.getByTestId("image-list")).toHaveTextContent(
+        "M42 - Orion Nebula",
+      );
     });
-    expect(
-      screen.queryByText("M31 - Andromeda Galaxy"),
-    ).not.toBeInTheDocument();
+    expect(screen.getByTestId("image-list")).not.toHaveTextContent(
+      "M31 - Andromeda Galaxy",
+    );
   });
 });

@@ -65,7 +65,10 @@ export function ImageList({
   }
 
   return (
-    <div className="mx-auto flex max-w-lg flex-col gap-2">
+    <div
+      data-testid="image-list"
+      className="mx-auto flex max-w-lg flex-col gap-2"
+    >
       {records.map((record) => (
         <ImageListItem
           key={record.record_id}

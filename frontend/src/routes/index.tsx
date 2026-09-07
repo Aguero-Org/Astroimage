@@ -1,5 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect } from "react";
+import { BrandLogo } from "@/components/brand-logo";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { ImageList } from "@/features/images/components/image-list";
 import { ImageSearch } from "@/features/images/components/image-search";
 import { useImageFetch } from "@/features/images/use-image-fetch";
@@ -25,10 +27,15 @@ function HomePage() {
   }, [trimmedQuery, fetchMutation.mutate]);
 
   return (
-    <main className="flex min-h-svh flex-col items-center gap-6 p-6">
+    <main className="relative flex min-h-svh flex-col items-center gap-6 p-6">
+      <div className="absolute top-4 right-4">
+        <ThemeToggle />
+      </div>
       <div className="flex flex-col items-center gap-2 pt-10">
-        <img src="/favicon.svg" alt="astroimage" className="h-32 w-32" />
-        <h1 className="text-2xl font-semibold">Astroimage</h1>
+        <BrandLogo className="h-32 w-32" />
+        <h1 data-testid="home-title" className="text-2xl font-semibold">
+          Astroimage
+        </h1>
       </div>
       <ImageSearch
         variant="hero"
