@@ -78,18 +78,17 @@ preference:
 |---------|---------|
 | 1 | no control |
 | 2–4 | radio group, all labels visible, one `HelpHint` on the group |
-| 5+ | `<select>` |
+| 5+ | styled `Select` (Radix list, not native `<select>`) |
 | boolean | checkbox or switch |
 
 Use a select anyway when the list is **dynamic** (HDU indices, catalog names)
 even if the current length is 2–4 — the count will change per file.
 
-Style native `<select>` with `frontend/src/components/ui/select.tsx` (class
-`ui-select`). Do not add a Radix dropdown. Scrollbars use the same tokens
-(`--border`, `--muted-foreground`, `--radius`) from `index.css`.
+The option list of a native `<select>` is OS chrome and cannot be themed.
+Use `frontend/src/components/ui/select.tsx` (Radix). Scrollbars use the same
+tokens (`--border`, `--muted-foreground`, `--radius`) from `index.css`.
 
-Today: stretch (4) and limits (2) should be radios; colormap (5) stays a
-select. Do not add a custom select component.
+Today: stretch (4) and limits (2) are radios; colormap (5) uses `Select`.
 
 ## Forms (render / detection)
 

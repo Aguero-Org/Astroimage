@@ -2,7 +2,13 @@ import { type ReactNode, type SyntheticEvent, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { HelpHint } from "@/components/ui/help-hint";
 import { Input } from "@/components/ui/input";
-import { Select } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   COLORMAP_OPTIONS,
   DEFAULT_RENDER_PARAMS,
@@ -185,20 +191,24 @@ function ExclusiveChoice({
 }>) {
   if (options.length >= SELECT_THRESHOLD) {
     return (
-      <Select
-        id={`render-${name}`}
-        data-testid={`render-field-${name}`}
-        value={value}
-        disabled={disabled}
-        onChange={(event) => {
-          onChange(event.target.value);
-        }}
-      >
-        {options.map((option) => (
-          <option key={option.value} value={option.value}>
-            {option.label}
-          </option>
-        ))}
+      <Select value={value} onValueChange={onChange} disabled={disabled}>
+        <SelectTrigger
+          id={`render-${name}`}
+          data-testid={`render-field-${name}`}
+        >
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          {options.map((option) => (
+            <SelectItem
+              key={option.value}
+              value={option.value}
+              data-testid={`render-field-${name}-${option.value}`}
+            >
+              {option.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
       </Select>
     );
   }

@@ -35,7 +35,10 @@ describe("RenderViewForm", () => {
     expect(
       screen.getByTestId("render-field-limits-percentiles"),
     ).toHaveAttribute("type", "radio");
-    expect(screen.getByTestId("render-field-colormap").tagName).toBe("SELECT");
+    expect(screen.getByTestId("render-field-colormap")).toHaveAttribute(
+      "data-slot",
+      "select-trigger",
+    );
   });
 
   it("submits a changed stretch from the radio group", async () => {
@@ -51,10 +54,8 @@ describe("RenderViewForm", () => {
   it("submits a changed colormap", async () => {
     const { onSubmit, user } = renderForm();
 
-    await user.selectOptions(
-      screen.getByTestId("render-field-colormap"),
-      "heat",
-    );
+    await user.click(screen.getByTestId("render-field-colormap"));
+    await user.click(screen.getByTestId("render-field-colormap-heat"));
     await user.click(screen.getByTestId("render-view-submit"));
     expect(onSubmit).toHaveBeenCalledWith(
       expect.objectContaining({ colormap: "heat" }),

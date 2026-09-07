@@ -139,7 +139,7 @@ Do not mix TanStack Query with a global client store for server data.
 Exclusive choices (one value from a fixed list):
 
 - 2–4 options → radio group (all choices visible)
-- 5 or more → `<select>`
+- 5 or more → styled `Select` (`components/ui/select.tsx`, Radix). Never a native `<select>`: the option list is painted by the OS and cannot match the UI.
 - 1 option → no control
 - boolean on/off → checkbox or switch, not radios
 

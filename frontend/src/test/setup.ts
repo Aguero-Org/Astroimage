@@ -14,6 +14,19 @@ afterAll(() => {
   server.close();
 });
 
+class ResizeObserverStub {
+  observe(): void {}
+  unobserve(): void {}
+  disconnect(): void {}
+}
+
+window.ResizeObserver = ResizeObserverStub;
+
+Element.prototype.hasPointerCapture ??= () => false;
+Element.prototype.setPointerCapture ??= () => {};
+Element.prototype.releasePointerCapture ??= () => {};
+Element.prototype.scrollIntoView ??= () => {};
+
 // Mocks for JSDOM
 window.scrollTo = vi.fn();
 window.scroll = vi.fn();
