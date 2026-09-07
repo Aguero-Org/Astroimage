@@ -1,5 +1,6 @@
 import { useNavigate, useSearch } from "@tanstack/react-router";
-import { AppearanceControls } from "@/components/appearance-controls";
+import { BrandLogo } from "@/components/brand-logo";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { ImageSearch } from "@/features/images/components/image-search";
 
 export function Navbar() {
@@ -19,7 +20,7 @@ export function Navbar() {
           className="flex shrink-0 cursor-pointer items-center gap-2"
           onClick={() => navigate({ to: "/", search: { query: "" } })}
         >
-          <img src="/favicon.svg" alt="astroimage" className="h-8 w-8" />
+          <BrandLogo className="h-8 w-8" />
           <span className="text-lg font-semibold">Astroimage</span>
         </button>
         <div className="flex min-w-0 items-center gap-2">
@@ -28,7 +29,7 @@ export function Navbar() {
             value={urlQuery}
             onSearch={(query) => navigate({ to: "/", search: { query } })}
           />
-          <AppearanceControls />
+          <ThemeToggle />
         </div>
       </div>
     </header>
