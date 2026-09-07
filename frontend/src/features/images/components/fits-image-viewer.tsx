@@ -60,19 +60,20 @@ export function FitsImageViewer({
     <ViewerStateProvider state={state}>
       <div
         className={cn(
-          "relative overflow-hidden rounded-xl border bg-transparent",
+          "relative h-full min-h-svh overflow-hidden rounded-xl border bg-transparent",
           className,
         )}
+        data-testid="fits-viewer"
       >
         <div
           ref={state.setContainerElement}
           role="application"
           aria-label={label}
-          className="fits-osd h-[min(70vh,40rem)] w-full bg-transparent"
+          className="fits-osd h-full min-h-svh w-full bg-transparent"
         />
         <div
           id={navigatorId}
-          className="pointer-events-auto absolute right-3 bottom-3 h-28 w-40 overflow-hidden rounded-md border bg-transparent shadow-sm"
+          className="pointer-events-auto absolute right-3 bottom-3 h-28 w-40 overflow-hidden rounded-md border border-white/20 bg-transparent shadow-sm sm:right-8 sm:bottom-8"
         />
         <SourceMarkers sources={pointSources} />
         <FitsImageViewerToolbar />

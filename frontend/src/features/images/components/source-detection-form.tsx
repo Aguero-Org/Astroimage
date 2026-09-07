@@ -131,8 +131,12 @@ export function SourceDetectionForm({
 
   return (
     <TooltipProvider delayDuration={200}>
-      <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+      <form
+        data-testid="source-detection-form"
+        className="flex flex-col gap-4"
+        onSubmit={handleSubmit}
+      >
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           {FIELDS.map((field) => (
             <div key={field.key} className="flex flex-col gap-1 text-sm">
               <div className="flex items-center gap-1">
@@ -143,6 +147,7 @@ export function SourceDetectionForm({
                   <TooltipTrigger asChild>
                     <button
                       type="button"
+                      data-testid={`source-help-${field.key}`}
                       className="inline-flex size-4 cursor-help items-center justify-center rounded-full text-muted-foreground hover:text-foreground"
                       aria-label={`Ayuda: ${field.label}`}
                     >
@@ -156,6 +161,7 @@ export function SourceDetectionForm({
               </div>
               <Input
                 id={field.key}
+                data-testid={`source-field-${field.key}`}
                 type="number"
                 step={field.step}
                 value={draft[field.key]}
@@ -171,7 +177,12 @@ export function SourceDetectionForm({
             </div>
           ))}
         </div>
-        <Button type="submit" disabled={isPending} className="self-start">
+        <Button
+          type="submit"
+          data-testid="source-detect-submit"
+          disabled={isPending}
+          className="self-start"
+        >
           {isPending ? "Detectando…" : "Detectar fuentes"}
         </Button>
       </form>

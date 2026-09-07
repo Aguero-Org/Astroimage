@@ -33,13 +33,14 @@ export function FitsImageViewerToolbar() {
   }
 
   return (
-    <div className="absolute top-3 right-3 z-10 flex gap-1 rounded-lg border bg-background/90 p-1 shadow-sm backdrop-blur">
+    <div className="absolute top-16 right-3 z-10 flex gap-1 rounded-lg border border-white/15 bg-background/80 p-1 shadow-sm backdrop-blur-md sm:top-20 sm:right-8">
       <Button
         type="button"
         variant="ghost"
         size="icon"
         disabled={disabled}
         onClick={zoomIn}
+        data-testid="fits-toolbar-zoom-in"
         aria-label="Acercar"
       >
         <ZoomIn className="size-4" />
@@ -50,6 +51,7 @@ export function FitsImageViewerToolbar() {
         size="icon"
         disabled={disabled}
         onClick={zoomOut}
+        data-testid="fits-toolbar-zoom-out"
         aria-label="Alejar"
       >
         <ZoomOut className="size-4" />
@@ -60,6 +62,7 @@ export function FitsImageViewerToolbar() {
         size="icon"
         disabled={disabled}
         onClick={goHome}
+        data-testid="fits-toolbar-home"
         aria-label="Ajustar a la vista"
       >
         <House className="size-4" />
@@ -70,6 +73,7 @@ export function FitsImageViewerToolbar() {
         size="icon"
         disabled={disabled}
         onClick={toggleFullPage}
+        data-testid="fits-toolbar-fullscreen"
         aria-label={
           isFullPage ? "Salir de pantalla completa" : "Pantalla completa"
         }

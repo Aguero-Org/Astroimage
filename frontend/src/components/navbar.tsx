@@ -7,10 +7,14 @@ export function Navbar() {
   const urlQuery = typeof search.query === "string" ? search.query : "";
 
   return (
-    <header className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur">
+    <header
+      data-testid="navbar"
+      className="border-b border-white/10 bg-background/40 backdrop-blur-md"
+    >
       <div className="mx-auto flex w-full max-w-5xl items-center justify-between gap-3 px-4 py-3 sm:gap-6 sm:px-6 md:max-w-6xl md:px-8 lg:px-12 xl:max-w-7xl xl:px-16">
         <button
           type="button"
+          data-testid="navbar-logo"
           className="flex shrink-0 cursor-pointer items-center gap-2"
           onClick={() => navigate({ to: "/", search: { query: "" } })}
         >

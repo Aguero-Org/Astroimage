@@ -13,7 +13,11 @@ function RootLayout() {
 
   return (
     <>
-      {isHome ? null : <Navbar />}
+      {isHome ? null : (
+        <div className="absolute inset-x-0 top-0 z-50">
+          <Navbar />
+        </div>
+      )}
       <Outlet />
       <TanStackRouterDevtools />
       <ReactQueryDevtools buttonPosition="bottom-left" />
