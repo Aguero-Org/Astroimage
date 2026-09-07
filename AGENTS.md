@@ -118,6 +118,16 @@ Do not create empty test files for symmetry.
 
 Do not mix TanStack Query with a global client store for server data.
 
+### Image workspace (detail view)
+
+The FITS viewer is the canvas. Controls and metadata live in a hamburger
+inspector drawer with collapsible sections — not extra pages or stacked
+floating cards. Explain labels with the shared `HelpHint` tooltip.
+Viewer overlays are composed as siblings (point sources, later extended
+and other layers), not hard-wired into the viewer.
+
+On-demand workflow: `.agents/skills/frontend-image-workspace/SKILL.md`.
+
 ## Out of current scope
 
 - Authentication
