@@ -69,6 +69,24 @@ annotations are **sibling layers**, not extra props on `FitsImageViewer`.
   until the contract adds positions.
 - Selecting an overlay item fills **Selección**; it does not open a modal.
 
+## Exclusive choice controls
+
+Pick the control from the **size of the closed option set**, not from layout
+preference:
+
+| Options | Control |
+|---------|---------|
+| 1 | no control |
+| 2–4 | radio group, all labels visible, one `HelpHint` on the group |
+| 5+ | `<select>` |
+| boolean | checkbox or switch |
+
+Use a select anyway when the list is **dynamic** (HDU indices, catalog names)
+even if the current length is 2–4 — the count will change per file.
+
+Today: stretch (4) and limits (2) should be radios; colormap (5) stays a
+select. Do not add a custom select component.
+
 ## Forms (render / detection)
 
 Contract: current values + submit. **Reset** and **named presets** (short
