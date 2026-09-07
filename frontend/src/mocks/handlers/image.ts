@@ -52,10 +52,11 @@ export const imageHandlers = [
       image: { shape: [1024, 1024], unit: "e-/s" },
       wcs: { present: true, naxis: 2, ctype: ["RA---TAN", "DEC--TAN"] },
       hdus: {
-        selected: 0,
-        image_indices: [0],
+        selected: 1,
+        image_indices: [1, 2],
         images: [
-          { index: 0, extname: "SCI", kind: "image", shape: [1024, 1024] },
+          { index: 1, extname: "SCI", kind: "image", shape: [1024, 1024] },
+          { index: 2, extname: "ERR", kind: "image", shape: [1024, 1024] },
         ],
       },
       header: { TELESCOP: "HST", INSTRUME: "WFC3" },

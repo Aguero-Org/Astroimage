@@ -30,10 +30,11 @@ dashboard of cards.
 | Selección | placeholder | clicked overlay item (point, extended, future kinds) and scientific metadata |
 | Archivo | grouped `/info` (instrumento, imagen, WCS, HDUs; header cerrado) | HDU selector |
 
-HDU is **workspace state**, not a field inside each form. Render, histogram,
-and detection share the same `hdu`. Show a selector only when
-`hdus.images.length > 1`. Default `hdu` is omitted (backend picks the first
-2D image HDU).
+HDU is **workspace state** on the image page (not a field inside each form).
+Render, histogram, and detection share the same `hdu`. `HduSelector` sits in
+the inspector header and renders only when `hdus.images.length > 1`. With a
+single plane the query param is omitted (backend picks the first 2D image
+HDU).
 
 `POST /fits/metadata` is out of this workspace (no `record_id`, cannot render).
 

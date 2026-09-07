@@ -9,12 +9,14 @@ type ImageInspectorProps = {
   view: ReactNode;
   sources: ReactNode;
   archive: ReactNode;
+  workspace?: ReactNode;
 };
 
 export function ImageInspector({
   view,
   sources,
   archive,
+  workspace,
 }: Readonly<ImageInspectorProps>) {
   const [open, setOpen] = useState(false);
 
@@ -49,6 +51,7 @@ export function ImageInspector({
             cada sección se abre solo cuando la necesitás.
           </HelpHint>
         </header>
+        {workspace}
         <div className="flex-1 overflow-y-auto px-4 py-1">
           <CollapsibleSection id="view" title="Vista">
             {view}

@@ -200,7 +200,7 @@ export function ImageArchive({ info, isPending }: Readonly<ImageArchiveProps>) {
           [hdu.extname, hdu.kind, formatList(hdu.shape)]
             .filter(Boolean)
             .join(" · ") || String(hdu.index),
-          "Extensión de imagen 2D disponible en el FITS. El selector de HDU vendrá después.",
+          "Extensión de imagen 2D disponible en el FITS.",
         ),
       )
       .filter((item) => item !== null) ?? [];

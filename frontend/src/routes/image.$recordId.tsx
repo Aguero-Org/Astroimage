@@ -10,6 +10,7 @@ import { useRenderFitsImage } from "@/api/generated/render/render";
 import { useDetectSources } from "@/api/generated/sources/sources";
 import { Skeleton } from "@/components/ui/skeleton";
 import { FitsImageViewer } from "@/features/images/components/fits-image-viewer";
+import { HduSelector } from "@/features/images/components/hdu-selector";
 import { ImageArchive } from "@/features/images/components/image-archive";
 import { ImageInspector } from "@/features/images/components/image-inspector";
 import { RenderViewForm } from "@/features/images/components/render-view-form";
@@ -31,16 +32,36 @@ function ImageDetailPage() {
   const [renderParams, setRenderParams] = useState<RenderViewParams>(
     DEFAULT_RENDER_PARAMS,
   );
-  const renderQuery = useRenderFitsImage(recordId, renderParams, {
+  const [hdu, setHdu] = useState<number | null>(null);
+  const renderQueryParams =
+    hdu === null ? renderParams : { ...renderParams, hdu };
+  const renderQuery = useRenderFitsImage(recordId, renderQueryParams, {
     query: { placeholderData: keepPreviousData },
   });
   const infoQuery = useGetImageInfo(recordId);
   const [detectionParams, setDetectionParams] = useState<DetectSourcesParams>(
     DEFAULT_SOURCE_DETECTION_PARAMS,
   );
-  const sourcesQuery = useDetectSources(recordId, detectionParams);
+  const sourcesQueryParams =
+    hdu === null ? detectionParams : { ...detectionParams, hdu };
+  const sourcesQuery = useDetectSources(recordId, sourcesQueryParams);
   const imageInfo =
     infoQuery.data?.status === 200 ? infoQuery.data.data : undefined;
+  const imageHdus = imageInfo?.hdus.images ?? [];
+
+  useEffect(() => {
+    const images = imageInfo?.hdus.images ?? [];
+    if (images.length <= 1) {
+      setHdu(null);
+      return;
+    }
+    setHdu((current) => {
+      if (current !== null && images.some((plane) => plane.index === current)) {
+        return current;
+      }
+      return imageInfo?.hdus.selected ?? images[0]?.index ?? null;
+    });
+  }, [imageInfo]);
   const sourceName = imageInfo?.source_name;
   const pointSources =
     sourcesQuery.data?.status === 200
@@ -78,6 +99,9 @@ function ImageDetailPage() {
       </header>
 
       <ImageInspector
+        workspace={
+          <HduSelector images={imageHdus} value={hdu} onChange={setHdu} />
+        }
         view={
           <RenderViewForm
             isPending={renderQuery.isFetching}
