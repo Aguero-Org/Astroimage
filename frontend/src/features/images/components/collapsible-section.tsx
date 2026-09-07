@@ -21,7 +21,7 @@ export function CollapsibleSection({
   return (
     <section
       data-testid={`inspector-section-${id}`}
-      className="border-b border-white/10 py-2 last:border-b-0"
+      className="border-b border-border py-2 last:border-b-0"
     >
       <button
         type="button"

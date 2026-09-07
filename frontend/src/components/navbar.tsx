@@ -1,4 +1,5 @@
 import { useNavigate, useSearch } from "@tanstack/react-router";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { ImageSearch } from "@/features/images/components/image-search";
 
 export function Navbar() {
@@ -9,7 +10,7 @@ export function Navbar() {
   return (
     <header
       data-testid="navbar"
-      className="border-b border-white/10 bg-background/40 backdrop-blur-md"
+      className="border-b border-border bg-background/70 backdrop-blur-md"
     >
       <div className="mx-auto flex w-full max-w-5xl items-center justify-between gap-3 px-4 py-3 sm:gap-6 sm:px-6 md:max-w-6xl md:px-8 lg:px-12 xl:max-w-7xl xl:px-16">
         <button
@@ -21,11 +22,14 @@ export function Navbar() {
           <img src="/favicon.svg" alt="astroimage" className="h-8 w-8" />
           <span className="text-lg font-semibold">Astroimage</span>
         </button>
-        <ImageSearch
-          variant="navbar"
-          value={urlQuery}
-          onSearch={(query) => navigate({ to: "/", search: { query } })}
-        />
+        <div className="flex min-w-0 items-center gap-2">
+          <ImageSearch
+            variant="navbar"
+            value={urlQuery}
+            onSearch={(query) => navigate({ to: "/", search: { query } })}
+          />
+          <ThemeToggle />
+        </div>
       </div>
     </header>
   );

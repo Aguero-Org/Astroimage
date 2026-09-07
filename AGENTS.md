@@ -136,6 +136,12 @@ Do not create empty test files for symmetry.
 
 Do not mix TanStack Query with a global client store for server data.
 
+Theming is shadcn CSS variables in `frontend/src/index.css` (`:root` / `.dark`).
+Do not hardcode brand colors on components; use tokens (`bg-background`,
+`text-primary`, `border-border`, …). Palette source: Coolors
+`97dffc-858ae3-613dc1-4e148c-2c0735`. Toggle `.dark` on `<html>` (Zustand +
+`localStorage` key `astroimage-theme`). Keep `--destructive` red.
+
 Exclusive choices (one value from a fixed list):
 
 - 2–4 options → radio group (all choices visible)

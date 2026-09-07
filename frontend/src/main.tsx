@@ -3,8 +3,11 @@ import { createRouter, RouterProvider } from "@tanstack/react-router";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { queryClient } from "@/lib/query-client";
+import { hydrateTheme } from "@/lib/theme-store";
 import { routeTree } from "@/routeTree.gen";
 import "./index.css";
+
+hydrateTheme();
 
 const router = createRouter({ routeTree });
 

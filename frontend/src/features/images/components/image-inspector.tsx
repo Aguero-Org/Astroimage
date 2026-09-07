@@ -37,10 +37,10 @@ export function ImageInspector({
         data-testid="inspector-drawer"
         hidden={!open}
         className={cn(
-          "absolute top-28 bottom-4 left-4 z-30 flex w-[min(100%-2rem,22rem)] flex-col overflow-hidden rounded-xl border border-white/15 bg-background/85 shadow-lg backdrop-blur-md sm:bottom-8 sm:left-8",
+          "absolute top-28 bottom-4 left-4 z-30 flex w-[min(100%-2rem,22rem)] flex-col overflow-hidden rounded-xl border border-border bg-background/85 shadow-lg backdrop-blur-md sm:bottom-8 sm:left-8",
         )}
       >
-        <header className="flex items-center gap-2 border-b border-white/10 px-4 py-3">
+        <header className="flex items-center gap-2 border-b border-border px-4 py-3">
           <h2 className="text-sm font-medium">Inspector</h2>
           <HelpHint label="Inspector" testId="help-inspector">
             Controles y metadatos de la imagen. La vista FITS permanece al lado;

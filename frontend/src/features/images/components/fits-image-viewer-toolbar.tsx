@@ -33,7 +33,7 @@ export function FitsImageViewerToolbar() {
   }
 
   return (
-    <div className="absolute top-16 right-3 z-10 flex gap-1 rounded-lg border border-white/15 bg-background/80 p-1 shadow-sm backdrop-blur-md sm:top-20 sm:right-8">
+    <div className="absolute top-16 right-3 z-10 flex gap-1 rounded-lg border border-border bg-background/80 p-1 shadow-sm backdrop-blur-md sm:top-20 sm:right-8">
       <Button
         type="button"
         variant="ghost"
