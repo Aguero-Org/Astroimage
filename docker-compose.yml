@@ -7,7 +7,7 @@ services:
       - "8000:8000"
     environment:
       DATABASE_URL: postgresql+asyncpg://astroimage:astroimage@postgres:5432/astroimage
-      CORS_ORIGINS: '["http://localhost:5173"]'
+      CORS_ORIGINS: '["http://localhost:5173", "http://127.0.0.1:5173"]'
       LOG_LEVEL: info
       ENVIRONMENT: development
       OTLP_ENDPOINT: http://host.docker.internal:4318/v1/traces
@@ -25,6 +25,22 @@ services:
         condition: service_healthy
       minio:
         condition: service_healthy
+
+  frontend:
+    build:
+      context: ./frontend
+    command: ["pnpm", "dev", "--host", "0.0.0.0", "--port", "5173"]
+    ports:
+      - "5173:5173"
+    environment:
+      VITE_API_BASE_URL: http://localhost:8000
+      VITE_API_MOCKING: "false"
+      DOCKER: "1"
+    volumes:
+      - ./frontend:/app
+      - frontend_node_modules:/app/node_modules
+    depends_on:
+      - api
 
   postgres:
     image: postgres:16
@@ -63,3 +79,4 @@ volumes:
   postgres_data:
   minio_data:
   api_venv:
+  frontend_node_modules:

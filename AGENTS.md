@@ -26,7 +26,7 @@ choice felt "obvious". If there were none, omit the heading.
 - `frontend/` — Vite + React SPA
 - `monitoring/` — external observability compose (not part of the app image)
 - `sonar/` — external SonarQube compose (code quality; not part of the app image)
-- Root `docker-compose.yml` — API + PostgreSQL only
+- Root `docker-compose.yml` — API + frontend + PostgreSQL + MinIO
 - Root `sonar-project.properties` — SonarQube/SonarCloud monorepo analysis config
 
 ## Allowed backend stack
@@ -169,7 +169,7 @@ On-demand workflow: `.agents/skills/frontend-image-workspace/SKILL.md`.
 - Rate limiting
 - ARQ/Redis/Celery (defer until processing volume requires it)
 - In-memory cache libraries beyond what Python already provides
-- MinIO / extra compose services
+- Extra compose app services beyond the root stack (API, frontend, PostgreSQL, MinIO)
 - Storybook
 - Kibana / Elasticsearch
 - New UI kits, HTTP clients (axios, ky), or routers

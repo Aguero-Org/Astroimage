@@ -40,7 +40,7 @@ astroimage/
   frontend/      Vite + React 19 + TypeScript + OpenSeadragon + TanStack Router/Query
   monitoring/    Prometheus, Grafana, Loki, Promtail, Tempo (external observability)
   sonar/         SonarQube Community (local quality analysis)
-  docker-compose.yml (API + PostgreSQL + MinIO)
+  docker-compose.yml (API + frontend + PostgreSQL + MinIO)
   sonar-project.properties
 ```
 
@@ -49,7 +49,7 @@ astroimage/
 - Python 3.12+ (3.13 locally)
 - [uv](https://docs.astral.sh/uv/)
 - Node 22 + pnpm 11
-- Docker & Docker Compose (API, PostgreSQL 16, and MinIO)
+- Docker & Docker Compose (API, frontend, PostgreSQL 16, and MinIO)
 
 ## Backend
 
@@ -124,16 +124,19 @@ Add shadcn components with `pnpm dlx shadcn@latest add <component>`.
 
 ## Docker
 
-Application stack (API + PostgreSQL + MinIO):
+Application stack (API + frontend + PostgreSQL + MinIO):
 
 ```bash
 docker compose up --build
 ```
 
+- Frontend: http://localhost:5173
 - API: http://localhost:8000
 - PostgreSQL: `localhost:5432`
 - MinIO S3 API: http://localhost:9000
 - MinIO Web Console: http://localhost:9001 (`minioadmin` / `minioadmin`)
+
+The SPA in the browser still calls the API at `http://localhost:8000` (`VITE_API_BASE_URL`). Do not point Vite at `http://api:8000`; that hostname only exists inside the compose network.
 
 Observability (separate stack; scrapes `/metrics` and collects JSON logs):
 
