@@ -1,6 +1,15 @@
 import { ChevronDown } from "lucide-react";
-import { type ReactNode, useState } from "react";
-import { cn } from "@/lib/utils";
+import type { ReactNode } from "react";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
+import {
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
+} from "@/components/ui/sidebar";
 
 type CollapsibleSectionProps = {
   id: string;
@@ -15,33 +24,32 @@ export function CollapsibleSection({
   defaultOpen = false,
   children,
 }: Readonly<CollapsibleSectionProps>) {
-  const [open, setOpen] = useState(defaultOpen);
-  const panelId = `${id}-panel`;
-
   return (
-    <section
+    <Collapsible
+      defaultOpen={defaultOpen}
+      className="group/collapsible"
       data-testid={`inspector-section-${id}`}
-      className="border-b border-border py-2 last:border-b-0"
     >
-      <button
-        type="button"
-        data-testid={`inspector-section-${id}-toggle`}
-        className="flex w-full cursor-pointer items-center justify-between gap-2 py-1 text-left text-sm font-medium"
-        aria-expanded={open}
-        aria-controls={panelId}
-        onClick={() => setOpen((current) => !current)}
-      >
-        {title}
-        <ChevronDown
-          className={cn(
-            "size-4 shrink-0 transition-transform",
-            open ? "rotate-0" : "-rotate-90",
-          )}
-        />
-      </button>
-      <div id={panelId} hidden={!open} className="pt-2 pb-1">
-        {children}
-      </div>
-    </section>
+      <SidebarGroup>
+        <SidebarGroupLabel
+          asChild
+          className="h-auto w-full text-sm text-sidebar-foreground"
+        >
+          <CollapsibleTrigger
+            type="button"
+            data-testid={`inspector-section-${id}-toggle`}
+            className="flex w-full cursor-pointer items-center justify-between gap-2 py-1"
+          >
+            {title}
+            <ChevronDown className="size-4 shrink-0 transition-transform group-data-[state=closed]/collapsible:-rotate-90" />
+          </CollapsibleTrigger>
+        </SidebarGroupLabel>
+        <CollapsibleContent>
+          <SidebarGroupContent className="pt-2 pb-1">
+            {children}
+          </SidebarGroupContent>
+        </CollapsibleContent>
+      </SidebarGroup>
+    </Collapsible>
   );
 }

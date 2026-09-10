@@ -37,3 +37,15 @@ Element.prototype.scrollIntoView ??= () => {};
 window.scrollTo = vi.fn();
 window.scroll = vi.fn();
 window.scrollBy = vi.fn();
+
+window.matchMedia = (query: string) =>
+  ({
+    matches: false,
+    media: query,
+    onchange: null,
+    addEventListener: () => {},
+    removeEventListener: () => {},
+    addListener: () => {},
+    removeListener: () => {},
+    dispatchEvent: () => false,
+  }) as MediaQueryList;

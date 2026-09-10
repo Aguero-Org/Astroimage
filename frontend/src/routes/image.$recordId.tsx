@@ -110,16 +110,15 @@ function ImageDetailPage() {
         }}
       />
 
-      <header className="pointer-events-none absolute top-16 left-16 z-20 max-w-[min(100%-5rem,28rem)] sm:left-20">
-        <h1
-          data-testid="image-detail-title"
-          className="text-2xl font-semibold text-white drop-shadow-[0_1px_8px_rgba(0,0,0,0.8)]"
-        >
-          {sourceName ?? recordId}
-        </h1>
-      </header>
-
       <ImageInspector
+        title={
+          <h1
+            data-testid="image-detail-title"
+            className="min-w-0 truncate text-2xl font-semibold text-white drop-shadow-[0_1px_8px_rgba(0,0,0,0.8)]"
+          >
+            {sourceName ?? recordId}
+          </h1>
+        }
         open={inspectorOpen}
         onOpenChange={setInspectorOpen}
         selectionOpen={selectedSource !== null}

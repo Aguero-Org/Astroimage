@@ -11,6 +11,7 @@ describe("ImageInspector", () => {
       <TooltipProvider delayDuration={0}>
         <div className="relative h-96">
           <ImageInspector
+            title={<h1 data-testid="image-detail-title">M31</h1>}
             view={<p>Formulario de vista</p>}
             sources={<p>Formulario de fuentes</p>}
             archive={<p>Metadatos de archivo</p>}
@@ -20,15 +21,33 @@ describe("ImageInspector", () => {
       </TooltipProvider>,
     );
 
-    expect(screen.getByTestId("inspector-drawer")).not.toBeVisible();
+    expect(screen.getByTestId("inspector-toggle")).toHaveAttribute(
+      "aria-expanded",
+      "false",
+    );
+    expect(screen.getByTestId("inspector-drawer")).toHaveAttribute(
+      "data-state",
+      "collapsed",
+    );
     await user.click(screen.getByTestId("inspector-toggle"));
-    expect(screen.getByTestId("inspector-drawer")).toBeVisible();
+    expect(screen.getByTestId("inspector-toggle")).toHaveAttribute(
+      "aria-expanded",
+      "true",
+    );
+    expect(screen.getByTestId("inspector-drawer")).toHaveAttribute(
+      "data-state",
+      "expanded",
+    );
     expect(screen.getByText("Formulario de fuentes")).toBeVisible();
-    expect(screen.getByText("Formulario de vista")).not.toBeVisible();
+    expect(screen.queryByText("Formulario de vista")).not.toBeInTheDocument();
     expect(screen.getByTestId("inspector-section-view")).toBeInTheDocument();
     expect(
       screen.getByTestId("inspector-section-selection"),
     ).toBeInTheDocument();
     expect(screen.getByTestId("inspector-section-archive")).toBeInTheDocument();
+    expect(screen.getByTestId("image-detail-title")).toBeInTheDocument();
+    expect(
+      screen.getByTestId("inspector-toggle").parentElement,
+    ).toContainElement(screen.getByTestId("image-detail-title"));
   });
 });
