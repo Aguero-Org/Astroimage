@@ -1,11 +1,17 @@
-import { Menu, X } from "lucide-react";
-import { type ReactNode, useState } from "react";
-import { Button } from "@/components/ui/button";
+import type { CSSProperties, ReactNode } from "react";
+import { useState } from "react";
 import { HelpHint } from "@/components/ui/help-hint";
-import { cn } from "@/lib/utils";
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarHeader,
+  SidebarProvider,
+  SidebarTrigger,
+} from "@/components/ui/sidebar";
 import { CollapsibleSection } from "./collapsible-section";
 
 type ImageInspectorProps = {
+  title?: ReactNode;
   view: ReactNode;
   sources: ReactNode;
   archive: ReactNode;
@@ -17,6 +23,7 @@ type ImageInspectorProps = {
 };
 
 export function ImageInspector({
+  title,
   view,
   sources,
   archive,
@@ -37,38 +44,30 @@ export function ImageInspector({
   }
 
   return (
-    <>
-      <Button
-        type="button"
-        variant="secondary"
-        size="icon"
-        data-testid="inspector-toggle"
-        className="absolute top-16 left-4 z-30 shadow-md sm:left-8"
-        aria-expanded={isOpen}
-        aria-controls="image-inspector-drawer"
-        aria-label={isOpen ? "Cerrar inspector" : "Abrir inspector"}
-        onClick={() => setOpen(!isOpen)}
-      >
-        {isOpen ? <X className="size-4" /> : <Menu className="size-4" />}
-      </Button>
-
-      <aside
+    <SidebarProvider
+      open={isOpen}
+      onOpenChange={setOpen}
+      defaultOpen={false}
+      className="pointer-events-none absolute inset-0 z-30 min-h-0 w-full"
+      style={{ "--sidebar-width": "22rem" } as CSSProperties}
+    >
+      <Sidebar
         id="image-inspector-drawer"
         data-testid="inspector-drawer"
-        hidden={!isOpen}
-        className={cn(
-          "absolute top-28 bottom-4 left-4 z-30 flex w-[min(100%-2rem,22rem)] flex-col overflow-hidden rounded-xl border border-border bg-background/85 shadow-lg backdrop-blur-md sm:bottom-8 sm:left-8",
-        )}
+        side="left"
+        variant="floating"
+        collapsible="offcanvas"
+        className="pointer-events-auto top-14"
       >
-        <header className="flex items-center gap-2 border-b border-border px-4 py-3">
+        <SidebarHeader className="flex-row items-center gap-2 border-b border-sidebar-border px-3 py-3">
           <h2 className="text-sm font-medium">Inspector</h2>
           <HelpHint label="Inspector" testId="help-inspector">
             Controles y metadatos de la imagen. La vista FITS permanece al lado;
             cada sección se abre solo cuando la necesitás.
           </HelpHint>
-        </header>
+        </SidebarHeader>
         {workspace}
-        <div className="flex-1 overflow-y-auto px-4 py-1">
+        <SidebarContent className="gap-0">
           <CollapsibleSection id="view" title="Vista">
             {view}
           </CollapsibleSection>
@@ -86,8 +85,22 @@ export function ImageInspector({
           <CollapsibleSection id="archive" title="Archivo">
             {archive}
           </CollapsibleSection>
+        </SidebarContent>
+      </Sidebar>
+      <div className="flex min-w-0 flex-1 flex-col pt-16">
+        <div className="flex items-center gap-3 px-4 sm:px-8">
+          <SidebarTrigger
+            type="button"
+            variant="secondary"
+            size="icon"
+            data-testid="inspector-toggle"
+            className="pointer-events-auto size-9 shrink-0 shadow-md"
+            aria-controls="image-inspector-drawer"
+            aria-label={isOpen ? "Cerrar inspector" : "Abrir inspector"}
+          />
+          {title}
         </div>
-      </aside>
-    </>
+      </div>
+    </SidebarProvider>
   );
 }

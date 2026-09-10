@@ -81,9 +81,15 @@ describe("ImageDetailPage", () => {
     await waitFor(() => {
       expect(screen.getByTestId("inspector-toggle")).toBeInTheDocument();
     });
-    expect(screen.getByTestId("inspector-drawer")).not.toBeVisible();
+    expect(screen.getByTestId("inspector-drawer")).toHaveAttribute(
+      "data-state",
+      "collapsed",
+    );
     await user.click(screen.getByTestId("inspector-toggle"));
-    expect(screen.getByTestId("inspector-drawer")).toBeVisible();
+    expect(screen.getByTestId("inspector-drawer")).toHaveAttribute(
+      "data-state",
+      "expanded",
+    );
     expect(screen.getByTestId("inspector-section-sources")).toBeInTheDocument();
     expect(screen.getByTestId("hdu-selector")).toBeInTheDocument();
     await user.click(screen.getByTestId("inspector-section-view-toggle"));
@@ -103,7 +109,10 @@ describe("ImageDetailPage", () => {
       { timeout: 8000 },
     );
     await user.click(screen.getByTestId("source-marker"));
-    expect(screen.getByTestId("inspector-drawer")).toBeVisible();
+    expect(screen.getByTestId("inspector-drawer")).toHaveAttribute(
+      "data-state",
+      "expanded",
+    );
     expect(screen.getByTestId("meta-sel-snr")).toHaveTextContent("11.20");
   });
 

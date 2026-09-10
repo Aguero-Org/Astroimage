@@ -13,7 +13,7 @@ describe("CollapsibleSection", () => {
     );
 
     expect(screen.getByTestId("inspector-section-view")).toBeInTheDocument();
-    expect(screen.getByText("Parámetros de render")).not.toBeVisible();
+    expect(screen.queryByText("Parámetros de render")).not.toBeInTheDocument();
 
     await user.click(screen.getByTestId("inspector-section-view-toggle"));
     expect(screen.getByText("Parámetros de render")).toBeVisible();

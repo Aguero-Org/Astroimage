@@ -71,7 +71,7 @@ export function FitsImageViewer({
         />
         <div
           id={navigatorId}
-          className="pointer-events-auto absolute right-3 bottom-3 h-28 w-40 overflow-hidden rounded-md border border-white/20 bg-transparent shadow-sm sm:right-8 sm:bottom-8"
+          className="pointer-events-auto absolute right-3 bottom-3 h-28 w-40 overflow-hidden rounded-md border border-sidebar-border bg-sidebar shadow-sm sm:right-8 sm:bottom-8"
         />
         {children}
         <FitsImageViewerToolbar />

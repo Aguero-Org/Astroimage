@@ -11,7 +11,7 @@ export function Navbar() {
   return (
     <header
       data-testid="navbar"
-      className="border-b border-border bg-background/70 backdrop-blur-md"
+      className="border-b border-sidebar-border bg-sidebar text-sidebar-foreground"
     >
       <div className="mx-auto flex w-full max-w-5xl items-center justify-between gap-3 px-4 py-3 sm:gap-6 sm:px-6 md:max-w-6xl md:px-8 lg:px-12 xl:max-w-7xl xl:px-16">
         <button
