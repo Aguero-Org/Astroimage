@@ -3,10 +3,18 @@ import sys
 
 import structlog
 
+_OTLP_EXPORTER_LOGGER = "opentelemetry.exporter.otlp.proto.http.trace_exporter"
+
+
+def _quiet_third_party_loggers() -> None:
+    logging.getLogger(_OTLP_EXPORTER_LOGGER).setLevel(logging.CRITICAL)
+
 
 def setup_logging(log_level: str) -> None:
     level = getattr(logging, log_level.upper(), logging.INFO)
     logging.basicConfig(format="%(message)s", stream=sys.stdout, level=level)
+
+    _quiet_third_party_loggers()
 
     structlog.configure(
         processors=[

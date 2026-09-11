@@ -4,7 +4,7 @@ Set-Location $RepoRoot
 
 $EnvFile = Join-Path $RepoRoot "sonar\.env"
 if (-not (Test-Path $EnvFile)) {
-    throw "Missing sonar/.env — create it with SONAR_TOKEN=..."
+    throw "Missing sonar/.env - create it with SONAR_TOKEN=..."
 }
 
 Get-Content $EnvFile | ForEach-Object {
@@ -17,11 +17,18 @@ if (-not $env:SONAR_TOKEN) {
     throw "SONAR_TOKEN is empty in sonar/.env"
 }
 
-$env:SONAR_HOST_URL = "http://host.docker.internal:9000"
+$env:SONAR_HOST_URL = "http://host.docker.internal:9002"
 
 Write-Host "==> Backend tests + coverage"
 Push-Location (Join-Path $RepoRoot "backend")
-uv run pytest -q
+if (Test-Path ".\.venv\Scripts\pytest.exe") {
+    .\.venv\Scripts\pytest.exe -q
+} else {
+    uv run pytest -q
+}
+if ($LASTEXITCODE -ne 0) {
+    throw "backend pytest failed with exit $LASTEXITCODE"
+}
 $cov = Get-Content "coverage.xml" -Raw
 $cov = $cov -replace 'filename="src/', 'filename="backend/src/'
 Set-Content -Path "coverage.xml" -Value $cov -NoNewline
@@ -30,13 +37,17 @@ Pop-Location
 Write-Host "==> Frontend tests + coverage"
 Push-Location (Join-Path $RepoRoot "frontend")
 pnpm test:coverage
-$lcovPath = "coverage\lcov.info"
-if (Test-Path $lcovPath) {
-    $lcov = Get-Content $lcovPath -Raw
-    $lcov = $lcov -replace '\\', '/'
-    $lcov = $lcov -replace 'SF:src/', 'SF:frontend/src/'
-    Set-Content -Path $lcovPath -Value $lcov -NoNewline
+if ($LASTEXITCODE -ne 0) {
+    throw "frontend vitest failed with exit $LASTEXITCODE"
 }
+$lcovPath = "coverage\lcov.info"
+if (-not (Test-Path $lcovPath)) {
+    throw "frontend coverage/lcov.info was not produced"
+}
+$lcov = Get-Content $lcovPath -Raw
+$lcov = $lcov -replace '\\', '/'
+$lcov = $lcov -replace 'SF:src/', 'SF:frontend/src/'
+Set-Content -Path $lcovPath -Value $lcov -NoNewline
 Pop-Location
 
 Write-Host "==> SonarScanner"
@@ -49,4 +60,4 @@ docker run --rm `
     sonarsource/sonar-scanner-cli:11
 
 Write-Host ""
-Write-Host "Dashboard: http://localhost:9000/dashboard?id=Astroimage"
+Write-Host "Dashboard: http://localhost:9002/dashboard?id=Astroimage"

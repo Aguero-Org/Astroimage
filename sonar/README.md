@@ -8,7 +8,8 @@ Self-hosted SonarQube for analyzing the monorepo. Separate from `docker-compose.
 docker compose -f sonar/docker-compose.yml up -d
 ```
 
-Open http://localhost:9000 — default credentials `admin` / `admin` (forced change on first login).
+Open http://localhost:9002 — default credentials `admin` / `admin` (forced change on first login).
+Host port **9002** avoids clashing with MinIO on **9000** (`docker-compose.yml`).
 
 Wait until the container is healthy (`docker compose -f sonar/docker-compose.yml ps`).
 
@@ -21,11 +22,11 @@ Wait until the container is healthy (`docker compose -f sonar/docker-compose.yml
 ```bash
 # Windows PowerShell
 $env:SONAR_TOKEN = "squ_..."
-$env:SONAR_HOST_URL = "http://localhost:9000"
+$env:SONAR_HOST_URL = "http://localhost:9002"
 
 # bash
 export SONAR_TOKEN=squ_...
-export SONAR_HOST_URL=http://localhost:9000
+export SONAR_HOST_URL=http://localhost:9002
 ```
 
 ## Produce coverage and scan (recommended)
@@ -34,7 +35,7 @@ Create `sonar/.env` (gitignored):
 
 ```env
 SONAR_TOKEN=sqp_...
-SONAR_HOST_URL=http://localhost:9000
+SONAR_HOST_URL=http://localhost:9002
 ```
 
 From the repository root:
@@ -52,7 +53,7 @@ bash sonar/run-analysis.sh
 The script runs backend + frontend tests with coverage, fixes monorepo report
 paths, and uploads the analysis with `sonarsource/sonar-scanner-cli`.
 
-Dashboard: http://localhost:9000/dashboard?id=Astroimage
+Dashboard: http://localhost:9002/dashboard?id=Astroimage
 
 > Project key is **case-sensitive** and must match the SonarQube project
 > (`Astroimage` in `sonar-project.properties`).

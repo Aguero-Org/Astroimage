@@ -2,13 +2,31 @@
 
 This repository is opinionated. Do not introduce libraries, layers, or patterns outside this document. CI, linters, architecture tests, and pre-commit hooks must stay green.
 
+## Report unsolicited decisions
+
+The user will not specify every UI, API, or implementation choice. When something is
+underspecified and you must pick a path to keep moving, **do not stop to ask** unless
+the choice would violate this file, a skill, or the stated goal.
+
+Keep going, then **notify the user in the same turn's summary** under a heading
+`Decisiones no pedidas` (or `Unsolicited decisions` if the conversation is in English).
+For each item, state:
+
+1. What was not specified
+2. What you chose
+3. Why (one line, tied to existing constraints)
+4. How to change it if they disagree
+
+Do not hide these choices in source comments. Do not skip the report because the
+choice felt "obvious". If there were none, omit the heading.
+
 ## Layout
 
 - `backend/` — FastAPI API (`src/` layout, package `astroimage`)
 - `frontend/` — Vite + React SPA
 - `monitoring/` — external observability compose (not part of the app image)
 - `sonar/` — external SonarQube compose (code quality; not part of the app image)
-- Root `docker-compose.yml` — API + PostgreSQL only
+- Root `docker-compose.yml` — API + frontend + PostgreSQL + MinIO
 - Root `sonar-project.properties` — SonarQube/SonarCloud monorepo analysis config
 
 ## Allowed backend stack
@@ -45,6 +63,7 @@ src/astroimage/
 │   ├── metrics.py
 │   ├── middleware.py
 │   └── telemetry.py
+├── cli.py                  # project operations CLI (composition root)
 ├── config.py               # settings (composition root)
 └── main.py                 # app factory + router composition
 ```
@@ -117,13 +136,40 @@ Do not create empty test files for symmetry.
 
 Do not mix TanStack Query with a global client store for server data.
 
+Theming is shadcn CSS variables in `frontend/src/index.css` (`:root` / `.dark`).
+Do not hardcode brand colors on components; use tokens (`bg-background`,
+`text-primary`, `border-border`, …). Five brand stops live in
+`frontend/src/lib/palettes.ts` as `--palette-1` (lightest) … `--palette-5`
+(darkest). Add a palette by appending an entry with five hexes; the switcher
+appears when there is more than one. Toggle `.dark` on `<html>` (Zustand +
+`localStorage`). Keep `--destructive` red.
+
+Exclusive choices (one value from a fixed list):
+
+- 2–4 options → radio group (all choices visible)
+- 5 or more → styled `Select` (`components/ui/select.tsx`, Radix). Never a native `<select>`: the option list is painted by the OS and cannot match the UI.
+- 1 option → no control
+- boolean on/off → checkbox or switch, not radios
+
+Dynamic lists (HDU, catalogs) use a select even if the current count is 2–4.
+
+### Image workspace (detail view)
+
+The FITS viewer is the canvas. Controls and metadata live in a hamburger
+inspector drawer with collapsible sections — not extra pages or stacked
+floating cards. Explain labels with the shared `HelpHint` tooltip.
+Viewer overlays are composed as siblings (point sources, later extended
+and other layers), not hard-wired into the viewer.
+
+On-demand workflow: `.agents/skills/frontend-image-workspace/SKILL.md`.
+
 ## Out of current scope
 
 - Authentication
 - Rate limiting
 - ARQ/Redis/Celery (defer until processing volume requires it)
 - In-memory cache libraries beyond what Python already provides
-- MinIO / extra compose services
+- Extra compose app services beyond the root stack (API, frontend, PostgreSQL, MinIO)
 - Storybook
 - Kibana / Elasticsearch
 - New UI kits, HTTP clients (axios, ky), or routers

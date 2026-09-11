@@ -1,19 +1,55 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Button } from "@/components/ui/button";
-import { useUiStore } from "@/stores/ui";
+import { useEffect } from "react";
+import { BrandLogo } from "@/components/brand-logo";
+import { ThemeToggle } from "@/components/theme-toggle";
+import { ImageList } from "@/features/images/components/image-list";
+import { ImageSearch } from "@/features/images/components/image-search";
+import { useImageFetch } from "@/features/images/use-image-fetch";
 
 export const Route = createFileRoute("/")({
+  validateSearch: (search: Record<string, unknown>) => ({
+    query: (search.query as string) ?? "",
+  }),
   component: HomePage,
 });
 
 function HomePage() {
-  const sidebarOpen = useUiStore((state) => state.sidebarOpen);
+  const { query } = Route.useSearch();
+  const navigate = Route.useNavigate();
+  const fetchMutation = useImageFetch();
+  const trimmedQuery = query.trim();
+
+  useEffect(() => {
+    if (trimmedQuery.length === 0) {
+      return;
+    }
+    fetchMutation.mutate(trimmedQuery);
+  }, [trimmedQuery, fetchMutation.mutate]);
 
   return (
-    <main className="flex min-h-svh flex-col gap-4 p-6">
-      <h1 className="text-2xl font-semibold">astroimage</h1>
-      <p className="text-muted-foreground">Frontend toolchain is ready.</p>
-      <Button type="button">Sidebar {sidebarOpen ? "open" : "closed"}</Button>
+    <main className="relative flex min-h-svh flex-col items-center gap-6 p-6">
+      <div className="absolute top-4 right-4">
+        <ThemeToggle />
+      </div>
+      <div className="flex flex-col items-center gap-2 pt-10">
+        <BrandLogo className="h-32 w-32" />
+        <h1 data-testid="home-title" className="text-2xl font-semibold">
+          Astroimage
+        </h1>
+      </div>
+      <ImageSearch
+        variant="hero"
+        value={query}
+        onSearch={(nextQuery) => {
+          navigate({ to: "/", search: { query: nextQuery } });
+        }}
+        isFetching={fetchMutation.isPending}
+      />
+      <ImageList
+        query={query}
+        isFetching={fetchMutation.isPending}
+        fetchError={fetchMutation.error}
+      />
     </main>
   );
 }

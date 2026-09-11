@@ -9,14 +9,16 @@ const dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export default defineConfig({
   server: {
-    host: "127.0.0.1",
+    host: process.env.DOCKER === "1" ? "0.0.0.0" : "127.0.0.1",
     port: 5173,
     strictPort: true,
+    watch: process.env.DOCKER === "1" ? { usePolling: true } : undefined,
   },
   plugins: [
     tanstackRouter({
       target: "react",
       autoCodeSplitting: true,
+      routeFileIgnorePattern: "\\.test\\.(ts|tsx)$",
     }),
     react(),
     tailwindcss(),
@@ -38,6 +40,7 @@ export default defineConfig({
       include: ["src/**/*.{ts,tsx}"],
       exclude: [
         "src/test/**",
+        "src/mocks/**",
         "src/api/generated/**",
         "src/routeTree.gen.ts",
         "src/main.tsx",

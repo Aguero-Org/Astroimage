@@ -20,6 +20,18 @@ def test_log_level_is_accepted(level: str) -> None:
     assert parsed.log_level == level
 
 
+def test_minio_settings_accept_overrides() -> None:
+    settings = Settings(
+        database_url=_TEST_DATABASE_URL,
+        minio_endpoint="localhost:9000",
+        minio_bucket="astroimage",
+        minio_secure=False,
+    )
+    assert settings.minio_endpoint == "localhost:9000"
+    assert settings.minio_bucket == "astroimage"
+    assert settings.minio_secure is False
+
+
 def test_database_url_is_required() -> None:
     import pytest
     from pydantic import ValidationError

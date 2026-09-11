@@ -1,3 +1,5 @@
+stream_over_http_enabled: true
+
 server:
   http_listen_port: 3200
 
@@ -8,6 +10,22 @@ distributor:
         http:
           endpoint: 0.0.0.0:4318
 
+query_frontend:
+  search:
+    max_duration: 0s
+  metrics:
+    max_duration: 0s
+
+metrics_generator:
+  traces_storage:
+    path: /var/tempo/generator/traces
+  storage:
+    path: /var/tempo/generator/wal
+  processor:
+    local_blocks:
+      filter_server_spans: false
+      flush_to_storage: true
+
 storage:
   trace:
     backend: local
@@ -15,3 +33,8 @@ storage:
       path: /var/tempo/traces
     wal:
       path: /var/tempo/wal
+
+overrides:
+  defaults:
+    metrics_generator:
+      processors: [service-graphs, span-metrics, local-blocks]

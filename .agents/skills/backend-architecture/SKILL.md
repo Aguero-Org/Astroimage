@@ -36,6 +36,19 @@ Allowed only when strictly necessary:
 
 Never leave dead commented-out code. Delete it.
 
+## Naming style (mandatory)
+
+**Do not use single-letter variable names** in application or test code.
+
+- Forbidden as identifiers: `i`, `j`, `k`, `n`, `x`, `y`, `e`, `f`, `v`, `t`, …
+- Prefer descriptive names: `index`, `row_count`, `coordinate_x`, `exc`,
+  `fits_file`, `value`, `elapsed_s`.
+- Loop targets and comprehensions included (`for item in items`, not `for x in items`).
+- Exception only for **mathematical** local bindings that match a standard formula
+  and are immediately obvious in a tiny pure function (e.g. `a, b` in a quadratic),
+  still prefer domain names when they exist.
+- `_` is allowed solely for intentionally unused values.
+
 ## Canonical layout
 
 ```text
@@ -54,6 +67,7 @@ backend/src/astroimage/
 │   ├── metrics.py
 │   ├── middleware.py
 │   └── telemetry.py
+├── cli.py                     # project operations CLI (composition root)
 ├── config.py                  # settings (composition root)
 └── main.py                    # app factory + router composition
 ```
@@ -140,7 +154,7 @@ uv run ruff check src tests
 uv run mypy
 uv run lint-imports
 uv run pytest
-uv run python scripts/export_openapi.py   # if HTTP contract changed
+uv run astroimage openapi export          # if HTTP contract changed
 ```
 
 If OpenAPI changed, regenerate the frontend client:
