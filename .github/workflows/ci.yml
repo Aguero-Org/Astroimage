@@ -68,7 +68,7 @@ jobs:
             -p 9000:9000 \
             -e MINIO_ROOT_USER=minioadmin \
             -e MINIO_ROOT_PASSWORD=minioadmin \
-            minio/minio:latest server /data --console-address :9001
+            quay.io/minio/minio:latest server /data --console-address :9001
           for _ in $(seq 1 30); do
             if curl -sf http://127.0.0.1:9000/minio/health/live; then
               exit 0
