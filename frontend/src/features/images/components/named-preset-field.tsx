@@ -57,7 +57,7 @@ export function NamedPresetField<T>({
           }
         }}
       >
-        <SelectTrigger id={testId} data-testid={testId}>
+        <SelectTrigger id={testId} data-testid={testId} aria-label={label}>
           <SelectValue>{triggerLabel}</SelectValue>
         </SelectTrigger>
         <SelectContent>
@@ -72,7 +72,7 @@ export function NamedPresetField<T>({
             >
               <span className="flex flex-col gap-0.5 py-0.5">
                 <span>{preset.label}</span>
-                <span className="text-muted-foreground text-xs leading-snug">
+                <span className="text-xs leading-snug opacity-80">
                   {preset.outcome}
                 </span>
               </span>

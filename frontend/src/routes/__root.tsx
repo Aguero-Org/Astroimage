@@ -20,8 +20,12 @@ function RootLayout() {
         </div>
       )}
       <Outlet />
-      <TanStackRouterDevtools />
-      <ReactQueryDevtools buttonPosition="bottom-left" />
+      {import.meta.env.VITE_E2E === "true" ? null : (
+        <>
+          <TanStackRouterDevtools />
+          <ReactQueryDevtools buttonPosition="bottom-left" />
+        </>
+      )}
     </TooltipProvider>
   );
 }

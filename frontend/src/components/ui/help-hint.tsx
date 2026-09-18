@@ -19,7 +19,7 @@ export function HelpHint({ label, testId, children }: Readonly<HelpHintProps>) {
         <button
           type="button"
           data-testid={testId}
-          className="inline-flex size-4 cursor-help items-center justify-center rounded-full text-muted-foreground hover:text-foreground"
+          className="inline-flex size-6 cursor-help items-center justify-center rounded-full text-muted-foreground hover:text-foreground"
           aria-label={`Ayuda: ${label}`}
         >
           <CircleHelp className="size-3.5" />

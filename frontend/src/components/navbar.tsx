@@ -17,6 +17,7 @@ export function Navbar() {
         <button
           type="button"
           data-testid="navbar-logo"
+          aria-label="Ir al inicio"
           className="flex shrink-0 cursor-pointer items-center gap-2"
           onClick={() => navigate({ to: "/", search: { query: "" } })}
         >

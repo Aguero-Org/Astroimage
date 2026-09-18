@@ -234,6 +234,7 @@ function ExclusiveChoice<T extends string>({
         <SelectTrigger
           id={`render-${name}`}
           data-testid={`render-field-${name}`}
+          aria-label={name}
         >
           <SelectValue />
         </SelectTrigger>

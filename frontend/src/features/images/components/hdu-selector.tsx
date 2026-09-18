@@ -51,7 +51,11 @@ export function HduSelector({
           onChange(Number(next));
         }}
       >
-        <SelectTrigger data-testid="hdu-selector" className="h-8">
+        <SelectTrigger
+          data-testid="hdu-selector"
+          className="h-8"
+          aria-label="HDU"
+        >
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
