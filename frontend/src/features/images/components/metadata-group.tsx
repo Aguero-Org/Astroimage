@@ -5,6 +5,7 @@ export type MetadataRow = {
   label: string;
   value: string;
   help: string;
+  glossaryId?: string;
 };
 
 type MetadataGroupProps = {
@@ -30,7 +31,11 @@ export function MetadataGroup({
           <div key={row.id} className="contents">
             <dt className="flex items-center gap-1 text-muted-foreground">
               {row.label}
-              <HelpHint label={row.label} testId={`help-${row.id}`}>
+              <HelpHint
+                label={row.label}
+                testId={`help-${row.id}`}
+                glossaryId={row.glossaryId}
+              >
                 {row.help}
               </HelpHint>
             </dt>

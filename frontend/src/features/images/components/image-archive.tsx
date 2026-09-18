@@ -32,11 +32,12 @@ function row(
   label: string,
   value: string | number | null | undefined,
   help: string,
+  glossaryId?: string,
 ): MetadataRow | null {
   if (value === null || value === undefined || value === "") {
     return null;
   }
-  return { id, label, value: String(value), help };
+  return { id, label, value: String(value), help, glossaryId };
 }
 
 export function ImageArchive({ info, isPending }: Readonly<ImageArchiveProps>) {
@@ -172,6 +173,7 @@ export function ImageArchive({ info, isPending }: Readonly<ImageArchiveProps>) {
       "WCS",
       wcsPresent,
       "Si el HDU trae una solución astrométrica (coordenadas en el cielo).",
+      "wcs",
     ),
     row("wcs-naxis", "NAXIS", info.wcs?.naxis, "Cantidad de ejes del WCS."),
     row(

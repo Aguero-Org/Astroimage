@@ -36,12 +36,14 @@ export function SourceSelection({ source }: Readonly<SourceSelectionProps>) {
       label: "SNR",
       value: source.snr.toFixed(2),
       help: "Relación señal/ruido del pico.",
+      glossaryId: "snr",
     },
     {
       id: "sel-score",
       label: "Score",
       value: source.relevance_score.toFixed(3),
       help: "Puntuación de relevancia combinada (0 a 1).",
+      glossaryId: "score",
     },
     {
       id: "sel-x",

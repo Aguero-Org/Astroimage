@@ -2,9 +2,10 @@
 name: frontend-image-workspace
 description: >-
   Image-detail workspace for astroimage: FITS viewer canvas, inspector
-  drawer, collapsible sections, HelpHint tooltips, and composable viewer
-  overlays. Use when changing the image page, inspector, render/detection
-  forms, metadata, source markers, or related frontend tests.
+  drawer, collapsible sections, HelpHint tooltips, glossary, and
+  composable viewer overlays. Use when changing the image page, inspector,
+  render/detection forms, metadata, source markers, glossary entries, or
+  related frontend tests.
 ---
 
 # Frontend image workspace
@@ -58,6 +59,29 @@ Almost every control and labeled value needs a short explanation.
 - Do not invent a second tooltip pattern. Wrap Radix `Tooltip` only there.
 - `TooltipProvider` lives at the app root.
 - Help copy explains meaning, not the implementation.
+- Concept tooltips pass `glossaryId` matching an entry `id` in
+  `frontend/src/features/glossary/entries.ts`. The tooltip stays short;
+  the glossary is the long copy. Link goes to `/glossary#<id>`.
+
+## Glossary
+
+The glossary must stay in lockstep with what the app actually shows.
+
+When you add or change a user-facing concept (control, labeled value,
+preset, overlay, search term, inspector section):
+
+1. Add or update the entry in `GLOSSARY_ENTRIES` (stable `id`, name as in
+   the UI, what it is, what it does in Astroimage, where it appears).
+2. Point the `HelpHint` at that `id`. No concept tooltip without an entry;
+   no `#` that does not exist.
+3. Keep tooltip and glossary consistent: same meaning, glossary is longer
+   and talks about the effect in the app, not the algorithm.
+4. If a term does not apply to every image (e.g. HDU with a single plane),
+   the entry still exists and says when it shows up.
+5. Drop or rewrite entries that no longer match the UI.
+
+Route: `/glossary`. Access: `GlossaryLink` (home and navbar). Do not invent
+a second glossary or a modal of definitions.
 
 ## Viewer overlays
 
@@ -130,6 +154,10 @@ frontend/src/features/images/render-view.ts
 frontend/src/features/images/source-detection.ts
 frontend/src/features/images/named-preset.ts
 frontend/src/components/ui/help-hint.tsx
+frontend/src/features/glossary/entries.ts
+frontend/src/features/glossary/glossary-page.tsx
+frontend/src/features/glossary/glossary-link.tsx
+frontend/src/routes/glossary.tsx
 ```
 
 ## Out of scope here

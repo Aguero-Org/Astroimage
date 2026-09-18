@@ -1,6 +1,7 @@
 import { useNavigate, useSearch } from "@tanstack/react-router";
 import { BrandLogo } from "@/components/brand-logo";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { GlossaryLink } from "@/features/glossary/glossary-link";
 import { ImageSearch } from "@/features/images/components/image-search";
 
 export function Navbar() {
@@ -30,6 +31,7 @@ export function Navbar() {
             value={urlQuery}
             onSearch={(query) => navigate({ to: "/", search: { query } })}
           />
+          <GlossaryLink testId="navbar-glossary" />
           <ThemeToggle />
         </div>
       </div>

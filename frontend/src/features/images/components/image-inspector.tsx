@@ -62,7 +62,11 @@ export function ImageInspector({
       >
         <SidebarHeader className="flex-row items-center gap-2 border-b border-sidebar-border px-3 py-3">
           <h2 className="text-sm font-medium">Inspector</h2>
-          <HelpHint label="Inspector" testId="help-inspector">
+          <HelpHint
+            label="Inspector"
+            testId="help-inspector"
+            glossaryId="inspector"
+          >
             Controles y metadatos de la imagen. La vista FITS permanece al lado;
             cada sección se abre solo cuando la necesitás.
           </HelpHint>

@@ -1,4 +1,5 @@
-import { CircleHelp } from "lucide-react";
+import { Link } from "@tanstack/react-router";
+import { CircleHelp, ExternalLink } from "lucide-react";
 import type { ReactNode } from "react";
 import {
   Tooltip,
@@ -9,10 +10,16 @@ import {
 type HelpHintProps = {
   label: string;
   testId?: string;
+  glossaryId?: string;
   children: ReactNode;
 };
 
-export function HelpHint({ label, testId, children }: Readonly<HelpHintProps>) {
+export function HelpHint({
+  label,
+  testId,
+  glossaryId,
+  children,
+}: Readonly<HelpHintProps>) {
   return (
     <Tooltip>
       <TooltipTrigger asChild>
@@ -26,7 +33,20 @@ export function HelpHint({ label, testId, children }: Readonly<HelpHintProps>) {
         </button>
       </TooltipTrigger>
       <TooltipContent className="max-w-xs" side="top">
-        {children}
+        <span className="inline-flex items-start gap-2">
+          <span>{children}</span>
+          {glossaryId ? (
+            <Link
+              to="/glossary"
+              hash={glossaryId}
+              data-testid={testId ? `${testId}-glossary` : undefined}
+              aria-label={`Abrir glosario: ${label}`}
+              className="inline-flex size-6 shrink-0 items-center justify-center rounded-full text-background hover:opacity-80"
+            >
+              <ExternalLink className="size-3.5" />
+            </Link>
+          ) : null}
+        </span>
       </TooltipContent>
     </Tooltip>
   );

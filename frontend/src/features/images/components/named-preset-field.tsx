@@ -11,6 +11,7 @@ import { CUSTOM_PRESET_ID, type NamedPreset } from "../named-preset";
 type NamedPresetFieldProps<T> = {
   label: string;
   testId: string;
+  glossaryId?: string;
   presets: readonly NamedPreset<T>[];
   value: string;
   lastNamedId: string;
@@ -21,6 +22,7 @@ type NamedPresetFieldProps<T> = {
 export function NamedPresetField<T>({
   label,
   testId,
+  glossaryId,
   presets,
   value,
   lastNamedId,
@@ -42,7 +44,11 @@ export function NamedPresetField<T>({
       <legend className="mb-1 flex items-center gap-1">
         <span className="text-muted-foreground">{label}</span>
         {hint ? (
-          <HelpHint label={label} testId={`${testId}-help`}>
+          <HelpHint
+            label={label}
+            testId={`${testId}-help`}
+            glossaryId={glossaryId}
+          >
             {hint}
           </HelpHint>
         ) : null}

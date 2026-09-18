@@ -18,6 +18,16 @@ type SourceDetectionFormProps = {
 
 type FieldKey = keyof SourceDetectionParams;
 
+const FIELD_GLOSSARY: Partial<Record<FieldKey, string>> = {
+  fwhm: "fwhm",
+  sigma: "sigma",
+  min_snr: "snr",
+  min_score: "score",
+  min_distance: "min-distance",
+  visual_weight: "visual-weight",
+  max_sources: "max-sources",
+};
+
 const FIELDS: { key: FieldKey; label: string; step: string; help: string }[] = [
   {
     key: "fwhm",
@@ -166,6 +176,7 @@ export function SourceDetectionForm({
       <NamedPresetField
         label="Preset"
         testId="source-preset"
+        glossaryId="preset-deteccion"
         presets={SOURCE_DETECTION_PRESETS}
         value={presetId}
         lastNamedId={lastNamedId}
@@ -181,7 +192,11 @@ export function SourceDetectionForm({
               <label htmlFor={field.key} className="text-muted-foreground">
                 {field.label}
               </label>
-              <HelpHint label={field.label} testId={`source-help-${field.key}`}>
+              <HelpHint
+                label={field.label}
+                testId={`source-help-${field.key}`}
+                glossaryId={FIELD_GLOSSARY[field.key]}
+              >
                 {field.help}
               </HelpHint>
             </div>
