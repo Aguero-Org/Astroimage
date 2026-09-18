@@ -49,5 +49,11 @@ describe("ImageInspector", () => {
     expect(
       screen.getByTestId("inspector-toggle").parentElement,
     ).toContainElement(screen.getByTestId("image-detail-title"));
+    expect(screen.getByTestId("image-workspace-overlay").className).toContain(
+      "max-h-full",
+    );
+    expect(screen.getByTestId("image-workspace-overlay").className).toContain(
+      "min-h-0",
+    );
   });
 });

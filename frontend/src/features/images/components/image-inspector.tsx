@@ -48,7 +48,8 @@ export function ImageInspector({
       open={isOpen}
       onOpenChange={setOpen}
       defaultOpen={false}
-      className="pointer-events-none absolute inset-0 z-30 min-h-0 w-full"
+      data-testid="image-workspace-overlay"
+      className="pointer-events-none absolute inset-0 z-30 h-full max-h-full min-h-0 w-full"
       style={{ "--sidebar-width": "22rem" } as CSSProperties}
     >
       <Sidebar
@@ -87,7 +88,7 @@ export function ImageInspector({
           </CollapsibleSection>
         </SidebarContent>
       </Sidebar>
-      <div className="flex min-w-0 flex-1 flex-col pt-16">
+      <div className="flex h-full min-h-0 min-w-0 flex-1 flex-col pt-16">
         <div className="flex items-center gap-3 px-4 sm:px-8">
           <SidebarTrigger
             type="button"

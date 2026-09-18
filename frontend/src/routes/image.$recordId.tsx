@@ -26,6 +26,7 @@ import {
   type RenderViewParams,
 } from "@/features/images/render-view";
 import { DEFAULT_SOURCE_DETECTION_PARAMS } from "@/features/images/source-detection";
+import { followOnQueriesEnabled } from "@/features/images/workspace-queries";
 
 export const Route = createFileRoute("/image/$recordId")({
   component: ImageDetailPage,
@@ -52,9 +53,14 @@ function ImageDetailPage() {
   );
   const sourcesQueryParams =
     hdu === null ? detectionParams : { ...detectionParams, hdu };
-  const sourcesQuery = useDetectSources(recordId, sourcesQueryParams);
+  const followOnsEnabled = followOnQueriesEnabled(renderQuery);
+  const sourcesQuery = useDetectSources(recordId, sourcesQueryParams, {
+    query: { enabled: followOnsEnabled },
+  });
   const histogramParams = hdu === null ? { bins: 64 } : { bins: 64, hdu };
-  const histogramQuery = useRenderFitsHistogram(recordId, histogramParams);
+  const histogramQuery = useRenderFitsHistogram(recordId, histogramParams, {
+    query: { enabled: followOnsEnabled },
+  });
   const imageInfo =
     infoQuery.data?.status === 200 ? infoQuery.data.data : undefined;
   const imageHdus = imageInfo?.hdus.images ?? [];
