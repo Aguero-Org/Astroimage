@@ -41,6 +41,14 @@ for (const theme of THEMES) {
       await expectNoWcagViolations(page);
     });
 
+    test(`glossary has no AA violations in ${theme}`, async ({ page }) => {
+      await applyTheme(page, theme);
+      await page.goto("/glossary");
+      await expect(page.getByTestId("glossary-page")).toBeVisible();
+      await expectHtmlTheme(page, theme);
+      await expectNoWcagViolations(page);
+    });
+
     test(`image viewer with inspector open has no AA violations in ${theme}`, async ({
       page,
     }) => {

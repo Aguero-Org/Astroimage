@@ -21,6 +21,7 @@ import { RenderViewForm } from "@/features/images/components/render-view-form";
 import { SourceDetectionForm } from "@/features/images/components/source-detection-form";
 import { SourceMarkers } from "@/features/images/components/source-markers";
 import { SourceSelection } from "@/features/images/components/source-selection";
+import { rememberLastImageRecord } from "@/features/images/last-record";
 import {
   DEFAULT_RENDER_PARAMS,
   type RenderViewParams,
@@ -34,6 +35,10 @@ export const Route = createFileRoute("/image/$recordId")({
 
 function ImageDetailPage() {
   const { recordId } = Route.useParams();
+
+  useEffect(() => {
+    rememberLastImageRecord(recordId);
+  }, [recordId]);
 
   const [renderParams, setRenderParams] = useState<RenderViewParams>(
     DEFAULT_RENDER_PARAMS,

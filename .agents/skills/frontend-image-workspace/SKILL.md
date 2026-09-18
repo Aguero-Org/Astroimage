@@ -60,8 +60,9 @@ Almost every control and labeled value needs a short explanation.
 - `TooltipProvider` lives at the app root.
 - Help copy explains meaning, not the implementation.
 - Concept tooltips pass `glossaryId` matching an entry `id` in
-  `frontend/src/features/glossary/entries.ts`. The tooltip stays short;
-  the glossary is the long copy. Link goes to `/glossary#<id>`.
+  `frontend/src/features/glossary/entries.ts`. The `?` stays a short
+  tooltip; a book icon **beside** it (not inside the tooltip) goes to
+  `/glossary#<id>`.
 
 ## Glossary
 

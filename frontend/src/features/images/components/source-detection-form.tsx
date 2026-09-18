@@ -25,6 +25,8 @@ const FIELD_GLOSSARY: Partial<Record<FieldKey, string>> = {
   min_score: "score",
   min_distance: "min-distance",
   visual_weight: "visual-weight",
+  visual_area_radius: "visual-area-radius",
+  visual_area_sigma: "visual-area-sigma",
   max_sources: "max-sources",
 };
 

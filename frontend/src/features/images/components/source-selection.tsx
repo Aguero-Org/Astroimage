@@ -30,6 +30,7 @@ export function SourceSelection({ source }: Readonly<SourceSelectionProps>) {
       label: "Rank",
       value: String(source.rank),
       help: "Orden de relevancia entre las fuentes detectadas (1 es la más relevante).",
+      glossaryId: "rank",
     },
     {
       id: "sel-snr",
@@ -50,12 +51,14 @@ export function SourceSelection({ source }: Readonly<SourceSelectionProps>) {
       label: "X",
       value: source.xcentroid.toFixed(2),
       help: "Centroide en píxeles, eje X.",
+      glossaryId: "centroide",
     },
     {
       id: "sel-y",
       label: "Y",
       value: source.ycentroid.toFixed(2),
       help: "Centroide en píxeles, eje Y.",
+      glossaryId: "centroide",
     },
   ];
   const peak = formatNumber(source.peak);
@@ -66,6 +69,7 @@ export function SourceSelection({ source }: Readonly<SourceSelectionProps>) {
       label: "Peak",
       value: peak,
       help: "Valor de píxel en el máximo del pico.",
+      glossaryId: "peak",
     });
   }
   if (flux) {
@@ -74,6 +78,7 @@ export function SourceSelection({ source }: Readonly<SourceSelectionProps>) {
       label: "Flux",
       value: flux,
       help: "Flujo estimado de la fuente puntual.",
+      glossaryId: "flux",
     });
   }
 
