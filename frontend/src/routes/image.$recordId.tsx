@@ -21,11 +21,13 @@ import { RenderViewForm } from "@/features/images/components/render-view-form";
 import { SourceDetectionForm } from "@/features/images/components/source-detection-form";
 import { SourceMarkers } from "@/features/images/components/source-markers";
 import { SourceSelection } from "@/features/images/components/source-selection";
+import { rememberLastImageRecord } from "@/features/images/last-record";
 import {
   DEFAULT_RENDER_PARAMS,
   type RenderViewParams,
 } from "@/features/images/render-view";
 import { DEFAULT_SOURCE_DETECTION_PARAMS } from "@/features/images/source-detection";
+import { followOnQueriesEnabled } from "@/features/images/workspace-queries";
 
 export const Route = createFileRoute("/image/$recordId")({
   component: ImageDetailPage,
@@ -33,6 +35,10 @@ export const Route = createFileRoute("/image/$recordId")({
 
 function ImageDetailPage() {
   const { recordId } = Route.useParams();
+
+  useEffect(() => {
+    rememberLastImageRecord(recordId);
+  }, [recordId]);
 
   const [renderParams, setRenderParams] = useState<RenderViewParams>(
     DEFAULT_RENDER_PARAMS,
@@ -52,9 +58,14 @@ function ImageDetailPage() {
   );
   const sourcesQueryParams =
     hdu === null ? detectionParams : { ...detectionParams, hdu };
-  const sourcesQuery = useDetectSources(recordId, sourcesQueryParams);
+  const followOnsEnabled = followOnQueriesEnabled(renderQuery);
+  const sourcesQuery = useDetectSources(recordId, sourcesQueryParams, {
+    query: { enabled: followOnsEnabled },
+  });
   const histogramParams = hdu === null ? { bins: 64 } : { bins: 64, hdu };
-  const histogramQuery = useRenderFitsHistogram(recordId, histogramParams);
+  const histogramQuery = useRenderFitsHistogram(recordId, histogramParams, {
+    query: { enabled: followOnsEnabled },
+  });
   const imageInfo =
     infoQuery.data?.status === 200 ? infoQuery.data.data : undefined;
   const imageHdus = imageInfo?.hdus.images ?? [];

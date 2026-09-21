@@ -32,11 +32,12 @@ function row(
   label: string,
   value: string | number | null | undefined,
   help: string,
+  glossaryId?: string,
 ): MetadataRow | null {
   if (value === null || value === undefined || value === "") {
     return null;
   }
-  return { id, label, value: String(value), help };
+  return { id, label, value: String(value), help, glossaryId };
 }
 
 export function ImageArchive({ info, isPending }: Readonly<ImageArchiveProps>) {
@@ -57,42 +58,49 @@ export function ImageArchive({ info, isPending }: Readonly<ImageArchiveProps>) {
       "Telescopio",
       info.instrument?.telescope,
       "Observatorio o misión que tomó la exposición.",
+      "instrumento",
     ),
     row(
       "instrument",
       "Instrumento",
       info.instrument?.instrument,
       "Cámara o espectrógrafo montado en el telescopio.",
+      "instrumento",
     ),
     row(
       "detector",
       "Detector",
       info.instrument?.detector,
       "Chip o canal del instrumento.",
+      "instrumento",
     ),
     row(
       "filter",
       "Filtro",
       info.instrument?.filter_name,
       "Banda fotométrica de la exposición.",
+      "instrumento",
     ),
     row(
       "exptime",
       "Exposición",
       formatNumber(info.instrument?.exptime, 5),
       "Tiempo de integración, en segundos.",
+      "instrumento",
     ),
     row(
       "date-obs",
       "Fecha",
       info.instrument?.date_obs,
       "Fecha de observación (DATE-OBS).",
+      "instrumento",
     ),
     row(
       "time-obs",
       "Hora",
       info.instrument?.time_obs,
       "Hora de observación (TIME-OBS).",
+      "instrumento",
     ),
   ].filter((item) => item !== null);
 
@@ -102,42 +110,49 @@ export function ImageArchive({ info, isPending }: Readonly<ImageArchiveProps>) {
       "Tamaño",
       formatList(info.image?.shape),
       "Dimensiones del arreglo de píxeles (filas × columnas).",
+      "imagen-pixeles",
     ),
     row(
       "unit",
       "Unidad",
       info.image?.unit,
       "Unidad física de los valores de píxel.",
+      "imagen-pixeles",
     ),
     row(
       "datamin",
       "Mínimo",
       formatNumber(info.image?.datamin),
       "Valor mínimo en el HDU de imagen.",
+      "imagen-pixeles",
     ),
     row(
       "datamax",
       "Máximo",
       formatNumber(info.image?.datamax),
       "Valor máximo en el HDU de imagen.",
+      "imagen-pixeles",
     ),
     row(
       "datamean",
       "Media",
       formatNumber(info.image?.datamean),
       "Promedio de los píxeles.",
+      "imagen-pixeles",
     ),
     row(
       "median",
       "Mediana",
       formatNumber(info.image?.median),
       "Mediana de los píxeles.",
+      "imagen-pixeles",
     ),
     row(
       "background",
       "Fondo",
       formatNumber(info.image?.background),
       "Estimación del cielo o fondo.",
+      "imagen-pixeles",
     ),
   ].filter((item) => item !== null);
 
@@ -147,18 +162,21 @@ export function ImageArchive({ info, isPending }: Readonly<ImageArchiveProps>) {
       "PHOTFLAM",
       formatNumber(info.photometry?.photflam),
       "Factor de conversión de cuentas a flujo.",
+      "fotometria",
     ),
     row(
       "photplam",
       "PHOTPLAM",
       formatNumber(info.photometry?.photplam),
       "Longitud de onda pivot, en ångströms.",
+      "fotometria",
     ),
     row(
       "photbw",
       "PHOTBW",
       formatNumber(info.photometry?.photbw),
       "Ancho de banda equivalente del filtro.",
+      "fotometria",
     ),
   ].filter((item) => item !== null);
 
@@ -172,25 +190,35 @@ export function ImageArchive({ info, isPending }: Readonly<ImageArchiveProps>) {
       "WCS",
       wcsPresent,
       "Si el HDU trae una solución astrométrica (coordenadas en el cielo).",
+      "wcs",
     ),
-    row("wcs-naxis", "NAXIS", info.wcs?.naxis, "Cantidad de ejes del WCS."),
+    row(
+      "wcs-naxis",
+      "NAXIS",
+      info.wcs?.naxis,
+      "Cantidad de ejes del WCS.",
+      "wcs",
+    ),
     row(
       "wcs-ctype",
       "CTYPE",
       info.wcs?.ctype?.join(", "),
       "Tipos de coordenadas (p. ej. RA---TAN, DEC--TAN).",
+      "wcs",
     ),
     row(
       "wcs-crval",
       "CRVAL",
       info.wcs?.crval?.map((value) => value.toPrecision(6)).join(", "),
       "Coordenadas del píxel de referencia.",
+      "wcs",
     ),
     row(
       "wcs-crpix",
       "CRPIX",
       info.wcs?.crpix?.map((value) => value.toPrecision(6)).join(", "),
       "Píxel de referencia en el detector.",
+      "wcs",
     ),
   ].filter((item) => item !== null);
 
@@ -204,6 +232,7 @@ export function ImageArchive({ info, isPending }: Readonly<ImageArchiveProps>) {
             .filter(Boolean)
             .join(" · ") || String(hdu.index),
           "Extensión de imagen 2D disponible en el FITS.",
+          "hdu",
         ),
       )
       .filter((item) => item !== null) ?? [];
@@ -216,6 +245,7 @@ export function ImageArchive({ info, isPending }: Readonly<ImageArchiveProps>) {
           table.name || `Tabla ${table.index}`,
           `${table.rows} filas · ${table.columns.length} columnas`,
           "Tabla binaria embebida en el FITS (catálogo o calibración).",
+          "tabla-fits",
         ),
       )
       .filter((item) => item !== null) ?? [];

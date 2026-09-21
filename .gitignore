@@ -11,6 +11,7 @@ coverage.xml
 htmlcov/
 .hypothesis/
 .import_linter_cache/
+.cache/
 dist/
 build/
 

@@ -157,7 +157,9 @@ Dynamic lists (HDU, catalogs) use a select even if the current count is 2–4.
 
 The FITS viewer is the canvas. Controls and metadata live in a hamburger
 inspector drawer with collapsible sections — not extra pages or stacked
-floating cards. Explain labels with the shared `HelpHint` tooltip.
+floating cards. Explain labels with the shared `HelpHint` tooltip; keep
+the glossary (`/glossary`, `features/glossary/entries.ts`) in lockstep
+with those concepts (entry + `glossaryId` on the tooltip).
 Viewer overlays are composed as siblings (point sources, later extended
 and other layers), not hard-wired into the viewer.
 

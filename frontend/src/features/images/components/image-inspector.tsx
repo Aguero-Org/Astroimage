@@ -48,7 +48,8 @@ export function ImageInspector({
       open={isOpen}
       onOpenChange={setOpen}
       defaultOpen={false}
-      className="pointer-events-none absolute inset-0 z-30 min-h-0 w-full"
+      data-testid="image-workspace-overlay"
+      className="pointer-events-none absolute inset-0 z-30 h-full max-h-full min-h-0 w-full"
       style={{ "--sidebar-width": "22rem" } as CSSProperties}
     >
       <Sidebar
@@ -61,7 +62,11 @@ export function ImageInspector({
       >
         <SidebarHeader className="flex-row items-center gap-2 border-b border-sidebar-border px-3 py-3">
           <h2 className="text-sm font-medium">Inspector</h2>
-          <HelpHint label="Inspector" testId="help-inspector">
+          <HelpHint
+            label="Inspector"
+            testId="help-inspector"
+            glossaryId="inspector"
+          >
             Controles y metadatos de la imagen. La vista FITS permanece al lado;
             cada sección se abre solo cuando la necesitás.
           </HelpHint>
@@ -87,7 +92,7 @@ export function ImageInspector({
           </CollapsibleSection>
         </SidebarContent>
       </Sidebar>
-      <div className="flex min-w-0 flex-1 flex-col pt-16">
+      <div className="flex h-full min-h-0 min-w-0 flex-1 flex-col pt-16">
         <div className="flex items-center gap-3 px-4 sm:px-8">
           <SidebarTrigger
             type="button"

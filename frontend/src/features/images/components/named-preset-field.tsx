@@ -11,6 +11,7 @@ import { CUSTOM_PRESET_ID, type NamedPreset } from "../named-preset";
 type NamedPresetFieldProps<T> = {
   label: string;
   testId: string;
+  glossaryId?: string;
   presets: readonly NamedPreset<T>[];
   value: string;
   lastNamedId: string;
@@ -21,6 +22,7 @@ type NamedPresetFieldProps<T> = {
 export function NamedPresetField<T>({
   label,
   testId,
+  glossaryId,
   presets,
   value,
   lastNamedId,
@@ -42,7 +44,11 @@ export function NamedPresetField<T>({
       <legend className="mb-1 flex items-center gap-1">
         <span className="text-muted-foreground">{label}</span>
         {hint ? (
-          <HelpHint label={label} testId={`${testId}-help`}>
+          <HelpHint
+            label={label}
+            testId={`${testId}-help`}
+            glossaryId={glossaryId}
+          >
             {hint}
           </HelpHint>
         ) : null}
@@ -57,7 +63,7 @@ export function NamedPresetField<T>({
           }
         }}
       >
-        <SelectTrigger id={testId} data-testid={testId}>
+        <SelectTrigger id={testId} data-testid={testId} aria-label={label}>
           <SelectValue>{triggerLabel}</SelectValue>
         </SelectTrigger>
         <SelectContent>
@@ -72,7 +78,7 @@ export function NamedPresetField<T>({
             >
               <span className="flex flex-col gap-0.5 py-0.5">
                 <span>{preset.label}</span>
-                <span className="text-muted-foreground text-xs leading-snug">
+                <span className="text-xs leading-snug opacity-80">
                   {preset.outcome}
                 </span>
               </span>

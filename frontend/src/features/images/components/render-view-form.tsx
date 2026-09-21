@@ -66,6 +66,7 @@ export function RenderViewForm({
       <NamedPresetField
         label="Preset"
         testId="render-preset"
+        glossaryId="preset-vista"
         presets={RENDER_PRESETS}
         value={presetId}
         lastNamedId={lastNamedId}
@@ -77,6 +78,7 @@ export function RenderViewForm({
       <Field
         label="Stretch"
         testId="render-stretch"
+        glossaryId="stretch"
         help="Cómo se comprime el brillo de los píxeles. Lineal deja el rango crudo; raíz y log resaltan estructura débil."
       >
         <ExclusiveChoice
@@ -92,6 +94,7 @@ export function RenderViewForm({
       <Field
         label="Límites"
         testId="render-limits"
+        glossaryId="limits"
         help="Cómo se elige el rango de intensidad. Percentiles recorta colas; ZScale se adapta al ruido local."
       >
         <ExclusiveChoice
@@ -107,6 +110,7 @@ export function RenderViewForm({
       <Field
         label="Mapa de color"
         testId="render-colormap"
+        glossaryId="colormap"
         help="Paleta con la que se pinta el PNG. Gris es el default astronómico; las otras paletas resaltan contraste."
       >
         <ExclusiveChoice
@@ -123,6 +127,7 @@ export function RenderViewForm({
         <Field
           label="Pmin"
           testId="render-pmin"
+          glossaryId="pmin"
           help="Percentil inferior del recorte (0–100). Subirlo oculta fondo; debe ser menor que Pmax."
         >
           <Input
@@ -145,6 +150,7 @@ export function RenderViewForm({
         <Field
           label="Pmax"
           testId="render-pmax"
+          glossaryId="pmax"
           help="Percentil superior del recorte (0–100). Bajarlo satura menos las estrellas brillantes."
         >
           <Input
@@ -168,6 +174,7 @@ export function RenderViewForm({
       <Field
         label="Gamma"
         testId="render-gamma"
+        glossaryId="gamma"
         help="Curva extra sobre el stretch (0.1–5). Menor que 1 aclara medios tonos; mayor que 1 los oscurece."
       >
         <Input
@@ -234,6 +241,7 @@ function ExclusiveChoice<T extends string>({
         <SelectTrigger
           id={`render-${name}`}
           data-testid={`render-field-${name}`}
+          aria-label={name}
         >
           <SelectValue />
         </SelectTrigger>
@@ -290,11 +298,13 @@ function Field({
   label,
   testId,
   help,
+  glossaryId,
   children,
 }: Readonly<{
   label: string;
   testId: string;
   help: string;
+  glossaryId?: string;
   children: ReactNode;
 }>) {
   return (
@@ -304,6 +314,7 @@ function Field({
         <HelpHint
           label={label}
           testId={`render-help-${testId.replace("render-", "")}`}
+          glossaryId={glossaryId}
         >
           {help}
         </HelpHint>
