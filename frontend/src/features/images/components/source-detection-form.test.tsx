@@ -48,7 +48,7 @@ describe("SourceDetectionForm", () => {
     await user.click(screen.getByTestId("source-detect-submit"));
 
     expect(onSubmit).toHaveBeenCalledWith({
-      fwhm: 5.5,
+      ...DEFAULT_SOURCE_DETECTION_PARAMS,
       sigma: 12,
       min_snr: 10,
       min_score: 0.35,
@@ -89,6 +89,25 @@ describe("SourceDetectionForm", () => {
 
     expect(screen.getByTestId("source-help-fwhm")).toBeInTheDocument();
     expect(screen.getByTestId("source-help-max_sources")).toBeInTheDocument();
+    expect(screen.getByTestId("source-help-ext_sigma")).toBeInTheDocument();
+  });
+
+  it("renders point and extended parameter groups", () => {
+    renderForm({ isPending: false, onSubmit: vi.fn() });
+
+    expect(screen.getByTestId("source-group-point")).toBeInTheDocument();
+    expect(screen.getByTestId("source-group-extended")).toBeInTheDocument();
+    expect(screen.getByTestId("source-field-fwhm")).toBeInTheDocument();
+    expect(screen.getByTestId("source-field-ext_min_area")).toBeInTheDocument();
+  });
+
+  it("keeps the point preset when only an extended field changes", async () => {
+    const user = userEvent.setup();
+    renderForm({ isPending: false, onSubmit: vi.fn() });
+
+    await user.type(screen.getByTestId("source-field-ext_min_area"), "0");
+
+    expect(screen.getByTestId("source-preset")).toHaveTextContent("Estándar");
   });
 
   it("allows clearing a numeric field without restoring zero", async () => {

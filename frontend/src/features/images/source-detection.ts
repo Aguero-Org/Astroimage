@@ -1,9 +1,43 @@
 import type { DetectSourcesParams } from "@/api/generated/model";
 import type { NamedPreset } from "./named-preset";
 
+export const POINT_DETECTION_KEYS = [
+  "fwhm",
+  "sigma",
+  "min_snr",
+  "min_score",
+  "min_distance",
+  "visual_weight",
+  "visual_area_radius",
+  "visual_area_sigma",
+  "max_sources",
+] as const;
+
+export const EXTENDED_DETECTION_KEYS = [
+  "ext_sigma",
+  "ext_smooth_sigma",
+  "ext_min_area",
+  "ext_max_area",
+  "ext_bin_factor",
+  "ext_closing_iterations",
+  "ext_opening_iterations",
+  "ext_min_score",
+  "ext_max_sources",
+] as const;
+
+export type PointDetectionParams = Pick<
+  DetectSourcesParams,
+  (typeof POINT_DETECTION_KEYS)[number]
+>;
+
+export type ExtendedDetectionParams = Pick<
+  DetectSourcesParams,
+  (typeof EXTENDED_DETECTION_KEYS)[number]
+>;
+
 export type SourceDetectionParams = Omit<DetectSourcesParams, "hdu">;
 
-export const DEFAULT_SOURCE_DETECTION_PARAMS: SourceDetectionParams = {
+export const DEFAULT_POINT_DETECTION_PARAMS: PointDetectionParams = {
   fwhm: 5.5,
   sigma: 9,
   min_snr: 6,
@@ -15,14 +49,41 @@ export const DEFAULT_SOURCE_DETECTION_PARAMS: SourceDetectionParams = {
   max_sources: 50,
 };
 
-export const SOURCE_DETECTION_PRESETS: NamedPreset<SourceDetectionParams>[] = [
+export const DEFAULT_EXTENDED_DETECTION_PARAMS: ExtendedDetectionParams = {
+  ext_sigma: 3,
+  ext_smooth_sigma: 8,
+  ext_min_area: 500,
+  ext_max_area: 0,
+  ext_bin_factor: 8,
+  ext_closing_iterations: 2,
+  ext_opening_iterations: 1,
+  ext_min_score: 0.2,
+  ext_max_sources: 3,
+};
+
+export const DEFAULT_SOURCE_DETECTION_PARAMS: SourceDetectionParams = {
+  ...DEFAULT_POINT_DETECTION_PARAMS,
+  ...DEFAULT_EXTENDED_DETECTION_PARAMS,
+};
+
+export function pointDetectionParams(
+  values: SourceDetectionParams,
+): PointDetectionParams {
+  const selected: Partial<PointDetectionParams> = {};
+  for (const key of POINT_DETECTION_KEYS) {
+    selected[key] = values[key];
+  }
+  return selected as PointDetectionParams;
+}
+
+export const POINT_DETECTION_PRESETS: NamedPreset<PointDetectionParams>[] = [
   {
     id: "estandar",
     label: "Estándar",
     outcome:
       "Las estrellas que se ven claro, un número manejable de marcas, las más visibles arriba.",
     hint: "Usala como primera detección.",
-    values: DEFAULT_SOURCE_DETECTION_PARAMS,
+    values: DEFAULT_POINT_DETECTION_PARAMS,
   },
   {
     id: "conservador",
@@ -83,7 +144,7 @@ export const SOURCE_DETECTION_PRESETS: NamedPreset<SourceDetectionParams>[] = [
       "Las mismas detecciones que el estándar, ordenadas por intensidad, no por quién se ve más grande.",
     hint: "Usala si arriba del ranking hay manchas y abajo estrellas nítidas. No suma fuentes nuevas.",
     values: {
-      ...DEFAULT_SOURCE_DETECTION_PARAMS,
+      ...DEFAULT_POINT_DETECTION_PARAMS,
       visual_weight: 0.25,
       min_score: 0.15,
     },
