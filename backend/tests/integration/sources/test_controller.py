@@ -10,7 +10,10 @@ from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from astroimage.fits.service import FitsService
-from tests.unit.sources.helpers import synthetic_point_source_image
+from tests.unit.sources.helpers import (
+    synthetic_extended_source_image,
+    synthetic_point_source_image,
+)
 
 
 def _sources_fits_bytes() -> bytes:
@@ -44,15 +47,16 @@ async def test_detect_sources_returns_point_sources(
     assert response.status_code == 200
     body = response.json()
     assert body["source_name"] == "survey.fits"
-    assert body["summary"]["extended_count"] == 0
+    assert body["summary"]["extended_count"] == len(body["extended_sources"])
     assert body["summary"]["point_count"] == len(body["point_sources"])
     assert body["summary"]["point_count"] >= 3
-    assert body["extended_sources"] == []
     for source in body["point_sources"]:
         assert source["object_type"] == "point"
         assert source["xcentroid"] > 0
         assert source["ycentroid"] > 0
         assert source["snr"] >= 4.0
+    for source in body["extended_sources"]:
+        assert source["object_type"] == "extended"
     ranks = [source["rank"] for source in body["point_sources"]]
     assert ranks == list(range(1, len(ranks) + 1))
 
@@ -72,6 +76,52 @@ async def test_detect_sources_with_max_sources_limit(
     assert response.status_code == 200
     body = response.json()
     assert body["summary"]["point_count"] <= 2
+
+
+@pytest.mark.asyncio
+async def test_detect_sources_returns_extended_sources_on_nebula(
+    client: AsyncClient,
+    fits_service: FitsService,
+    db_session: AsyncSession,
+) -> None:
+    image, _ = synthetic_extended_source_image()
+    buffer = BytesIO()
+    fits.PrimaryHDU(image).writeto(buffer)
+    record = await fits_service.store_bytes(buffer.getvalue(), source_name="nebula.fits")
+    await db_session.commit()
+
+    response = await client.get(f"/image/{record.id}/sources")
+    assert response.status_code == 200
+    body = response.json()
+    assert body["summary"]["extended_count"] >= 1
+    assert body["summary"]["extended_count"] == len(body["extended_sources"])
+    for source in body["extended_sources"]:
+        assert source["object_type"] == "extended"
+        assert source["xcentroid"] > 0
+        assert source["ycentroid"] > 0
+        assert source["area_pixels"] > 0
+
+
+@pytest.mark.asyncio
+async def test_detect_sources_extended_params_filter_out_regions(
+    client: AsyncClient,
+    fits_service: FitsService,
+    db_session: AsyncSession,
+) -> None:
+    image, _ = synthetic_extended_source_image()
+    buffer = BytesIO()
+    fits.PrimaryHDU(image).writeto(buffer)
+    record = await fits_service.store_bytes(buffer.getvalue(), source_name="nebula.fits")
+    await db_session.commit()
+
+    response = await client.get(
+        f"/image/{record.id}/sources",
+        params={"ext_min_area": "100000000"},
+    )
+    assert response.status_code == 200
+    body = response.json()
+    assert body["summary"]["extended_count"] == 0
+    assert body["extended_sources"] == []
 
 
 @pytest.mark.asyncio

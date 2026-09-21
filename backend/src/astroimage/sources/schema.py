@@ -19,6 +19,20 @@ class PointDetectionConfigSchema(BaseModel):
     max_sources: int = Field(default=50, ge=0)
 
 
+class ExtendedDetectionConfigSchema(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    sigma: float = Field(default=3.0, ge=0.5)
+    smooth_sigma: float = Field(default=8.0, ge=0.5)
+    min_area: int = Field(default=500, ge=1)
+    max_area: int = Field(default=0, ge=0)
+    bin_factor: int = Field(default=8, ge=1)
+    closing_iterations: int = Field(default=2, ge=0)
+    opening_iterations: int = Field(default=1, ge=0)
+    min_score: float = Field(default=0.20, ge=0.0, le=1.0)
+    max_sources: int = Field(default=3, ge=0)
+
+
 class PointSourceSchema(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -38,6 +52,15 @@ class ExtendedSourceSchema(BaseModel):
 
     source_id: int
     rank: int
+    xcentroid: float
+    ycentroid: float
+    width_pixels: float
+    height_pixels: float
+    area_pixels: int
+    peak: float
+    mean: float
+    flux: float
+    relevance_score: float
     object_type: Literal["extended"] = "extended"
 
 

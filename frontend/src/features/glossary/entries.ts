@@ -301,6 +301,93 @@ export const GLOSSARY_ENTRIES: GlossaryEntry[] = [
     where: "Inspector → Selección",
   },
   {
+    id: "fuente-extendida",
+    name: "Fuente extendida",
+    group: "fuentes",
+    what: "Región no puntual de la imagen: luz difusa con forma, como una nebulosa o una galaxia.",
+    inApp:
+      "Se marca con un recuadro sobre la imagen y cuenta como 'extendida' en el resumen.",
+    where: "Visor (recuadro) e Inspector → Selección",
+  },
+  {
+    id: "area",
+    name: "Área",
+    group: "fuentes",
+    what: "Cantidad de píxeles que ocupa la región extendida detectada.",
+    inApp: "Aparece en Selección al marcar una fuente extendida.",
+    where: "Inspector → Selección",
+  },
+  {
+    id: "ancho-alto",
+    name: "Ancho y alto",
+    group: "fuentes",
+    what: "Extensión horizontal y vertical, en píxeles, del recuadro que envuelve la región.",
+    inApp: "Se muestran en Selección al marcar una fuente extendida.",
+    where: "Inspector → Selección",
+  },
+  {
+    id: "ext-sigma",
+    name: "Sigma (extendidas)",
+    group: "fuentes",
+    what: "Umbral en RMS del fondo para abrir regiones de luz difusa.",
+    inApp:
+      "Más alto exige nebulosas más contrastadas. Lo edita el grupo Fuentes extendidas.",
+    where: "Inspector → Fuentes",
+  },
+  {
+    id: "ext-smooth-sigma",
+    name: "Suavizado",
+    group: "fuentes",
+    what: "Suavizado gaussiano previo al umbral para dominar el ruido.",
+    inApp:
+      "Muy bajo deja ruido que abre regiones falsas; muy alto funde estructuras finas.",
+    where: "Inspector → Fuentes",
+  },
+  {
+    id: "ext-binning",
+    name: "Factor de bin",
+    group: "fuentes",
+    what: "Agrupado de píxeles que usa el detector de regiones para acelerar el cálculo.",
+    inApp:
+      "No cambia el resultado: el área y el umbral se escalan para compensarlo.",
+    where: "Inspector → Fuentes",
+  },
+  {
+    id: "ext-min-area",
+    name: "Área mínima",
+    group: "fuentes",
+    what: "Área mínima, en píxeles, para que una región cuente como fuente extendida.",
+    inApp: "Regiones más chicas se descartan antes de calcular su relevancia.",
+    where: "Inspector → Fuentes",
+  },
+  {
+    id: "ext-max-area",
+    name: "Área máxima",
+    group: "fuentes",
+    what: "Área máxima, en píxeles, de una región extendida.",
+    inApp:
+      "0 significa sin límite. Útil para separar la nebulosa de un fondo de estructura grande.",
+    where: "Inspector → Fuentes",
+  },
+  {
+    id: "ext-closing",
+    name: "Cierre",
+    group: "fuentes",
+    what: "Operación morfológica que rellena huecos y une bordes rotos de una región.",
+    inApp:
+      "Subirlo ayuda cuando la nebulosa sale cortada en pedazos. 0 desactiva.",
+    where: "Inspector → Fuentes",
+  },
+  {
+    id: "ext-opening",
+    name: "Apertura",
+    group: "fuentes",
+    what: "Operación morfológica que corta protuberancias finas y rastro de ruido.",
+    inApp:
+      "Subirlo limpia la silueta pero puede dividir regiones grandes. 0 desactiva.",
+    where: "Inspector → Fuentes",
+  },
+  {
     id: "inspector",
     name: "Inspector",
     group: "visor",

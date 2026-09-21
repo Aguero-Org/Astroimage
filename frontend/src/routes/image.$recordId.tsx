@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useGetImageInfo } from "@/api/generated/hub/hub";
 import type {
   DetectSourcesParams,
+  ExtendedSourceSchema,
   PointSourceSchema,
 } from "@/api/generated/model";
 import {
@@ -11,7 +12,9 @@ import {
   useRenderFitsImage,
 } from "@/api/generated/render/render";
 import { useDetectSources } from "@/api/generated/sources/sources";
+import { HelpHint } from "@/components/ui/help-hint";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ExtendedSourceMarkers } from "@/features/images/components/extended-source-markers";
 import { FitsImageViewer } from "@/features/images/components/fits-image-viewer";
 import { HduSelector } from "@/features/images/components/hdu-selector";
 import { ImageArchive } from "@/features/images/components/image-archive";
@@ -45,8 +48,9 @@ function ImageDetailPage() {
   );
   const [hdu, setHdu] = useState<number | null>(null);
   const [inspectorOpen, setInspectorOpen] = useState(false);
-  const [selectedSource, setSelectedSource] =
-    useState<PointSourceSchema | null>(null);
+  const [selectedSource, setSelectedSource] = useState<
+    PointSourceSchema | ExtendedSourceSchema | null
+  >(null);
   const renderQueryParams =
     hdu === null ? renderParams : { ...renderParams, hdu };
   const renderQuery = useRenderFitsImage(recordId, renderQueryParams, {
@@ -88,9 +92,21 @@ function ImageDetailPage() {
     sourcesQuery.data?.status === 200
       ? (sourcesQuery.data.data.point_sources ?? [])
       : [];
+  const extendedSources =
+    sourcesQuery.data?.status === 200
+      ? (sourcesQuery.data.data.extended_sources ?? [])
+      : [];
   const detectionSummary =
     sourcesQuery.data?.status === 200
       ? sourcesQuery.data.data.summary
+      : undefined;
+  const selectedPointId =
+    selectedSource?.object_type === "point"
+      ? selectedSource.source_id
+      : undefined;
+  const selectedExtendedId =
+    selectedSource?.object_type === "extended"
+      ? selectedSource.source_id
       : undefined;
 
   const blob =
@@ -114,7 +130,9 @@ function ImageDetailPage() {
         objectUrl={objectUrl}
         label={sourceName ?? `Render FITS ${recordId}`}
         pointSources={pointSources}
-        selectedId={selectedSource?.source_id}
+        extendedSources={extendedSources}
+        selectedId={selectedPointId}
+        selectedExtendedId={selectedExtendedId}
         onSelectSource={(source) => {
           setSelectedSource(source);
           setInspectorOpen(true);
@@ -160,8 +178,8 @@ function ImageDetailPage() {
         sources={
           <>
             <p className="mb-3 text-xs text-muted-foreground">
-              Ajusta los parámetros y lanza el análisis. Los puntos se marcan
-              sobre la imagen.
+              Ajusta los parámetros y lanza el análisis. Los puntos y las
+              estructuras extendidas se marcan sobre la imagen.
             </p>
             <SourceDetectionForm
               isPending={sourcesQuery.isFetching}
@@ -179,10 +197,18 @@ function ImageDetailPage() {
             {detectionSummary ? (
               <p
                 data-testid="detect-summary"
-                className="mt-2 text-sm text-muted-foreground"
+                className="mt-2 flex items-center gap-1 text-sm text-muted-foreground"
               >
                 {detectionSummary.point_count} puntuales,{" "}
                 {detectionSummary.extended_count} extendidas
+                <HelpHint
+                  label="resumen de fuentes"
+                  testId="help-detect-summary"
+                  glossaryId="fuente-extendida"
+                >
+                  Las puntuales son estrellas o picos nítidos; las extendidas
+                  son nebulosas o galaxias y se marcan con recuadros.
+                </HelpHint>
               </p>
             ) : null}
           </>
@@ -202,7 +228,9 @@ function RenderedFitsSection({
   objectUrl,
   label,
   pointSources,
+  extendedSources,
   selectedId,
+  selectedExtendedId,
   onSelectSource,
 }: Readonly<{
   isPending: boolean;
@@ -211,8 +239,10 @@ function RenderedFitsSection({
   objectUrl: string | undefined;
   label: string;
   pointSources: PointSourceSchema[];
+  extendedSources: ExtendedSourceSchema[];
   selectedId?: number;
-  onSelectSource?: (source: PointSourceSchema) => void;
+  selectedExtendedId?: number;
+  onSelectSource?: (source: PointSourceSchema | ExtendedSourceSchema) => void;
 }>) {
   if (isPending) {
     return (
@@ -244,6 +274,11 @@ function RenderedFitsSection({
         label={label}
         className="h-full rounded-none border-0"
       >
+        <ExtendedSourceMarkers
+          sources={extendedSources}
+          selectedId={selectedExtendedId}
+          onSelect={onSelectSource}
+        />
         <SourceMarkers
           sources={pointSources}
           selectedId={selectedId}

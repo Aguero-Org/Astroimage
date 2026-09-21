@@ -8,5 +8,14 @@
 export interface ExtendedSourceSchema {
   source_id: number;
   rank: number;
+  xcentroid: number;
+  ycentroid: number;
+  width_pixels: number;
+  height_pixels: number;
+  area_pixels: number;
+  peak: number;
+  mean: number;
+  flux: number;
+  relevance_score: number;
   object_type?: 'extended';
 }

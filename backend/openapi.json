@@ -366,6 +366,106 @@
               "default": 50,
               "title": "Max Sources"
             }
+          },
+          {
+            "name": "ext_sigma",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number",
+              "minimum": 0.5,
+              "default": 3.0,
+              "title": "Ext Sigma"
+            }
+          },
+          {
+            "name": "ext_smooth_sigma",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number",
+              "minimum": 0.5,
+              "default": 8.0,
+              "title": "Ext Smooth Sigma"
+            }
+          },
+          {
+            "name": "ext_min_area",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 500,
+              "title": "Ext Min Area"
+            }
+          },
+          {
+            "name": "ext_max_area",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "Ext Max Area"
+            }
+          },
+          {
+            "name": "ext_bin_factor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 8,
+              "title": "Ext Bin Factor"
+            }
+          },
+          {
+            "name": "ext_closing_iterations",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 2,
+              "title": "Ext Closing Iterations"
+            }
+          },
+          {
+            "name": "ext_opening_iterations",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 1,
+              "title": "Ext Opening Iterations"
+            }
+          },
+          {
+            "name": "ext_min_score",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number",
+              "maximum": 1.0,
+              "minimum": 0.0,
+              "default": 0.2,
+              "title": "Ext Min Score"
+            }
+          },
+          {
+            "name": "ext_max_sources",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 3,
+              "title": "Ext Max Sources"
+            }
           }
         ],
         "responses": {
@@ -645,6 +745,42 @@
             "type": "integer",
             "title": "Rank"
           },
+          "xcentroid": {
+            "type": "number",
+            "title": "Xcentroid"
+          },
+          "ycentroid": {
+            "type": "number",
+            "title": "Ycentroid"
+          },
+          "width_pixels": {
+            "type": "number",
+            "title": "Width Pixels"
+          },
+          "height_pixels": {
+            "type": "number",
+            "title": "Height Pixels"
+          },
+          "area_pixels": {
+            "type": "integer",
+            "title": "Area Pixels"
+          },
+          "peak": {
+            "type": "number",
+            "title": "Peak"
+          },
+          "mean": {
+            "type": "number",
+            "title": "Mean"
+          },
+          "flux": {
+            "type": "number",
+            "title": "Flux"
+          },
+          "relevance_score": {
+            "type": "number",
+            "title": "Relevance Score"
+          },
           "object_type": {
             "type": "string",
             "const": "extended",
@@ -656,7 +792,16 @@
         "type": "object",
         "required": [
           "source_id",
-          "rank"
+          "rank",
+          "xcentroid",
+          "ycentroid",
+          "width_pixels",
+          "height_pixels",
+          "area_pixels",
+          "peak",
+          "mean",
+          "flux",
+          "relevance_score"
         ],
         "title": "ExtendedSourceSchema"
       },
