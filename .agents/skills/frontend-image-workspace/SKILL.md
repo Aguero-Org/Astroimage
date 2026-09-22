@@ -157,7 +157,11 @@ frontend/src/features/images/named-preset.ts
 frontend/src/components/ui/help-hint.tsx
 frontend/src/features/glossary/entries.ts
 frontend/src/features/glossary/glossary-page.tsx
+frontend/src/features/glossary/glossary-header.tsx
+frontend/src/features/glossary/glossary-toc.tsx
+frontend/src/features/glossary/glossary-article.tsx
 frontend/src/features/glossary/glossary-link.tsx
+frontend/src/hooks/use-scroll-spy.ts
 frontend/src/routes/glossary.tsx
 ```
 

@@ -60,8 +60,9 @@ describe("GlossaryPage", () => {
     await waitFor(() => {
       expect(screen.getByTestId("glossary-entry-fwhm")).toBeInTheDocument();
     });
-    expect(screen.getByTestId("glossary-entry-fwhm").className).toContain(
-      "ring-ring",
+    expect(screen.getByTestId("glossary-entry-fwhm")).toHaveAttribute(
+      "data-active",
+      "true",
     );
     expect(screen.getByTestId("glossary-toc")).toBeInTheDocument();
     await user.click(screen.getByTestId("glossary-copy-fwhm"));
