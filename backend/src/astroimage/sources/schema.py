@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from typing import Literal
+from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -78,3 +79,65 @@ class SourceDetectionResponse(BaseModel):
     summary: DetectionSummarySchema
     point_sources: list[PointSourceSchema] = Field(default_factory=list)
     extended_sources: list[ExtendedSourceSchema] = Field(default_factory=list)
+    gaia_url: str | None = None
+
+
+class GaiaMatchConfigSchema(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    match_radius_arcsec: float = Field(default=4.0, ge=0.0)
+    probability_power: float = Field(default=2.0, ge=0.1)
+
+
+class GaiaMatchSchema(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    source_id: int
+    object_type: Literal["point", "extended"]
+    rank: int
+    ra_deg: float | None = None
+    dec_deg: float | None = None
+    gaia_match: bool = False
+    gaia_separation_arcsec: float | None = None
+    gaia_probability: float = 0.0
+    gaia_source_id: str | None = None
+    gaia_ra_deg: float | None = None
+    gaia_dec_deg: float | None = None
+    gaia_gmag: float | None = None
+
+
+class GaiaTypeSummarySchema(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    count: int = 0
+    matched: int = 0
+    match_rate: float = 0.0
+    median_separation_arcsec: float | None = None
+
+
+class GaiaVerificationSummarySchema(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    point: GaiaTypeSummarySchema = Field(default_factory=GaiaTypeSummarySchema)
+    extended: GaiaTypeSummarySchema = Field(default_factory=GaiaTypeSummarySchema)
+
+
+class GaiaVerificationResponse(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    source_name: str | None = None
+    match_radius_arcsec: float
+    probability_power: float
+    wcs_present: bool = False
+    queried: bool = False
+    error: str | None = None
+    summary: GaiaVerificationSummarySchema = Field(default_factory=GaiaVerificationSummarySchema)
+    matches: list[GaiaMatchSchema] = Field(default_factory=list)
+
+
+class GaiaJobStatusSchema(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    status: Literal["pending"] = "pending"
+    job_id: str
+    record_id: UUID
