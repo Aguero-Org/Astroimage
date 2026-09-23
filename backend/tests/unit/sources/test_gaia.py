@@ -178,7 +178,7 @@ def test_verify_with_wcs_matches_sources_to_gaia() -> None:
     assert result.summary.point.matched == len(point_rows)
     assert result.summary.point.match_rate == pytest.approx(1.0)
     assert result.summary.point.median_separation_arcsec is not None
-    assert result.summary.extended.count == 0
+    assert result.summary.extended.count == 2
     assert len(provider.searches) == 1
     assert provider.searches[0][2] >= 60.0
 
@@ -319,7 +319,7 @@ async def test_verify_from_record_returns_matches() -> None:
     assert result.error is None
     assert result.wcs_present is True
     assert any(row.gaia_match for row in result.matches)
-    assert len(provider.searches) == 3
+    assert len(provider.searches) == 5
 
 
 @pytest.mark.asyncio
@@ -343,8 +343,8 @@ async def test_gaia_block_queries_run_concurrently_across_thread_pool() -> None:
 
     assert result.queried is True
     assert (
-        len(provider.searches) == 4
-    )  # 3 bloques + fallback single-query (paridad TPI gaia.py:183-204)
+        len(provider.searches) == 6
+    )  # 5 fuentes (3 point + 2 extended) + fallback single-query (paridad TPI gaia.py:183-204)
     assert provider.max_concurrent == 3
     assert elapsed < 3.0
 
@@ -424,6 +424,8 @@ async def test_verify_from_record_times_out_gracefully() -> None:
     assert result.wcs_present is True
     assert result.matches
     assert all(row.gaia_match is False for row in result.matches)
-    assert result.summary.point.count == len(result.matches)
+    assert result.summary.point.count + result.summary.extended.count == len(
+        result.matches
+    )  # point + extended (paridad detector: 5 = 3 bloques + 2 extendidos)
 
     await asyncio.sleep(1.2)
