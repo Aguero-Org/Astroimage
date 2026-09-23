@@ -36,6 +36,7 @@ const FIELDS: FieldDefinition[] = [
     label: "FWHM",
     step: "0.1",
     help: "Ancho a media altura del núcleo estelar, en píxeles. Valores más altos buscan estrellas más extendidas.",
+    glossaryId: "fwhm",
   },
   {
     key: "sigma",
