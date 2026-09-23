@@ -11,6 +11,7 @@ class FetchImageResponseSchema(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     record_id: UUID
+    slug: str
 
 
 class ListRecordsResponseSchema(BaseModel):

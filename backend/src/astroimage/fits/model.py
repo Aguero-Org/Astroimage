@@ -16,6 +16,7 @@ class FitsRecord(Base):
 
     id: Mapped[UUID] = mapped_column(Uuid(as_uuid=True), primary_key=True, default=uuid4)
     object_key: Mapped[str] = mapped_column(String(512), unique=True, nullable=False)
+    slug: Mapped[str] = mapped_column(String(512), nullable=False)
     original_filename: Mapped[str] = mapped_column(String(512), nullable=False)
     size_bytes: Mapped[int] = mapped_column(Integer, nullable=False)
     metadata_payload: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=False)

@@ -113,6 +113,7 @@ class FitsService:
             record = FitsRecord(
                 id=record_id,
                 object_key=object_key,
+                slug=source_name,
                 original_filename=source_name,
                 size_bytes=len(payload),
                 metadata_payload=metadata_payload,
@@ -212,6 +213,7 @@ class FitsService:
     def _to_summary(record: FitsRecord) -> FitsRecordSummarySchema:
         return FitsRecordSummarySchema(
             record_id=record.id,
+            slug=record.slug,
             name=record.original_filename,
         )
 
@@ -279,6 +281,7 @@ class FitsService:
                 record = FitsRecord(
                     id=record_id,
                     object_key=object_key,
+                    slug=filename,
                     original_filename=filename,
                     size_bytes=len(payload),
                     metadata_payload=metadata.model_dump(mode="json"),

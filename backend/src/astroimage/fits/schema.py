@@ -96,4 +96,5 @@ class FitsRecordSummarySchema(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     record_id: UUID
+    slug: str
     name: str

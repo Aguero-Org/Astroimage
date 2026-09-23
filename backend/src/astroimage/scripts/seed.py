@@ -159,6 +159,7 @@ def cmd_seed_load(args: argparse.Namespace) -> int:
                         FitsRecord(
                             id=record_id,
                             object_key=object_key,
+                            slug=str(row["original_filename"]),
                             original_filename=str(row["original_filename"]),
                             size_bytes=_require_int(row["size_bytes"]),
                             metadata_payload=_require_dict(row["metadata_payload"]),
