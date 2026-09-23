@@ -306,7 +306,7 @@ def detect_extended_sources(
     work_rms = _work_rms(smooth, finite, background_rms, factor)
     threshold = median + float(sigma) * work_rms
     mask = _build_mask(
-        clean,
+        smooth,
         finite,
         threshold,
         opening_iterations=opening_iterations,
