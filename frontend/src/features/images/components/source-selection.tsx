@@ -41,13 +41,17 @@ export function SourceSelection({ source }: Readonly<SourceSelectionProps>) {
       help: "Orden de relevancia entre las fuentes detectadas (1 es la más relevante).",
       glossaryId: "rank",
     },
-    {
-      id: "sel-snr",
-      label: "SNR",
-      value: source.snr.toFixed(2),
-      help: "Relación señal/ruido del pico.",
-      glossaryId: "snr",
-    },
+    ...("snr" in source
+      ? [
+          {
+            id: "sel-snr",
+            label: "SNR",
+            value: source.snr.toFixed(2),
+            help: "Relación señal/ruido del pico.",
+            glossaryId: "snr",
+          },
+        ]
+      : []),
     {
       id: "sel-score",
       label: "Score",
@@ -174,6 +178,7 @@ function ExtendedSourceDetails({
       label: "Media",
       value: mean,
       help: "Valor medio de píxel dentro de la región.",
+      glossaryId: "mean",
     });
   }
   if (flux) {

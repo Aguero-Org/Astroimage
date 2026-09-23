@@ -301,6 +301,14 @@ export const GLOSSARY_ENTRIES: GlossaryEntry[] = [
     where: "Inspector → Selección",
   },
   {
+    id: "mean",
+    name: "Media",
+    group: "fuentes",
+    what: "Valor medio de píxel dentro de la región detectada.",
+    inApp: "En Selección, si el detector lo calculó.",
+    where: "Inspector → Selección",
+  },
+  {
     id: "fuente-extendida",
     name: "Fuente extendida",
     group: "fuentes",
