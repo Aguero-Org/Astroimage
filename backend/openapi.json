@@ -781,7 +781,80 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/GaiaVerificationResponse"
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/GaiaVerificationResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/GaiaJobStatusSchema"
+                    }
+                  ],
+                  "title": "Response Verifysourcesgaia"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/image/{record_id}/sources/gaia/jobs/{job_id}": {
+      "get": {
+        "tags": [
+          "sources"
+        ],
+        "summary": "Get Sources Gaia Job",
+        "operationId": "getSourcesGaiaJob",
+        "parameters": [
+          {
+            "name": "record_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Stored FITS record id",
+              "title": "Record Id"
+            },
+            "description": "Stored FITS record id"
+          },
+          {
+            "name": "job_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Submission id returned by the gaia verification endpoint",
+              "title": "Job Id"
+            },
+            "description": "Submission id returned by the gaia verification endpoint"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/GaiaVerificationResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/GaiaJobStatusSchema"
+                    }
+                  ],
+                  "title": "Response Getsourcesgaiajob"
                 }
               }
             }
@@ -1647,6 +1720,32 @@
         "additionalProperties": false,
         "type": "object",
         "title": "FitsWcsInfoSchema"
+      },
+      "GaiaJobStatusSchema": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "const": "pending",
+            "title": "Status",
+            "default": "pending"
+          },
+          "job_id": {
+            "type": "string",
+            "title": "Job Id"
+          },
+          "record_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Record Id"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "job_id",
+          "record_id"
+        ],
+        "title": "GaiaJobStatusSchema"
       },
       "GaiaMatchSchema": {
         "properties": {
