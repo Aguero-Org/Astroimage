@@ -1191,12 +1191,17 @@
             "type": "string",
             "format": "uuid",
             "title": "Record Id"
+          },
+          "slug": {
+            "type": "string",
+            "title": "Slug"
           }
         },
         "additionalProperties": false,
         "type": "object",
         "required": [
-          "record_id"
+          "record_id",
+          "slug"
         ],
         "title": "FetchImageResponseSchema"
       },
@@ -1566,6 +1571,10 @@
             "format": "uuid",
             "title": "Record Id"
           },
+          "slug": {
+            "type": "string",
+            "title": "Slug"
+          },
           "name": {
             "type": "string",
             "title": "Name"
@@ -1575,6 +1584,7 @@
         "type": "object",
         "required": [
           "record_id",
+          "slug",
           "name"
         ],
         "title": "FitsRecordSummarySchema"

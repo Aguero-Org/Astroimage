@@ -106,8 +106,16 @@ async def test_get_image_info_missing_record(
 async def test_list_astro_images_returns_all_records(client: AsyncClient) -> None:
     records = ListRecordsResponseSchema(
         records=[
-            {"record_id": _record_id(), "name": "hst_drz.fits"},
-            {"record_id": _record_id(), "name": "hst_flt.fits"},
+            {
+                "record_id": _record_id(),
+                "slug": "hst_drz.fits",
+                "name": "hst_drz.fits",
+            },
+            {
+                "record_id": _record_id(),
+                "slug": "hst_flt.fits",
+                "name": "hst_flt.fits",
+            },
         ]
     )
     fake = _FakeService(
@@ -123,7 +131,9 @@ async def test_list_astro_images_returns_all_records(client: AsyncClient) -> Non
     assert response.status_code == 200
     payload = response.json()
     assert payload == {
-        "records": [{"record_id": str(r.record_id), "name": r.name} for r in records.records]
+        "records": [
+            {"record_id": str(r.record_id), "slug": r.slug, "name": r.name} for r in records.records
+        ]
     }
 
 
@@ -131,7 +141,7 @@ async def test_search_astro_images_by_name_returns_filtered_records(
     client: AsyncClient,
 ) -> None:
     records = ListRecordsResponseSchema(
-        records=[{"record_id": _record_id(), "name": "hst_m31.fits"}]
+        records=[{"record_id": _record_id(), "slug": "hst_m31.fits", "name": "hst_m31.fits"}]
     )
     fake = _FakeService(
         FetchImageResponseSchema(record_id=_record_id(), slug=_slug()),

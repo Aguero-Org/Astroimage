@@ -5,7 +5,8 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export interface FetchImageResponseSchema {
+export interface GaiaJobStatusSchema {
+  status?: 'pending';
+  job_id: string;
   record_id: string;
-  slug: string;
 }

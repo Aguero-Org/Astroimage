@@ -6,6 +6,7 @@ import { ImageListItem } from "./image-list-item";
 
 const record: ImageRecord = {
   record_id: "b6693c65-1f3f-4169-a741-a9fc2ef1a36b",
+  slug: "m31",
   name: "m31",
 };
 

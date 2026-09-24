@@ -275,20 +275,24 @@ async def test_verify_sources_gaia_matches_stored_wcs_sources(
     assert body["match_radius_arcsec"] == 60.0
     assert body["summary"]["point"]["matched"] >= 1
     assert any(row["gaia_match"] for row in body["matches"])
-    assert len(provider.searches) == 3
+    assert (
+        len(provider.searches) == 5
+    )  # 5 bloques: 3 point + 2 extended (paridad TPI gaia.py:183-204)
     expected_centers = {
         (9.9325, 20.0575),
         (10.0225, 20.0875),
         (10.0625, 19.9475),
     }
     got_centers = {(center_ra, center_dec) for center_ra, center_dec, _ in provider.searches}
+    # Cada fuente puntual debe quedar cubierta por un bloque; los bloques
+    # adicionales cubren las fuentes extendidas (paridad TPI gaia.py:183-204).
     assert all(
         any(
             center_ra == pytest.approx(expected_ra, abs=0.02)
             and center_dec == pytest.approx(expected_dec, abs=0.02)
-            for expected_ra, expected_dec in expected_centers
+            for center_ra, center_dec in got_centers
         )
-        for center_ra, center_dec in got_centers
+        for expected_ra, expected_dec in expected_centers
     )
     assert all(radius >= 60.0 for _, _, radius in provider.searches)
 
@@ -317,8 +321,8 @@ async def test_verify_sources_gaia_endpoint_conserves_detection_params(
     assert body["summary"]["point"]["count"] >= 3
     assert body["summary"]["point"]["matched"] == 0
     assert (
-        len(provider.searches) == 4
-    )  # 3 bloques + fallback single-query (paridad TPI gaia.py:183-204)
+        len(provider.searches) == 6
+    )  # 5 fuentes (3 point + 2 extended) + fallback single-query (paridad TPI gaia.py:183-204)
     assert not any(row["gaia_match"] for row in body["matches"])
 
 
@@ -372,7 +376,7 @@ async def test_verify_sources_gaia_isolates_queries_by_client_id(
             assert body["summary"]["point"]["count"] >= 3
             expected_blocks += min(
                 8,
-                body["summary"]["point"]["count"],
+                body["summary"]["point"]["count"] + body["summary"]["extended"]["count"],
             )
     finally:
         app.dependency_overrides.pop(gaia_provider_dependency, None)
@@ -409,8 +413,8 @@ async def test_verify_sources_gaia_serves_cached_result_on_resubmit(
     assert second["queried"] is True
     assert second == first
     assert (
-        len(provider.searches) == 4
-    )  # 3 bloques + fallback single-query (paridad TPI gaia.py:183-204)
+        len(provider.searches) == 6
+    )  # 5 fuentes (3 point + 2 extended) + fallback single-query (paridad TPI gaia.py:183-204)
 
 
 @pytest.mark.asyncio

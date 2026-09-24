@@ -22,6 +22,7 @@ export * from './fitsPhotometryInfoSchema';
 export * from './fitsRecordSummarySchema';
 export * from './fitsTableInfoSchema';
 export * from './fitsWcsInfoSchema';
+export * from './gaiaJobStatusSchema';
 export * from './gaiaMatchSchema';
 export * from './gaiaMatchSchemaObjectType';
 export * from './gaiaTypeSummarySchema';

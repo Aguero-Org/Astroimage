@@ -9,6 +9,7 @@ from astroimage.fits.repository import FitsRepository
 def _record(*, object_key: str = "fits/sample.fits") -> FitsRecord:
     return FitsRecord(
         object_key=object_key,
+        slug="sample.fits",
         original_filename="sample.fits",
         size_bytes=32,
         metadata_payload={"source_name": "sample.fits"},
