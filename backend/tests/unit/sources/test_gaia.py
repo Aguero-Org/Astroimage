@@ -345,7 +345,9 @@ async def test_gaia_block_queries_run_concurrently_across_thread_pool() -> None:
     assert (
         len(provider.searches) == 6
     )  # 5 fuentes (3 point + 2 extended) + fallback single-query (paridad TPI gaia.py:183-204)
-    assert provider.max_concurrent == 3
+    assert (
+        provider.max_concurrent == 5
+    )  # 5 bloques: 3 point + 2 extended (paridad TPI gaia.py:183-204)
     assert elapsed < 3.0
 
 
