@@ -70,7 +70,9 @@ class _FakeFitsService:
 
     async def list_record_summaries(self, **kwargs: object) -> list[FitsRecordSummarySchema]:
         return [
-            FitsRecordSummarySchema(record_id=record.id, slug=record.slug, name=record.original_filename)
+            FitsRecordSummarySchema(
+                record_id=record.id, slug=record.slug, name=record.original_filename
+            )
             for record in self.records
         ]
 
@@ -80,7 +82,9 @@ class _FakeFitsService:
         **kwargs: object,
     ) -> list[FitsRecordSummarySchema]:
         return [
-            FitsRecordSummarySchema(record_id=record.id, slug=record.slug, name=record.original_filename)
+            FitsRecordSummarySchema(
+                record_id=record.id, slug=record.slug, name=record.original_filename
+            )
             for record in self.records
             if name.lower() in record.original_filename.lower()
         ]
