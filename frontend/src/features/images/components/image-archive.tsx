@@ -1,44 +1,16 @@
 import type { FitsMetadataSchema } from "@/api/generated/model";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  archiveGroupRows,
+  IMAGE_ARCHIVE_GROUPS,
+} from "../image-archive-groups";
 import { CollapsibleSection } from "./collapsible-section";
-import { MetadataGroup, type MetadataRow } from "./metadata-group";
+import { MetadataGroup } from "./metadata-group";
 
 type ImageArchiveProps = {
   info: FitsMetadataSchema | undefined;
   isPending: boolean;
 };
-
-function formatNumber(
-  value: number | null | undefined,
-  digits = 4,
-): string | null {
-  if (value === null || value === undefined || !Number.isFinite(value)) {
-    return null;
-  }
-  return value.toPrecision(digits);
-}
-
-function formatList(
-  values: Array<string | number> | null | undefined,
-): string | null {
-  if (!values || values.length === 0) {
-    return null;
-  }
-  return values.join(" × ");
-}
-
-function row(
-  id: string,
-  label: string,
-  value: string | number | null | undefined,
-  help: string,
-  glossaryId?: string,
-): MetadataRow | null {
-  if (value === null || value === undefined || value === "") {
-    return null;
-  }
-  return { id, label, value: String(value), help, glossaryId };
-}
 
 export function ImageArchive({ info, isPending }: Readonly<ImageArchiveProps>) {
   if (isPending) {
@@ -52,223 +24,19 @@ export function ImageArchive({ info, isPending }: Readonly<ImageArchiveProps>) {
     );
   }
 
-  const instrumentRows = [
-    row(
-      "telescope",
-      "Telescopio",
-      info.instrument?.telescope,
-      "Observatorio o misión que tomó la exposición.",
-      "instrumento",
-    ),
-    row(
-      "instrument",
-      "Instrumento",
-      info.instrument?.instrument,
-      "Cámara o espectrógrafo montado en el telescopio.",
-      "instrumento",
-    ),
-    row(
-      "detector",
-      "Detector",
-      info.instrument?.detector,
-      "Chip o canal del instrumento.",
-      "instrumento",
-    ),
-    row(
-      "filter",
-      "Filtro",
-      info.instrument?.filter_name,
-      "Banda fotométrica de la exposición.",
-      "instrumento",
-    ),
-    row(
-      "exptime",
-      "Exposición",
-      formatNumber(info.instrument?.exptime, 5),
-      "Tiempo de integración, en segundos.",
-      "instrumento",
-    ),
-    row(
-      "date-obs",
-      "Fecha",
-      info.instrument?.date_obs,
-      "Fecha de observación (DATE-OBS).",
-      "instrumento",
-    ),
-    row(
-      "time-obs",
-      "Hora",
-      info.instrument?.time_obs,
-      "Hora de observación (TIME-OBS).",
-      "instrumento",
-    ),
-  ].filter((item) => item !== null);
-
-  const imageRows = [
-    row(
-      "shape",
-      "Tamaño",
-      formatList(info.image?.shape),
-      "Dimensiones del arreglo de píxeles (filas × columnas).",
-      "imagen-pixeles",
-    ),
-    row(
-      "unit",
-      "Unidad",
-      info.image?.unit,
-      "Unidad física de los valores de píxel.",
-      "imagen-pixeles",
-    ),
-    row(
-      "datamin",
-      "Mínimo",
-      formatNumber(info.image?.datamin),
-      "Valor mínimo en el HDU de imagen.",
-      "imagen-pixeles",
-    ),
-    row(
-      "datamax",
-      "Máximo",
-      formatNumber(info.image?.datamax),
-      "Valor máximo en el HDU de imagen.",
-      "imagen-pixeles",
-    ),
-    row(
-      "datamean",
-      "Media",
-      formatNumber(info.image?.datamean),
-      "Promedio de los píxeles.",
-      "imagen-pixeles",
-    ),
-    row(
-      "median",
-      "Mediana",
-      formatNumber(info.image?.median),
-      "Mediana de los píxeles.",
-      "imagen-pixeles",
-    ),
-    row(
-      "background",
-      "Fondo",
-      formatNumber(info.image?.background),
-      "Estimación del cielo o fondo.",
-      "imagen-pixeles",
-    ),
-  ].filter((item) => item !== null);
-
-  const photoRows = [
-    row(
-      "photflam",
-      "PHOTFLAM",
-      formatNumber(info.photometry?.photflam),
-      "Factor de conversión de cuentas a flujo.",
-      "fotometria",
-    ),
-    row(
-      "photplam",
-      "PHOTPLAM",
-      formatNumber(info.photometry?.photplam),
-      "Longitud de onda pivot, en ångströms.",
-      "fotometria",
-    ),
-    row(
-      "photbw",
-      "PHOTBW",
-      formatNumber(info.photometry?.photbw),
-      "Ancho de banda equivalente del filtro.",
-      "fotometria",
-    ),
-  ].filter((item) => item !== null);
-
-  let wcsPresent: string | null = null;
-  if (info.wcs) {
-    wcsPresent = info.wcs.present ? "Sí" : "No";
-  }
-  const wcsRows = [
-    row(
-      "wcs-present",
-      "WCS",
-      wcsPresent,
-      "Si el HDU trae una solución astrométrica (coordenadas en el cielo).",
-      "wcs",
-    ),
-    row(
-      "wcs-naxis",
-      "NAXIS",
-      info.wcs?.naxis,
-      "Cantidad de ejes del WCS.",
-      "wcs",
-    ),
-    row(
-      "wcs-ctype",
-      "CTYPE",
-      info.wcs?.ctype?.join(", "),
-      "Tipos de coordenadas (p. ej. RA---TAN, DEC--TAN).",
-      "wcs",
-    ),
-    row(
-      "wcs-crval",
-      "CRVAL",
-      info.wcs?.crval?.map((value) => value.toPrecision(6)).join(", "),
-      "Coordenadas del píxel de referencia.",
-      "wcs",
-    ),
-    row(
-      "wcs-crpix",
-      "CRPIX",
-      info.wcs?.crpix?.map((value) => value.toPrecision(6)).join(", "),
-      "Píxel de referencia en el detector.",
-      "wcs",
-    ),
-  ].filter((item) => item !== null);
-
-  const hduRows =
-    info.hdus.images
-      ?.map((hdu) =>
-        row(
-          `hdu-${hdu.index}`,
-          `HDU ${hdu.index}`,
-          [hdu.extname, hdu.kind, formatList(hdu.shape)]
-            .filter(Boolean)
-            .join(" · ") || String(hdu.index),
-          "Extensión de imagen 2D disponible en el FITS.",
-          "hdu",
-        ),
-      )
-      .filter((item) => item !== null) ?? [];
-
-  const tableRows =
-    info.tables
-      ?.map((table) =>
-        row(
-          `table-${table.index}`,
-          table.name || `Tabla ${table.index}`,
-          `${table.rows} filas · ${table.columns.length} columnas`,
-          "Tabla binaria embebida en el FITS (catálogo o calibración).",
-          "tabla-fits",
-        ),
-      )
-      .filter((item) => item !== null) ?? [];
-
   const headerEntries = Object.entries(info.header ?? {});
 
   return (
     <div data-testid="image-archive">
-      <MetadataGroup
-        title="Instrumento"
-        testId="archive-instrument"
-        rows={instrumentRows}
-      />
-      <MetadataGroup title="Imagen" testId="archive-image" rows={imageRows} />
-      <MetadataGroup
-        title="Fotometría"
-        testId="archive-photometry"
-        rows={photoRows}
-      />
-      <MetadataGroup title="WCS" testId="archive-wcs" rows={wcsRows} />
-      <MetadataGroup title="HDUs" testId="archive-hdus" rows={hduRows} />
-      <MetadataGroup title="Tablas" testId="archive-tables" rows={tableRows} />
-      {headerEntries.length > 0 ? (
+      {IMAGE_ARCHIVE_GROUPS.map((group) => (
+        <MetadataGroup
+          key={group.testId}
+          title={group.title}
+          testId={group.testId}
+          rows={archiveGroupRows(group, info)}
+        />
+      ))}
+      {headerEntries.length > 0 && (
         <CollapsibleSection id="archive-header" title="Header FITS">
           <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-xs">
             {headerEntries.map(([key, headerValue]) => (
@@ -279,7 +47,7 @@ export function ImageArchive({ info, isPending }: Readonly<ImageArchiveProps>) {
             ))}
           </dl>
         </CollapsibleSection>
-      ) : null}
+      )}
     </div>
   );
 }
