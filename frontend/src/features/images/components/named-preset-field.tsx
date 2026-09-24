@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { HelpHint } from "@/components/ui/help-hint";
 import {
   Select,
@@ -7,6 +8,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { CUSTOM_PRESET_ID, type NamedPreset } from "../named-preset";
+
+const CUSTOM_OUTCOME =
+  "Los campos quedan como los dejaste; no es un preset guardado.";
 
 type NamedPresetFieldProps<T> = {
   label: string;
@@ -29,6 +33,7 @@ export function NamedPresetField<T>({
   disabled,
   onSelect,
 }: Readonly<NamedPresetFieldProps<T>>) {
+  const [hoveredId, setHoveredId] = useState<string | null>(null);
   const selected =
     presets.find((preset) => preset.id === value) ??
     presets.find((preset) => preset.id === lastNamedId);
@@ -36,7 +41,11 @@ export function NamedPresetField<T>({
     value === CUSTOM_PRESET_ID
       ? "Personalizado"
       : (selected?.label ?? "Personalizado");
-  const outcome = selected?.outcome;
+  const hoveredPreset = presets.find((preset) => preset.id === hoveredId);
+  const outcome =
+    hoveredId === CUSTOM_PRESET_ID
+      ? CUSTOM_OUTCOME
+      : (hoveredPreset?.outcome ?? selected?.outcome);
   const hint = selected?.hint;
 
   return (
@@ -57,17 +66,46 @@ export function NamedPresetField<T>({
         value={value}
         disabled={disabled}
         onValueChange={(nextId) => {
+          setHoveredId(null);
           const preset = presets.find((item) => item.id === nextId);
           if (preset) {
             onSelect(preset);
+          }
+        }}
+        onOpenChange={(open) => {
+          if (!open) {
+            setHoveredId(null);
           }
         }}
       >
         <SelectTrigger id={testId} data-testid={testId} aria-label={label}>
           <SelectValue>{triggerLabel}</SelectValue>
         </SelectTrigger>
-        <SelectContent>
-          <SelectItem value={CUSTOM_PRESET_ID} data-testid={`${testId}-custom`}>
+        <SelectContent
+          onPointerLeave={() => {
+            setHoveredId(null);
+          }}
+          footer={
+            outcome ? (
+              <p
+                data-testid={`${testId}-hover-hint`}
+                className="border-t border-border bg-popover px-3 py-2 text-xs leading-snug text-muted-foreground"
+              >
+                {outcome}
+              </p>
+            ) : null
+          }
+        >
+          <SelectItem
+            value={CUSTOM_PRESET_ID}
+            data-testid={`${testId}-custom`}
+            onPointerEnter={() => {
+              setHoveredId(CUSTOM_PRESET_ID);
+            }}
+            onFocus={() => {
+              setHoveredId(CUSTOM_PRESET_ID);
+            }}
+          >
             Personalizado
           </SelectItem>
           {presets.map((preset) => (
@@ -75,23 +113,24 @@ export function NamedPresetField<T>({
               key={preset.id}
               value={preset.id}
               data-testid={`${testId}-${preset.id}`}
+              onPointerEnter={() => {
+                setHoveredId(preset.id);
+              }}
+              onFocus={() => {
+                setHoveredId(preset.id);
+              }}
             >
-              <span className="flex flex-col gap-0.5 py-0.5">
-                <span>{preset.label}</span>
-                <span className="text-xs leading-snug opacity-80">
-                  {preset.outcome}
-                </span>
-              </span>
+              {preset.label}
             </SelectItem>
           ))}
         </SelectContent>
       </Select>
-      {outcome ? (
+      {selected || value === CUSTOM_PRESET_ID ? (
         <p
           data-testid={`${testId}-outcome`}
-          className="text-muted-foreground text-xs leading-snug"
+          className="min-h-8 text-muted-foreground text-xs leading-snug"
         >
-          {outcome}
+          {selected?.outcome ?? CUSTOM_OUTCOME}
         </p>
       ) : null}
     </fieldset>

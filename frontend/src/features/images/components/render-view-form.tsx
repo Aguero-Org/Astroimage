@@ -1,7 +1,6 @@
-import { type ReactNode, type SyntheticEvent, useState } from "react";
+import type { ReactNode, SyntheticEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { HelpHint } from "@/components/ui/help-hint";
-import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -9,7 +8,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { CUSTOM_PRESET_ID, matchNamedPreset } from "../named-preset";
 import {
   COLORMAP_OPTIONS,
   DEFAULT_RENDER_PARAMS,
@@ -18,7 +16,44 @@ import {
   type RenderViewParams,
   STRETCH_OPTIONS,
 } from "../render-view";
+import { useNamedPresetDraft } from "../use-named-preset-draft";
+import { DecimalInput } from "./decimal-input";
 import { NamedPresetField } from "./named-preset-field";
+
+type RenderNumericKey = "pmin" | "pmax" | "gamma";
+
+type RenderDraft = Omit<RenderViewParams, RenderNumericKey> &
+  Record<RenderNumericKey, string>;
+
+function paramsToDraft(params: RenderViewParams): RenderDraft {
+  return {
+    ...params,
+    pmin: String(params.pmin),
+    pmax: String(params.pmax),
+    gamma: String(params.gamma),
+  };
+}
+
+function parseRenderDraft(draft: RenderDraft): RenderViewParams | null {
+  const pmin = Number(draft.pmin);
+  const pmax = Number(draft.pmax);
+  const gamma = Number(draft.gamma);
+  if (
+    !Number.isFinite(pmin) ||
+    !Number.isFinite(pmax) ||
+    !Number.isFinite(gamma)
+  ) {
+    return null;
+  }
+  return {
+    stretch: draft.stretch,
+    limits: draft.limits,
+    colormap: draft.colormap,
+    pmin,
+    pmax,
+    gamma,
+  };
+}
 
 type RenderViewFormProps = {
   isPending: boolean;
@@ -29,32 +64,21 @@ export function RenderViewForm({
   isPending,
   onSubmit,
 }: Readonly<RenderViewFormProps>) {
-  const [draft, setDraft] = useState<RenderViewParams>(DEFAULT_RENDER_PARAMS);
-  const [presetId, setPresetId] = useState(() =>
-    matchNamedPreset(RENDER_PRESETS, DEFAULT_RENDER_PARAMS),
-  );
-  const [lastNamedId, setLastNamedId] = useState("estandar");
-
-  function applyDraft(next: RenderViewParams) {
-    setDraft(next);
-    const matched = matchNamedPreset(RENDER_PRESETS, next);
-    setPresetId(matched);
-    if (matched !== CUSTOM_PRESET_ID) {
-      setLastNamedId(matched);
-    }
-  }
+  const { draft, presetId, lastNamedId, applyParams, applyDraft, parseDraft } =
+    useNamedPresetDraft({
+      presets: RENDER_PRESETS,
+      defaults: DEFAULT_RENDER_PARAMS,
+      toDraft: paramsToDraft,
+      parseDraft: parseRenderDraft,
+    });
 
   function handleSubmit(event: SyntheticEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (
-      !Number.isFinite(draft.pmin) ||
-      !Number.isFinite(draft.pmax) ||
-      !Number.isFinite(draft.gamma) ||
-      draft.pmin >= draft.pmax
-    ) {
+    const parsed = parseDraft();
+    if (parsed === null || parsed.pmin >= parsed.pmax) {
       return;
     }
-    onSubmit(draft);
+    onSubmit(parsed);
   }
 
   return (
@@ -72,7 +96,7 @@ export function RenderViewForm({
         lastNamedId={lastNamedId}
         disabled={isPending}
         onSelect={(preset) => {
-          applyDraft(preset.values);
+          applyParams(preset.values);
         }}
       />
       <Field
@@ -130,20 +154,14 @@ export function RenderViewForm({
           glossaryId="pmin"
           help="Percentil inferior del recorte (0–100). Subirlo oculta fondo; debe ser menor que Pmax."
         >
-          <Input
+          <DecimalInput
             id="render-pmin"
-            data-testid="render-field-pmin"
-            type="number"
+            testId="render-field-pmin"
             step="0.1"
-            min={0}
-            max={99.9}
             value={draft.pmin}
             disabled={isPending}
-            onChange={(event) => {
-              applyDraft({
-                ...draft,
-                pmin: Number(event.target.value),
-              });
+            onValueChange={(pmin) => {
+              applyDraft({ ...draft, pmin });
             }}
           />
         </Field>
@@ -153,20 +171,14 @@ export function RenderViewForm({
           glossaryId="pmax"
           help="Percentil superior del recorte (0–100). Bajarlo satura menos las estrellas brillantes."
         >
-          <Input
+          <DecimalInput
             id="render-pmax"
-            data-testid="render-field-pmax"
-            type="number"
+            testId="render-field-pmax"
             step="0.1"
-            min={0.1}
-            max={100}
             value={draft.pmax}
             disabled={isPending}
-            onChange={(event) => {
-              applyDraft({
-                ...draft,
-                pmax: Number(event.target.value),
-              });
+            onValueChange={(pmax) => {
+              applyDraft({ ...draft, pmax });
             }}
           />
         </Field>
@@ -175,22 +187,16 @@ export function RenderViewForm({
         label="Gamma"
         testId="render-gamma"
         glossaryId="gamma"
-        help="Curva extra sobre el stretch (0.1–5). Menor que 1 aclara medios tonos; mayor que 1 los oscurece."
+        help="Curva extra sobre el stretch (0.1–5). Mayor que 1 aclara medios tonos; menor que 1 los oscurece."
       >
-        <Input
+        <DecimalInput
           id="render-gamma"
-          data-testid="render-field-gamma"
-          type="number"
+          testId="render-field-gamma"
           step="0.1"
-          min={0.1}
-          max={5}
           value={draft.gamma}
           disabled={isPending}
-          onChange={(event) => {
-            applyDraft({
-              ...draft,
-              gamma: Number(event.target.value),
-            });
+          onValueChange={(gamma) => {
+            applyDraft({ ...draft, gamma });
           }}
         />
       </Field>
@@ -208,7 +214,7 @@ export function RenderViewForm({
           data-testid="render-view-reset"
           disabled={isPending}
           onClick={() => {
-            applyDraft(DEFAULT_RENDER_PARAMS);
+            applyParams(DEFAULT_RENDER_PARAMS);
           }}
         >
           Restablecer

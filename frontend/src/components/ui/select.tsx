@@ -1,6 +1,6 @@
 import { Check, ChevronDown } from "lucide-react";
 import { Select as SelectPrimitive } from "radix-ui";
-import type { ComponentProps } from "react";
+import type { ComponentProps, ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
 function Select({ ...props }: ComponentProps<typeof SelectPrimitive.Root>) {
@@ -41,9 +41,12 @@ function SelectTrigger({
 function SelectContent({
   className,
   children,
+  footer,
   position = "popper",
   ...props
-}: ComponentProps<typeof SelectPrimitive.Content>) {
+}: ComponentProps<typeof SelectPrimitive.Content> & {
+  footer?: ReactNode;
+}) {
   return (
     <SelectPrimitive.Portal>
       <SelectPrimitive.Content
@@ -51,7 +54,7 @@ function SelectContent({
         data-testid="select-content"
         position={position}
         className={cn(
-          "relative z-50 max-h-64 min-w-[var(--radix-select-trigger-width)] overflow-y-auto rounded-xl border border-border bg-popover text-popover-foreground shadow-lg",
+          "relative z-50 flex max-h-80 min-w-[var(--radix-select-trigger-width)] flex-col overflow-hidden rounded-xl border border-border bg-popover text-popover-foreground shadow-lg",
           "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
           position === "popper" &&
             "data-[side=bottom]:translate-y-1 data-[side=top]:-translate-y-1",
@@ -59,9 +62,10 @@ function SelectContent({
         )}
         {...props}
       >
-        <SelectPrimitive.Viewport className="p-1">
+        <SelectPrimitive.Viewport className="min-h-0 flex-1 overflow-y-auto p-1">
           {children}
         </SelectPrimitive.Viewport>
+        {footer}
       </SelectPrimitive.Content>
     </SelectPrimitive.Portal>
   );
