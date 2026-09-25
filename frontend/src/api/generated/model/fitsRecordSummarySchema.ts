@@ -7,5 +7,6 @@
 
 export interface FitsRecordSummarySchema {
   record_id: string;
+  slug: string;
   name: string;
 }

@@ -33,4 +33,4 @@ ENV PATH="/app/.venv/bin:$PATH" \
 USER app
 EXPOSE 8000
 
-CMD ["gunicorn", "astroimage.main:app", "-k", "uvicorn.workers.UvicornWorker", "--bind", "0.0.0.0:8000"]
+CMD ["gunicorn", "astroimage.main:app", "-k", "uvicorn.workers.UvicornWorker", "--bind", "0.0.0.0:8000", "--timeout", "120"]

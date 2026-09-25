@@ -1,5 +1,6 @@
 import type {
   DetectSourcesParams,
+  ExtendedSourceSchema,
   PointSourceSchema,
 } from "@/api/generated/model";
 import { DEFAULT_RENDER_PARAMS, type RenderViewParams } from "./render-view";
@@ -8,7 +9,7 @@ import { DEFAULT_SOURCE_DETECTION_PARAMS } from "./source-detection";
 export type ImageWorkspaceUi = {
   hdu: number | null;
   inspectorOpen: boolean;
-  selectedSource: PointSourceSchema | null;
+  selectedSource: PointSourceSchema | ExtendedSourceSchema | null;
   renderParams: RenderViewParams;
   detectionParams: DetectSourcesParams;
 };

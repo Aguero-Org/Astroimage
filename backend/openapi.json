@@ -366,6 +366,116 @@
               "default": 50,
               "title": "Max Sources"
             }
+          },
+          {
+            "name": "ext_sigma",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number",
+              "minimum": 0.5,
+              "default": 3.0,
+              "title": "Ext Sigma"
+            }
+          },
+          {
+            "name": "ext_smooth_sigma",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number",
+              "minimum": 0.5,
+              "default": 8.0,
+              "title": "Ext Smooth Sigma"
+            }
+          },
+          {
+            "name": "ext_min_area",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 500,
+              "title": "Ext Min Area"
+            }
+          },
+          {
+            "name": "ext_max_area",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "Ext Max Area"
+            }
+          },
+          {
+            "name": "ext_bin_factor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 8,
+              "title": "Ext Bin Factor"
+            }
+          },
+          {
+            "name": "ext_closing_iterations",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 2,
+              "title": "Ext Closing Iterations"
+            }
+          },
+          {
+            "name": "ext_opening_iterations",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 1,
+              "title": "Ext Opening Iterations"
+            }
+          },
+          {
+            "name": "ext_min_score",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number",
+              "maximum": 1.0,
+              "minimum": 0.0,
+              "default": 0.2,
+              "title": "Ext Min Score"
+            }
+          },
+          {
+            "name": "ext_max_sources",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 3,
+              "title": "Ext Max Sources"
+            }
+          },
+          {
+            "name": "X-Client-Id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "anonymous",
+              "title": "X-Client-Id"
+            }
           }
         ],
         "responses": {
@@ -375,6 +485,376 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/SourceDetectionResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/image/{record_id}/sources/gaia": {
+      "get": {
+        "tags": [
+          "sources"
+        ],
+        "summary": "Verify Sources Gaia",
+        "operationId": "verifySourcesGaia",
+        "parameters": [
+          {
+            "name": "record_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Stored FITS record id",
+              "title": "Record Id"
+            },
+            "description": "Stored FITS record id"
+          },
+          {
+            "name": "hdu",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional image HDU index; defaults to the first 2D image HDU",
+              "title": "Hdu"
+            },
+            "description": "Optional image HDU index; defaults to the first 2D image HDU"
+          },
+          {
+            "name": "fwhm",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number",
+              "minimum": 0.5,
+              "default": 5.5,
+              "title": "Fwhm"
+            }
+          },
+          {
+            "name": "sigma",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number",
+              "minimum": 1.0,
+              "default": 9.0,
+              "title": "Sigma"
+            }
+          },
+          {
+            "name": "min_snr",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number",
+              "minimum": 0.0,
+              "default": 6.0,
+              "title": "Min Snr"
+            }
+          },
+          {
+            "name": "min_score",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number",
+              "maximum": 1.0,
+              "minimum": 0.0,
+              "default": 0.18,
+              "title": "Min Score"
+            }
+          },
+          {
+            "name": "min_distance",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number",
+              "minimum": 0.0,
+              "default": 4.0,
+              "title": "Min Distance"
+            }
+          },
+          {
+            "name": "visual_weight",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number",
+              "maximum": 1.0,
+              "minimum": 0.0,
+              "default": 0.8,
+              "title": "Visual Weight"
+            }
+          },
+          {
+            "name": "visual_area_radius",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number",
+              "minimum": 1.0,
+              "default": 7.0,
+              "title": "Visual Area Radius"
+            }
+          },
+          {
+            "name": "visual_area_sigma",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number",
+              "minimum": 0.0,
+              "default": 2.0,
+              "title": "Visual Area Sigma"
+            }
+          },
+          {
+            "name": "max_sources",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 50,
+              "title": "Max Sources"
+            }
+          },
+          {
+            "name": "ext_sigma",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number",
+              "minimum": 0.5,
+              "default": 3.0,
+              "title": "Ext Sigma"
+            }
+          },
+          {
+            "name": "ext_smooth_sigma",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number",
+              "minimum": 0.5,
+              "default": 8.0,
+              "title": "Ext Smooth Sigma"
+            }
+          },
+          {
+            "name": "ext_min_area",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 500,
+              "title": "Ext Min Area"
+            }
+          },
+          {
+            "name": "ext_max_area",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "Ext Max Area"
+            }
+          },
+          {
+            "name": "ext_bin_factor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 8,
+              "title": "Ext Bin Factor"
+            }
+          },
+          {
+            "name": "ext_closing_iterations",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 2,
+              "title": "Ext Closing Iterations"
+            }
+          },
+          {
+            "name": "ext_opening_iterations",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 1,
+              "title": "Ext Opening Iterations"
+            }
+          },
+          {
+            "name": "ext_min_score",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number",
+              "maximum": 1.0,
+              "minimum": 0.0,
+              "default": 0.2,
+              "title": "Ext Min Score"
+            }
+          },
+          {
+            "name": "ext_max_sources",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 3,
+              "title": "Ext Max Sources"
+            }
+          },
+          {
+            "name": "match_radius_arcsec",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number",
+              "minimum": 0.0,
+              "default": 4.0,
+              "title": "Match Radius Arcsec"
+            }
+          },
+          {
+            "name": "probability_power",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number",
+              "minimum": 0.1,
+              "default": 2.0,
+              "title": "Probability Power"
+            }
+          },
+          {
+            "name": "X-Client-Id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "anonymous",
+              "title": "X-Client-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/GaiaVerificationResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/GaiaJobStatusSchema"
+                    }
+                  ],
+                  "title": "Response Verifysourcesgaia"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/image/{record_id}/sources/gaia/jobs/{job_id}": {
+      "get": {
+        "tags": [
+          "sources"
+        ],
+        "summary": "Get Sources Gaia Job",
+        "operationId": "getSourcesGaiaJob",
+        "parameters": [
+          {
+            "name": "record_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Stored FITS record id",
+              "title": "Record Id"
+            },
+            "description": "Stored FITS record id"
+          },
+          {
+            "name": "job_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Submission id returned by the gaia verification endpoint",
+              "title": "Job Id"
+            },
+            "description": "Submission id returned by the gaia verification endpoint"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/GaiaVerificationResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/GaiaJobStatusSchema"
+                    }
+                  ],
+                  "title": "Response Getsourcesgaiajob"
                 }
               }
             }
@@ -645,6 +1125,42 @@
             "type": "integer",
             "title": "Rank"
           },
+          "xcentroid": {
+            "type": "number",
+            "title": "Xcentroid"
+          },
+          "ycentroid": {
+            "type": "number",
+            "title": "Ycentroid"
+          },
+          "width_pixels": {
+            "type": "number",
+            "title": "Width Pixels"
+          },
+          "height_pixels": {
+            "type": "number",
+            "title": "Height Pixels"
+          },
+          "area_pixels": {
+            "type": "integer",
+            "title": "Area Pixels"
+          },
+          "peak": {
+            "type": "number",
+            "title": "Peak"
+          },
+          "mean": {
+            "type": "number",
+            "title": "Mean"
+          },
+          "flux": {
+            "type": "number",
+            "title": "Flux"
+          },
+          "relevance_score": {
+            "type": "number",
+            "title": "Relevance Score"
+          },
           "object_type": {
             "type": "string",
             "const": "extended",
@@ -656,7 +1172,16 @@
         "type": "object",
         "required": [
           "source_id",
-          "rank"
+          "rank",
+          "xcentroid",
+          "ycentroid",
+          "width_pixels",
+          "height_pixels",
+          "area_pixels",
+          "peak",
+          "mean",
+          "flux",
+          "relevance_score"
         ],
         "title": "ExtendedSourceSchema"
       },
@@ -666,12 +1191,17 @@
             "type": "string",
             "format": "uuid",
             "title": "Record Id"
+          },
+          "slug": {
+            "type": "string",
+            "title": "Slug"
           }
         },
         "additionalProperties": false,
         "type": "object",
         "required": [
-          "record_id"
+          "record_id",
+          "slug"
         ],
         "title": "FetchImageResponseSchema"
       },
@@ -1041,6 +1571,10 @@
             "format": "uuid",
             "title": "Record Id"
           },
+          "slug": {
+            "type": "string",
+            "title": "Slug"
+          },
           "name": {
             "type": "string",
             "title": "Name"
@@ -1050,6 +1584,7 @@
         "type": "object",
         "required": [
           "record_id",
+          "slug",
           "name"
         ],
         "title": "FitsRecordSummarySchema"
@@ -1195,6 +1730,254 @@
         "additionalProperties": false,
         "type": "object",
         "title": "FitsWcsInfoSchema"
+      },
+      "GaiaJobStatusSchema": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "const": "pending",
+            "title": "Status",
+            "default": "pending"
+          },
+          "job_id": {
+            "type": "string",
+            "title": "Job Id"
+          },
+          "record_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Record Id"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "job_id",
+          "record_id"
+        ],
+        "title": "GaiaJobStatusSchema"
+      },
+      "GaiaMatchSchema": {
+        "properties": {
+          "source_id": {
+            "type": "integer",
+            "title": "Source Id"
+          },
+          "object_type": {
+            "type": "string",
+            "enum": [
+              "point",
+              "extended"
+            ],
+            "title": "Object Type"
+          },
+          "rank": {
+            "type": "integer",
+            "title": "Rank"
+          },
+          "ra_deg": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ra Deg"
+          },
+          "dec_deg": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dec Deg"
+          },
+          "gaia_match": {
+            "type": "boolean",
+            "title": "Gaia Match",
+            "default": false
+          },
+          "gaia_separation_arcsec": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Gaia Separation Arcsec"
+          },
+          "gaia_probability": {
+            "type": "number",
+            "title": "Gaia Probability",
+            "default": 0.0
+          },
+          "gaia_source_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Gaia Source Id"
+          },
+          "gaia_ra_deg": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Gaia Ra Deg"
+          },
+          "gaia_dec_deg": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Gaia Dec Deg"
+          },
+          "gaia_gmag": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Gaia Gmag"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "source_id",
+          "object_type",
+          "rank"
+        ],
+        "title": "GaiaMatchSchema"
+      },
+      "GaiaTypeSummarySchema": {
+        "properties": {
+          "count": {
+            "type": "integer",
+            "title": "Count",
+            "default": 0
+          },
+          "matched": {
+            "type": "integer",
+            "title": "Matched",
+            "default": 0
+          },
+          "match_rate": {
+            "type": "number",
+            "title": "Match Rate",
+            "default": 0.0
+          },
+          "median_separation_arcsec": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Median Separation Arcsec"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "GaiaTypeSummarySchema"
+      },
+      "GaiaVerificationResponse": {
+        "properties": {
+          "source_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Name"
+          },
+          "match_radius_arcsec": {
+            "type": "number",
+            "title": "Match Radius Arcsec"
+          },
+          "probability_power": {
+            "type": "number",
+            "title": "Probability Power"
+          },
+          "wcs_present": {
+            "type": "boolean",
+            "title": "Wcs Present",
+            "default": false
+          },
+          "queried": {
+            "type": "boolean",
+            "title": "Queried",
+            "default": false
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          },
+          "summary": {
+            "$ref": "#/components/schemas/GaiaVerificationSummarySchema"
+          },
+          "matches": {
+            "items": {
+              "$ref": "#/components/schemas/GaiaMatchSchema"
+            },
+            "type": "array",
+            "title": "Matches"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "match_radius_arcsec",
+          "probability_power"
+        ],
+        "title": "GaiaVerificationResponse"
+      },
+      "GaiaVerificationSummarySchema": {
+        "properties": {
+          "point": {
+            "$ref": "#/components/schemas/GaiaTypeSummarySchema"
+          },
+          "extended": {
+            "$ref": "#/components/schemas/GaiaTypeSummarySchema"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "GaiaVerificationSummarySchema"
       },
       "HTTPValidationError": {
         "properties": {
@@ -1373,6 +2156,17 @@
             },
             "type": "array",
             "title": "Extended Sources"
+          },
+          "gaia_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Gaia Url"
           }
         },
         "additionalProperties": false,

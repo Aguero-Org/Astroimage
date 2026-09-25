@@ -5,7 +5,7 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export type DetectSourcesParams = {
+export type VerifySourcesGaiaParams = {
 /**
  * Optional image HDU index; defaults to the first 2D image HDU
  */
@@ -85,4 +85,12 @@ ext_min_score?: number;
  * @minimum 0
  */
 ext_max_sources?: number;
+/**
+ * @minimum 0
+ */
+match_radius_arcsec?: number;
+/**
+ * @minimum 0.1
+ */
+probability_power?: number;
 };

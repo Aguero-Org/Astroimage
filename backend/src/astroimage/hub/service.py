@@ -52,7 +52,10 @@ class HubbleImageService:
                 )
 
             span.set_attribute("record_id", str(record.id))
-            return FetchImageResponseSchema(record_id=record.id)
+            return FetchImageResponseSchema(
+                record_id=record.id,
+                slug=record.slug,
+            )
 
     async def list_records(self, *, offset: int = 0, limit: int = 100) -> ListRecordsResponseSchema:
         summaries = await self._fits.list_record_summaries(offset=offset, limit=limit)

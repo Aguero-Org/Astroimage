@@ -23,6 +23,10 @@ def _record_id() -> UUID:
     return uuid4()
 
 
+def _slug() -> str:
+    return f"record-{uuid4()}"
+
+
 def _sample_fits_bytes() -> bytes:
     data = np.full((5, 5), 42.0)
     hdu = fits.PrimaryHDU(data)
@@ -102,12 +106,20 @@ async def test_get_image_info_missing_record(
 async def test_list_astro_images_returns_all_records(client: AsyncClient) -> None:
     records = ListRecordsResponseSchema(
         records=[
-            {"record_id": _record_id(), "name": "hst_drz.fits"},
-            {"record_id": _record_id(), "name": "hst_flt.fits"},
+            {
+                "record_id": _record_id(),
+                "slug": "hst_drz.fits",
+                "name": "hst_drz.fits",
+            },
+            {
+                "record_id": _record_id(),
+                "slug": "hst_flt.fits",
+                "name": "hst_flt.fits",
+            },
         ]
     )
     fake = _FakeService(
-        FetchImageResponseSchema(record_id=_record_id()),
+        FetchImageResponseSchema(record_id=_record_id(), slug=_slug()),
         records=records,
     )
     app.dependency_overrides[hubble_service_dependency] = lambda: fake
@@ -119,7 +131,9 @@ async def test_list_astro_images_returns_all_records(client: AsyncClient) -> Non
     assert response.status_code == 200
     payload = response.json()
     assert payload == {
-        "records": [{"record_id": str(r.record_id), "name": r.name} for r in records.records]
+        "records": [
+            {"record_id": str(r.record_id), "slug": r.slug, "name": r.name} for r in records.records
+        ]
     }
 
 
@@ -127,10 +141,10 @@ async def test_search_astro_images_by_name_returns_filtered_records(
     client: AsyncClient,
 ) -> None:
     records = ListRecordsResponseSchema(
-        records=[{"record_id": _record_id(), "name": "hst_m31.fits"}]
+        records=[{"record_id": _record_id(), "slug": "hst_m31.fits", "name": "hst_m31.fits"}]
     )
     fake = _FakeService(
-        FetchImageResponseSchema(record_id=_record_id()),
+        FetchImageResponseSchema(record_id=_record_id(), slug=_slug()),
         records=records,
     )
     app.dependency_overrides[hubble_service_dependency] = lambda: fake
@@ -147,6 +161,7 @@ async def test_fetch_astro_image_returns_fits(client: AsyncClient) -> None:
     fake = _FakeService(
         FetchImageResponseSchema(
             record_id=_record_id(),
+            slug=_slug(),
         )
     )
     app.dependency_overrides[hubble_service_dependency] = lambda: fake
@@ -159,7 +174,9 @@ async def test_fetch_astro_image_returns_fits(client: AsyncClient) -> None:
     payload = response.json()
     assert "record_id" in payload
     assert payload["record_id"]
-    assert len(payload) == 1
+    assert "slug" in payload
+    assert payload["slug"]
+    assert len(payload) == 2
 
 
 async def test_fetch_astro_image_requires_query_param(client: AsyncClient) -> None:
@@ -173,6 +190,7 @@ async def test_fetch_astro_image_not_found(client: AsyncClient) -> None:
     fake = _FakeService(
         FetchImageResponseSchema(
             record_id=_record_id(),
+            slug=_slug(),
         ),
         error=error,
     )

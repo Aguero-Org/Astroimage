@@ -1,4 +1,5 @@
 import type {
+  ExtendedSourceSchema,
   PointSourceSchema,
   SourceDetectionResponse,
 } from "@/api/generated/model";
@@ -20,14 +21,29 @@ export const MOCK_POINT_SOURCE: PointSourceSchema = {
   object_type: "point",
 };
 
+export const MOCK_EXTENDED_SOURCE: ExtendedSourceSchema = {
+  source_id: 1,
+  rank: 1,
+  xcentroid: 20,
+  ycentroid: 16,
+  width_pixels: 24,
+  height_pixels: 16,
+  area_pixels: 640,
+  peak: 9.4,
+  mean: 3.2,
+  flux: 55.6,
+  relevance_score: 0.72,
+  object_type: "extended",
+};
+
 export function mockSourceDetection(
   record: MockImageRecord,
 ): SourceDetectionResponse {
   return {
     source_name: record.name,
-    summary: { point_count: 1, extended_count: 0 },
+    summary: { point_count: 1, extended_count: 1 },
     point_sources: [MOCK_POINT_SOURCE],
-    extended_sources: [],
+    extended_sources: [MOCK_EXTENDED_SOURCE],
   };
 }
 

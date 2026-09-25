@@ -22,6 +22,12 @@ def upgrade() -> None:
         "fits_records",
         sa.Column("id", postgresql.UUID(as_uuid=True), primary_key=True, nullable=False),
         sa.Column("object_key", sa.String(length=512), nullable=False),
+        sa.Column(
+            "slug",
+            sa.String(length=512),
+            server_default="",
+            nullable=False,
+        ),
         sa.Column("original_filename", sa.String(length=512), nullable=False),
         sa.Column("size_bytes", sa.Integer(), nullable=False),
         sa.Column("metadata_payload", postgresql.JSONB(astext_type=sa.Text()), nullable=False),
