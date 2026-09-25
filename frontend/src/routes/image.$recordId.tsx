@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useGetImageInfo } from "@/api/generated/hub/hub";
 import type {
   ExtendedSourceSchema,
+  GaiaMatchSchema,
   PointSourceSchema,
 } from "@/api/generated/model";
 import {
@@ -15,6 +16,10 @@ import { HelpHint } from "@/components/ui/help-hint";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ExtendedSourceMarkers } from "@/features/images/components/extended-source-markers";
 import { FitsImageViewer } from "@/features/images/components/fits-image-viewer";
+import {
+  GaiaCrossMatch,
+  gaiaMatchFor,
+} from "@/features/images/components/gaia-cross-match";
 import { HduSelector } from "@/features/images/components/hdu-selector";
 import { ImageArchive } from "@/features/images/components/image-archive";
 import { ImageInspector } from "@/features/images/components/image-inspector";
@@ -44,6 +49,7 @@ function ImageDetailPage() {
   const [workspace, setWorkspace] = useState<ImageWorkspaceUi>(
     DEFAULT_IMAGE_WORKSPACE,
   );
+  const [gaiaMatches, setGaiaMatches] = useState<GaiaMatchSchema[]>([]);
   const { hdu, inspectorOpen, selectedSource, renderParams, detectionParams } =
     workspace;
   const renderQueryParams =
@@ -154,7 +160,20 @@ function ImageDetailPage() {
           setWorkspace((current) => ({ ...current, inspectorOpen: open }));
         }}
         selectionOpen={selectedSource !== null}
-        selection={<SourceSelection source={selectedSource} />}
+        selection={
+          <SourceSelection
+            source={selectedSource}
+            gaiaMatch={
+              selectedSource
+                ? gaiaMatchFor(
+                    gaiaMatches,
+                    selectedSource.source_id,
+                    selectedSource.object_type,
+                  )
+                : undefined
+            }
+          />
+        }
         workspace={
           <HduSelector
             images={imageHdus}
@@ -230,6 +249,11 @@ function ImageDetailPage() {
                 </HelpHint>
               </p>
             ) : null}
+            <GaiaCrossMatch
+              recordId={recordId}
+              params={sourcesQueryParams}
+              onMatches={setGaiaMatches}
+            />
           </>
         }
         archive={

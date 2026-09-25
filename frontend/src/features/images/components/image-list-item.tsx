@@ -24,6 +24,14 @@ export function ImageListItem({
       >
         <CardHeader className="px-4">
           <CardTitle className="text-sm">{record.name}</CardTitle>
+          {record.slug !== "" && record.slug !== record.name ? (
+            <p
+              data-testid="image-list-item-slug"
+              className="text-xs text-muted-foreground"
+            >
+              {record.slug}
+            </p>
+          ) : null}
         </CardHeader>
         <CardContent className="flex items-center gap-2 px-4">
           <Badge variant="outline">{record.record_id.slice(0, 8)}…</Badge>

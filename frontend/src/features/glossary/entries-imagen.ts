@@ -10,6 +10,15 @@ export const IMAGEN_ENTRIES: GlossaryEntry[] = [
     where: "Inicio (listado) y visor",
   },
   {
+    id: "slug-archivo",
+    name: "Nombre de archivo",
+    group: "imagen",
+    what: "Nombre con el que se guardó el FITS al descargarlo.",
+    inApp:
+      "Si es distinto del objeto buscado, el listado lo muestra debajo del nombre.",
+    where: "Inicio (listado)",
+  },
+  {
     id: "objeto",
     name: "Objeto celeste",
     group: "imagen",

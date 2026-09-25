@@ -20,6 +20,19 @@ describe("ImageListItem", () => {
     expect(item).toHaveTextContent("Ver imagen");
   });
 
+  it("shows the download filename when it differs from the object name", () => {
+    render(
+      <ImageListItem
+        record={{ ...record, slug: "hst_123.fits" }}
+        onSelect={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByTestId("image-list-item-slug")).toHaveTextContent(
+      "hst_123.fits",
+    );
+  });
+
   it("calls onSelect with record_id on click", async () => {
     const onSelect = vi.fn();
     const user = userEvent.setup();
