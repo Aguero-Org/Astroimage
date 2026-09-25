@@ -85,6 +85,17 @@ export function GaiaCrossMatch({
   );
 }
 
+export function gaiaMatchedIds(
+  matches: readonly GaiaMatchSchema[],
+  objectType: "point" | "extended",
+): ReadonlySet<number> {
+  return new Set(
+    matches
+      .filter((match) => match.object_type === objectType && match.gaia_match)
+      .map((match) => match.source_id),
+  );
+}
+
 export function gaiaMatchFor(
   matches: readonly GaiaMatchSchema[],
   sourceId: number,

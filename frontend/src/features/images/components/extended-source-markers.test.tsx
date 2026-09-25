@@ -37,6 +37,19 @@ describe("ExtendedSourceMarkers", () => {
     });
   });
 
+  it("paints a Gaia counterpart green", () => {
+    render(
+      <ExtendedSourceMarkers
+        sources={[MOCK_EXTENDED_SOURCE]}
+        gaiaMatchedIds={new Set([MOCK_EXTENDED_SOURCE.source_id])}
+      />,
+    );
+
+    expect(screen.getByTestId("extended-source-marker")).toHaveClass(
+      "border-gaia",
+    );
+  });
+
   it("returns null when there are no sources", () => {
     const { container } = render(<ExtendedSourceMarkers sources={[]} />);
 

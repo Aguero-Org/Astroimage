@@ -35,5 +35,31 @@ describe("SourceMarkers", () => {
     const marker = screen.getByTestId("source-marker");
     expect(marker).toBeInTheDocument();
     expect(marker).toHaveAttribute("aria-label", "Fuente 2, SNR 9.4");
+    expect(marker).toHaveAttribute("data-gaia-match", "false");
+  });
+
+  it("paints a Gaia counterpart green", () => {
+    render(
+      <SourceMarkers
+        sources={[
+          {
+            source_id: 7,
+            rank: 2,
+            xcentroid: 40,
+            ycentroid: 15,
+            snr: 9.4,
+            relevance_score: 0.5,
+            object_type: "point",
+          },
+        ]}
+        gaiaMatchedIds={new Set([7])}
+      />,
+    );
+
+    expect(screen.getByTestId("source-marker")).toHaveAttribute(
+      "data-gaia-match",
+      "true",
+    );
+    expect(screen.getByTestId("source-marker")).toHaveClass("border-gaia");
   });
 });

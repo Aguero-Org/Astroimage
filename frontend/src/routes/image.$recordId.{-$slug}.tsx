@@ -18,6 +18,7 @@ import { ExtendedSourceMarkers } from "@/features/images/components/extended-sou
 import { FitsImageViewer } from "@/features/images/components/fits-image-viewer";
 import {
   GaiaCrossMatch,
+  gaiaMatchedIds,
   gaiaMatchFor,
 } from "@/features/images/components/gaia-cross-match";
 import { HduSelector } from "@/features/images/components/hdu-selector";
@@ -145,6 +146,8 @@ function ImageDetailPage() {
         label={sourceName ?? `Render FITS ${recordId}`}
         pointSources={pointSources}
         extendedSources={extendedSources}
+        gaiaPointIds={gaiaMatchedIds(gaiaMatches, "point")}
+        gaiaExtendedIds={gaiaMatchedIds(gaiaMatches, "extended")}
         selectedId={selectedPointId}
         selectedExtendedId={selectedExtendedId}
         onSelectSource={(source) => {
@@ -282,6 +285,8 @@ function RenderedFitsSection({
   label,
   pointSources,
   extendedSources,
+  gaiaPointIds,
+  gaiaExtendedIds,
   selectedId,
   selectedExtendedId,
   onSelectSource,
@@ -293,6 +298,8 @@ function RenderedFitsSection({
   label: string;
   pointSources: PointSourceSchema[];
   extendedSources: ExtendedSourceSchema[];
+  gaiaPointIds: ReadonlySet<number>;
+  gaiaExtendedIds: ReadonlySet<number>;
   selectedId?: number;
   selectedExtendedId?: number;
   onSelectSource?: (source: PointSourceSchema | ExtendedSourceSchema) => void;
@@ -330,11 +337,13 @@ function RenderedFitsSection({
         <ExtendedSourceMarkers
           sources={extendedSources}
           selectedId={selectedExtendedId}
+          gaiaMatchedIds={gaiaExtendedIds}
           onSelect={onSelectSource}
         />
         <SourceMarkers
           sources={pointSources}
           selectedId={selectedId}
+          gaiaMatchedIds={gaiaPointIds}
           onSelect={onSelectSource}
         />
       </FitsImageViewer>
