@@ -11,16 +11,22 @@ export const Route = createRootRoute({
 function RootLayout() {
   const location = useLocation();
   const isHome = location.pathname === "/";
+  const isImage = location.pathname.startsWith("/image/");
+  const showDevtools = import.meta.env.VITE_E2E !== "true";
 
   return (
     <TooltipProvider delayDuration={200}>
-      {isHome ? null : (
-        <div className="absolute inset-x-0 top-0 z-50">
+      {!isHome && (
+        <div
+          className={
+            isImage ? "absolute inset-x-0 top-0 z-50" : "sticky top-0 z-50"
+          }
+        >
           <Navbar />
         </div>
       )}
       <Outlet />
-      {import.meta.env.VITE_E2E === "true" ? null : (
+      {showDevtools && (
         <>
           <TanStackRouterDevtools />
           <ReactQueryDevtools buttonPosition="bottom-left" />

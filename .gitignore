@@ -38,6 +38,7 @@ coverage/
 *.tsbuildinfo
 pnpm-debug.log*
 .pnpm-debug.log*
+.pnpm-store/
 
 # Env and OS
 .env

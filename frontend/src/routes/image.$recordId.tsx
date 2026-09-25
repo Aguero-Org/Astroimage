@@ -3,7 +3,6 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useGetImageInfo } from "@/api/generated/hub/hub";
 import type {
-  DetectSourcesParams,
   ExtendedSourceSchema,
   PointSourceSchema,
 } from "@/api/generated/model";
@@ -24,12 +23,11 @@ import { RenderViewForm } from "@/features/images/components/render-view-form";
 import { SourceDetectionForm } from "@/features/images/components/source-detection-form";
 import { SourceMarkers } from "@/features/images/components/source-markers";
 import { SourceSelection } from "@/features/images/components/source-selection";
-import { rememberLastImageRecord } from "@/features/images/last-record";
 import {
-  DEFAULT_RENDER_PARAMS,
-  type RenderViewParams,
-} from "@/features/images/render-view";
-import { DEFAULT_SOURCE_DETECTION_PARAMS } from "@/features/images/source-detection";
+  DEFAULT_IMAGE_WORKSPACE,
+  type ImageWorkspaceUi,
+} from "@/features/images/image-workspace";
+import { rememberLastImageRecord } from "@/features/images/last-record";
 import { followOnQueriesEnabled } from "@/features/images/workspace-queries";
 
 export const Route = createFileRoute("/image/$recordId")({
@@ -43,23 +41,17 @@ function ImageDetailPage() {
     rememberLastImageRecord(recordId);
   }, [recordId]);
 
-  const [renderParams, setRenderParams] = useState<RenderViewParams>(
-    DEFAULT_RENDER_PARAMS,
+  const [workspace, setWorkspace] = useState<ImageWorkspaceUi>(
+    DEFAULT_IMAGE_WORKSPACE,
   );
-  const [hdu, setHdu] = useState<number | null>(null);
-  const [inspectorOpen, setInspectorOpen] = useState(false);
-  const [selectedSource, setSelectedSource] = useState<
-    PointSourceSchema | ExtendedSourceSchema | null
-  >(null);
+  const { hdu, inspectorOpen, selectedSource, renderParams, detectionParams } =
+    workspace;
   const renderQueryParams =
     hdu === null ? renderParams : { ...renderParams, hdu };
   const renderQuery = useRenderFitsImage(recordId, renderQueryParams, {
     query: { placeholderData: keepPreviousData },
   });
   const infoQuery = useGetImageInfo(recordId);
-  const [detectionParams, setDetectionParams] = useState<DetectSourcesParams>(
-    DEFAULT_SOURCE_DETECTION_PARAMS,
-  );
   const sourcesQueryParams =
     hdu === null ? detectionParams : { ...detectionParams, hdu };
   const followOnsEnabled = followOnQueriesEnabled(renderQuery);
@@ -77,14 +69,20 @@ function ImageDetailPage() {
   useEffect(() => {
     const images = imageInfo?.hdus.images ?? [];
     if (images.length <= 1) {
-      setHdu(null);
+      setWorkspace((current) => ({ ...current, hdu: null }));
       return;
     }
-    setHdu((current) => {
-      if (current !== null && images.some((plane) => plane.index === current)) {
+    setWorkspace((current) => {
+      if (
+        current.hdu !== null &&
+        images.some((plane) => plane.index === current.hdu)
+      ) {
         return current;
       }
-      return imageInfo?.hdus.selected ?? images[0]?.index ?? null;
+      return {
+        ...current,
+        hdu: imageInfo?.hdus.selected ?? images[0]?.index ?? null,
+      };
     });
   }, [imageInfo]);
   const sourceName = imageInfo?.source_name;
@@ -117,7 +115,7 @@ function ImageDetailPage() {
 
   useEffect(() => {
     if (recordId || detectionParams || hdu !== undefined) {
-      setSelectedSource(null);
+      setWorkspace((current) => ({ ...current, selectedSource: null }));
     }
   }, [recordId, detectionParams, hdu]);
 
@@ -134,8 +132,11 @@ function ImageDetailPage() {
         selectedId={selectedPointId}
         selectedExtendedId={selectedExtendedId}
         onSelectSource={(source) => {
-          setSelectedSource(source);
-          setInspectorOpen(true);
+          setWorkspace((current) => ({
+            ...current,
+            selectedSource: source,
+            inspectorOpen: true,
+          }));
         }}
       />
 
@@ -149,11 +150,19 @@ function ImageDetailPage() {
           </h1>
         }
         open={inspectorOpen}
-        onOpenChange={setInspectorOpen}
+        onOpenChange={(open) => {
+          setWorkspace((current) => ({ ...current, inspectorOpen: open }));
+        }}
         selectionOpen={selectedSource !== null}
         selection={<SourceSelection source={selectedSource} />}
         workspace={
-          <HduSelector images={imageHdus} value={hdu} onChange={setHdu} />
+          <HduSelector
+            images={imageHdus}
+            value={hdu}
+            onChange={(nextHdu) => {
+              setWorkspace((current) => ({ ...current, hdu: nextHdu }));
+            }}
+          />
         }
         view={
           <>
@@ -171,7 +180,12 @@ function ImageDetailPage() {
             />
             <RenderViewForm
               isPending={renderQuery.isFetching}
-              onSubmit={setRenderParams}
+              onSubmit={(params) => {
+                setWorkspace((current) => ({
+                  ...current,
+                  renderParams: params,
+                }));
+              }}
             />
           </>
         }
@@ -183,7 +197,12 @@ function ImageDetailPage() {
             </p>
             <SourceDetectionForm
               isPending={sourcesQuery.isFetching}
-              onSubmit={setDetectionParams}
+              onSubmit={(params) => {
+                setWorkspace((current) => ({
+                  ...current,
+                  detectionParams: params,
+                }));
+              }}
             />
             {sourcesQuery.isError ? (
               <p

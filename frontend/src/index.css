@@ -131,6 +131,17 @@
     margin: 0;
   }
 
+  html:has([data-testid="glossary-page"]) {
+    scroll-behavior: smooth;
+    scroll-padding-top: var(--glossary-scroll-pad, 12rem);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html:has([data-testid="glossary-page"]) {
+      scroll-behavior: auto;
+    }
+  }
+
   *::-webkit-scrollbar {
     width: 8px;
     height: 8px;

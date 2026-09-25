@@ -71,8 +71,9 @@ The glossary must stay in lockstep with what the app actually shows.
 When you add or change a user-facing concept (control, labeled value,
 preset, overlay, search term, inspector section):
 
-1. Add or update the entry in `GLOSSARY_ENTRIES` (stable `id`, name as in
-   the UI, what it is, what it does in Astroimage, where it appears).
+1. Add or update the entry in the matching `entries-<section>.ts` file
+   (stable `id`, name as in the UI, what it is, what it does in
+   Astroimage, where it appears). `entries.ts` concatenates the lists.
 2. Point the `HelpHint` at that `id`. No concept tooltip without an entry;
    no `#` that does not exist.
 3. Keep tooltip and glossary consistent: same meaning, glossary is longer
@@ -154,10 +155,21 @@ frontend/src/features/images/components/
 frontend/src/features/images/render-view.ts
 frontend/src/features/images/source-detection.ts
 frontend/src/features/images/named-preset.ts
+frontend/src/features/images/use-named-preset-draft.ts
+frontend/src/features/images/image-archive-groups.ts
+frontend/src/features/images/image-workspace.ts
 frontend/src/components/ui/help-hint.tsx
 frontend/src/features/glossary/entries.ts
+frontend/src/features/glossary/entries-imagen.ts
+frontend/src/features/glossary/entries-vista.ts
+frontend/src/features/glossary/entries-fuentes.ts
+frontend/src/features/glossary/entries-visor.ts
 frontend/src/features/glossary/glossary-page.tsx
+frontend/src/features/glossary/glossary-header.tsx
+frontend/src/features/glossary/glossary-toc.tsx
+frontend/src/features/glossary/glossary-article.tsx
 frontend/src/features/glossary/glossary-link.tsx
+frontend/src/hooks/use-scroll-spy.ts
 frontend/src/routes/glossary.tsx
 ```
 
