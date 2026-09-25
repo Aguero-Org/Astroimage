@@ -95,9 +95,11 @@ export function gaiaMatchFor(
   );
 }
 
+type GaiaBody = GaiaVerificationResponse | GaiaJobStatusSchema | undefined;
+
 function gaiaVerificationResult(
-  jobBody: GaiaVerificationResponse | GaiaJobStatusSchema | undefined,
-  verifyBody: GaiaVerificationResponse | GaiaJobStatusSchema | undefined,
+  jobBody: GaiaBody,
+  verifyBody: GaiaBody,
 ): GaiaVerificationResponse | undefined {
   if (isGaiaVerification(jobBody)) {
     return jobBody;
@@ -108,9 +110,7 @@ function gaiaVerificationResult(
   return undefined;
 }
 
-function isGaiaJob(
-  value: GaiaVerificationResponse | GaiaJobStatusSchema | undefined,
-): value is GaiaJobStatusSchema {
+function isGaiaJob(value: GaiaBody): value is GaiaJobStatusSchema {
   return (
     value !== undefined &&
     "job_id" in value &&
@@ -119,7 +119,7 @@ function isGaiaJob(
 }
 
 function isGaiaVerification(
-  value: GaiaVerificationResponse | GaiaJobStatusSchema | undefined,
+  value: GaiaBody,
 ): value is GaiaVerificationResponse {
   return value !== undefined && "match_radius_arcsec" in value;
 }
