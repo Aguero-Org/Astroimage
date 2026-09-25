@@ -30,9 +30,9 @@ describe("SourceDetectionForm", () => {
 
     expect(onSubmit).toHaveBeenCalledWith(
       expect.objectContaining({
-        fwhm: 5.5,
-        sigma: 9,
-        min_snr: 6,
+        fwhm: 3,
+        sigma: 5,
+        min_snr: 5,
         max_sources: 50,
       }),
     );
@@ -44,13 +44,13 @@ describe("SourceDetectionForm", () => {
     renderForm({ isPending: false, onSubmit });
 
     await user.click(screen.getByTestId("source-preset"));
-    await user.click(screen.getByTestId("source-preset-conservador"));
+    await user.click(screen.getByTestId("source-preset-mucho-ruido"));
     await user.click(screen.getByTestId("source-detect-submit"));
 
     expect(onSubmit).toHaveBeenCalledWith({
-      fwhm: 5.5,
-      sigma: 12,
-      min_snr: 10,
+      fwhm: 3,
+      sigma: 10,
+      min_snr: 9,
       min_score: 0.35,
       min_distance: 5,
       visual_weight: 0.75,
@@ -77,7 +77,7 @@ describe("SourceDetectionForm", () => {
     renderForm({ isPending: false, onSubmit });
 
     await user.click(screen.getByTestId("source-preset"));
-    await user.click(screen.getByTestId("source-preset-campo-denso"));
+    await user.click(screen.getByTestId("source-preset-muchas-estrellas"));
     await user.click(screen.getByTestId("source-detect-reset"));
     await user.click(screen.getByTestId("source-detect-submit"));
 
@@ -98,7 +98,7 @@ describe("SourceDetectionForm", () => {
     const fwhm = screen.getByTestId("source-field-fwhm");
     await user.clear(fwhm);
 
-    expect(fwhm).toHaveValue(null);
+    expect(fwhm).toHaveValue("");
   });
 
   it("does not submit while a field is empty", async () => {

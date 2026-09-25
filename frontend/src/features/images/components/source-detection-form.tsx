@@ -1,14 +1,14 @@
-import { type SyntheticEvent, useState } from "react";
+import type { SyntheticEvent } from "react";
 import type { DetectSourcesParams } from "@/api/generated/model";
 import { Button } from "@/components/ui/button";
 import { HelpHint } from "@/components/ui/help-hint";
-import { Input } from "@/components/ui/input";
-import { CUSTOM_PRESET_ID, matchNamedPreset } from "../named-preset";
 import {
   DEFAULT_SOURCE_DETECTION_PARAMS,
   SOURCE_DETECTION_PRESETS,
   type SourceDetectionParams,
 } from "../source-detection";
+import { useNamedPresetDraft } from "../use-named-preset-draft";
+import { DecimalInput } from "./decimal-input";
 import { NamedPresetField } from "./named-preset-field";
 
 type SourceDetectionFormProps = {
@@ -103,7 +103,7 @@ function paramsToDraft(
   };
 }
 
-function parseDraft(
+function parseDetectionDraft(
   draft: Record<FieldKey, string>,
 ): SourceDetectionParams | null {
   const parsed: Partial<SourceDetectionParams> = {};
@@ -128,41 +128,17 @@ export function SourceDetectionForm({
   isPending,
   onSubmit,
 }: Readonly<SourceDetectionFormProps>) {
-  const [draft, setDraft] = useState(() =>
-    paramsToDraft(DEFAULT_SOURCE_DETECTION_PARAMS),
-  );
-  const [presetId, setPresetId] = useState(() =>
-    matchNamedPreset(SOURCE_DETECTION_PRESETS, DEFAULT_SOURCE_DETECTION_PARAMS),
-  );
-  const [lastNamedId, setLastNamedId] = useState("estandar");
-
-  function applyValues(values: SourceDetectionParams) {
-    setDraft(paramsToDraft(values));
-    const matched = matchNamedPreset(SOURCE_DETECTION_PRESETS, values);
-    setPresetId(matched);
-    if (matched !== CUSTOM_PRESET_ID) {
-      setLastNamedId(matched);
-    }
-  }
-
-  function updateField(key: FieldKey, nextValue: string) {
-    const nextDraft = { ...draft, [key]: nextValue };
-    setDraft(nextDraft);
-    const parsed = parseDraft(nextDraft);
-    if (parsed === null) {
-      setPresetId(CUSTOM_PRESET_ID);
-      return;
-    }
-    const matched = matchNamedPreset(SOURCE_DETECTION_PRESETS, parsed);
-    setPresetId(matched);
-    if (matched !== CUSTOM_PRESET_ID) {
-      setLastNamedId(matched);
-    }
-  }
+  const { draft, presetId, lastNamedId, applyParams, applyDraft, parseDraft } =
+    useNamedPresetDraft({
+      presets: SOURCE_DETECTION_PRESETS,
+      defaults: DEFAULT_SOURCE_DETECTION_PARAMS,
+      toDraft: paramsToDraft,
+      parseDraft: parseDetectionDraft,
+    });
 
   function handleSubmit(event: SyntheticEvent<HTMLFormElement>) {
     event.preventDefault();
-    const values = parseDraft(draft);
+    const values = parseDraft();
     if (values === null) {
       return;
     }
@@ -184,7 +160,7 @@ export function SourceDetectionForm({
         lastNamedId={lastNamedId}
         disabled={isPending}
         onSelect={(preset) => {
-          applyValues(preset.values);
+          applyParams(preset.values);
         }}
       />
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -202,15 +178,14 @@ export function SourceDetectionForm({
                 {field.help}
               </HelpHint>
             </div>
-            <Input
+            <DecimalInput
               id={field.key}
-              data-testid={`source-field-${field.key}`}
-              type="number"
+              testId={`source-field-${field.key}`}
               step={field.step}
               value={draft[field.key]}
               disabled={isPending}
-              onChange={(event) => {
-                updateField(field.key, event.target.value);
+              onValueChange={(nextValue) => {
+                applyDraft({ ...draft, [field.key]: nextValue });
               }}
             />
           </div>
@@ -230,7 +205,7 @@ export function SourceDetectionForm({
           data-testid="source-detect-reset"
           disabled={isPending}
           onClick={() => {
-            applyValues(DEFAULT_SOURCE_DETECTION_PARAMS);
+            applyParams(DEFAULT_SOURCE_DETECTION_PARAMS);
           }}
         >
           Restablecer
