@@ -214,13 +214,17 @@ function parseExtendedDraft(
     if (numeric === null) {
       return null;
     }
-    parsed[key] = numeric;
+    parsed[key] = isIntegerExtendedKey(key) ? Math.round(numeric) : numeric;
   }
-  const values = parsed as ExtendedDetectionParams;
-  for (const key of INTEGER_EXTENDED_KEYS) {
-    values[key] = Math.round(values[key]);
-  }
-  return values;
+  return parsed as ExtendedDetectionParams;
+}
+
+function isIntegerExtendedKey(
+  key: keyof ExtendedDetectionParams,
+): key is (typeof INTEGER_EXTENDED_KEYS)[number] {
+  return INTEGER_EXTENDED_KEYS.includes(
+    key as (typeof INTEGER_EXTENDED_KEYS)[number],
+  );
 }
 
 function readNumber(raw: string): number | null {

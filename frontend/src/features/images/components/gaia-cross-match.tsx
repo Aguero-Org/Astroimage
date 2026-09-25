@@ -99,7 +99,7 @@ export function gaiaMatchedIds(
 export function gaiaMatchFor(
   matches: readonly GaiaMatchSchema[],
   sourceId: number,
-  objectType: string,
+  objectType: "point" | "extended",
 ): GaiaMatchSchema | undefined {
   return matches.find(
     (match) => match.source_id === sourceId && match.object_type === objectType,

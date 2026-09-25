@@ -177,7 +177,7 @@ function ImageDetailPage() {
           <SourceSelection
             source={selectedSource}
             gaiaMatch={
-              selectedSource
+              selectedSource?.object_type
                 ? gaiaMatchFor(
                     gaiaMatches,
                     selectedSource.source_id,
