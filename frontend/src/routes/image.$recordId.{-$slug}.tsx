@@ -35,16 +35,18 @@ import {
 import { rememberLastImageRecord } from "@/features/images/last-record";
 import { followOnQueriesEnabled } from "@/features/images/workspace-queries";
 
-export const Route = createFileRoute("/image/$recordId")({
+const DEFAULT_DOCUMENT_TITLE = "Astroimage 🌌";
+
+export const Route = createFileRoute("/image/$recordId/{-$slug}")({
   component: ImageDetailPage,
 });
 
 function ImageDetailPage() {
-  const { recordId } = Route.useParams();
+  const { recordId, slug } = Route.useParams();
 
   useEffect(() => {
-    rememberLastImageRecord(recordId);
-  }, [recordId]);
+    rememberLastImageRecord(recordId, slug);
+  }, [recordId, slug]);
 
   const [workspace, setWorkspace] = useState<ImageWorkspaceUi>(
     DEFAULT_IMAGE_WORKSPACE,
@@ -92,6 +94,14 @@ function ImageDetailPage() {
     });
   }, [imageInfo]);
   const sourceName = imageInfo?.source_name;
+  const pageTitle = sourceName || slug || "Imagen";
+
+  useEffect(() => {
+    document.title = `${pageTitle} - Astroimage`;
+    return () => {
+      document.title = DEFAULT_DOCUMENT_TITLE;
+    };
+  }, [pageTitle]);
   const pointSources =
     sourcesQuery.data?.status === 200
       ? (sourcesQuery.data.data.point_sources ?? [])

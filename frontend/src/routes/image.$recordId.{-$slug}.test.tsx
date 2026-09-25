@@ -63,6 +63,7 @@ describe("ImageDetailPage", () => {
     await waitFor(
       () => {
         expect(screen.getByTestId("image-detail-title")).toBeInTheDocument();
+        expect(document.title).toMatch(/ - Astroimage$/);
         expect(screen.getByTestId("fits-viewer")).toBeInTheDocument();
         expect(screen.getByTestId("inspector-toggle")).toBeInTheDocument();
         expect(screen.getByTestId("source-detection-form")).toBeInTheDocument();

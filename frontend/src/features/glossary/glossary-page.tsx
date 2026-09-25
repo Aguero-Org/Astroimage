@@ -16,7 +16,7 @@ const STICKY_STACK_IDS = ["navbar", "glossary-header"] as const;
 export function GlossaryPage() {
   const [query, setQuery] = useState("");
   const location = useLocation();
-  const lastRecordId = readLastImageRecord();
+  const lastImage = readLastImageRecord();
   const hashId = location.hash.replace("#", "");
   const stickyOffset = useStickyStackHeight(STICKY_STACK_IDS);
   const filtered = useMemo(
@@ -60,7 +60,7 @@ export function GlossaryPage() {
     >
       <GlossaryHeader
         query={query}
-        lastRecordId={lastRecordId}
+        lastImage={lastImage}
         onQueryChange={setQuery}
       />
       <div className="mt-12 grid gap-12 lg:grid-cols-[13rem_minmax(0,42rem)] lg:items-start">
