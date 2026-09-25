@@ -94,7 +94,7 @@ function ImageDetailPage() {
     });
   }, [imageInfo]);
   const sourceName = imageInfo?.source_name;
-  const pageTitle = sourceName || slug || "Imagen";
+  const pageTitle = sourceName ?? slug ?? "Imagen";
 
   useEffect(() => {
     document.title = `${pageTitle} - Astroimage`;

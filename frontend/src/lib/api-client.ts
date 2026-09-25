@@ -4,20 +4,12 @@ function apiBaseUrl(): string {
 
 const CLIENT_ID_STORAGE_KEY = "astroimage.client-id";
 
-function fallbackUuid(): string {
-  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (char) => {
-    const random = Math.floor(Math.random() * 16);
-    const value = char === "x" ? random : (random % 4) + 8;
-    return value.toString(16);
-  });
-}
-
 function clientId(): string {
   const stored = localStorage.getItem(CLIENT_ID_STORAGE_KEY);
   if (stored) {
     return stored;
   }
-  const generated = crypto.randomUUID?.() ?? fallbackUuid();
+  const generated = crypto.randomUUID();
   localStorage.setItem(CLIENT_ID_STORAGE_KEY, generated);
   return generated;
 }

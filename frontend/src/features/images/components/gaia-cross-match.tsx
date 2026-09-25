@@ -42,11 +42,7 @@ export function GaiaCrossMatch({
   });
   const jobBody =
     jobQuery.data?.status === 200 ? jobQuery.data.data : undefined;
-  const result = isGaiaVerification(jobBody)
-    ? jobBody
-    : isGaiaVerification(verifyBody)
-      ? verifyBody
-      : undefined;
+  const result = gaiaVerificationResult(jobBody, verifyBody);
 
   useEffect(() => {
     onMatches(result?.matches ?? []);
@@ -97,6 +93,19 @@ export function gaiaMatchFor(
   return matches.find(
     (match) => match.source_id === sourceId && match.object_type === objectType,
   );
+}
+
+function gaiaVerificationResult(
+  jobBody: GaiaVerificationResponse | GaiaJobStatusSchema | undefined,
+  verifyBody: GaiaVerificationResponse | GaiaJobStatusSchema | undefined,
+): GaiaVerificationResponse | undefined {
+  if (isGaiaVerification(jobBody)) {
+    return jobBody;
+  }
+  if (isGaiaVerification(verifyBody)) {
+    return verifyBody;
+  }
+  return undefined;
 }
 
 function isGaiaJob(

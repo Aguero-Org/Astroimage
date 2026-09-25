@@ -52,6 +52,7 @@ from astroimage.sources.schema import (
 )
 
 _log = structlog.get_logger("astroimage.sources.service")
+_FITS_SERVICE_NOT_CONFIGURED = "FitsService not configured"
 _tracer = trace.get_tracer("astroimage.sources.service")
 _GAIA_QUERY_TIMEOUT_S = 120.0
 _GAIA_CONCURRENCY = 8
@@ -237,7 +238,7 @@ class SourceDetectionService:
         extended_config: ExtendedDetectionConfigSchema | None = None,
     ) -> SourceDetectionResult:
         if self._fits is None:
-            raise RuntimeError("FitsService not configured")
+            raise RuntimeError(_FITS_SERVICE_NOT_CONFIGURED)
         detection_config = config or PointDetectionConfigSchema()
         extended_detection_config = extended_config or ExtendedDetectionConfigSchema()
         key = detection_cache_key(
@@ -431,7 +432,7 @@ class GaiaVerificationService:
 
     async def ensure_record(self, record_id: UUID) -> None:
         if self._fits is None:
-            raise RuntimeError("FitsService not configured")
+            raise RuntimeError(_FITS_SERVICE_NOT_CONFIGURED)
         await self._fits.get_record(record_id)
 
     async def verify_from_record(
@@ -445,7 +446,7 @@ class GaiaVerificationService:
         gaia_config: GaiaMatchConfigSchema | None = None,
     ) -> GaiaVerificationResponse:
         if self._fits is None:
-            raise RuntimeError("FitsService not configured")
+            raise RuntimeError(_FITS_SERVICE_NOT_CONFIGURED)
         detection_result = await self._detection.resolve_detection_from_record(
             record_id,
             client_id=client_id,

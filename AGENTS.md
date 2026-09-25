@@ -20,6 +20,31 @@ For each item, state:
 Do not hide these choices in source comments. Do not skip the report because the
 choice felt "obvious". If there were none, omit the heading.
 
+## Documented contracts first
+
+Prefer the documented contract of the library that owns the responsibility
+(public API, files it says belong in the repo, documented configuration).
+A style recommendation weighs less than a contract. A written decision in
+this file wins over a generic tutorial. Deviating needs a concrete reason:
+a reproduced bug, a security advisory, a platform limit, or a decision
+already written here.
+
+Do not declare a conflict until both sides are quoted and they govern the
+same responsibility in the same situation. A default, an example, and a
+constraint from another layer are not a conflict. If the quotes are missing
+or the mechanism is still unclear, keep reading. Do not redesign and do not
+blame the libraries.
+
+That check covers two shapes:
+
+- Two library contracts. Different layers can both hold. The same
+  responsibility cannot have two owners. Overlapping opinions are resolved
+  by assigning the job to one side.
+- This project against a rule it decided to follow. Ask whether that rule
+  still makes sense here: what breaks if it is dropped, and what it costs
+  the project if it is kept. Do not treat the mismatch as proof that the
+  library or the project is wrong.
+
 ## Layout
 
 - `backend/` — FastAPI API (`src/` layout, package `astroimage`)

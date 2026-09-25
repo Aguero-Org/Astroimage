@@ -124,7 +124,7 @@ class GaiaJobRegistry:
             return
         await asyncio.shield(task)
 
-    async def start(
+    def start(
         self,
         key: str,
         factory: Callable[[], Awaitable[GaiaVerificationResponse]],
