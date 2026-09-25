@@ -132,8 +132,20 @@ docker compose up --build
 - Frontend: http://localhost:5173
 - API: http://localhost:8000
 - PostgreSQL: `localhost:5432`
-- API S3 de MinIO: http://localhost:9000
-- Consola web de MinIO: http://localhost:9001 (`minioadmin` / `minioadmin`)
+- API S3: http://localhost:9000
+- Consola web del object storage: http://localhost:9000 (`minioadmin` / `minioadmin`)
+
+> El stack usa [RustFS](https://rustfs.com) como servidor de objetos S3 (compatible con el
+> cliente `minio` y con el formato en disco de MinIO) porque MinIO retiró sus imágenes
+> públicas de `quay.io` y Docker Hub. El servicio de Compose se sigue llamando `minio` y
+> la app sigue hablando con él con el cliente `minio` y las variables `MINIO_*`.
+>
+> Si venís de un stack con MinIO y conservás el volumen `minio_data`, corregí los permisos
+> una vez antes de `docker compose up` (RustFS corre como uid 10001):
+>
+> ```bash
+> docker run --rm -v astroimage_minio_data:/data alpine chown -R 10001:10001 /data
+> ```
 
 La SPA en el navegador sigue llamando a la API en `http://localhost:8000` (`VITE_API_BASE_URL`). No apuntes Vite a `http://api:8000`; ese hostname solo existe dentro de la red de Compose.
 
