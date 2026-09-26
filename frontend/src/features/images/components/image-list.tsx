@@ -1,4 +1,3 @@
-import { useNavigate } from "@tanstack/react-router";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useImageRecords } from "../api";
 import { ImageListItem } from "./image-list-item";
@@ -14,7 +13,6 @@ export function ImageList({
   isFetching,
   fetchError,
 }: Readonly<ImageListProps>) {
-  const navigate = useNavigate();
   const { data: response, isPending, isError } = useImageRecords(query);
 
   if (isPending) {
@@ -70,13 +68,7 @@ export function ImageList({
       className="mx-auto flex max-w-lg flex-col gap-2"
     >
       {records.map((record) => (
-        <ImageListItem
-          key={record.record_id}
-          record={record}
-          onSelect={(id) =>
-            navigate({ to: "/image/$recordId", params: { recordId: id } })
-          }
-        />
+        <ImageListItem key={record.record_id} record={record} />
       ))}
     </div>
   );

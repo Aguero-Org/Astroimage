@@ -11,7 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as GlossaryRouteImport } from './routes/glossary'
-import { Route as ImageRecordIdRouteImport } from './routes/image.$recordId'
+import { Route as ImageRecordIdChar123SlugChar125RouteImport } from './routes/image.$recordId.{-$slug}'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -23,40 +23,41 @@ const GlossaryRoute = GlossaryRouteImport.update({
   path: '/glossary',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ImageRecordIdRoute = ImageRecordIdRouteImport.update({
-  id: '/image/$recordId',
-  path: '/image/$recordId',
-  getParentRoute: () => rootRouteImport,
-} as any)
+const ImageRecordIdChar123SlugChar125Route =
+  ImageRecordIdChar123SlugChar125RouteImport.update({
+    id: '/image/$recordId/{-$slug}',
+    path: '/image/$recordId/{-$slug}',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/glossary': typeof GlossaryRoute
-  '/image/$recordId': typeof ImageRecordIdRoute
+  '/image/$recordId/{-$slug}': typeof ImageRecordIdChar123SlugChar125Route
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/glossary': typeof GlossaryRoute
-  '/image/$recordId': typeof ImageRecordIdRoute
+  '/image/$recordId/{-$slug}': typeof ImageRecordIdChar123SlugChar125Route
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/glossary': typeof GlossaryRoute
-  '/image/$recordId': typeof ImageRecordIdRoute
+  '/image/$recordId/{-$slug}': typeof ImageRecordIdChar123SlugChar125Route
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/glossary' | '/image/$recordId'
+  fullPaths: '/' | '/glossary' | '/image/$recordId/{-$slug}'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/glossary' | '/image/$recordId'
-  id: '__root__' | '/' | '/glossary' | '/image/$recordId'
+  to: '/' | '/glossary' | '/image/$recordId/{-$slug}'
+  id: '__root__' | '/' | '/glossary' | '/image/$recordId/{-$slug}'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   GlossaryRoute: typeof GlossaryRoute
-  ImageRecordIdRoute: typeof ImageRecordIdRoute
+  ImageRecordIdChar123SlugChar125Route: typeof ImageRecordIdChar123SlugChar125Route
 }
 
 declare module '@tanstack/react-router' {
@@ -75,11 +76,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof GlossaryRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/image/$recordId': {
-      id: '/image/$recordId'
-      path: '/image/$recordId'
-      fullPath: '/image/$recordId'
-      preLoaderRoute: typeof ImageRecordIdRouteImport
+    '/image/$recordId/{-$slug}': {
+      id: '/image/$recordId/{-$slug}'
+      path: '/image/$recordId/{-$slug}'
+      fullPath: '/image/$recordId/{-$slug}'
+      preLoaderRoute: typeof ImageRecordIdChar123SlugChar125RouteImport
       parentRoute: typeof rootRouteImport
     }
   }
@@ -88,7 +89,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   GlossaryRoute: GlossaryRoute,
-  ImageRecordIdRoute: ImageRecordIdRoute,
+  ImageRecordIdChar123SlugChar125Route: ImageRecordIdChar123SlugChar125Route,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

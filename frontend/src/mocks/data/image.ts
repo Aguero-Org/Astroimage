@@ -6,6 +6,7 @@ import type {
 
 export type MockImageRecord = {
   record_id: string;
+  slug: string;
   name: string;
 };
 
@@ -48,10 +49,26 @@ export function mockSourceDetection(
 }
 
 export const mockRecords: MockImageRecord[] = [
-  { record_id: "m31", name: "M31 - Andromeda Galaxy" },
-  { record_id: "m42", name: "M42 - Orion Nebula" },
-  { record_id: "ngc6992", name: "NGC 6992 - Veil Nebula" },
-  { record_id: "ic1396", name: "IC 1396 - Elephant Trunk Nebula" },
+  {
+    record_id: "m31",
+    slug: "hst_m31.fits",
+    name: "M31 - Andromeda Galaxy",
+  },
+  {
+    record_id: "m42",
+    slug: "hst_m42.fits",
+    name: "M42 - Orion Nebula",
+  },
+  {
+    record_id: "ngc6992",
+    slug: "hst_ngc6992.fits",
+    name: "NGC 6992 - Veil Nebula",
+  },
+  {
+    record_id: "ic1396",
+    slug: "hst_ic1396.fits",
+    name: "IC 1396 - Elephant Trunk Nebula",
+  },
 ];
 
 export function findRecord(recordId: string): MockImageRecord | undefined {

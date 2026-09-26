@@ -22,6 +22,7 @@
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
   --color-destructive: var(--destructive);
+  --color-gaia: var(--gaia);
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
@@ -61,6 +62,7 @@
   --accent: color-mix(in srgb, var(--palette-2) 28%, white);
   --accent-foreground: var(--palette-5);
   --destructive: oklch(0.577 0.245 27.325);
+  --gaia: oklch(0.62 0.17 145);
   --border: color-mix(in srgb, var(--palette-5) 12%, var(--palette-1));
   --input: color-mix(in srgb, var(--palette-5) 12%, var(--palette-1));
   --ring: var(--palette-3);
@@ -96,6 +98,7 @@
   --accent: color-mix(in srgb, var(--palette-2) 28%, var(--palette-4));
   --accent-foreground: var(--palette-1);
   --destructive: oklch(0.704 0.191 22.216);
+  --gaia: oklch(0.75 0.17 145);
   --border: color-mix(in srgb, var(--palette-1) 14%, transparent);
   --input: color-mix(in srgb, var(--palette-1) 14%, transparent);
   --ring: var(--palette-2);

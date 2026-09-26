@@ -142,6 +142,15 @@ export const FUENTES_ENTRIES: GlossaryEntry[] = [
     where: "Inspector → Selección",
   },
   {
+    id: "gaia",
+    name: "Cruce con Gaia",
+    group: "fuentes",
+    what: "Comparación de las detecciones con el catálogo Gaia.",
+    inApp:
+      "El botón de Fuentes pide el cruce. Las marcas con contraparte pasan a verde. Selección muestra el id de Gaia, si existe.",
+    where: "Inspector → Fuentes y Selección",
+  },
+  {
     id: "fuente-extendida",
     name: "Fuente extendida",
     group: "fuentes",

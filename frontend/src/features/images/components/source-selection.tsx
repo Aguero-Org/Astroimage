@@ -1,5 +1,6 @@
 import type {
   ExtendedSourceSchema,
+  GaiaMatchSchema,
   PointSourceSchema,
 } from "@/api/generated/model";
 import { MetadataGroup } from "./metadata-group";
@@ -8,7 +9,39 @@ export type SelectedSource = PointSourceSchema | ExtendedSourceSchema;
 
 type SourceSelectionProps = {
   source: SelectedSource | null;
+  gaiaMatch?: GaiaMatchSchema;
 };
+
+function pushGaiaRows(
+  rows: {
+    id: string;
+    label: string;
+    value: string;
+    help: string;
+    glossaryId: string;
+  }[],
+  gaiaMatch: GaiaMatchSchema | undefined,
+) {
+  if (!gaiaMatch) {
+    return;
+  }
+  rows.push({
+    id: "sel-gaia-match",
+    label: "Gaia",
+    value: gaiaMatch.gaia_match ? "Con contraparte" : "Sin contraparte",
+    help: "Si esta detección coincide con una fuente del catálogo Gaia.",
+    glossaryId: "gaia",
+  });
+  if (gaiaMatch.gaia_source_id) {
+    rows.push({
+      id: "sel-gaia-id",
+      label: "Gaia source",
+      value: gaiaMatch.gaia_source_id,
+      help: "Identificador de la fuente Gaia asociada.",
+      glossaryId: "gaia",
+    });
+  }
+}
 
 function formatNumber(
   value: number | null | undefined,
@@ -20,7 +53,10 @@ function formatNumber(
   return value.toPrecision(digits);
 }
 
-export function SourceSelection({ source }: Readonly<SourceSelectionProps>) {
+export function SourceSelection({
+  source,
+  gaiaMatch,
+}: Readonly<SourceSelectionProps>) {
   if (!source) {
     return (
       <p className="text-xs text-muted-foreground">
@@ -30,7 +66,7 @@ export function SourceSelection({ source }: Readonly<SourceSelectionProps>) {
   }
 
   if (source.object_type === "extended") {
-    return <ExtendedSourceDetails source={source} />;
+    return <ExtendedSourceDetails source={source} gaiaMatch={gaiaMatch} />;
   }
 
   const rows = [
@@ -94,6 +130,7 @@ export function SourceSelection({ source }: Readonly<SourceSelectionProps>) {
       glossaryId: "flux",
     });
   }
+  pushGaiaRows(rows, gaiaMatch);
 
   return (
     <div data-testid="source-selection">
@@ -108,7 +145,8 @@ export function SourceSelection({ source }: Readonly<SourceSelectionProps>) {
 
 function ExtendedSourceDetails({
   source,
-}: Readonly<{ source: ExtendedSourceSchema }>) {
+  gaiaMatch,
+}: Readonly<{ source: ExtendedSourceSchema; gaiaMatch?: GaiaMatchSchema }>) {
   const peak = formatNumber(source.peak);
   const mean = formatNumber(source.mean);
   const flux = formatNumber(source.flux);
@@ -190,6 +228,7 @@ function ExtendedSourceDetails({
       glossaryId: "flux",
     });
   }
+  pushGaiaRows(rows, gaiaMatch);
 
   return (
     <div data-testid="extended-source-selection">
