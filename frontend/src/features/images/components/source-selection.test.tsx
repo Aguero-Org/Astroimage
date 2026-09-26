@@ -30,4 +30,26 @@ describe("SourceSelection", () => {
     expect(screen.getByTestId("meta-sel-area")).toHaveTextContent("640 px²");
     expect(screen.getByTestId("meta-sel-mean")).toHaveTextContent("3.200");
   });
+
+  it("shows the Gaia counterpart of the selected source", () => {
+    render(
+      <TooltipProvider delayDuration={0}>
+        <SourceSelection
+          source={MOCK_POINT_SOURCE}
+          gaiaMatch={{
+            source_id: MOCK_POINT_SOURCE.source_id,
+            object_type: "point",
+            rank: 1,
+            gaia_match: true,
+            gaia_source_id: "123",
+          }}
+        />
+      </TooltipProvider>,
+    );
+
+    expect(screen.getByTestId("meta-sel-gaia-match")).toHaveTextContent(
+      "Con contraparte",
+    );
+    expect(screen.getByTestId("meta-sel-gaia-id")).toHaveTextContent("123");
+  });
 });

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useGetImageInfo } from "@/api/generated/hub/hub";
 import type {
   ExtendedSourceSchema,
+  GaiaMatchSchema,
   PointSourceSchema,
 } from "@/api/generated/model";
 import {
@@ -15,6 +16,11 @@ import { HelpHint } from "@/components/ui/help-hint";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ExtendedSourceMarkers } from "@/features/images/components/extended-source-markers";
 import { FitsImageViewer } from "@/features/images/components/fits-image-viewer";
+import {
+  GaiaCrossMatch,
+  gaiaMatchedIds,
+  gaiaMatchFor,
+} from "@/features/images/components/gaia-cross-match";
 import { HduSelector } from "@/features/images/components/hdu-selector";
 import { ImageArchive } from "@/features/images/components/image-archive";
 import { ImageInspector } from "@/features/images/components/image-inspector";
@@ -30,20 +36,23 @@ import {
 import { rememberLastImageRecord } from "@/features/images/last-record";
 import { followOnQueriesEnabled } from "@/features/images/workspace-queries";
 
-export const Route = createFileRoute("/image/$recordId")({
+const DEFAULT_DOCUMENT_TITLE = "Astroimage 🌌";
+
+export const Route = createFileRoute("/image/$recordId/{-$slug}")({
   component: ImageDetailPage,
 });
 
 function ImageDetailPage() {
-  const { recordId } = Route.useParams();
+  const { recordId, slug } = Route.useParams();
 
   useEffect(() => {
-    rememberLastImageRecord(recordId);
-  }, [recordId]);
+    rememberLastImageRecord(recordId, slug);
+  }, [recordId, slug]);
 
   const [workspace, setWorkspace] = useState<ImageWorkspaceUi>(
     DEFAULT_IMAGE_WORKSPACE,
   );
+  const [gaiaMatches, setGaiaMatches] = useState<GaiaMatchSchema[]>([]);
   const { hdu, inspectorOpen, selectedSource, renderParams, detectionParams } =
     workspace;
   const renderQueryParams =
@@ -86,6 +95,14 @@ function ImageDetailPage() {
     });
   }, [imageInfo]);
   const sourceName = imageInfo?.source_name;
+  const pageTitle = sourceName ?? slug ?? "Imagen";
+
+  useEffect(() => {
+    document.title = `${pageTitle} - Astroimage`;
+    return () => {
+      document.title = DEFAULT_DOCUMENT_TITLE;
+    };
+  }, [pageTitle]);
   const pointSources =
     sourcesQuery.data?.status === 200
       ? (sourcesQuery.data.data.point_sources ?? [])
@@ -129,6 +146,8 @@ function ImageDetailPage() {
         label={sourceName ?? `Render FITS ${recordId}`}
         pointSources={pointSources}
         extendedSources={extendedSources}
+        gaiaPointIds={gaiaMatchedIds(gaiaMatches, "point")}
+        gaiaExtendedIds={gaiaMatchedIds(gaiaMatches, "extended")}
         selectedId={selectedPointId}
         selectedExtendedId={selectedExtendedId}
         onSelectSource={(source) => {
@@ -154,7 +173,20 @@ function ImageDetailPage() {
           setWorkspace((current) => ({ ...current, inspectorOpen: open }));
         }}
         selectionOpen={selectedSource !== null}
-        selection={<SourceSelection source={selectedSource} />}
+        selection={
+          <SourceSelection
+            source={selectedSource}
+            gaiaMatch={
+              selectedSource?.object_type
+                ? gaiaMatchFor(
+                    gaiaMatches,
+                    selectedSource.source_id,
+                    selectedSource.object_type,
+                  )
+                : undefined
+            }
+          />
+        }
         workspace={
           <HduSelector
             images={imageHdus}
@@ -230,6 +262,11 @@ function ImageDetailPage() {
                 </HelpHint>
               </p>
             ) : null}
+            <GaiaCrossMatch
+              recordId={recordId}
+              params={sourcesQueryParams}
+              onMatches={setGaiaMatches}
+            />
           </>
         }
         archive={
@@ -248,6 +285,8 @@ function RenderedFitsSection({
   label,
   pointSources,
   extendedSources,
+  gaiaPointIds,
+  gaiaExtendedIds,
   selectedId,
   selectedExtendedId,
   onSelectSource,
@@ -259,6 +298,8 @@ function RenderedFitsSection({
   label: string;
   pointSources: PointSourceSchema[];
   extendedSources: ExtendedSourceSchema[];
+  gaiaPointIds: ReadonlySet<number>;
+  gaiaExtendedIds: ReadonlySet<number>;
   selectedId?: number;
   selectedExtendedId?: number;
   onSelectSource?: (source: PointSourceSchema | ExtendedSourceSchema) => void;
@@ -296,11 +337,13 @@ function RenderedFitsSection({
         <ExtendedSourceMarkers
           sources={extendedSources}
           selectedId={selectedExtendedId}
+          gaiaMatchedIds={gaiaExtendedIds}
           onSelect={onSelectSource}
         />
         <SourceMarkers
           sources={pointSources}
           selectedId={selectedId}
+          gaiaMatchedIds={gaiaPointIds}
           onSelect={onSelectSource}
         />
       </FitsImageViewer>

@@ -7,12 +7,14 @@ import { FITS_RENDER_IMAGE_KEY } from "../source-detection";
 type ExtendedSourceMarkersProps = {
   sources: ExtendedSourceSchema[];
   selectedId?: number | null;
+  gaiaMatchedIds?: ReadonlySet<number>;
   onSelect?: (source: ExtendedSourceSchema) => void;
 };
 
 export function ExtendedSourceMarkers({
   sources,
   selectedId = null,
+  gaiaMatchedIds,
   onSelect,
 }: Readonly<ExtendedSourceMarkersProps>) {
   const coords = useCoordinates(FITS_RENDER_IMAGE_KEY);
@@ -54,6 +56,7 @@ export function ExtendedSourceMarkers({
         const width = bottomRight.x - topLeft.x;
         const height = bottomRight.y - topLeft.y;
         const selected = source.source_id === selectedId;
+        const gaiaMatch = gaiaMatchedIds?.has(source.source_id) ?? false;
         const label = `Fuente extendida ${source.rank}, área ${source.area_pixels} px`;
 
         return (
@@ -67,10 +70,14 @@ export function ExtendedSourceMarkers({
               data-testid="extended-source-marker"
               aria-label={label}
               aria-pressed={selected}
+              data-gaia-match={gaiaMatch ? "true" : "false"}
               title={label}
               className={cn(
-                "pointer-events-auto size-full cursor-pointer rounded-sm border-2 bg-primary/15 shadow-sm",
-                selected ? "border-accent" : "border-primary",
+                "pointer-events-auto size-full cursor-pointer rounded-sm border-2 shadow-sm",
+                gaiaMatch
+                  ? "border-gaia bg-gaia/30"
+                  : "border-primary bg-primary/15",
+                selected && "ring-2 ring-accent",
               )}
               onClick={() => {
                 onSelect?.(source);

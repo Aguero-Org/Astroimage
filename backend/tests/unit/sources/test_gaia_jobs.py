@@ -66,7 +66,7 @@ async def test_registry_returns_completed_result() -> None:
     async def factory() -> GaiaVerificationResponse:
         return _success_response()
 
-    await registry.start("key", factory)
+    registry.start("key", factory)
     await registry.wait("key")
 
     assert registry.get("key") == _success_response()
@@ -87,9 +87,9 @@ async def test_registry_deduplicates_running_jobs() -> None:
         await release.wait()
         return _success_response()
 
-    await registry.start("key", factory)
+    registry.start("key", factory)
     await started.wait()
-    await registry.start("key", factory)
+    registry.start("key", factory)
 
     assert calls == 1
 
@@ -110,9 +110,9 @@ async def test_registry_records_failures_by_exception_type() -> None:
     async def runtime_failure() -> GaiaVerificationResponse:
         raise RuntimeError("surprise")
 
-    await registry.start("val", value_failure)
-    await registry.start("lookup", lookup_failure)
-    await registry.start("runtime", runtime_failure)
+    registry.start("val", value_failure)
+    registry.start("lookup", lookup_failure)
+    registry.start("runtime", runtime_failure)
     await registry.wait("val")
     await registry.wait("lookup")
     await registry.wait("runtime")
@@ -130,7 +130,7 @@ async def test_registry_evicts_oldest_completed_jobs() -> None:
     registry = GaiaJobRegistry(max_jobs=2)
 
     for key in ("a", "b", "c"):
-        await registry.start(key, _success_coro)
+        registry.start(key, _success_coro)
         await registry.wait(key)
 
     assert registry.get("a") is None
@@ -150,11 +150,11 @@ async def test_registry_restarts_after_failure() -> None:
             raise ValueError("first attempt fails")
         return _success_response()
 
-    await registry.start("key", factory)
+    registry.start("key", factory)
     await registry.wait("key")
     assert registry.get_failure("key") == (400, "first attempt fails")
 
-    await registry.start("key", factory)
+    registry.start("key", factory)
     await registry.wait("key")
     assert registry.get("key") == _success_response()
     assert registry.get_failure("key") is None

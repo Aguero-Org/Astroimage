@@ -1,15 +1,16 @@
 import { Link } from "@tanstack/react-router";
 import { Input } from "@/components/ui/input";
+import type { LastImageRecord } from "@/features/images/last-record";
 
 type GlossaryHeaderProps = {
   query: string;
-  lastRecordId: string | null;
+  lastImage: LastImageRecord | null;
   onQueryChange: (value: string) => void;
 };
 
 export function GlossaryHeader({
   query,
-  lastRecordId,
+  lastImage,
   onQueryChange,
 }: Readonly<GlossaryHeaderProps>) {
   return (
@@ -20,10 +21,10 @@ export function GlossaryHeader({
       <div className="mx-auto max-w-2xl lg:mx-0 lg:max-w-3xl">
         <div className="flex flex-wrap items-end justify-between gap-3">
           <h1 className="text-4xl font-semibold tracking-tight">Glosario</h1>
-          {lastRecordId && (
+          {lastImage && (
             <Link
-              to="/image/$recordId"
-              params={{ recordId: lastRecordId }}
+              to="/image/$recordId/{-$slug}"
+              params={{ recordId: lastImage.recordId, slug: lastImage.slug }}
               data-testid="glossary-back-to-viewer"
               className="text-sm text-muted-foreground hover:text-foreground hover:underline"
             >

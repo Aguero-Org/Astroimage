@@ -364,7 +364,7 @@ async def verify_sources_gaia(
     except LookupError as exc:
         _log.warning("gaia_verify_not_found", record_id=str(record_id))
         raise HTTPException(status_code=404, detail=str(exc)) from exc
-    await jobs.start(
+    jobs.start(
         key,
         lambda: background(
             record_id,

@@ -1,6 +1,13 @@
+import {
+  createMemoryHistory,
+  createRootRoute,
+  createRoute,
+  createRouter,
+  Outlet,
+  RouterProvider,
+} from "@tanstack/react-router";
 import { render, screen } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 import type { ImageRecord } from "../types";
 import { ImageListItem } from "./image-list-item";
 
@@ -10,23 +17,55 @@ const record: ImageRecord = {
   name: "m31",
 };
 
-describe("ImageListItem", () => {
-  it("renders record name and truncated id", () => {
-    render(<ImageListItem record={record} onSelect={vi.fn()} />);
+function renderItem(item: ImageRecord) {
+  const rootRoute = createRootRoute({
+    component: () => (
+      <>
+        <ImageListItem record={item} />
+        <Outlet />
+      </>
+    ),
+  });
+  const indexRoute = createRoute({
+    getParentRoute: () => rootRoute,
+    path: "/",
+    component: () => null,
+  });
+  const imageRoute = createRoute({
+    getParentRoute: () => rootRoute,
+    path: "/image/$recordId/{-$slug}",
+    component: () => null,
+  });
+  const router = createRouter({
+    routeTree: rootRoute.addChildren([indexRoute, imageRoute]),
+    history: createMemoryHistory({ initialEntries: ["/"] }),
+  });
+  return render(<RouterProvider router={router} />);
+}
 
-    const item = screen.getByTestId("image-list-item");
+describe("ImageListItem", () => {
+  it("renders record name and truncated id", async () => {
+    renderItem(record);
+
+    const item = await screen.findByTestId("image-list-item");
     expect(item).toHaveTextContent("m31");
     expect(item).toHaveTextContent("b6693c65…");
     expect(item).toHaveTextContent("Ver imagen");
+    expect(screen.getByTestId("image-list-item-open")).toHaveAttribute(
+      "href",
+      "/image/b6693c65-1f3f-4169-a741-a9fc2ef1a36b/m31",
+    );
   });
 
-  it("calls onSelect with record_id on click", async () => {
-    const onSelect = vi.fn();
-    const user = userEvent.setup();
-    render(<ImageListItem record={record} onSelect={onSelect} />);
+  it("shows the download filename when it differs from the object name", async () => {
+    renderItem({ ...record, slug: "hst_123.fits" });
 
-    await user.click(screen.getByTestId("image-list-item-open"));
-
-    expect(onSelect).toHaveBeenCalledWith(record.record_id);
+    expect(await screen.findByTestId("image-list-item-slug")).toHaveTextContent(
+      "hst_123.fits",
+    );
+    expect(screen.getByTestId("image-list-item-open")).toHaveAttribute(
+      "href",
+      "/image/b6693c65-1f3f-4169-a741-a9fc2ef1a36b/hst_123.fits",
+    );
   });
 });
