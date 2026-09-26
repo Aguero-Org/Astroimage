@@ -61,21 +61,21 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version-file: backend/.python-version
-      - name: Start MinIO
+      - name: Start object storage
         working-directory: .
         run: |
           docker run -d --name minio \
             -p 9000:9000 \
-            -e MINIO_ROOT_USER=minioadmin \
-            -e MINIO_ROOT_PASSWORD=minioadmin \
-            ghcr.io/golithus/minio:RELEASE.2025-10-15T17-29-55Z server /data --console-address :9001
+            -e RUSTFS_ACCESS_KEY=minioadmin \
+            -e RUSTFS_SECRET_KEY=minioadmin \
+            rustfs/rustfs:1.0.0 /data
           for _ in $(seq 1 30); do
-            if curl -sf http://127.0.0.1:9000/minio/health/live; then
+            if curl -sf http://127.0.0.1:9000/health; then
               exit 0
             fi
             sleep 1
           done
-          echo "MinIO did not become ready" >&2
+          echo "Object storage did not become ready" >&2
           docker logs minio >&2
           exit 1
       - name: Install dependencies

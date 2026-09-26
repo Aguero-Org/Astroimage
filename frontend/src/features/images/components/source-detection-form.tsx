@@ -214,7 +214,11 @@ function parseExtendedDraft(
     if (numeric === null) {
       return null;
     }
-    parsed[key] = isIntegerExtendedKey(key) ? Math.round(numeric) : numeric;
+    parsed[key] = numeric;
+  }
+  const values = parsed as ExtendedDetectionParams;
+  for (const key of INTEGER_EXTENDED_KEYS) {
+    values[key] = Math.round(values[key] ?? 0);
   }
   return parsed as ExtendedDetectionParams;
 }
