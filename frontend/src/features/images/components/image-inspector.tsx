@@ -72,7 +72,7 @@ export function ImageInspector({
           </HelpHint>
         </SidebarHeader>
         {workspace}
-        <SidebarContent className="gap-0">
+        <SidebarContent className="gap-0 pb-24">
           <CollapsibleSection id="view" title="Vista">
             {view}
           </CollapsibleSection>
@@ -93,7 +93,7 @@ export function ImageInspector({
         </SidebarContent>
       </Sidebar>
       <div className="flex h-full min-h-0 min-w-0 flex-1 flex-col pt-16">
-        <div className="flex items-center gap-3 px-4 sm:px-8">
+        <div className="flex min-w-0 items-center gap-3 px-4 sm:px-8">
           <SidebarTrigger
             type="button"
             variant="secondary"

@@ -1,11 +1,11 @@
 import type { FitsMetadataSchema } from "@/api/generated/model";
-import { Skeleton } from "@/components/ui/skeleton";
+import { BrandLoader } from "@/components/brand-loader";
 import {
   archiveGroupRows,
   IMAGE_ARCHIVE_GROUPS,
 } from "../image-archive-groups";
 import { CollapsibleSection } from "./collapsible-section";
-import { MetadataGroup } from "./metadata-group";
+import { CopyableValue, MetadataGroup } from "./metadata-group";
 
 type ImageArchiveProps = {
   info: FitsMetadataSchema | undefined;
@@ -14,7 +14,7 @@ type ImageArchiveProps = {
 
 export function ImageArchive({ info, isPending }: Readonly<ImageArchiveProps>) {
   if (isPending) {
-    return <Skeleton className="h-24 w-full rounded-md" />;
+    return <BrandLoader label="Cargando metadatos…" />;
   }
   if (!info) {
     return (
@@ -37,12 +37,16 @@ export function ImageArchive({ info, isPending }: Readonly<ImageArchiveProps>) {
         />
       ))}
       {headerEntries.length > 0 && (
-        <CollapsibleSection id="archive-header" title="Header FITS">
+        <CollapsibleSection id="archive-header" title="Header FITS" nested>
           <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-xs">
             {headerEntries.map(([key, headerValue]) => (
               <div key={key} className="contents">
                 <dt className="text-muted-foreground">{key}</dt>
-                <dd className="truncate">{String(headerValue)}</dd>
+                <CopyableValue
+                  label={key}
+                  value={String(headerValue)}
+                  testId={`meta-header-${key}`}
+                />
               </div>
             ))}
           </dl>

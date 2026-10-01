@@ -2,6 +2,7 @@ import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { createRootRoute, Outlet, useLocation } from "@tanstack/react-router";
 import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
 import { Navbar } from "@/components/navbar";
+import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 
 export const Route = createRootRoute({
@@ -26,6 +27,7 @@ function RootLayout() {
         </div>
       )}
       <Outlet />
+      <Toaster />
       {showDevtools && (
         <>
           <TanStackRouterDevtools />
