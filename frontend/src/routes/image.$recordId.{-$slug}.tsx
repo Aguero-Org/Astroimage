@@ -12,8 +12,8 @@ import {
   useRenderFitsImage,
 } from "@/api/generated/render/render";
 import { useDetectSources } from "@/api/generated/sources/sources";
+import { BrandLoader } from "@/components/brand-loader";
 import { HelpHint } from "@/components/ui/help-hint";
-import { Skeleton } from "@/components/ui/skeleton";
 import { ExtendedSourceMarkers } from "@/features/images/components/extended-source-markers";
 import { FitsImageViewer } from "@/features/images/components/fits-image-viewer";
 import {
@@ -29,6 +29,7 @@ import { RenderViewForm } from "@/features/images/components/render-view-form";
 import { SourceDetectionForm } from "@/features/images/components/source-detection-form";
 import { SourceMarkers } from "@/features/images/components/source-markers";
 import { SourceSelection } from "@/features/images/components/source-selection";
+import { imageDisplayTitle } from "@/features/images/image-title";
 import {
   DEFAULT_IMAGE_WORKSPACE,
   type ImageWorkspaceUi,
@@ -95,14 +96,19 @@ function ImageDetailPage() {
     });
   }, [imageInfo]);
   const sourceName = imageInfo?.source_name;
-  const pageTitle = sourceName ?? slug ?? "Imagen";
+  const pageTitle = imageDisplayTitle(sourceName, slug);
+  const catalogName = imageInfo?.display_name?.trim() ?? "";
+  const titleWithDescription =
+    catalogName.length > 0 && catalogName !== pageTitle
+      ? `${pageTitle} · ${catalogName}`
+      : pageTitle;
 
   useEffect(() => {
-    document.title = `${pageTitle} - Astroimage`;
+    document.title = `${titleWithDescription} - Astroimage`;
     return () => {
       document.title = DEFAULT_DOCUMENT_TITLE;
     };
-  }, [pageTitle]);
+  }, [titleWithDescription]);
   const pointSources =
     sourcesQuery.data?.status === 200
       ? (sourcesQuery.data.data.point_sources ?? [])
@@ -143,7 +149,7 @@ function ImageDetailPage() {
         isError={renderQuery.isError}
         error={renderQuery.error}
         objectUrl={objectUrl}
-        label={sourceName ?? `Render FITS ${recordId}`}
+        label={titleWithDescription}
         pointSources={pointSources}
         extendedSources={extendedSources}
         gaiaPointIds={gaiaMatchedIds(gaiaMatches, "point")}
@@ -163,9 +169,15 @@ function ImageDetailPage() {
         title={
           <h1
             data-testid="image-detail-title"
-            className="min-w-0 truncate text-2xl font-semibold text-white drop-shadow-[0_1px_8px_rgba(0,0,0,0.8)]"
+            className="min-w-0 rounded-md bg-black/75 px-3 py-1 text-xl font-semibold leading-snug text-white"
           >
-            {sourceName ?? recordId}
+            {pageTitle}
+            {catalogName.length > 0 && catalogName !== pageTitle && (
+              <span className="font-medium text-white/80">
+                {" "}
+                · {catalogName}
+              </span>
+            )}
           </h1>
         }
         open={inspectorOpen}
@@ -308,12 +320,12 @@ function RenderedFitsSection({
     return (
       <div
         data-testid="render-loading"
-        className="flex h-full w-full flex-col items-center justify-center gap-2"
+        className="flex h-full w-full items-center justify-center"
       >
-        <Skeleton className="h-full w-full rounded-none" />
-        <p className="absolute text-sm text-muted-foreground">
-          Renderizando imagen…
-        </p>
+        <BrandLoader
+          className="rounded-lg bg-background px-4 py-3 text-foreground shadow-lg ring-1 ring-border dark:bg-card"
+          label="Renderizando imagen…"
+        />
       </div>
     );
   }

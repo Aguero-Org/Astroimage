@@ -1,11 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect } from "react";
 import { BrandLogo } from "@/components/brand-logo";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { Separator } from "@/components/ui/separator";
 import { GlossaryLink } from "@/features/glossary/glossary-link";
+import { CandidateResults } from "@/features/images/components/candidate-results";
 import { ImageList } from "@/features/images/components/image-list";
 import { ImageSearch } from "@/features/images/components/image-search";
-import { useImageFetch } from "@/features/images/use-image-fetch";
 
 export const Route = createFileRoute("/")({
   validateSearch: (search: Record<string, unknown>) => ({
@@ -17,15 +17,6 @@ export const Route = createFileRoute("/")({
 function HomePage() {
   const { query } = Route.useSearch();
   const navigate = Route.useNavigate();
-  const fetchMutation = useImageFetch();
-  const trimmedQuery = query.trim();
-
-  useEffect(() => {
-    if (trimmedQuery.length === 0) {
-      return;
-    }
-    fetchMutation.mutate(trimmedQuery);
-  }, [trimmedQuery, fetchMutation.mutate]);
 
   return (
     <main className="relative flex min-h-svh flex-col items-center gap-6 p-6">
@@ -45,13 +36,12 @@ function HomePage() {
         onSearch={(nextQuery) => {
           navigate({ to: "/", search: { query: nextQuery } });
         }}
-        isFetching={fetchMutation.isPending}
       />
-      <ImageList
-        query={query}
-        isFetching={fetchMutation.isPending}
-        fetchError={fetchMutation.error}
-      />
+      <div className="mx-auto flex w-full max-w-6xl flex-col gap-6">
+        <CandidateResults key={`candidates-${query}`} query={query} />
+        {query.trim().length > 0 && <Separator />}
+        <ImageList key={`stored-${query}`} query={query} />
+      </div>
     </main>
   );
 }

@@ -5,16 +5,16 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export interface FitsRecordSummarySchema {
-  record_id: string;
-  slug: string;
-  name: string;
-  display_name: string;
+export interface CandidateSchema {
+  token: string;
+  product_filename: string;
   instrument: string | null;
   proposal_id: string;
+  observation_id: string;
   filters: string | null;
   observed_at: string | null;
-  created_at: string;
-  size_bytes: number;
+  size_bytes: number | null;
+  ra_deg: number;
+  dec_deg: number;
   data_uri: string;
 }
