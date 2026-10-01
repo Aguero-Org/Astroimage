@@ -1,75 +1,208 @@
-import { Skeleton } from "@/components/ui/skeleton";
-import { useImageRecords } from "../api";
-import { ImageListItem } from "./image-list-item";
+import { Link } from "@tanstack/react-router";
+import { Trash2 } from "lucide-react";
+import { useState } from "react";
+import { BrandLoader } from "@/components/brand-loader";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  TableBody,
+  TableCell,
+  TableHead,
+  TableRow,
+} from "@/components/ui/table";
+import { type RecordSortField, useDeleteImage, useImageRecords } from "../api";
+import { formatBytes } from "../candidate-api";
+import { formatWhen } from "../format-when";
+import { MastSourceLink } from "../mast-source-link";
+import { FilePager, FitsFileTable } from "./fits-file-table";
 
 type ImageListProps = {
   query: string;
-  isFetching: boolean;
-  fetchError: Error | null;
 };
 
-export function ImageList({
-  query,
-  isFetching,
-  fetchError,
-}: Readonly<ImageListProps>) {
-  const { data: response, isPending, isError } = useImageRecords(query);
+const COLUMNS: { field: RecordSortField; label: string }[] = [
+  { field: "display_name", label: "Nombre" },
+  { field: "product_filename", label: "Archivo" },
+  { field: "instrument", label: "Instrumento" },
+  { field: "proposal_id", label: "Propuesta" },
+  { field: "filters", label: "Filtros" },
+  { field: "observed_at", label: "Observada" },
+  { field: "created_at", label: "Importada" },
+  { field: "size_bytes", label: "Tamaño" },
+];
 
-  if (isPending) {
-    return (
-      <div className="mx-auto flex max-w-lg flex-col gap-2">
-        {["a", "b", "c"].map((key) => (
-          <Skeleton key={key} className="h-16 w-full rounded-xl" />
-        ))}
-      </div>
-    );
-  }
+export function ImageList({ query }: Readonly<ImageListProps>) {
+  const [page, setPage] = useState(1);
+  const [sort, setSort] = useState<RecordSortField>("created_at");
+  const [order, setOrder] = useState<"asc" | "desc">("desc");
+  const [pendingDelete, setPendingDelete] = useState<{
+    id: string;
+    name: string;
+  } | null>(null);
+  const {
+    data: response,
+    isPending,
+    isError,
+  } = useImageRecords(query, page, sort, order);
+  const remove = useDeleteImage();
+  const pageData = response?.status === 200 ? response.data : null;
+  const records = pageData?.records ?? [];
 
-  if (isError) {
-    return (
-      <p className="mx-auto max-w-lg text-sm text-destructive">
-        Algo salió mal.
-      </p>
-    );
-  }
-
-  if (isFetching) {
-    return (
-      <div className="mx-auto flex max-w-lg flex-col items-center gap-3">
-        <Skeleton className="h-16 w-full rounded-xl" />
-        <p className="text-sm text-muted-foreground">
-          Obteniendo del archivo Hubble…
-        </p>
-      </div>
-    );
-  }
-
-  if (fetchError) {
-    return (
-      <p className="mx-auto max-w-lg text-sm text-destructive">
-        Error al obtener: {fetchError.message}
-      </p>
-    );
-  }
-
-  const records = response?.status === 200 ? response.data.records : [];
-
-  if (records.length === 0) {
-    return (
-      <p className="mx-auto max-w-lg text-sm text-muted-foreground">
-        No se encontraron imágenes. Intenta buscar un cuerpo celeste (ej. M31).
-      </p>
-    );
+  function toggleSort(field: RecordSortField) {
+    if (field === sort) {
+      setOrder((current) => (current === "asc" ? "desc" : "asc"));
+    } else {
+      setSort(field);
+      setOrder("asc");
+    }
+    setPage(1);
   }
 
   return (
-    <div
-      data-testid="image-list"
-      className="mx-auto flex max-w-lg flex-col gap-2"
-    >
-      {records.map((record) => (
-        <ImageListItem key={record.record_id} record={record} />
-      ))}
-    </div>
+    <section className="flex w-full flex-col gap-2">
+      <h2 className="text-sm font-medium">Imágenes disponibles</h2>
+      {isPending && <BrandLoader label="Cargando imágenes…" />}
+      {isError && <p className="text-sm text-destructive">Algo salió mal.</p>}
+      {!isPending &&
+        !isError &&
+        records.length === 0 &&
+        (query.trim().length === 0 ? (
+          <p className="text-sm text-muted-foreground">
+            No hay imágenes cargadas en el servidor.
+          </p>
+        ) : (
+          <p className="text-sm text-muted-foreground">
+            No se encontraron imágenes para{" "}
+            <strong className="font-semibold text-foreground">
+              {query.trim()}
+            </strong>
+            .
+          </p>
+        ))}
+      {!isPending && !isError && records.length > 0 && (
+        <FitsFileTable
+          testId="image-list"
+          columns={COLUMNS}
+          sort={sort}
+          order={order}
+          onSort={(field) => toggleSort(field as RecordSortField)}
+          trailingHead={
+            <>
+              <TableHead>Fuente</TableHead>
+              <TableHead />
+            </>
+          }
+        >
+          <TableBody>
+            {records.map((record) => (
+              <TableRow key={record.record_id} data-testid="image-list-item">
+                <TableCell>{record.display_name}</TableCell>
+                <TableCell>
+                  <Link
+                    to="/image/$recordId/{-$slug}"
+                    params={{
+                      recordId: record.record_id,
+                      slug: record.slug === "" ? undefined : record.slug,
+                    }}
+                    data-testid="image-list-item-open"
+                    className="text-primary underline-offset-2 hover:underline dark:text-ring"
+                  >
+                    {record.name}
+                  </Link>
+                </TableCell>
+                <TableCell>{record.instrument ?? "—"}</TableCell>
+                <TableCell>{record.proposal_id}</TableCell>
+                <TableCell>{record.filters ?? "—"}</TableCell>
+                <TableCell>{formatWhen(record.observed_at)}</TableCell>
+                <TableCell>{formatWhen(record.created_at)}</TableCell>
+                <TableCell>{formatBytes(record.size_bytes)}</TableCell>
+                <TableCell>
+                  <MastSourceLink dataUri={record.data_uri} />
+                </TableCell>
+                <TableCell className="text-right">
+                  <Button
+                    type="button"
+                    size="icon"
+                    variant="ghost"
+                    aria-label={`Eliminar ${record.display_name}`}
+                    data-testid="delete-image"
+                    onClick={() =>
+                      setPendingDelete({
+                        id: record.record_id,
+                        name: record.display_name,
+                      })
+                    }
+                  >
+                    <Trash2 className="size-4" />
+                  </Button>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </FitsFileTable>
+      )}
+      {pageData && (
+        <FilePager
+          page={page}
+          hasMore={pageData.has_more === true}
+          onPage={setPage}
+        />
+      )}
+      <Dialog
+        open={pendingDelete !== null}
+        onOpenChange={(open) => {
+          if (!open) {
+            setPendingDelete(null);
+          }
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Eliminar imagen</DialogTitle>
+            <DialogDescription>
+              Se borra{" "}
+              <strong className="font-semibold text-foreground">
+                {pendingDelete?.name}
+              </strong>{" "}
+              del servidor. El original en MAST no se toca.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setPendingDelete(null)}
+            >
+              Cancelar
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              data-testid="confirm-delete-image"
+              disabled={remove.isPending}
+              onClick={() => {
+                if (pendingDelete === null) {
+                  return;
+                }
+                void remove
+                  .mutateAsync({ recordId: pendingDelete.id })
+                  .then(() => {
+                    setPendingDelete(null);
+                  });
+              }}
+            >
+              Eliminar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </section>
   );
 }

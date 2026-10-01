@@ -12,7 +12,15 @@ export const imageHandlers = [
   http.get(`${apiBaseUrl}/image`, ({ request }) => {
     const url = new URL(request.url);
     const cuerpoCeleste = url.searchParams.get("cuerpo_celeste");
-    return HttpResponse.json({ records: filterRecords(cuerpoCeleste) });
+    const records = filterRecords(cuerpoCeleste);
+    return HttpResponse.json({
+      records,
+      page: Number(url.searchParams.get("page") ?? "1"),
+      limit: Number(url.searchParams.get("limit") ?? "8"),
+      has_more: false,
+      sort: url.searchParams.get("sort") ?? "created_at",
+      order: url.searchParams.get("order") ?? "desc",
+    });
   }),
 
   http.get(`${apiBaseUrl}/image/search`, ({ request }) => {
@@ -25,7 +33,66 @@ export const imageHandlers = [
     if (!match) {
       return HttpResponse.json({ detail: "Image not found" }, { status: 404 });
     }
-    return HttpResponse.json({ record_id: match.record_id });
+    return HttpResponse.json({
+      items: [
+        {
+          token: `token-${match.record_id}`,
+          product_filename: `${match.record_id}.fits`,
+          instrument: "WFC3",
+          proposal_id: "12345",
+          observation_id: match.record_id,
+          filters: "F606W",
+          observed_at: null,
+          size_bytes: 120 * 1024 * 1024,
+          ra_deg: 0,
+          dec_deg: 0,
+          data_uri: `mast:HST/product/${match.record_id}.fits`,
+        },
+      ],
+      page: 1,
+      limit: 8,
+      has_more: false,
+      sort: url.searchParams.get("sort") ?? "product_filename",
+      order: url.searchParams.get("order") ?? "asc",
+    });
+  }),
+
+  http.post(`${apiBaseUrl}/image/search/select`, async ({ request }) => {
+    const body = (await request.json()) as {
+      candidate_token: string;
+      display_name?: string;
+    };
+    return HttpResponse.json({
+      transfer_id: body.candidate_token,
+      status: "completed",
+      display_name: body.display_name ?? "",
+      product_filename: `${body.candidate_token}.fits`,
+      bytes_transferred: 120 * 1024 * 1024,
+      total_bytes: 120 * 1024 * 1024,
+      speed_bytes_per_second: null,
+      progress: 1,
+      error: null,
+      record_id: "m42",
+      slug: "m42",
+      resumable: false,
+    });
+  }),
+
+  http.get(`${apiBaseUrl}/image/transfers/:transferId`, ({ params }) => {
+    return HttpResponse.json({
+      transfer_id: params.transferId,
+      status: "completed",
+      display_name: "Imagen",
+      product_filename: "archivo.fits",
+      bytes_transferred: 120 * 1024 * 1024,
+      total_bytes: 120 * 1024 * 1024,
+      speed_bytes_per_second: null,
+      progress: 1,
+      error: null,
+      record_id: "m42",
+      slug: "m42",
+      resumable: false,
+    });
   }),
 
   http.get(`${apiBaseUrl}/image/:recordId/sources`, ({ params }) => {

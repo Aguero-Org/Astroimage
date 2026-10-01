@@ -12,8 +12,12 @@ from astroimage.fits.service import FitsService
 from astroimage.hub.deps import hubble_service_dependency
 from astroimage.hub.importer import HubbleImporter, HubbleNotFoundError
 from astroimage.hub.schema import (
+    CandidatePageSchema,
+    CandidateSortField,
+    CandidateSortOrder,
     FetchImageResponseSchema,
     ListRecordsResponseSchema,
+    TransferStatusSchema,
 )
 from astroimage.hub.service import HubbleImageService
 from astroimage.main import app
@@ -61,6 +65,43 @@ class _FakeService:
 
     async def search_records(self, name: str, **kwargs: object) -> ListRecordsResponseSchema:
         return self._records
+
+    async def search_candidates(
+        self,
+        target_name: str,
+        *,
+        page: int,
+        limit: int,
+        min_size_mb: float | None,
+        sort: CandidateSortField = "product_filename",
+        order: CandidateSortOrder = "asc",
+    ) -> CandidatePageSchema:
+        if self._error is not None:
+            raise self._error
+        return CandidatePageSchema(
+            items=[],
+            page=page,
+            limit=limit,
+            has_more=False,
+            sort=sort,
+            order=order,
+        )
+
+    async def get_transfer(self, transfer_id: UUID) -> TransferStatusSchema:
+        return TransferStatusSchema(
+            transfer_id=transfer_id,
+            status="queued",
+            display_name="Galaxia",
+            product_filename="product.fits",
+            bytes_transferred=0,
+            total_bytes=None,
+            speed_bytes_per_second=None,
+            progress=None,
+            error=None,
+            record_id=None,
+            slug=None,
+            resumable=False,
+        )
 
 
 async def test_get_image_info_returns_stored_metadata(
@@ -110,11 +151,27 @@ async def test_list_astro_images_returns_all_records(client: AsyncClient) -> Non
                 "record_id": _record_id(),
                 "slug": "hst_drz.fits",
                 "name": "hst_drz.fits",
+                "instrument": "WFC3",
+                "proposal_id": "100",
+                "filters": "F606W",
+                "observed_at": "55401.4",
+                "created_at": "2026-09-30T00:00:00Z",
+                "display_name": "Drizzle",
+                "size_bytes": 10,
+                "data_uri": "mast:HST/product/hst_drz.fits",
             },
             {
                 "record_id": _record_id(),
                 "slug": "hst_flt.fits",
                 "name": "hst_flt.fits",
+                "instrument": "ACS",
+                "proposal_id": "200",
+                "filters": None,
+                "observed_at": None,
+                "created_at": "2026-09-30T00:00:00Z",
+                "display_name": "Calibrada",
+                "size_bytes": 20,
+                "data_uri": "mast:HST/product/hst_flt.fits",
             },
         ]
     )
@@ -130,18 +187,28 @@ async def test_list_astro_images_returns_all_records(client: AsyncClient) -> Non
 
     assert response.status_code == 200
     payload = response.json()
-    assert payload == {
-        "records": [
-            {"record_id": str(r.record_id), "slug": r.slug, "name": r.name} for r in records.records
-        ]
-    }
+    assert payload == records.model_dump(mode="json")
 
 
 async def test_search_astro_images_by_name_returns_filtered_records(
     client: AsyncClient,
 ) -> None:
     records = ListRecordsResponseSchema(
-        records=[{"record_id": _record_id(), "slug": "hst_m31.fits", "name": "hst_m31.fits"}]
+        records=[
+            {
+                "record_id": _record_id(),
+                "slug": "hst_m31.fits",
+                "name": "hst_m31.fits",
+                "instrument": "WFC3",
+                "proposal_id": "100",
+                "filters": "F606W",
+                "observed_at": "55401.4",
+                "created_at": "2026-09-30T00:00:00Z",
+                "display_name": "M31",
+                "size_bytes": 10,
+                "data_uri": "mast:HST/product/hst_m31.fits",
+            }
+        ]
     )
     fake = _FakeService(
         FetchImageResponseSchema(record_id=_record_id(), slug=_slug()),
@@ -157,7 +224,7 @@ async def test_search_astro_images_by_name_returns_filtered_records(
     assert "records" in response.json()
 
 
-async def test_fetch_astro_image_returns_fits(client: AsyncClient) -> None:
+async def test_search_candidates_returns_a_page(client: AsyncClient) -> None:
     fake = _FakeService(
         FetchImageResponseSchema(
             record_id=_record_id(),
@@ -172,11 +239,9 @@ async def test_fetch_astro_image_returns_fits(client: AsyncClient) -> None:
 
     assert response.status_code == 200
     payload = response.json()
-    assert "record_id" in payload
-    assert payload["record_id"]
-    assert "slug" in payload
-    assert payload["slug"]
-    assert len(payload) == 2
+    assert payload["items"] == []
+    assert payload["page"] == 1
+    assert payload["has_more"] is False
 
 
 async def test_fetch_astro_image_requires_query_param(client: AsyncClient) -> None:

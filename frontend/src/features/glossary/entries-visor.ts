@@ -19,6 +19,15 @@ export const VISOR_ENTRIES: GlossaryEntry[] = [
     where: "Inspector → Selección",
   },
   {
+    id: "copiar-dato",
+    name: "Copiar dato",
+    group: "visor",
+    what: "Copia al portapapeles un valor del inspector, o todos los de un grupo.",
+    inApp:
+      "Al pasar el cursor, el dato o el título del grupo se subraya y aparece el ícono de copia. El título copia todas las líneas del grupo. Un aviso confirma que se copió.",
+    where: "Inspector",
+  },
+  {
     id: "pan-zoom",
     name: "Pan y zoom",
     group: "visor",

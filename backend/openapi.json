@@ -109,7 +109,66 @@
                   "type": "null"
                 }
               ],
+              "description": "Case-insensitive match on display name, filename, instrument, proposal id, or MAST data URI",
               "title": "Cuerpo Celeste"
+            },
+            "description": "Case-insensitive match on display name, filename, instrument, proposal id, or MAST data URI"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1,
+              "title": "Page"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 50,
+              "minimum": 1,
+              "default": 8,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "product_filename",
+                "instrument",
+                "proposal_id",
+                "filters",
+                "size_bytes",
+                "observed_at",
+                "display_name",
+                "created_at"
+              ],
+              "type": "string",
+              "default": "created_at",
+              "title": "Sort"
+            }
+          },
+          {
+            "name": "order",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "asc",
+                "desc"
+              ],
+              "type": "string",
+              "default": "desc",
+              "title": "Order"
             }
           }
         ],
@@ -143,7 +202,7 @@
           "hub"
         ],
         "summary": "Search Astro Image",
-        "operationId": "fetchHubbleImage",
+        "operationId": "searchHubbleCandidates",
         "parameters": [
           {
             "name": "query",
@@ -152,10 +211,82 @@
             "schema": {
               "type": "string",
               "minLength": 1,
-              "description": "Celestial body to fetch from Hubble",
+              "description": "Celestial body to search in Hubble",
               "title": "Query"
             },
-            "description": "Celestial body to fetch from Hubble"
+            "description": "Celestial body to search in Hubble"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1,
+              "title": "Page"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 50,
+              "minimum": 1,
+              "default": 10,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "min_size_mb",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "number",
+                  "minimum": 0
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Min Size Mb"
+            }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "product_filename",
+                "instrument",
+                "proposal_id",
+                "filters",
+                "size_bytes",
+                "observed_at"
+              ],
+              "type": "string",
+              "default": "product_filename",
+              "title": "Sort"
+            }
+          },
+          {
+            "name": "order",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "asc",
+                "desc"
+              ],
+              "type": "string",
+              "default": "asc",
+              "title": "Order"
+            }
           }
         ],
         "responses": {
@@ -164,9 +295,353 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/FetchImageResponseSchema"
+                  "$ref": "#/components/schemas/CandidatePageSchema"
                 }
               }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/image/search/select": {
+      "post": {
+        "tags": [
+          "hub"
+        ],
+        "summary": "Select Astro Image",
+        "operationId": "selectHubbleCandidate",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SelectCandidateRequestSchema"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TransferStatusSchema"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/image/transfers/{transfer_id}": {
+      "get": {
+        "tags": [
+          "hub"
+        ],
+        "summary": "Get Image Transfer",
+        "operationId": "getImageTransfer",
+        "parameters": [
+          {
+            "name": "transfer_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Stored FITS record id",
+              "title": "Transfer Id"
+            },
+            "description": "Stored FITS record id"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TransferStatusSchema"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/image/transfers/{transfer_id}/cancel": {
+      "post": {
+        "tags": [
+          "hub"
+        ],
+        "summary": "Cancel Image Transfer",
+        "operationId": "cancelImageTransfer",
+        "parameters": [
+          {
+            "name": "transfer_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Stored FITS record id",
+              "title": "Transfer Id"
+            },
+            "description": "Stored FITS record id"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TransferStatusSchema"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/image/transfers/{transfer_id}/resume": {
+      "post": {
+        "tags": [
+          "hub"
+        ],
+        "summary": "Resume Image Transfer",
+        "operationId": "resumeImageTransfer",
+        "parameters": [
+          {
+            "name": "transfer_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Stored FITS record id",
+              "title": "Transfer Id"
+            },
+            "description": "Stored FITS record id"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TransferStatusSchema"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/image/{record_id}": {
+      "delete": {
+        "tags": [
+          "hub"
+        ],
+        "summary": "Delete Astro Image",
+        "operationId": "deleteHubbleImage",
+        "parameters": [
+          {
+            "name": "record_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Stored FITS record id",
+              "title": "Record Id"
+            },
+            "description": "Stored FITS record id"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "render"
+        ],
+        "summary": "Render Fits Image",
+        "operationId": "renderFitsImage",
+        "parameters": [
+          {
+            "name": "record_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Stored FITS record id",
+              "title": "Record Id"
+            },
+            "description": "Stored FITS record id"
+          },
+          {
+            "name": "hdu",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional image HDU index; defaults to the first 2D image HDU",
+              "title": "Hdu"
+            },
+            "description": "Optional image HDU index; defaults to the first 2D image HDU"
+          },
+          {
+            "name": "stretch",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^(linear|sqrt|log|asinh)$",
+              "default": "sqrt",
+              "title": "Stretch"
+            }
+          },
+          {
+            "name": "limits",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^(percentiles|zscale)$",
+              "default": "percentiles",
+              "title": "Limits"
+            }
+          },
+          {
+            "name": "colormap",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^(grey|inverse|heat|rainbow|cube_helix)$",
+              "default": "grey",
+              "title": "Colormap"
+            }
+          },
+          {
+            "name": "pmin",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number",
+              "minimum": 0.0,
+              "exclusiveMaximum": 100.0,
+              "default": 1.0,
+              "title": "Pmin"
+            }
+          },
+          {
+            "name": "pmax",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number",
+              "maximum": 100.0,
+              "exclusiveMinimum": 0.0,
+              "default": 99.0,
+              "title": "Pmax"
+            }
+          },
+          {
+            "name": "gamma",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number",
+              "maximum": 5.0,
+              "minimum": 0.1,
+              "default": 1.0,
+              "title": "Gamma"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              },
+              "image/png": {}
             }
           },
           "422": {
@@ -872,138 +1347,6 @@
         }
       }
     },
-    "/image/{record_id}": {
-      "get": {
-        "tags": [
-          "render"
-        ],
-        "summary": "Render Fits Image",
-        "operationId": "renderFitsImage",
-        "parameters": [
-          {
-            "name": "record_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid",
-              "description": "Stored FITS record id",
-              "title": "Record Id"
-            },
-            "description": "Stored FITS record id"
-          },
-          {
-            "name": "hdu",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "integer",
-                  "minimum": 0
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "description": "Optional image HDU index; defaults to the first 2D image HDU",
-              "title": "Hdu"
-            },
-            "description": "Optional image HDU index; defaults to the first 2D image HDU"
-          },
-          {
-            "name": "stretch",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string",
-              "pattern": "^(linear|sqrt|log|asinh)$",
-              "default": "sqrt",
-              "title": "Stretch"
-            }
-          },
-          {
-            "name": "limits",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string",
-              "pattern": "^(percentiles|zscale)$",
-              "default": "percentiles",
-              "title": "Limits"
-            }
-          },
-          {
-            "name": "colormap",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string",
-              "pattern": "^(grey|inverse|heat|rainbow|cube_helix)$",
-              "default": "grey",
-              "title": "Colormap"
-            }
-          },
-          {
-            "name": "pmin",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "number",
-              "minimum": 0.0,
-              "exclusiveMaximum": 100.0,
-              "default": 1.0,
-              "title": "Pmin"
-            }
-          },
-          {
-            "name": "pmax",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "number",
-              "maximum": 100.0,
-              "exclusiveMinimum": 0.0,
-              "default": 99.0,
-              "title": "Pmax"
-            }
-          },
-          {
-            "name": "gamma",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "number",
-              "maximum": 5.0,
-              "minimum": 0.1,
-              "default": 1.0,
-              "title": "Gamma"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {}
-              },
-              "image/png": {}
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/image/{record_id}/histogram": {
       "get": {
         "tags": [
@@ -1098,6 +1441,152 @@
         ],
         "title": "Body_extractFitsMetadata"
       },
+      "CandidatePageSchema": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/CandidateSchema"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "page": {
+            "type": "integer",
+            "title": "Page"
+          },
+          "limit": {
+            "type": "integer",
+            "title": "Limit"
+          },
+          "has_more": {
+            "type": "boolean",
+            "title": "Has More"
+          },
+          "sort": {
+            "type": "string",
+            "enum": [
+              "product_filename",
+              "instrument",
+              "proposal_id",
+              "filters",
+              "size_bytes",
+              "observed_at"
+            ],
+            "title": "Sort"
+          },
+          "order": {
+            "type": "string",
+            "enum": [
+              "asc",
+              "desc"
+            ],
+            "title": "Order"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "items",
+          "page",
+          "limit",
+          "has_more",
+          "sort",
+          "order"
+        ],
+        "title": "CandidatePageSchema"
+      },
+      "CandidateSchema": {
+        "properties": {
+          "token": {
+            "type": "string",
+            "title": "Token"
+          },
+          "product_filename": {
+            "type": "string",
+            "title": "Product Filename"
+          },
+          "instrument": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Instrument"
+          },
+          "proposal_id": {
+            "type": "string",
+            "title": "Proposal Id"
+          },
+          "observation_id": {
+            "type": "string",
+            "title": "Observation Id"
+          },
+          "filters": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Filters"
+          },
+          "observed_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Observed At"
+          },
+          "size_bytes": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Size Bytes"
+          },
+          "ra_deg": {
+            "type": "number",
+            "title": "Ra Deg"
+          },
+          "dec_deg": {
+            "type": "number",
+            "title": "Dec Deg"
+          },
+          "data_uri": {
+            "type": "string",
+            "title": "Data Uri"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "token",
+          "product_filename",
+          "instrument",
+          "proposal_id",
+          "observation_id",
+          "filters",
+          "observed_at",
+          "size_bytes",
+          "ra_deg",
+          "dec_deg",
+          "data_uri"
+        ],
+        "title": "CandidateSchema"
+      },
       "DetectionSummarySchema": {
         "properties": {
           "point_count": {
@@ -1184,26 +1673,6 @@
           "relevance_score"
         ],
         "title": "ExtendedSourceSchema"
-      },
-      "FetchImageResponseSchema": {
-        "properties": {
-          "record_id": {
-            "type": "string",
-            "format": "uuid",
-            "title": "Record Id"
-          },
-          "slug": {
-            "type": "string",
-            "title": "Slug"
-          }
-        },
-        "additionalProperties": false,
-        "type": "object",
-        "required": [
-          "record_id",
-          "slug"
-        ],
-        "title": "FetchImageResponseSchema"
       },
       "FitsHduDetailSchema": {
         "properties": {
@@ -1489,6 +1958,17 @@
             ],
             "title": "Source Name"
           },
+          "display_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Display Name"
+          },
           "image": {
             "$ref": "#/components/schemas/FitsImageInfoSchema"
           },
@@ -1578,6 +2058,60 @@
           "name": {
             "type": "string",
             "title": "Name"
+          },
+          "display_name": {
+            "type": "string",
+            "title": "Display Name"
+          },
+          "instrument": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Instrument"
+          },
+          "proposal_id": {
+            "type": "string",
+            "title": "Proposal Id"
+          },
+          "filters": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Filters"
+          },
+          "observed_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Observed At"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "size_bytes": {
+            "type": "integer",
+            "title": "Size Bytes"
+          },
+          "data_uri": {
+            "type": "string",
+            "title": "Data Uri"
           }
         },
         "additionalProperties": false,
@@ -1585,7 +2119,15 @@
         "required": [
           "record_id",
           "slug",
-          "name"
+          "name",
+          "display_name",
+          "instrument",
+          "proposal_id",
+          "filters",
+          "observed_at",
+          "created_at",
+          "size_bytes",
+          "data_uri"
         ],
         "title": "FitsRecordSummarySchema"
       },
@@ -2051,6 +2593,45 @@
             },
             "type": "array",
             "title": "Records"
+          },
+          "page": {
+            "type": "integer",
+            "title": "Page",
+            "default": 1
+          },
+          "limit": {
+            "type": "integer",
+            "title": "Limit",
+            "default": 100
+          },
+          "has_more": {
+            "type": "boolean",
+            "title": "Has More",
+            "default": false
+          },
+          "sort": {
+            "type": "string",
+            "enum": [
+              "product_filename",
+              "instrument",
+              "proposal_id",
+              "filters",
+              "size_bytes",
+              "observed_at",
+              "display_name",
+              "created_at"
+            ],
+            "title": "Sort",
+            "default": "created_at"
+          },
+          "order": {
+            "type": "string",
+            "enum": [
+              "asc",
+              "desc"
+            ],
+            "title": "Order",
+            "default": "desc"
           }
         },
         "additionalProperties": false,
@@ -2127,6 +2708,27 @@
         ],
         "title": "PointSourceSchema"
       },
+      "SelectCandidateRequestSchema": {
+        "properties": {
+          "candidate_token": {
+            "type": "string",
+            "title": "Candidate Token"
+          },
+          "display_name": {
+            "type": "string",
+            "maxLength": 256,
+            "minLength": 1,
+            "title": "Display Name"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "candidate_token",
+          "display_name"
+        ],
+        "title": "SelectCandidateRequestSchema"
+      },
       "SourceDetectionResponse": {
         "properties": {
           "source_name": {
@@ -2175,6 +2777,119 @@
           "summary"
         ],
         "title": "SourceDetectionResponse"
+      },
+      "TransferStatusSchema": {
+        "properties": {
+          "transfer_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Transfer Id"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "display_name": {
+            "type": "string",
+            "title": "Display Name"
+          },
+          "product_filename": {
+            "type": "string",
+            "title": "Product Filename"
+          },
+          "bytes_transferred": {
+            "type": "integer",
+            "title": "Bytes Transferred"
+          },
+          "total_bytes": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total Bytes"
+          },
+          "speed_bytes_per_second": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Speed Bytes Per Second"
+          },
+          "progress": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Progress"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          },
+          "record_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Record Id"
+          },
+          "slug": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Slug"
+          },
+          "resumable": {
+            "type": "boolean",
+            "title": "Resumable"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "transfer_id",
+          "status",
+          "display_name",
+          "product_filename",
+          "bytes_transferred",
+          "total_bytes",
+          "speed_bytes_per_second",
+          "progress",
+          "error",
+          "record_id",
+          "slug",
+          "resumable"
+        ],
+        "title": "TransferStatusSchema"
       },
       "ValidationError": {
         "properties": {

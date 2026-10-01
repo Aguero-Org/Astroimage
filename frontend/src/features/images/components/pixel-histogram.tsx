@@ -1,6 +1,6 @@
 import type { HistogramResponse } from "@/api/generated/model";
+import { BrandLoader } from "@/components/brand-loader";
 import { HelpHint } from "@/components/ui/help-hint";
-import { Skeleton } from "@/components/ui/skeleton";
 
 type PixelHistogramProps = {
   histogram: HistogramResponse | undefined;
@@ -36,7 +36,9 @@ export function PixelHistogram({
   showPercentiles,
 }: Readonly<PixelHistogramProps>) {
   if (isPending) {
-    return <Skeleton data-testid="histogram-loading" className="h-16 w-full" />;
+    return (
+      <BrandLoader testId="histogram-loading" label="Cargando histograma…" />
+    );
   }
   if (isError || !histogram || histogram.counts.length === 0) {
     return (

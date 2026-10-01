@@ -71,7 +71,17 @@ class _FakeFitsService:
     async def list_record_summaries(self, **kwargs: object) -> list[FitsRecordSummarySchema]:
         return [
             FitsRecordSummarySchema(
-                record_id=record.id, slug=record.slug, name=record.original_filename
+                record_id=record.id,
+                slug=record.slug,
+                name=record.original_filename,
+                display_name=record.original_filename,
+                instrument=None,
+                proposal_id="1",
+                filters=None,
+                observed_at=None,
+                created_at=record.created_at,
+                size_bytes=record.size_bytes,
+                data_uri=f"mast:HST/product/{record.original_filename}",
             )
             for record in self.records
         ]
@@ -83,7 +93,17 @@ class _FakeFitsService:
     ) -> list[FitsRecordSummarySchema]:
         return [
             FitsRecordSummarySchema(
-                record_id=record.id, slug=record.slug, name=record.original_filename
+                record_id=record.id,
+                slug=record.slug,
+                name=record.original_filename,
+                display_name=record.original_filename,
+                instrument=None,
+                proposal_id="1",
+                filters=None,
+                observed_at=None,
+                created_at=record.created_at,
+                size_bytes=record.size_bytes,
+                data_uri=f"mast:HST/product/{record.original_filename}",
             )
             for record in self.records
             if name.lower() in record.original_filename.lower()
@@ -135,7 +155,7 @@ async def test_service_lists_records_as_summaries() -> None:
     result = await service.list_records()
 
     assert isinstance(result, ListRecordsResponseSchema)
-    assert [r.name for r in result.records] == ["hst_drz.fits", "hst_flt.fits"]
+    assert [record.name for record in result.records] == ["hst_flt.fits", "hst_drz.fits"]
 
 
 async def test_service_searches_records_by_name() -> None:
