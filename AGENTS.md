@@ -218,3 +218,36 @@ Every change must pass:
 
 Do not commit `.scannerwork/` or coverage artifacts. Keep generated paths excluded from Sonar
 (`frontend/src/api/generated/**`, `routeTree.gen.ts`, `backend/alembic/**`).
+
+## Pull request descriptions
+
+A PR description is a project document, as useful as the task it closes. Write it
+while the work is still fresh, for the reviewer and for whoever reads the code later.
+Source: [How to write a proper description for a pull request](https://maddevs.io/blog/how-to-make-a-proper-description-for-a-pull-request/).
+
+Title: short, and it states the essence of the change. If a tracker ticket exists,
+prefix it with the ticket id.
+
+Body, in this order. Skip a section when it has nothing to say. Do not leave an
+empty heading.
+
+- **Related tasks.** Links to the tickets this PR closes or continues. Use the
+  tracker's closing keyword only when the PR actually finishes that ticket.
+- **Depends on.** Other open PRs that must be reviewed first, including PRs in
+  dependency repositories. Skip when there are none.
+- **Premise.** What the reviewer should know before reading the diff: the choice
+  between approaches or libraries, why the existing code had to change, and the
+  short result of a discussion. Link the sources that decided it.
+- **Changes.** The meaning of the work, not a file list. Git already shows the
+  diff. Say why a dependency, a deletion, a move, or a generated update happened.
+  A task list is fine when the reviewer should tick items.
+- **Concerns.** Doubts, unfinished stubs, or a better approach you chose not to
+  take now. Ask for the specific advice you need. Skip when there are none.
+- **Notes.** Side effects and non-obvious steps: migrations, new commands, broken
+  compatibility, magic values. If the UI changed, add before and after screenshots.
+
+Write commit messages so they can be reused as the Changes list. Before opening
+the PR, reread the diff as a reviewer and add any explanation you would otherwise
+have to give in a comment. Labels may mark a feature, a fix, a dependency, or a
+compatibility break. The description should be enough to draft the changelog
+without rereading the code.
