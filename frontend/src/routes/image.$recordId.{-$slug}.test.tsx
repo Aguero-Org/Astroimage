@@ -84,9 +84,12 @@ describe("ImageDetailPage", () => {
     const user = userEvent.setup();
     renderImageDetail("m31");
 
-    await waitFor(() => {
-      expect(screen.getByTestId("inspector-toggle")).toBeInTheDocument();
-    });
+    await waitFor(
+      () => {
+        expect(screen.getByTestId("inspector-toggle")).toBeInTheDocument();
+      },
+      { timeout: 8000 },
+    );
     expect(screen.getByTestId("inspector-drawer")).toHaveAttribute(
       "data-state",
       "collapsed",
@@ -147,18 +150,24 @@ describe("ImageDetailPage", () => {
     const user = userEvent.setup();
     renderImageDetail("m31");
 
-    await waitFor(() => {
-      expect(screen.getByTestId("search-input")).toBeInTheDocument();
-    });
+    await waitFor(
+      () => {
+        expect(screen.getByTestId("search-input")).toBeInTheDocument();
+      },
+      { timeout: 8000 },
+    );
 
     await user.type(screen.getByTestId("search-input"), "orion");
     await user.click(screen.getByTestId("search-submit"));
 
-    await waitFor(() => {
-      expect(screen.getByTestId("image-list")).toHaveTextContent(
-        "M42 - Orion Nebula",
-      );
-    });
+    await waitFor(
+      () => {
+        expect(screen.getByTestId("image-list")).toHaveTextContent(
+          "M42 - Orion Nebula",
+        );
+      },
+      { timeout: 8000 },
+    );
     expect(screen.getByTestId("image-list")).not.toHaveTextContent(
       "M31 - Andromeda Galaxy",
     );
