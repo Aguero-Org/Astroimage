@@ -165,7 +165,20 @@ class TransferRunner:
             current.error = None
             await repository.save(current)
             await session.commit()
+        await self._purge_parts(transfer_id)
         _log.info("transfer_completed", transfer_id=str(transfer_id), record_id=str(record.id))
+
+    async def _purge_parts(self, transfer_id: UUID) -> None:
+        """Drop the downloaded chunks once the FITS bytes are stored."""
+        try:
+            for key in await self._storage.list_object_keys(f"transfers/{transfer_id}/"):
+                await self._storage.remove(key)
+        except Exception as exc:
+            _log.warning(
+                "transfer_parts_purge_failed",
+                transfer_id=str(transfer_id),
+                error_type=type(exc).__name__,
+            )
 
     async def _read_parts(self, transfer: ImageTransfer) -> bytes:
         chunks: list[bytes] = []
