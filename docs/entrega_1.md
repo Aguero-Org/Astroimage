@@ -7,8 +7,10 @@ parámetros de detección salen de medir la imagen en lugar de ajustarlos a cieg
 
 La numeración de User Stories y Tareas continúa la de la PoC (`US1`–`US4`, `T1`–`T2`).
 
-Las historias y las tareas están agrupadas en cuatro bloques: **descarga de imágenes**,
-**detección de fuentes**, **verificación con Gaia** y **glosario y ayudas contextuales**.
+Cada historia cubre **un** requerimiento: las cards que tocaban el mismo requerimiento quedaron
+fusionadas en una sola historia en lugar de partirse en varias. Quedan cuatro áreas, una por
+historia y una por tarea: **descarga de imágenes**, **detección de fuentes**, **verificación con
+Gaia** y **glosario y ayudas contextuales**.
 
 ---
 
@@ -115,136 +117,92 @@ vuelve a importar `HTTPException`.
 
 ---
 
-## User Stories
+# User Stories
 
-### Descarga de imágenes
+## US5 - Bajarse una imagen de Hubble
 
-#### US5 - Elegir qué imagen de Hubble bajar
-
-##### Actor/es
+### Actor/es
 
 - Usuario
 
-##### Funcionalidad
+### Funcionalidad
 
-Como usuario, quiero ver los candidatos que ofrece Hubble para un objeto y elegir cuál bajar, en
-lugar de que el sistema decida por mí.
+Como usuario, quiero ver los candidatos que ofrece Hubble para un objeto, elegir cuál bajar, y que
+la descarga se pueda cancelar y retomar sin volver a empezar de cero.
 
-##### Valor aportado
+### Valor aportado
 
-Un mismo objeto tiene varias misiones, instrumentos y filtros. La imagen correcta depende de qué
-se quiera mirar, así que la elección es del usuario.
+Un mismo objeto tiene varias misiones, instrumentos y filtros, así que la imagen correcta depende
+de qué se quiera mirar: la elección es del usuario. Y como las imágenes pesan cientos de MB, un
+corte de conexión no debería costar el trabajo hecho.
 
-##### Criterios de aceptación
+### Criterios de aceptación
 
 - Al buscar un objeto veo el listado de candidatos con instrumento, filtro y tamaño.
 - El listado se pagina: no se descargan todas las páginas de Hubble para mostrar la primera.
 - Elijo un candidato y la descarga empieza, informada como una transferencia.
+- Veo bytes transferidos y porcentaje mientras la imagen baja.
+- Una descarga cancelada o interrumpida se retoma desde el último trozo guardado, incluso si
+  recargué la página.
+- Al terminar, la imagen aparece en el listado y los trozos intermedios ya no ocupan espacio en el
+  bucket.
 - Si el objeto no tiene productos science utilizables, el error se explica.
 
 ---
 
-#### US6 - Bajar una imagen grande sin perder el progreso
+## US6 - Detectar fuentes en la imagen
 
-##### Actor/es
-
-- Usuario
-
-##### Funcionalidad
-
-Como usuario, quiero ver el progreso de una descarga en curso, poder cancelarla y retomarla más
-tarde, sin volver a empezar de cero.
-
-##### Valor aportado
-
-Las imágenes de Hubble pesan cientos de MB. Un corte de conexión no debería costar el trabajo
-hecho, y la persona tiene que saber si sigue avanzando.
-
-##### Criterios de aceptación
-
-- Veo bytes transferidos y porcentaje mientras la imagen baja.
-- Al recargar la página veo el estado de la transferencia y la imagen aparece en el listado al terminar.
-- Una transferencia cancelada se puede volver a retomar desde donde estaba.
-- Los trozos intermedios no quedan ocupando espacio en el bucket una vez guardada la imagen.
-
----
-
-### Detección de fuentes
-
-#### US7 - Detectar nebulosa y filamentos, no solo estrellas
-
-##### Actor/es
+### Actor/es
 
 - Usuario
 
-##### Funcionalidad
+### Funcionalidad
 
-Como usuario, quiero detectar fuentes extendidas además de las puntuales, con parámetros propios,
-y verlas marcadas sobre la imagen.
+Como usuario, quiero detectar fuentes extendidas además de las puntuales, con sus propios
+parámetros, y que la aplicación mida esta imagen y me recomiende los valores de detección.
 
-##### Valor aportado
+### Valor aportado
 
-La mitad de lo que hay en una imagen de Hubble no son puntos. Un detector que solo encuentra
-estrellas deja fuera la nebulosa que uno fue a mirar.
+La mitad de lo que hay en una imagen de Hubble no son puntos: un detector que solo encuentra
+estrellas deja fuera la nebulosa que uno fue a mirar. Y los parámetros por defecto están
+calibrados para una imagen promedio, así que en una más borrosa o más nítida dan resultados que
+no se pueden entender ni corregir a ojo.
 
-##### Criterios de aceptación
+### Criterios de aceptación
 
 - En la sección Fuentes puedo pedir una detección de fuentes extendidas con sigma, suavizado, área y
   operaciones morfológicas.
 - Las regiones extendidas aparecen como marcadores propios, distintas de las puntuales, y se
   comportan bien con el zoom y el pan.
 - Los parámetros extendidos son independientes de los puntuales: cambiar unos no pisa los otros.
-- Si no hay nada que detectar, el estado se comunica como vacío y no como error.
-
----
-
-#### US8 - Que los parámetros salgan de la imagen y no de mi intuición
-
-##### Actor/es
-
-- Usuario
-
-##### Funcionalidad
-
-Como usuario, quiero que la aplicación mida el núcleo de las fuentes de esta imagen y me proponga
-los parámetros de detección a partir de esa medida.
-
-##### Valor aportado
-
-Los valores por defecto están calibrados para una imagen promedio. En una más borrosa o más
-nítida, dan resultados que no se pueden entender ni corregir a ojo.
-
-##### Criterios de aceptación
-
-- En la sección Fuentes hay una acción para pedir la recomendación.
-- Al pedirla, los campos de detección quedan con los valores recomendados y veo con qué se
-  calculó (FWHM medido, cuántas fuentes se usaron, qué tan dispersas estaban).
+- Hay una acción para pedir la recomendación de parámetros.
+- Al pedirla, los campos quedan con los valores recomendados y veo con qué se calculó (FWHM medido,
+  cuántas fuentes se usaron, qué tan dispersas estaban).
 - Los parámetros que la medición no toca quedan como yo los tenía.
 - Si la imagen no tiene fuentes suficientes para medir, los campos no cambian y se explica por qué.
 - Si la única diferencia con mis valores es de redondeo, el preset deja de figurar como propio y
   vuelve al preset con el que coincide.
+- Si no hay nada que detectar, el estado se comunica como vacío y no como error.
 
 ---
 
-### Verificación con Gaia
+## US7 - Confirmar las detecciones contra un catálogo real
 
-#### US9 - Confirmar las detecciones contra un catálogo real
-
-##### Actor/es
+### Actor/es
 
 - Usuario
 
-##### Funcionalidad
+### Funcionalidad
 
 Como usuario, quiero cruzar las fuentes detectadas con Gaia para saber cuáles son estrellas
 conocidas y cuáles son ruido o artefactos.
 
-##### Valor aportado
+### Valor aportado
 
 Un círculo en la imagen no es una estrella. El cruce con un catálogo da la probabilidad de que lo
 detectado sea un objeto real y con qué parámetros.
 
-##### Criterios de aceptación
+### Criterios de aceptación
 
 - Puedo pedir la verificación de las detecciones actuales para una fuente concreta.
 - La consulta al archivo no bloquea la interfaz: puedo seguir usando el visor.
@@ -253,25 +211,23 @@ detectado sea un objeto real y con qué parámetros.
 
 ---
 
-### Glosario y ayudas contextuales
+## US8 - Entender los términos que veo en pantalla
 
-#### US10 - Entender los términos que veo en pantalla
-
-##### Actor/es
+### Actor/es
 
 - Usuario
 
-##### Funcionalidad
+### Funcionalidad
 
 Como usuario, quiero consultar el significado de un término del inspector desde el mismo lugar
 donde lo veo.
 
-##### Valor aportado
+### Valor aportado
 
 "FWHM", "sigma" o "score" no se explican solos. Tener que buscar documentación externa corta el
 uso de la herramienta.
 
-##### Criterios de aceptación
+### Criterios de aceptación
 
 - Los rótulos técnicos del inspector tienen un indicador que abre su definición.
 - La definición enlaza a la entrada del glosario.
@@ -280,17 +236,16 @@ uso de la herramienta.
 
 ---
 
-## Tareas
+# Tareas
 
-### Descarga de imágenes
+## T3 - Descarga de imágenes desde Hubble
 
-#### T3 - Descargas reanudables desde Hubble
+### Objetivo
 
-##### Objetivo
+Poder elegir y bajar un producto science grande por partes, con progreso, cancelación y
+reanudación.
 
-Poder bajar un producto science grande por partes, con progreso, cancelación y reanudación.
-
-##### Resultado esperado
+### Resultado esperado
 
 - La búsqueda devuelve candidatos paginados y el usuario elige uno.
 - La transferencia expone estado y bytes transferidos, y se puede cancelar y retomar.
@@ -299,16 +254,14 @@ Poder bajar un producto science grande por partes, con progreso, cancelación y 
 
 ---
 
-### Detección de fuentes
+## T4 - Detección extendida y preset recomendado
 
-#### T4 - Detección extendida y preset recomendado
+### Objetivo
 
-##### Objetivo
-
-Detectar también estructura extendida, y derives los umbrales de detección de la medida del PSF de
+Detectar también estructura extendida, y derivar los umbrales de detección de la medida del PSF de
 la propia imagen.
 
-##### Resultado esperado
+### Resultado esperado
 
 - Los parámetros extendidos viajan por el mismo contrato de detección y no pisan los puntuales.
 - El endpoint de recomendación devuelve los umbrales medidos, cuáles cambió y con qué evidencia.
@@ -319,15 +272,13 @@ la propia imagen.
 
 ---
 
-### Verificación con Gaia
+## T5 - Verificación con Gaia DR4
 
-#### T5 - Verificación con Gaia DR4
-
-##### Objetivo
+### Objetivo
 
 Cruzar las detecciones con el catálogo Gaia para confirmar cuáles son estrellas reales.
 
-##### Resultado esperado
+### Resultado esperado
 
 - La consulta se resuelve como un job consultable, no bloqueando el request.
 - La respuesta dice, por fuente, si hubo coincidencia y con qué probabilidad.
@@ -335,15 +286,13 @@ Cruzar las detecciones con el catálogo Gaia para confirmar cuáles son estrella
 
 ---
 
-### Glosario y ayudas contextuales
+## T6 - Glosario y guías contextuales en el inspector
 
-#### T6 - Glosario y guías contextuales en el inspector
-
-##### Objetivo
+### Objetivo
 
 Que ningún parámetro del inspector quede sin explicación dentro de la misma app.
 
-##### Resultado esperado
+### Resultado esperado
 
 - Cada control técnico tiene un tooltip con su definición.
 - El glosario está paginado por tema y filtrable por texto.
