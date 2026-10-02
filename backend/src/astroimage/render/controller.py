@@ -20,7 +20,7 @@ RecordId = Annotated[
     Path(description="Stored FITS record id"),
 ]
 HduIndex = Annotated[
-    int | None,
+    int,
     Query(ge=0, description="Optional image HDU index; defaults to the first 2D image HDU"),
 ]
 
@@ -59,7 +59,7 @@ def _config(
 async def render_fits_image(
     record_id: RecordId,
     service: Annotated[RenderService, Depends(render_service_dependency)],
-    hdu: HduIndex = None,
+    hdu: HduIndex = None,  # type: ignore[assignment]  # nullable default, non-nullable query
     stretch: StretchParam = _DEFAULTS.stretch,
     limits: LimitsParam = _DEFAULTS.limits,
     colormap: ColormapParam = _DEFAULTS.colormap,
@@ -92,7 +92,7 @@ async def render_fits_image(
 async def render_fits_histogram(
     record_id: RecordId,
     service: Annotated[RenderService, Depends(render_service_dependency)],
-    hdu: HduIndex = None,
+    hdu: HduIndex = None,  # type: ignore[assignment]  # nullable default, non-nullable query
     bins: BinsParam = 256,
 ) -> HistogramResponse:
     _log.info("histogram_start", record_id=str(record_id), bins=bins)

@@ -1,15 +1,24 @@
 import type { SyntheticEvent } from "react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { HelpHint } from "@/components/ui/help-hint";
 import {
+  type BestPreset,
+  bestPresetExtendedParams,
+  bestPresetPointParams,
+  bestPresetSummary,
+} from "../best-preset";
+import {
   DEFAULT_EXTENDED_DETECTION_PARAMS,
   DEFAULT_POINT_DETECTION_PARAMS,
+  DEFAULT_SOURCE_DETECTION_PARAMS,
   EXTENDED_DETECTION_KEYS,
   type ExtendedDetectionParams,
+  extendedDetectionParams,
   POINT_DETECTION_KEYS,
   POINT_DETECTION_PRESETS,
   type PointDetectionParams,
+  pointDetectionParams,
   type SourceDetectionParams,
 } from "../source-detection";
 import { useNamedPresetDraft } from "../use-named-preset-draft";
@@ -18,6 +27,7 @@ import { NamedPresetField } from "./named-preset-field";
 
 type SourceDetectionFormProps = {
   isPending: boolean;
+  bestPreset?: BestPreset;
   onSubmit: (params: SourceDetectionParams) => void;
 };
 
@@ -234,6 +244,7 @@ function readNumber(raw: string): number | null {
 
 export function SourceDetectionForm({
   isPending,
+  bestPreset,
   onSubmit,
 }: Readonly<SourceDetectionFormProps>) {
   const { draft, presetId, lastNamedId, applyParams, applyDraft, parseDraft } =
@@ -246,6 +257,36 @@ export function SourceDetectionForm({
   const [extendedDraft, setExtendedDraft] = useState(() =>
     extendedToDraft(DEFAULT_EXTENDED_DETECTION_PARAMS),
   );
+  const measured = bestPreset?.data;
+  const currentValues = useRef<SourceDetectionParams>(
+    DEFAULT_SOURCE_DETECTION_PARAMS,
+  );
+  currentValues.current = {
+    ...(parseDraft() ?? DEFAULT_POINT_DETECTION_PARAMS),
+    ...(parseExtendedDraft(extendedDraft) ?? DEFAULT_EXTENDED_DETECTION_PARAMS),
+  };
+
+  useEffect(() => {
+    if (measured === undefined) {
+      return;
+    }
+    applyParams(
+      bestPresetPointParams(
+        measured,
+        pointDetectionParams(currentValues.current),
+      ),
+    );
+    setExtendedDraft(
+      extendedToDraft(
+        bestPresetExtendedParams(
+          measured,
+          extendedDetectionParams(currentValues.current),
+        ),
+      ),
+    );
+    // Only a new answer re-applies the measurement, so typing in the form is
+    // never overwritten by the previous one.
+  }, [applyParams, measured]);
 
   function handleSubmit(event: SyntheticEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -292,6 +333,38 @@ export function SourceDetectionForm({
             applyParams(preset.values);
           }}
         />
+        {bestPreset !== undefined ? (
+          <div className="flex flex-col gap-1">
+            <Button
+              type="button"
+              variant="outline"
+              data-testid="source-best-preset"
+              disabled={isPending || bestPreset.isPending}
+              onClick={bestPreset.request}
+            >
+              {bestPreset.isPending ? "Midiendo…" : "Usar el recomendado"}
+            </Button>
+            <div className="flex items-center gap-1">
+              <HelpHint
+                label="preset recomendado"
+                testId="source-help-best-preset"
+                glossaryId="preset-recomendado"
+              >
+                Mide el núcleo de las fuentes que ya detectaste en esta imagen y
+                ajusta los valores que dependen de ese ancho. El resto los deja
+                como están.
+              </HelpHint>
+              <p
+                data-testid="source-best-preset-summary"
+                className="text-muted-foreground text-xs leading-snug"
+              >
+                {bestPreset.isError
+                  ? "No se pudo pedir el recomendado a la API."
+                  : bestPresetSummary(bestPreset.data?.evidence)}
+              </p>
+            </div>
+          </div>
+        ) : null}
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           {POINT_FIELDS.map((field) => (
             <FieldInput

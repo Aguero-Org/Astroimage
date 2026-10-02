@@ -5,15 +5,10 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export type RenderFitsHistogramParams = {
+export type GetBestPresetParams = {
 /**
  * Optional image HDU index; defaults to the first 2D image HDU
  * @minimum 0
  */
 hdu?: number;
-/**
- * @minimum 2
- * @maximum 4096
- */
-bins?: number;
 };

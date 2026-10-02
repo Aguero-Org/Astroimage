@@ -18,7 +18,11 @@ from astroimage.fits.service import FitsService
 from astroimage.main import app
 from astroimage.sources.deps import gaia_provider_dependency
 from astroimage.sources.gaia import GaiaObject
-from astroimage.sources.schema import GaiaMatchConfigSchema
+from astroimage.sources.schema import (
+    ExtendedDetectionConfigSchema,
+    GaiaMatchConfigSchema,
+    PointDetectionConfigSchema,
+)
 from tests.unit.sources.helpers import (
     synthetic_extended_source_image,
     synthetic_point_source_image,
@@ -239,6 +243,121 @@ async def test_detect_sources_constant_image_raises_bad_request(
 
     response = await client.get(f"/image/{record.id}/sources")
     assert response.status_code == 400
+
+
+@pytest.mark.asyncio
+async def test_sources_preset_measures_the_psf_and_rescales(
+    client: AsyncClient,
+    fits_service: FitsService,
+    db_session: AsyncSession,
+) -> None:
+    record_id = await _store_sources(fits_service, db_session)
+
+    response = await client.get(f"/image/{record_id}/sources/bestPreset")
+    assert response.status_code == 200
+    body = response.json()
+
+    # The stored image was built with a 5 px PSF.
+    assert body["evidence"]["measured_fwhm"] == pytest.approx(5.0, rel=0.2)
+    assert body["evidence"]["fwhm_samples"] >= 3
+    assert body["evidence"]["point_count"] >= 3
+    assert body["evidence"]["from_cache"] is False
+    assert body["point_config"]["fwhm"] == pytest.approx(body["evidence"]["measured_fwhm"])
+    assert body["point_config"]["sigma"] == PointDetectionConfigSchema().sigma
+    assert body["baseline_point_config"] == PointDetectionConfigSchema().model_dump(mode="json")
+    assert {change["parameter"] for change in body["changes"]} == {
+        "fwhm",
+        "min_distance",
+        "visual_area_radius",
+        "smooth_sigma",
+        "min_area",
+    }
+    assert all(change["reason"] for change in body["changes"])
+
+
+@pytest.mark.asyncio
+async def test_sources_preset_reuses_the_detection_of_the_same_client(
+    client: AsyncClient,
+    fits_service: FitsService,
+    db_session: AsyncSession,
+) -> None:
+    record_id = await _store_sources(fits_service, db_session)
+    detection = await client.get(
+        f"/image/{record_id}/sources",
+        params={"fwhm": "9.0", "sigma": "8.0"},
+        headers={"X-Client-Id": "alice"},
+    )
+    assert detection.status_code == 200
+
+    response = await client.get(
+        f"/image/{record_id}/sources/bestPreset",
+        headers={"X-Client-Id": "alice"},
+    )
+    assert response.status_code == 200
+    body = response.json()
+
+    # The baseline is what this client already asked for, not the defaults.
+    assert body["evidence"]["from_cache"] is True
+    assert body["baseline_point_config"]["fwhm"] == 9.0
+    assert body["baseline_point_config"]["sigma"] == 8.0
+    assert body["point_config"]["sigma"] == 8.0
+    assert body["point_config"]["fwhm"] != 9.0
+
+
+@pytest.mark.asyncio
+async def test_sources_preset_isolates_the_baseline_per_client(
+    client: AsyncClient,
+    fits_service: FitsService,
+    db_session: AsyncSession,
+) -> None:
+    record_id = await _store_sources(fits_service, db_session)
+    await client.get(
+        f"/image/{record_id}/sources",
+        params={"fwhm": "9.0"},
+        headers={"X-Client-Id": "alice"},
+    )
+
+    response = await client.get(
+        f"/image/{record_id}/sources/bestPreset",
+        headers={"X-Client-Id": "bob"},
+    )
+    assert response.status_code == 200
+    body = response.json()
+
+    assert body["evidence"]["from_cache"] is False
+    assert body["baseline_point_config"]["fwhm"] == PointDetectionConfigSchema().fwhm
+
+
+@pytest.mark.asyncio
+async def test_sources_preset_without_sources_returns_the_baseline(
+    client: AsyncClient,
+    fits_service: FitsService,
+    db_session: AsyncSession,
+) -> None:
+    rng = np.random.default_rng(3)
+    buffer = BytesIO()
+    fits.PrimaryHDU(rng.normal(scale=5.0, size=(128, 128))).writeto(buffer)
+    record = await fits_service.store_bytes(buffer.getvalue(), source_name="noise.fits")
+    await db_session.commit()
+
+    response = await client.get(f"/image/{record.id}/sources/bestPreset")
+    assert response.status_code == 200
+    body = response.json()
+
+    assert body["evidence"]["measured_fwhm"] is None
+    assert body["evidence"]["fwhm_samples"] == 0
+    assert body["evidence"]["point_count"] == 0
+    assert body["changes"] == []
+    assert body["point_config"] == PointDetectionConfigSchema().model_dump(mode="json")
+    assert body["extended_config"] == ExtendedDetectionConfigSchema().model_dump(mode="json")
+
+
+@pytest.mark.asyncio
+async def test_sources_preset_missing_record_returns_not_found(client: AsyncClient) -> None:
+    response = await client.get(f"/image/{uuid4()}/sources/bestPreset")
+
+    assert response.status_code == 404
+    assert "detail" in response.json()
 
 
 @pytest.mark.asyncio

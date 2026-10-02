@@ -85,6 +85,15 @@ export const FUENTES_ENTRIES: GlossaryEntry[] = [
     where: "Inspector → Fuentes",
   },
   {
+    id: "preset-recomendado",
+    name: "Preset recomendado",
+    group: "fuentes",
+    what: "Valores de detección ajustados a la imagen abierta, midiendo el núcleo de las fuentes que ya detectaste.",
+    inApp:
+      "Rellena los campos que dependen del ancho del núcleo (FWHM, separación, radio visual, suavizado y área) y deja intactos los que expresan tu intención, como el SNR mínimo o el score.",
+    where: "Inspector → Fuentes → Usar el recomendado",
+  },
+  {
     id: "visual-area-radius",
     name: "Radio visual",
     group: "fuentes",

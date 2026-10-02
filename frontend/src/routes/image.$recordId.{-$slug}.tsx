@@ -11,7 +11,10 @@ import {
   useRenderFitsHistogram,
   useRenderFitsImage,
 } from "@/api/generated/render/render";
-import { useDetectSources } from "@/api/generated/sources/sources";
+import {
+  useDetectSources,
+  useGetBestPreset,
+} from "@/api/generated/sources/sources";
 import { BrandLoader } from "@/components/brand-loader";
 import { HelpHint } from "@/components/ui/help-hint";
 import { ExtendedSourceMarkers } from "@/features/images/components/extended-source-markers";
@@ -72,6 +75,13 @@ function ImageDetailPage() {
   const histogramQuery = useRenderFitsHistogram(recordId, histogramParams, {
     query: { enabled: followOnsEnabled },
   });
+  // Measuring the PSF is expensive, so this only runs when the inspector asks
+  // for it instead of on every visit to the image.
+  const bestPresetQuery = useGetBestPreset(
+    recordId,
+    hdu === null ? undefined : { hdu },
+    { query: { enabled: false } },
+  );
   const imageInfo =
     infoQuery.data?.status === 200 ? infoQuery.data.data : undefined;
   const imageHdus = imageInfo?.hdus.images ?? [];
@@ -241,6 +251,17 @@ function ImageDetailPage() {
             </p>
             <SourceDetectionForm
               isPending={sourcesQuery.isFetching}
+              bestPreset={{
+                isPending: bestPresetQuery.isFetching,
+                isError: bestPresetQuery.isError,
+                data:
+                  bestPresetQuery.data?.status === 200
+                    ? bestPresetQuery.data.data
+                    : undefined,
+                request: () => {
+                  void bestPresetQuery.refetch();
+                },
+              }}
               onSubmit={(params) => {
                 setWorkspace((current) => ({
                   ...current,

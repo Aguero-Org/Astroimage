@@ -141,3 +141,36 @@ class GaiaJobStatusSchema(BaseModel):
     status: Literal["pending"] = "pending"
     job_id: str
     record_id: UUID
+
+
+class PresetChangeSchema(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    parameter: str
+    baseline: float
+    recommended: float
+    reason: str
+
+
+class PresetEvidenceSchema(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    measured_fwhm: float | None = None
+    fwhm_samples: int = 0
+    fwhm_spread: float | None = None
+    background_rms: float | None = None
+    point_count: int = 0
+    extended_count: int = 0
+    median_snr: float | None = None
+    from_cache: bool = False
+
+
+class SourcePresetResponse(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    point_config: PointDetectionConfigSchema
+    extended_config: ExtendedDetectionConfigSchema
+    baseline_point_config: PointDetectionConfigSchema
+    baseline_extended_config: ExtendedDetectionConfigSchema
+    evidence: PresetEvidenceSchema = Field(default_factory=PresetEvidenceSchema)
+    changes: list[PresetChangeSchema] = Field(default_factory=list)

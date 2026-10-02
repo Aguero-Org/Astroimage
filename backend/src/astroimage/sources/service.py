@@ -20,7 +20,12 @@ from opentelemetry import trace
 
 from astroimage.fits.reader import FitsMetadata, FitsReader
 from astroimage.fits.service import FitsService
-from astroimage.sources.cache import DetectionCache, detection_cache_key
+from astroimage.sources.cache import (
+    CachedDetection,
+    DetectionCache,
+    detection_cache_key,
+    detection_scope_key,
+)
 from astroimage.sources.detection.background import estimate_background
 from astroimage.sources.detection.extended import detect_extended_sources
 from astroimage.sources.detection.filtering import (
@@ -28,6 +33,11 @@ from astroimage.sources.detection.filtering import (
     select_point_sources,
 )
 from astroimage.sources.detection.point import detect_point_sources
+from astroimage.sources.detection.preset import (
+    derive_preset,
+    measure_psf_fwhm,
+    median_source_snr,
+)
 from astroimage.sources.gaia import (
     AstroqueryGaiaProvider,
     GaiaCatalogProvider,
@@ -48,7 +58,10 @@ from astroimage.sources.schema import (
     GaiaVerificationSummarySchema,
     PointDetectionConfigSchema,
     PointSourceSchema,
+    PresetChangeSchema,
+    PresetEvidenceSchema,
     SourceDetectionResponse,
+    SourcePresetResponse,
 )
 
 _log = structlog.get_logger("astroimage.sources.service")
@@ -255,7 +268,7 @@ class SourceDetectionService:
                 record_id=str(record_id),
                 client_id=client_id,
             )
-            return cached
+            return cached.result
         record = await self._fits.get_record(record_id)
         payload = await self._fits.get_payload(record)
         _log.info(
@@ -272,8 +285,105 @@ class SourceDetectionService:
             config=detection_config,
             extended_config=extended_detection_config,
         )
-        self._cache.set(key, result)
+        self._cache.set(
+            key,
+            CachedDetection(
+                result=result,
+                point_config=detection_config,
+                extended_config=extended_detection_config,
+            ),
+            scope=detection_scope_key(
+                record_id=record_id,
+                client_id=client_id,
+                hdu_index=hdu_index,
+            ),
+        )
         return result
+
+    async def recommend_preset(
+        self,
+        record_id: UUID,
+        *,
+        client_id: str = "anonymous",
+        hdu_index: int | None = None,
+    ) -> SourcePresetResponse:
+        """Measure the PSF on this image and rescale the parameters that follow it.
+
+        Reuses the last detection this client ran on the image when there is one,
+        otherwise runs the default detection to get sources to measure.
+        """
+        if self._fits is None:
+            raise RuntimeError(_FITS_SERVICE_NOT_CONFIGURED)
+        scope = detection_scope_key(
+            record_id=record_id,
+            client_id=client_id,
+            hdu_index=hdu_index,
+        )
+        cached = self._cache.get_latest(scope)
+        from_cache = cached is not None
+        if cached is None:
+            cached = CachedDetection(
+                result=await self.resolve_detection_from_record(
+                    record_id,
+                    client_id=client_id,
+                    hdu_index=hdu_index,
+                ),
+                point_config=PointDetectionConfigSchema(),
+                extended_config=ExtendedDetectionConfigSchema(),
+            )
+
+        record = await self._fits.get_record(record_id)
+        payload = await self._fits.get_payload(record)
+        image = self._reader.read_image_data_from_bytes(
+            payload,
+            source_name=record.original_filename,
+            hdu_index=hdu_index,
+        )
+        background = estimate_background(image.data)
+        measurement = measure_psf_fwhm(
+            background.data_sub,
+            cached.result.point_sources,
+        )
+        recommendation = derive_preset(
+            measurement=measurement,
+            baseline_point=cached.point_config,
+            baseline_extended=cached.extended_config,
+        )
+        _log.info(
+            "preset_recommended",
+            record_id=str(record_id),
+            client_id=client_id,
+            from_cache=from_cache,
+            measured_fwhm=measurement.fwhm,
+            fwhm_samples=measurement.samples,
+            recommended_fwhm=recommendation.point_config.fwhm,
+            changes=len(recommendation.changes),
+        )
+        return SourcePresetResponse(
+            point_config=recommendation.point_config,
+            extended_config=recommendation.extended_config,
+            baseline_point_config=cached.point_config,
+            baseline_extended_config=cached.extended_config,
+            evidence=PresetEvidenceSchema(
+                measured_fwhm=measurement.fwhm,
+                fwhm_samples=measurement.samples,
+                fwhm_spread=measurement.spread,
+                background_rms=float(np.nanmedian(background.background_rms)),
+                point_count=len(cached.result.point_sources),
+                extended_count=len(cached.result.extended_sources),
+                median_snr=median_source_snr(cached.result.point_sources),
+                from_cache=from_cache,
+            ),
+            changes=[
+                PresetChangeSchema(
+                    parameter=change.parameter,
+                    baseline=change.baseline,
+                    recommended=change.recommended,
+                    reason=change.reason,
+                )
+                for change in recommendation.changes
+            ],
+        )
 
     def detect(
         self,

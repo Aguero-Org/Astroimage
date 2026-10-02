@@ -23,6 +23,7 @@ from astroimage.sources.schema import (
     GaiaVerificationResponse,
     PointDetectionConfigSchema,
     SourceDetectionResponse,
+    SourcePresetResponse,
 )
 from astroimage.sources.service import GaiaVerificationService, SourceDetectionService
 
@@ -37,7 +38,7 @@ RecordId = Annotated[
     Path(description="Stored FITS record id"),
 ]
 HduIndex = Annotated[
-    int | None,
+    int,
     Query(ge=0, description="Optional image HDU index; defaults to the first 2D image HDU"),
 ]
 
@@ -176,7 +177,7 @@ async def detect_sources(
     record_id: RecordId,
     service: Annotated[SourceDetectionService, Depends(source_service_dependency)],
     client_id: Annotated[str, Header(alias="X-Client-Id")] = "anonymous",
-    hdu: HduIndex = None,
+    hdu: HduIndex = None,  # type: ignore[assignment]  # nullable default, non-nullable query
     fwhm: FwhmParam = _DEFAULTS.fwhm,
     sigma: SigmaParam = _DEFAULTS.sigma,
     min_snr: MinSnrParam = _DEFAULTS.min_snr,
@@ -273,6 +274,26 @@ async def detect_sources(
 
 
 @router.get(
+    "/{record_id}/sources/bestPreset",
+    response_model=SourcePresetResponse,
+    operation_id="getBestPreset",
+    summary="Recommend detection parameters measured from this image",
+)
+async def get_best_preset(
+    record_id: RecordId,
+    service: Annotated[SourceDetectionService, Depends(source_service_dependency)],
+    client_id: Annotated[str, Header(alias="X-Client-Id")] = "anonymous",
+    hdu: HduIndex = None,  # type: ignore[assignment]  # nullable default, non-nullable query
+) -> SourcePresetResponse:
+    _log.info("best_preset_start", record_id=str(record_id), client_id=client_id)
+    return await service.recommend_preset(
+        record_id,
+        client_id=client_id,
+        hdu_index=hdu,
+    )
+
+
+@router.get(
     "/{record_id}/sources/gaia",
     response_model=GaiaVerificationResponse | GaiaJobStatusSchema,
     operation_id="verifySourcesGaia",
@@ -283,7 +304,7 @@ async def verify_sources_gaia(
     background: Annotated[GaiaBackgroundVerify, Depends(gaia_background_dependency)],
     jobs: Annotated[GaiaJobRegistry, Depends(gaia_job_registry_dependency)],
     client_id: Annotated[str, Header(alias="X-Client-Id")] = "anonymous",
-    hdu: HduIndex = None,
+    hdu: HduIndex = None,  # type: ignore[assignment]  # nullable default, non-nullable query
     fwhm: FwhmParam = _DEFAULTS.fwhm,
     sigma: SigmaParam = _DEFAULTS.sigma,
     min_snr: MinSnrParam = _DEFAULTS.min_snr,

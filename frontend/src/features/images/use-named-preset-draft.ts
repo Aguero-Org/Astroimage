@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import {
   CUSTOM_PRESET_ID,
   matchNamedPreset,
@@ -29,28 +29,41 @@ export function useNamedPresetDraft<TParams, TDraft>({
       : matched;
   });
 
-  function applyParams(next: TParams) {
-    setDraft(toDraft(next));
-    const matched = matchNamedPreset(presets, next);
-    setPresetId(matched);
-    if (matched !== CUSTOM_PRESET_ID) {
-      setLastNamedId(matched);
-    }
-  }
+  // Stable identities: the measured preset effect depends on applyParams, and a
+  // fresh closure every render would re-apply the measurement forever.
+  const applyParams = useCallback(
+    (next: TParams) => {
+      setDraft(toDraft(next));
+      const matched = matchNamedPreset(presets, next);
+      setPresetId(matched);
+      if (matched !== CUSTOM_PRESET_ID) {
+        setLastNamedId(matched);
+      }
+    },
+    [presets, toDraft],
+  );
 
-  function applyDraft(next: TDraft) {
-    setDraft(next);
-    const parsed = parseDraft(next);
-    if (parsed === null) {
-      setPresetId(CUSTOM_PRESET_ID);
-      return;
-    }
-    const matched = matchNamedPreset(presets, parsed);
-    setPresetId(matched);
-    if (matched !== CUSTOM_PRESET_ID) {
-      setLastNamedId(matched);
-    }
-  }
+  const applyDraft = useCallback(
+    (next: TDraft) => {
+      setDraft(next);
+      const parsed = parseDraft(next);
+      if (parsed === null) {
+        setPresetId(CUSTOM_PRESET_ID);
+        return;
+      }
+      const matched = matchNamedPreset(presets, parsed);
+      setPresetId(matched);
+      if (matched !== CUSTOM_PRESET_ID) {
+        setLastNamedId(matched);
+      }
+    },
+    [parseDraft, presets],
+  );
+
+  const parseCurrent = useCallback(
+    () => parseDraft(draft),
+    [draft, parseDraft],
+  );
 
   return {
     draft,
@@ -58,6 +71,6 @@ export function useNamedPresetDraft<TParams, TDraft>({
     lastNamedId,
     applyParams,
     applyDraft,
-    parseDraft: () => parseDraft(draft),
+    parseDraft: parseCurrent,
   };
 }

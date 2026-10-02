@@ -37,7 +37,7 @@ export type ExtendedDetectionParams = Pick<
 
 export type SourceDetectionParams = Omit<DetectSourcesParams, "hdu">;
 
-export const DEFAULT_POINT_DETECTION_PARAMS: PointDetectionParams = {
+export const DEFAULT_POINT_DETECTION_PARAMS: Required<PointDetectionParams> = {
   fwhm: 3,
   sigma: 5,
   min_snr: 5,
@@ -49,17 +49,18 @@ export const DEFAULT_POINT_DETECTION_PARAMS: PointDetectionParams = {
   max_sources: 50,
 };
 
-export const DEFAULT_EXTENDED_DETECTION_PARAMS: ExtendedDetectionParams = {
-  ext_sigma: 3,
-  ext_smooth_sigma: 8,
-  ext_min_area: 500,
-  ext_max_area: 0,
-  ext_bin_factor: 8,
-  ext_closing_iterations: 2,
-  ext_opening_iterations: 1,
-  ext_min_score: 0.2,
-  ext_max_sources: 3,
-};
+export const DEFAULT_EXTENDED_DETECTION_PARAMS: Required<ExtendedDetectionParams> =
+  {
+    ext_sigma: 3,
+    ext_smooth_sigma: 8,
+    ext_min_area: 500,
+    ext_max_area: 0,
+    ext_bin_factor: 8,
+    ext_closing_iterations: 2,
+    ext_opening_iterations: 1,
+    ext_min_score: 0.2,
+    ext_max_sources: 3,
+  };
 
 export const DEFAULT_SOURCE_DETECTION_PARAMS: SourceDetectionParams = {
   ...DEFAULT_POINT_DETECTION_PARAMS,
@@ -74,6 +75,16 @@ export function pointDetectionParams(
     selected[key] = values[key];
   }
   return selected as PointDetectionParams;
+}
+
+export function extendedDetectionParams(
+  values: SourceDetectionParams,
+): ExtendedDetectionParams {
+  const selected: Partial<ExtendedDetectionParams> = {};
+  for (const key of EXTENDED_DETECTION_KEYS) {
+    selected[key] = values[key];
+  }
+  return selected as ExtendedDetectionParams;
 }
 
 export const POINT_DETECTION_PRESETS: NamedPreset<PointDetectionParams>[] = [

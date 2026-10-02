@@ -5,7 +5,12 @@ from typing import Any
 from uuid import uuid4
 
 from astroimage.fits.model import FitsRecord
-from astroimage.sources.cache import DetectionCache, detection_cache_key
+from astroimage.sources.cache import (
+    CachedDetection,
+    DetectionCache,
+    detection_cache_key,
+    detection_scope_key,
+)
 from astroimage.sources.model import SourceDetectionResult
 from astroimage.sources.schema import (
     ExtendedDetectionConfigSchema,
@@ -16,6 +21,14 @@ from tests.unit.sources.helpers import (
     fits_bytes_from_image,
     synthetic_point_source_image,
 )
+
+
+def _entry(name: str, config: PointDetectionConfigSchema | None = None) -> CachedDetection:
+    return CachedDetection(
+        result=SourceDetectionResult(source_name=name),
+        point_config=config or PointDetectionConfigSchema(),
+        extended_config=ExtendedDetectionConfigSchema(),
+    )
 
 
 def test_cache_key_distinguishes_record_client_and_params() -> None:
@@ -45,20 +58,102 @@ def test_cache_key_distinguishes_record_client_and_params() -> None:
     ) != detection_cache_key(**base_kwargs)
 
 
+def test_scope_key_ignores_the_detection_parameters() -> None:
+    record_id = uuid4()
+    base: dict[str, Any] = {"record_id": record_id, "client_id": "alice", "hdu_index": None}
+
+    assert detection_scope_key(**base) == detection_scope_key(**base)
+    assert detection_scope_key(**{**base, "client_id": "bob"}) != detection_scope_key(**base)
+    assert detection_scope_key(**{**base, "record_id": uuid4()}) != detection_scope_key(**base)
+    assert detection_scope_key(**{**base, "hdu_index": 1}) != detection_scope_key(**base)
+
+
 def test_cache_evicts_least_recently_used() -> None:
     cache = DetectionCache(max_entries=2)
-    first = SourceDetectionResult(source_name="a")
-    second = SourceDetectionResult(source_name="b")
-    third = SourceDetectionResult(source_name="c")
+    first = _entry("a")
+    second = _entry("b")
+    third = _entry("c")
 
-    cache.set("a", first)
-    cache.set("b", second)
+    cache.set("a", first, scope="sa")
+    cache.set("b", second, scope="sb")
     cache.get("a")
-    cache.set("c", third)
+    cache.set("c", third, scope="sc")
 
     assert cache.get("a") is first
     assert cache.get("b") is None
     assert cache.get("c") is third
+
+
+def test_cache_returns_the_most_recent_detection_of_a_scope() -> None:
+    cache = DetectionCache()
+    record_id = uuid4()
+    scope = detection_scope_key(record_id=record_id, client_id="alice", hdu_index=None)
+    tuned = PointDetectionConfigSchema(fwhm=9.0)
+
+    cache.set("key-1", _entry("first"), scope=scope)
+    cache.set("key-2", _entry("second", tuned), scope=scope)
+
+    latest = cache.get_latest(scope)
+    assert latest is not None
+    assert latest.result.source_name == "second"
+    assert latest.point_config.fwhm == 9.0
+
+
+def test_cache_keeps_the_config_that_produced_the_detection() -> None:
+    cache = DetectionCache()
+    config = PointDetectionConfigSchema(sigma=7.5)
+    extended = ExtendedDetectionConfigSchema(max_sources=4)
+
+    cache.set(
+        "key",
+        CachedDetection(
+            result=SourceDetectionResult(source_name="a"),
+            point_config=config,
+            extended_config=extended,
+        ),
+        scope="scope",
+    )
+
+    entry = cache.get("key")
+    assert entry is not None
+    assert entry.point_config is config
+    assert entry.extended_config is extended
+
+
+def test_cache_scopes_are_isolated_per_client() -> None:
+    cache = DetectionCache()
+    record_id = uuid4()
+    alice = detection_scope_key(record_id=record_id, client_id="alice", hdu_index=None)
+    bob = detection_scope_key(record_id=record_id, client_id="bob", hdu_index=None)
+
+    cache.set("key-alice", _entry("alice"), scope=alice)
+
+    assert cache.get_latest(bob) is None
+    assert cache.get_latest(alice) is not None
+
+
+def test_cache_returns_nothing_for_an_unknown_scope() -> None:
+    assert DetectionCache().get_latest("never-stored") is None
+
+
+def test_cache_forgets_a_scope_whose_entry_was_evicted() -> None:
+    cache = DetectionCache(max_entries=1)
+    scope = detection_scope_key(record_id=uuid4(), client_id="alice", hdu_index=None)
+
+    cache.set("key-1", _entry("first"), scope=scope)
+    cache.set("key-2", _entry("second"), scope="other-scope")
+
+    assert cache.get_latest(scope) is None
+
+
+def test_cache_clears_entries_and_scopes() -> None:
+    cache = DetectionCache()
+    cache.set("key", _entry("a"), scope="scope")
+
+    cache.clear()
+
+    assert cache.get("key") is None
+    assert cache.get_latest("scope") is None
 
 
 class _CountingFitsService:

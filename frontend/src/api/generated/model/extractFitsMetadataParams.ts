@@ -8,6 +8,7 @@
 export type ExtractFitsMetadataParams = {
 /**
  * Optional image HDU index; defaults to the primary 2D image HDU
+ * @minimum 0
  */
-hdu?: number | null;
+hdu?: number;
 };

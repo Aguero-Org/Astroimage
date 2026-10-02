@@ -10,6 +10,15 @@ describe("filterGlossaryEntries", () => {
 
   it("filters by name", () => {
     const found = filterGlossaryEntries(GLOSSARY_ENTRIES, "FWHM");
-    expect(found.map((entry) => entry.id)).toEqual(["fwhm"]);
+    expect(found.map((entry) => entry.id)).toEqual([
+      "fwhm",
+      "preset-recomendado",
+    ]);
+  });
+
+  it("narrows to the entries mentioning the text", () => {
+    const found = filterGlossaryEntries(GLOSSARY_ENTRIES, "mucho ruido");
+    expect(found.length).toBeGreaterThan(0);
+    expect(found.length).toBeLessThan(GLOSSARY_ENTRIES.length);
   });
 });
