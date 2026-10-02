@@ -20,6 +20,10 @@ def test_signed_token_rejects_tampering() -> None:
         read_candidate_token(token + "x", "secret")
 
 
+def test_invalid_token_error_maps_to_bad_request() -> None:
+    assert InvalidCandidateTokenError("tampered").status_code == 400
+
+
 def test_progress_is_ratio_when_total_is_known() -> None:
     assert progress_ratio(25, 100) == 0.25
     assert progress_ratio(10, None) is None

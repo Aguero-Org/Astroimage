@@ -16,6 +16,8 @@ from astropy.io import fits
 from astroquery.mast import Observations
 from opentelemetry import trace
 
+from astroimage.shared.errors import NotFoundError, UpstreamServiceError
+
 _log = structlog.get_logger("astroimage.hub.importer")
 _tracer = trace.get_tracer("astroimage.hub.importer")
 
@@ -30,11 +32,11 @@ _FITS_SUFFIXES = (".fits", ".fit")
 _SCIENCE_PRODUCT_TYPE = "SCIENCE"
 
 
-class HubbleNotFoundError(ValueError):
+class HubbleNotFoundError(NotFoundError):
     """Raised when a target has no Hubble imaging or cannot be resolved."""
 
 
-class HubbleDownloadError(RuntimeError):
+class HubbleDownloadError(UpstreamServiceError):
     """Raised when a Hubble product cannot be downloaded."""
 
 

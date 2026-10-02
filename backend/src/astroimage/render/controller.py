@@ -5,7 +5,7 @@ from typing import Annotated
 from uuid import UUID
 
 import structlog
-from fastapi import APIRouter, Depends, HTTPException, Path, Query, Response
+from fastapi import APIRouter, Depends, Path, Query, Response
 
 from astroimage.render.deps import render_service_dependency
 from astroimage.render.schema import HistogramResponse, RenderConfigSchema
@@ -69,18 +69,11 @@ async def render_fits_image(
 ) -> Response:
     _log.info("render_start", record_id=str(record_id), colormap=colormap, stretch=stretch)
     start = time.perf_counter()
-    try:
-        png = await service.render_png_from_record(
-            record_id,
-            config=_config(stretch, limits, colormap, pmin, pmax, gamma),
-            hdu_index=hdu,
-        )
-    except LookupError as exc:
-        _log.warning("render_not_found", record_id=str(record_id))
-        raise HTTPException(status_code=404, detail=str(exc)) from exc
-    except (ValueError, OSError) as exc:
-        _log.warning("render_error", record_id=str(record_id), detail=str(exc))
-        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    png = await service.render_png_from_record(
+        record_id,
+        config=_config(stretch, limits, colormap, pmin, pmax, gamma),
+        hdu_index=hdu,
+    )
     elapsed_ms = round((time.perf_counter() - start) * 1000, 2)
     _log.info(
         "render_complete",
@@ -104,14 +97,7 @@ async def render_fits_histogram(
 ) -> HistogramResponse:
     _log.info("histogram_start", record_id=str(record_id), bins=bins)
     start = time.perf_counter()
-    try:
-        result = await service.histogram_from_record(record_id, bins=bins, hdu_index=hdu)
-    except LookupError as exc:
-        _log.warning("histogram_not_found", record_id=str(record_id))
-        raise HTTPException(status_code=404, detail=str(exc)) from exc
-    except (ValueError, OSError) as exc:
-        _log.warning("histogram_error", record_id=str(record_id), detail=str(exc))
-        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    result = await service.histogram_from_record(record_id, bins=bins, hdu_index=hdu)
     elapsed_ms = round((time.perf_counter() - start) * 1000, 2)
     _log.info(
         "histogram_complete",

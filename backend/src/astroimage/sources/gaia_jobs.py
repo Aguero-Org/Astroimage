@@ -8,8 +8,10 @@ from uuid import UUID
 
 import structlog
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
+from structlog.typing import FilteringBoundLogger
 
 from astroimage.fits.service import FitsService
+from astroimage.shared.errors import AppError, as_app_error
 from astroimage.sources.cache import DetectionCache, detection_cache_key
 from astroimage.sources.gaia import GaiaCatalogProvider
 from astroimage.sources.schema import (
@@ -21,6 +23,11 @@ from astroimage.sources.schema import (
 from astroimage.sources.service import GaiaVerificationService, SourceDetectionService
 
 _log = structlog.get_logger("astroimage.sources.gaia_jobs")
+
+_LOGS: dict[str, FilteringBoundLogger] = {
+    "warning": _log.warning,
+    "error": _log.error,
+}
 
 
 def gaia_job_key(
@@ -103,7 +110,7 @@ class GaiaJobRegistry:
         self._max_jobs = max_jobs
         self._max_failures = max_failures
         self._done: OrderedDict[str, GaiaVerificationResponse] = OrderedDict()
-        self._failed: OrderedDict[str, tuple[int, str]] = OrderedDict()
+        self._failed: OrderedDict[str, AppError] = OrderedDict()
         self._running: dict[str, asyncio.Task[None]] = {}
 
     def get(self, key: str) -> GaiaVerificationResponse | None:
@@ -112,7 +119,7 @@ class GaiaJobRegistry:
             self._done.move_to_end(key)
         return result
 
-    def get_failure(self, key: str) -> tuple[int, str] | None:
+    def get_failure(self, key: str) -> AppError | None:
         return self._failed.get(key)
 
     def is_running(self, key: str) -> bool:
@@ -141,18 +148,18 @@ class GaiaJobRegistry:
         factory: Callable[[], Awaitable[GaiaVerificationResponse]],
     ) -> None:
         try:
-            try:
-                result = await factory()
-            except LookupError as exc:
-                self._store_failure(key, 404, str(exc))
-                return
-            except (ValueError, OSError) as exc:
-                self._store_failure(key, 400, str(exc))
-                return
-            except Exception as exc:
-                _log.exception("gaia_job_failed", job_id=key, detail=str(exc))
-                self._store_failure(key, 500, str(exc))
-                return
+            result = await factory()
+        except Exception as exc:
+            error = as_app_error(exc)
+            log = _LOGS[error.log_level]
+            log(
+                "gaia_job_failed",
+                job_id=key,
+                error_type=type(error).__name__,
+                detail=error.message,
+            )
+            self._store_failure(key, error)
+            return
         finally:
             self._running.pop(key, None)
         _log.info("gaia_job_completed", job_id=key)
@@ -165,8 +172,8 @@ class GaiaJobRegistry:
         while len(self._done) > self._max_jobs:
             self._done.popitem(last=False)
 
-    def _store_failure(self, key: str, status_code: int, detail: str) -> None:
-        self._failed[key] = (status_code, detail)
+    def _store_failure(self, key: str, error: AppError) -> None:
+        self._failed[key] = error
         self._failed.move_to_end(key)
         while len(self._failed) > self._max_failures:
             self._failed.popitem(last=False)

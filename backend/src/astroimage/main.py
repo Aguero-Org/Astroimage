@@ -14,6 +14,7 @@ from astroimage.hub.repository import TransferRepository
 from astroimage.render.controller import router as render_router
 from astroimage.shared.background import BackgroundTasks
 from astroimage.shared.database import create_engine_from_settings, create_session_factory
+from astroimage.shared.errors import register_exception_handlers
 from astroimage.shared.logging import setup_logging
 from astroimage.shared.metrics import setup_metrics
 from astroimage.shared.middleware import RequestContextMiddleware
@@ -65,6 +66,7 @@ def create_app() -> FastAPI:
         lifespan=lifespan,
     )
     application.state.settings = settings
+    register_exception_handlers(application)
     application.add_middleware(RequestContextMiddleware)
     application.add_middleware(
         CORSMiddleware,

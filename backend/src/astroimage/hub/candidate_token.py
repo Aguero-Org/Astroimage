@@ -6,8 +6,10 @@ import hmac
 import json
 from typing import Any
 
+from astroimage.shared.errors import BadRequestError
 
-class InvalidCandidateTokenError(ValueError):
+
+class InvalidCandidateTokenError(BadRequestError):
     """Raised when a candidate token signature does not match."""
 
 

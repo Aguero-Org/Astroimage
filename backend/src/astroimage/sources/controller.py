@@ -6,8 +6,9 @@ from urllib.parse import urlencode
 from uuid import UUID
 
 import structlog
-from fastapi import APIRouter, Depends, Header, HTTPException, Path, Query
+from fastapi import APIRouter, Depends, Header, Path, Query
 
+from astroimage.shared.errors import InternalServerError, NotFoundError
 from astroimage.sources.deps import (
     gaia_background_dependency,
     gaia_job_registry_dependency,
@@ -207,40 +208,33 @@ async def detect_sources(
         min_snr=min_snr,
     )
     start = time.perf_counter()
-    try:
-        result = await service.detect_from_record(
-            record_id,
-            client_id=client_id,
-            hdu_index=hdu,
-            config=_config(
-                fwhm,
-                sigma,
-                min_snr,
-                min_score,
-                min_distance,
-                visual_weight,
-                visual_area_radius,
-                visual_area_sigma,
-                max_sources,
-            ),
-            extended_config=_extended_config(
-                ext_sigma,
-                ext_smooth_sigma,
-                ext_min_area,
-                ext_max_area,
-                ext_bin_factor,
-                ext_closing_iterations,
-                ext_opening_iterations,
-                ext_min_score,
-                ext_max_sources,
-            ),
-        )
-    except LookupError as exc:
-        _log.warning("detect_not_found", record_id=str(record_id))
-        raise HTTPException(status_code=404, detail=str(exc)) from exc
-    except (ValueError, OSError) as exc:
-        _log.warning("detect_error", record_id=str(record_id), detail=str(exc))
-        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    result = await service.detect_from_record(
+        record_id,
+        client_id=client_id,
+        hdu_index=hdu,
+        config=_config(
+            fwhm,
+            sigma,
+            min_snr,
+            min_score,
+            min_distance,
+            visual_weight,
+            visual_area_radius,
+            visual_area_sigma,
+            max_sources,
+        ),
+        extended_config=_extended_config(
+            ext_sigma,
+            ext_smooth_sigma,
+            ext_min_area,
+            ext_max_area,
+            ext_bin_factor,
+            ext_closing_iterations,
+            ext_opening_iterations,
+            ext_min_score,
+            ext_max_sources,
+        ),
+    )
     elapsed_ms = round((time.perf_counter() - start) * 1000, 2)
     _log.info(
         "detect_complete",
@@ -359,11 +353,7 @@ async def verify_sources_gaia(
     if completed is not None:
         _log.info("gaia_verify_cache_hit", record_id=str(record_id))
         return completed
-    try:
-        await service.ensure_record(record_id)
-    except LookupError as exc:
-        _log.warning("gaia_verify_not_found", record_id=str(record_id))
-        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    await service.ensure_record(record_id)
     jobs.start(
         key,
         lambda: background(
@@ -381,9 +371,8 @@ async def verify_sources_gaia(
         return completed
     failure = jobs.get_failure(key)
     if failure is not None:
-        status_code, detail = failure
-        raise HTTPException(status_code=status_code, detail=detail)
-    raise HTTPException(status_code=500, detail="gaia verification did not complete")
+        raise failure
+    raise InternalServerError("Gaia verification did not complete")
 
 
 @router.get(
@@ -403,6 +392,5 @@ async def get_sources_gaia_job(
         return GaiaJobStatusSchema(job_id=job_id, record_id=record_id)
     failure = jobs.get_failure(job_id)
     if failure is not None:
-        status_code, detail = failure
-        raise HTTPException(status_code=status_code, detail=detail)
-    raise HTTPException(status_code=404, detail=f"Unknown Gaia job: {job_id}")
+        raise failure
+    raise NotFoundError(f"Unknown Gaia job: {job_id}")

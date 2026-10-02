@@ -5,12 +5,10 @@ from typing import Annotated
 from uuid import UUID
 
 import structlog
-from fastapi import APIRouter, Depends, HTTPException, Path, Query
+from fastapi import APIRouter, Depends, Path, Query
 
 from astroimage.fits.schema import FitsMetadataSchema
-from astroimage.hub.candidate_token import InvalidCandidateTokenError
 from astroimage.hub.deps import hubble_service_dependency
-from astroimage.hub.importer import HubbleNotFoundError
 from astroimage.hub.schema import (
     CandidatePageSchema,
     CandidateSortField,
@@ -91,17 +89,14 @@ async def search_astro_image(
     order: Annotated[CandidateSortOrder, Query()] = "asc",
 ) -> CandidatePageSchema:
     _log.info("candidate_search_start", target=query, page=page, sort=sort, order=order)
-    try:
-        return await service.search_candidates(
-            query,
-            page=page,
-            limit=limit,
-            min_size_mb=min_size_mb,
-            sort=sort,
-            order=order,
-        )
-    except HubbleNotFoundError as exc:
-        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    return await service.search_candidates(
+        query,
+        page=page,
+        limit=limit,
+        min_size_mb=min_size_mb,
+        sort=sort,
+        order=order,
+    )
 
 
 @router.post(
@@ -113,10 +108,7 @@ async def select_astro_image(
     body: SelectCandidateRequestSchema,
     service: Annotated[HubbleImageService, Depends(hubble_service_dependency)],
 ) -> TransferStatusSchema:
-    try:
-        return await service.select_candidate(body.candidate_token, body.display_name)
-    except InvalidCandidateTokenError as exc:
-        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    return await service.select_candidate(body.candidate_token, body.display_name)
 
 
 @router.get(
@@ -128,10 +120,7 @@ async def get_image_transfer(
     transfer_id: RecordId,
     service: Annotated[HubbleImageService, Depends(hubble_service_dependency)],
 ) -> TransferStatusSchema:
-    try:
-        return await service.get_transfer(transfer_id)
-    except LookupError as exc:
-        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    return await service.get_transfer(transfer_id)
 
 
 @router.post(
@@ -143,10 +132,7 @@ async def cancel_image_transfer(
     transfer_id: RecordId,
     service: Annotated[HubbleImageService, Depends(hubble_service_dependency)],
 ) -> TransferStatusSchema:
-    try:
-        return await service.cancel(transfer_id)
-    except LookupError as exc:
-        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    return await service.cancel(transfer_id)
 
 
 @router.post(
@@ -158,10 +144,7 @@ async def resume_image_transfer(
     transfer_id: RecordId,
     service: Annotated[HubbleImageService, Depends(hubble_service_dependency)],
 ) -> TransferStatusSchema:
-    try:
-        return await service.resume(transfer_id)
-    except LookupError as exc:
-        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    return await service.resume(transfer_id)
 
 
 @router.delete(
@@ -173,10 +156,7 @@ async def delete_astro_image(
     record_id: RecordId,
     service: Annotated[HubbleImageService, Depends(hubble_service_dependency)],
 ) -> None:
-    try:
-        await service.delete_record(record_id)
-    except LookupError as exc:
-        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    await service.delete_record(record_id)
 
 
 @router.get(
@@ -188,7 +168,4 @@ async def get_image_info(
     record_id: RecordId,
     service: Annotated[HubbleImageService, Depends(hubble_service_dependency)],
 ) -> FitsMetadataSchema:
-    try:
-        return await service.get_record_info(record_id)
-    except LookupError as exc:
-        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    return await service.get_record_info(record_id)

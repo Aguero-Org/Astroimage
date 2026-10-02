@@ -6,6 +6,11 @@ from uuid import UUID, uuid4
 
 import pytest
 
+from astroimage.shared.errors import (
+    BadRequestError,
+    InternalServerError,
+    NotFoundError,
+)
 from astroimage.sources.gaia_jobs import GaiaJobRegistry, gaia_job_key
 from astroimage.sources.schema import (
     ExtendedDetectionConfigSchema,
@@ -117,11 +122,17 @@ async def test_registry_records_failures_by_exception_type() -> None:
     await registry.wait("lookup")
     await registry.wait("runtime")
 
-    assert registry.get_failure("val") == (400, "boom")
-    assert registry.get_failure("lookup") == (404, "missing")
+    value_failure_result = registry.get_failure("val")
+    assert isinstance(value_failure_result, BadRequestError)
+    assert value_failure_result.status_code == 400
+    assert value_failure_result.message == "boom"
+    lookup_failure_result = registry.get_failure("lookup")
+    assert isinstance(lookup_failure_result, NotFoundError)
+    assert lookup_failure_result.status_code == 404
+    assert lookup_failure_result.message == "missing"
     runtime_failure_result = registry.get_failure("runtime")
-    assert runtime_failure_result is not None
-    assert runtime_failure_result[0] == 500
+    assert isinstance(runtime_failure_result, InternalServerError)
+    assert runtime_failure_result.status_code == 500
     assert registry.get("val") is None
 
 
@@ -152,7 +163,10 @@ async def test_registry_restarts_after_failure() -> None:
 
     registry.start("key", factory)
     await registry.wait("key")
-    assert registry.get_failure("key") == (400, "first attempt fails")
+    retry_failure = registry.get_failure("key")
+    assert isinstance(retry_failure, BadRequestError)
+    assert retry_failure.status_code == 400
+    assert retry_failure.message == "first attempt fails"
 
     registry.start("key", factory)
     await registry.wait("key")
