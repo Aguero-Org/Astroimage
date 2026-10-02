@@ -5,12 +5,12 @@ núcleo mínimo: buscar un objeto, bajarlo, verlo y detectarle fuentes puntuales
 deja de adivinar: el usuario elige qué imagen bajar, la descarga se puede retomar, y los
 parámetros de detección salen de medir la imagen en lugar de ajustarlos a ciegas.
 
-La numeración de User Stories y Tareas continúa la de la PoC (`US1`–`US4`, `T1`–`T2`).
+La numeración de User Stories continúa la de la PoC (`US1`–`US4`).
 
 Cada historia cubre **un** requerimiento: las cards que tocaban el mismo requerimiento quedaron
 fusionadas en una sola historia en lugar de partirse en varias. Quedan cuatro áreas, una por
-historia y una por tarea: **descarga de imágenes**, **detección de fuentes**, **verificación con
-Gaia** y **glosario y ayudas contextuales**.
+historia: **descarga de imágenes**, **detección de fuentes**, **verificación con Gaia** y
+**glosario y ayudas contextuales**.
 
 ---
 
@@ -211,7 +211,7 @@ detectado sea un objeto real y con qué parámetros.
 
 ---
 
-## US8 - Entender los términos que veo en pantalla
+## US8 - Consultar el glosario desde el inspector
 
 ### Actor/es
 
@@ -233,67 +233,3 @@ uso de la herramienta.
 - La definición enlaza a la entrada del glosario.
 - El glosario agrupa las entradas por tema (imagen, vista, fuentes, uso del visor) y se puede
   filtrar por texto.
-
----
-
-# Tareas
-
-## T3 - Descarga de imágenes desde Hubble
-
-### Objetivo
-
-Poder elegir y bajar un producto science grande por partes, con progreso, cancelación y
-reanudación.
-
-### Resultado esperado
-
-- La búsqueda devuelve candidatos paginados y el usuario elige uno.
-- La transferencia expone estado y bytes transferidos, y se puede cancelar y retomar.
-- Los trozos se purgan al completar la transferencia.
-- Una descarga interrumpida se retoma desde el último trozo guardado.
-
----
-
-## T4 - Detección extendida y preset recomendado
-
-### Objetivo
-
-Detectar también estructura extendida, y derivar los umbrales de detección de la medida del PSF de
-la propia imagen.
-
-### Resultado esperado
-
-- Los parámetros extendidos viajan por el mismo contrato de detección y no pisan los puntuales.
-- El endpoint de recomendación devuelve los umbrales medidos, cuáles cambió y con qué evidencia.
-- La medición es adaptativa (la ventana crece hasta cubrir 4.5σ) y el resultado se guarda en caché
-  por registro, cliente y HDU.
-- El frontend ofrece la recomendación como acción explícita y aplica los valores sin pisar lo que
-  el usuario escribió.
-
----
-
-## T5 - Verificación con Gaia DR4
-
-### Objetivo
-
-Cruzar las detecciones con el catálogo Gaia para confirmar cuáles son estrellas reales.
-
-### Resultado esperado
-
-- La consulta se resuelve como un job consultable, no bloqueando el request.
-- La respuesta dice, por fuente, si hubo coincidencia y con qué probabilidad.
-- Los errores del archivo de Gaia se traducen a un estado que la interfaz puede mostrar.
-
----
-
-## T6 - Glosario y guías contextuales en el inspector
-
-### Objetivo
-
-Que ningún parámetro del inspector quede sin explicación dentro de la misma app.
-
-### Resultado esperado
-
-- Cada control técnico tiene un tooltip con su definición.
-- El glosario está paginado por tema y filtrable por texto.
-- El contrato de los conceptos del inspector y las entradas del glosario se mantienen en sync.
