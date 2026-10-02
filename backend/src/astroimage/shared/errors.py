@@ -10,21 +10,22 @@ contract and the 422 validation payload are untouched.
 from __future__ import annotations
 
 import contextlib
+from collections.abc import Awaitable, Callable
 from http import HTTPStatus
-from typing import Literal
+from typing import Literal, cast
 
 import structlog
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 from starlette.requests import Request
-from structlog.typing import FilteringBoundLogger
+from starlette.responses import Response
 
 _log = structlog.get_logger("astroimage.errors")
 
 INTERNAL_ERROR_MESSAGE = "Internal server error"
 
 LogLevel = Literal["warning", "error"]
-_LOGS: dict[LogLevel, FilteringBoundLogger] = {
+_LOGS: dict[LogLevel, Callable[..., None]] = {
     "warning": _log.warning,
     "error": _log.error,
 }
@@ -158,10 +159,27 @@ async def os_error_handler(request: Request, exc: OSError) -> JSONResponse:
     return await app_error_handler(request, BadRequestError(str(exc)))
 
 
+def _register[E: Exception](
+    app: FastAPI,
+    exc_class: type[E],
+    handler: Callable[[Request, E], Awaitable[Response]],
+) -> None:
+    """Register a narrowly typed handler under Starlette's wide signature.
+
+    Starlette dispatches on the exception class, so widening here is safe and
+    keeps each handler typed against the exception it actually receives.
+    """
+
+    async def wrapped(request: Request, exc: Exception) -> Response:
+        return await handler(request, cast("E", exc))
+
+    app.add_exception_handler(exc_class, wrapped)
+
+
 def register_exception_handlers(app: FastAPI) -> None:
     """Install the global handlers; call once, before the app starts serving."""
-    app.add_exception_handler(AppError, app_error_handler)
-    app.add_exception_handler(LookupError, lookup_error_handler)
-    app.add_exception_handler(ValueError, value_error_handler)
-    app.add_exception_handler(OSError, os_error_handler)
+    _register(app, AppError, app_error_handler)
+    _register(app, LookupError, lookup_error_handler)
+    _register(app, ValueError, value_error_handler)
+    _register(app, OSError, os_error_handler)
     app.add_exception_handler(Exception, internal_error_handler)

@@ -8,7 +8,6 @@ from uuid import UUID
 
 import structlog
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
-from structlog.typing import FilteringBoundLogger
 
 from astroimage.fits.service import FitsService
 from astroimage.shared.errors import AppError, as_app_error
@@ -24,7 +23,7 @@ from astroimage.sources.service import GaiaVerificationService, SourceDetectionS
 
 _log = structlog.get_logger("astroimage.sources.gaia_jobs")
 
-_LOGS: dict[str, FilteringBoundLogger] = {
+_LOGS: dict[str, Callable[..., None]] = {
     "warning": _log.warning,
     "error": _log.error,
 }
