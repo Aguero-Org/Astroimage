@@ -9,6 +9,7 @@ __pycache__/
 htmlcov/
 .hypothesis/
 .import_linter_cache/
+.cache/
 dist/
 build/
 *.egg-info

@@ -1,7 +1,41 @@
-import { useListHubbleImages } from "@/api/generated/hub/hub";
+import { keepPreviousData, useQueryClient } from "@tanstack/react-query";
+import {
+  getListHubbleImagesQueryKey,
+  useDeleteHubbleImage,
+  useListHubbleImages,
+} from "@/api/generated/hub/hub";
+import type { ListHubbleImagesSort } from "@/api/generated/model";
 
-export function useImageRecords(query: string) {
-  const params =
-    query.trim().length > 0 ? { cuerpo_celeste: query } : undefined;
-  return useListHubbleImages(params);
+export type RecordSortField = ListHubbleImagesSort;
+
+export function useImageRecords(
+  query: string,
+  page = 1,
+  sort: RecordSortField = "created_at",
+  order: "asc" | "desc" = "desc",
+) {
+  const cuerpoCeleste = query.trim();
+  return useListHubbleImages(
+    {
+      cuerpo_celeste: cuerpoCeleste.length > 0 ? cuerpoCeleste : undefined,
+      page,
+      limit: 8,
+      sort,
+      order,
+    },
+    { query: { placeholderData: keepPreviousData } },
+  );
+}
+
+export function useDeleteImage() {
+  const queryClient = useQueryClient();
+  return useDeleteHubbleImage({
+    mutation: {
+      onSuccess: async () => {
+        await queryClient.invalidateQueries({
+          queryKey: getListHubbleImagesQueryKey(),
+        });
+      },
+    },
+  });
 }
