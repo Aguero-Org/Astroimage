@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from datetime import datetime
 from typing import Any
 from uuid import UUID
 
@@ -83,6 +84,7 @@ class FitsMetadataSchema(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     source_name: str | None = None
+    display_name: str | None = None
     image: FitsImageInfoSchema = Field(default_factory=FitsImageInfoSchema)
     instrument: FitsInstrumentInfoSchema = Field(default_factory=FitsInstrumentInfoSchema)
     photometry: FitsPhotometryInfoSchema = Field(default_factory=FitsPhotometryInfoSchema)
@@ -96,4 +98,13 @@ class FitsRecordSummarySchema(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     record_id: UUID
+    slug: str
     name: str
+    display_name: str
+    instrument: str | None
+    proposal_id: str
+    filters: str | None
+    observed_at: str | None
+    created_at: datetime
+    size_bytes: int
+    data_uri: str

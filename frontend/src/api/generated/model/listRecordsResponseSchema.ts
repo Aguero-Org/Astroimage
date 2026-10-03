@@ -5,7 +5,14 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { FitsRecordSummarySchema } from './fitsRecordSummarySchema';
+import type { ListRecordsResponseSchemaOrder } from './listRecordsResponseSchemaOrder';
+import type { ListRecordsResponseSchemaSort } from './listRecordsResponseSchemaSort';
 
 export interface ListRecordsResponseSchema {
   records: FitsRecordSummarySchema[];
+  page?: number;
+  limit?: number;
+  has_more?: boolean;
+  sort?: ListRecordsResponseSchemaSort;
+  order?: ListRecordsResponseSchemaOrder;
 }

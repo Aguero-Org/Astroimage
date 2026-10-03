@@ -14,6 +14,7 @@ import type { FitsWcsInfoSchema } from './fitsWcsInfoSchema';
 
 export interface FitsMetadataSchema {
   source_name?: string | null;
+  display_name?: string | null;
   image?: FitsImageInfoSchema;
   instrument?: FitsInstrumentInfoSchema;
   photometry?: FitsPhotometryInfoSchema;
