@@ -40,8 +40,8 @@ export function ImageSearch({
         data-testid="search-input"
         placeholder={
           isNavbar
-            ? "Buscar por cuerpo celeste…"
-            : "Buscar por cuerpo celeste, ej. M31, Orión…"
+            ? "Nombre, archivo o cuerpo celeste…"
+            : "Nombre, archivo, instrumento, propuesta, fuente o cuerpo celeste…"
         }
         value={local}
         onChange={(event) => setLocal(event.target.value)}

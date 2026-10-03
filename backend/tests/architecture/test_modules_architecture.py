@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import ast
 from collections import defaultdict
 from pathlib import Path
 
@@ -489,3 +490,21 @@ def test_features_do_not_import_minio_adapter_or_library(
             .import_modules_that()
             .are_named(MINIO_ADAPTER_MODULE)
         ).assert_applies(evaluable)
+
+
+def test_controllers_do_not_raise_http_exceptions(features: list[str]) -> None:
+    """Controllers propagate; ``shared.errors`` owns the exception -> status mapping."""
+    offenders: list[str] = []
+    for feature in features:
+        controller = PACKAGE_PATH / feature / "controller.py"
+        if not controller.is_file():
+            continue
+        tree = ast.parse(controller.read_text(encoding="utf-8"))
+        for node in ast.walk(tree):
+            if not isinstance(node, ast.ImportFrom):
+                continue
+            if any(alias.name == "HTTPException" for alias in node.names):
+                offenders.append(f"{feature}/controller.py:{node.lineno}")
+    assert offenders == [], (
+        f"controllers must not import HTTPException; raise an AppError instead: {offenders}"
+    )
