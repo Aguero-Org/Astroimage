@@ -7,7 +7,7 @@ import {
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
-import { MOCK_POINT_SOURCE } from "@/mocks/data/image";
+import { MOCK_EXTENDED_SOURCE, MOCK_POINT_SOURCE } from "@/mocks/data/image";
 import { routeTree } from "@/routeTree.gen";
 import { createTestQueryClient } from "@/test/render";
 
@@ -52,6 +52,7 @@ describe("ImageDetailPage", () => {
     renderImageDetail("m31");
 
     const markerName = `Fuente ${MOCK_POINT_SOURCE.rank}, SNR ${MOCK_POINT_SOURCE.snr.toFixed(1)}`;
+    const extendedName = `Fuente extendida ${MOCK_EXTENDED_SOURCE.rank}, área ${MOCK_EXTENDED_SOURCE.area_pixels} px`;
 
     await waitFor(
       () => {
@@ -62,12 +63,17 @@ describe("ImageDetailPage", () => {
     await waitFor(
       () => {
         expect(screen.getByTestId("image-detail-title")).toBeInTheDocument();
+        expect(document.title).toMatch(/ - Astroimage$/);
         expect(screen.getByTestId("fits-viewer")).toBeInTheDocument();
         expect(screen.getByTestId("inspector-toggle")).toBeInTheDocument();
         expect(screen.getByTestId("source-detection-form")).toBeInTheDocument();
         expect(screen.getByTestId("source-marker")).toHaveAttribute(
           "aria-label",
           markerName,
+        );
+        expect(screen.getByTestId("extended-source-marker")).toHaveAttribute(
+          "aria-label",
+          extendedName,
         );
       },
       { timeout: 8000 },
@@ -78,9 +84,12 @@ describe("ImageDetailPage", () => {
     const user = userEvent.setup();
     renderImageDetail("m31");
 
-    await waitFor(() => {
-      expect(screen.getByTestId("inspector-toggle")).toBeInTheDocument();
-    });
+    await waitFor(
+      () => {
+        expect(screen.getByTestId("inspector-toggle")).toBeInTheDocument();
+      },
+      { timeout: 8000 },
+    );
     expect(screen.getByTestId("inspector-drawer")).toHaveAttribute(
       "data-state",
       "collapsed",
@@ -116,22 +125,49 @@ describe("ImageDetailPage", () => {
     expect(screen.getByTestId("meta-sel-snr")).toHaveTextContent("11.20");
   });
 
+  it("fills Selección when an extended marker is clicked", async () => {
+    const user = userEvent.setup();
+    renderImageDetail("m31");
+
+    await waitFor(
+      () => {
+        expect(
+          screen.getByTestId("extended-source-marker"),
+        ).toBeInTheDocument();
+      },
+      { timeout: 8000 },
+    );
+    await user.click(screen.getByTestId("extended-source-marker"));
+    expect(screen.getByTestId("inspector-drawer")).toHaveAttribute(
+      "data-state",
+      "expanded",
+    );
+    expect(screen.getByTestId("extended-source-selection")).toBeInTheDocument();
+    expect(screen.getByTestId("meta-sel-area")).toHaveTextContent("640 px²");
+  });
+
   it("searches from the navbar and shows filtered home results", async () => {
     const user = userEvent.setup();
     renderImageDetail("m31");
 
-    await waitFor(() => {
-      expect(screen.getByTestId("search-input")).toBeInTheDocument();
-    });
+    await waitFor(
+      () => {
+        expect(screen.getByTestId("search-input")).toBeInTheDocument();
+      },
+      { timeout: 8000 },
+    );
 
     await user.type(screen.getByTestId("search-input"), "orion");
     await user.click(screen.getByTestId("search-submit"));
 
-    await waitFor(() => {
-      expect(screen.getByTestId("image-list")).toHaveTextContent(
-        "M42 - Orion Nebula",
-      );
-    });
+    await waitFor(
+      () => {
+        expect(screen.getByTestId("image-list")).toHaveTextContent(
+          "M42 - Orion Nebula",
+        );
+      },
+      { timeout: 8000 },
+    );
     expect(screen.getByTestId("image-list")).not.toHaveTextContent(
       "M31 - Andromeda Galaxy",
     );

@@ -25,6 +25,13 @@ class FitsRepository:
             raise LookupError(f"FITS record not found: {record_id}")
         return record
 
+    async def find_by_mast_data_uri(self, data_uri: str) -> FitsRecord | None:
+        statement = select(FitsRecord).where(
+            FitsRecord.metadata_payload["mast"]["data_uri"].astext == data_uri
+        )
+        result = await self._session.execute(statement)
+        return result.scalar_one_or_none()
+
     async def get_by_object_key(self, object_key: str) -> FitsRecord:
         statement = select(FitsRecord).where(FitsRecord.object_key == object_key)
         result = await self._session.execute(statement)

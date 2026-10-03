@@ -28,14 +28,14 @@ describe("image mock contract", () => {
     expect(result.data.records[0]?.record_id).toBe("m42");
   });
 
-  it("GET /image/search?query=orion returns a single record_id", async () => {
+  it("GET /image/search?query=orion returns candidate products", async () => {
     const result = await customFetch<{
-      data: { record_id: string };
+      data: { items: { observation_id: string }[] };
       status: number;
     }>("/image/search?query=orion");
 
     expect(result.status).toBe(200);
-    expect(result.data.record_id).toBe("m42");
+    expect(result.data.items[0]?.observation_id).toBe("m42");
   });
 
   it("GET /image/:id/info returns image metadata", async () => {

@@ -4,7 +4,23 @@
  * astroimage
  * OpenAPI spec version: 0.1.0
  */
+import type { ListHubbleImagesOrder } from './listHubbleImagesOrder';
+import type { ListHubbleImagesSort } from './listHubbleImagesSort';
 
 export type ListHubbleImagesParams = {
+/**
+ * Case-insensitive match on display name, filename, instrument, proposal id, or MAST data URI
+ */
 cuerpo_celeste?: string | null;
+/**
+ * @minimum 1
+ */
+page?: number;
+/**
+ * @minimum 1
+ * @maximum 50
+ */
+limit?: number;
+sort?: ListHubbleImagesSort;
+order?: ListHubbleImagesOrder;
 };
