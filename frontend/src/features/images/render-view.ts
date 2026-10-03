@@ -9,12 +9,12 @@ export type RenderViewParams = Required<
 >;
 
 export const DEFAULT_RENDER_PARAMS: RenderViewParams = {
-  stretch: "sqrt",
+  stretch: "linear",
   limits: "percentiles",
   colormap: "grey",
   pmin: 1,
   pmax: 99,
-  gamma: 1,
+  gamma: 0.5,
 };
 
 export const STRETCH_OPTIONS = [
@@ -39,67 +39,69 @@ export const COLORMAP_OPTIONS = [
 
 export const RENDER_PRESETS: NamedPreset<RenderViewParams>[] = [
   {
-    id: "estandar",
-    label: "Estándar",
+    id: "equilibrio",
+    label: "Equilibrio",
     outcome:
       "Estrellas y cielo se ven a la vez, sin quemar lo más brillante ni pintar el ruido.",
-    hint: "Usala la primera vez que abrís el recorte.",
+    hint: "Primera vez que abrís el recorte.",
     values: DEFAULT_RENDER_PARAMS,
   },
   {
-    id: "cielo-profundo",
-    label: "Cielo profundo",
+    id: "mucho-ruido",
+    label: "Mucho ruido",
     outcome:
-      "El fondo y las nubes débiles se ven más; los núcleos muy brillantes se aplastan un poco.",
-    hint: "Usala si hay nebulosa, polvo o un objeto brillante con halo. No si solo te importan las estrellas puntuales: el cielo se llena de grano.",
+      "El grano del fondo se recorta; se pierde un poco de brillo débil.",
+    hint: "El cielo se ve salpicado o sucio. No si lo que buscás es precisamente ese fondo.",
+    values: {
+      stretch: "sqrt",
+      limits: "percentiles",
+      colormap: "grey",
+      pmin: 3,
+      pmax: 99,
+      gamma: 0.6,
+    },
+  },
+  {
+    id: "mucho-brillo",
+    label: "Mucho brillo",
+    outcome: "Los núcleos dejan de estar quemados; el cielo queda más oscuro.",
+    hint: "Hay centros saturados o un destello que se come el recorte.",
     values: {
       stretch: "asinh",
       limits: "percentiles",
       colormap: "grey",
       pmin: 0.5,
-      pmax: 99.5,
-      gamma: 1.2,
+      pmax: 98,
+      gamma: 0.5,
     },
   },
   {
-    id: "zscale",
-    label: "Zscale",
+    id: "poco-contraste",
+    label: "Poco contraste",
     outcome:
-      "Recupera detalle cuando la imagen se ve casi negra o casi blanca por un destello o un pixel disparado.",
-    hint: "Usala si el estándar deja el campo vacío o saturado. Si ya se ve bien, el recorte puede cambiar un poco de una vez a otra.",
+      "El recorte se adapta al ruido local cuando casi todo se ve negro o blanco.",
+    hint: "Equilibrio deja el campo vacío o una mancha única.",
     values: {
       stretch: "sqrt",
       limits: "zscale",
       colormap: "grey",
       pmin: 1,
       pmax: 99,
-      gamma: 1,
+      gamma: 0.8,
     },
   },
   {
-    id: "nucleos",
-    label: "Núcleos",
-    outcome:
-      "Se nota quién es realmente más brillante; el cielo queda más oscuro.",
-    hint: "Usala para mirar centros, picos y saturación. No para cazar estructura débil.",
+    id: "estructura-debil",
+    label: "Estructura débil",
+    outcome: "Halos, polvo y nubes se ven más; los picos se aplastan un poco.",
+    hint: "Nebulosa o un objeto brillante con envoltura. No para un campo solo de estrellas nítidas.",
     values: {
-      stretch: "linear",
+      stretch: "asinh",
       limits: "percentiles",
       colormap: "grey",
-      pmin: 5,
-      pmax: 99,
-      gamma: 1,
-    },
-  },
-  {
-    id: "color",
-    label: "Color",
-    outcome:
-      "La misma imagen, en una escala de color que sigue yendo de oscuro a claro.",
-    hint: "Usala si en gris no distinguís niveles. No cambia las fuentes ni inventa nebulosa.",
-    values: {
-      ...DEFAULT_RENDER_PARAMS,
-      colormap: "cube_helix",
+      pmin: 0.25,
+      pmax: 99.5,
+      gamma: 1.3,
     },
   },
 ];

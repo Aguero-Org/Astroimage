@@ -7,12 +7,14 @@ import { SourceMarker } from "./source-marker";
 type SourceMarkersProps = {
   sources: PointSourceSchema[];
   selectedId?: number | null;
+  gaiaMatchedIds?: ReadonlySet<number>;
   onSelect?: (source: PointSourceSchema) => void;
 };
 
 export function SourceMarkers({
   sources,
   selectedId = null,
+  gaiaMatchedIds,
   onSelect,
 }: Readonly<SourceMarkersProps>) {
   const coords = useCoordinates(FITS_RENDER_IMAGE_KEY);
@@ -54,6 +56,7 @@ export function SourceMarkers({
             <SourceMarker
               source={source}
               selected={source.source_id === selectedId}
+              gaiaMatch={gaiaMatchedIds?.has(source.source_id) ?? false}
               onSelect={onSelect}
             />
           </li>

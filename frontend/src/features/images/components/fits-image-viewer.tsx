@@ -58,7 +58,7 @@ export function FitsImageViewer({
     <ViewerStateProvider state={state}>
       <div
         className={cn(
-          "relative h-full min-h-svh overflow-hidden rounded-xl border bg-transparent",
+          "relative h-full min-h-0 overflow-hidden rounded-xl border bg-transparent",
           className,
         )}
         data-testid="fits-viewer"
@@ -67,7 +67,7 @@ export function FitsImageViewer({
           ref={state.setContainerElement}
           role="application"
           aria-label={label}
-          className="fits-osd h-full min-h-svh w-full bg-transparent"
+          className="fits-osd h-full min-h-0 w-full bg-transparent"
         />
         <div
           id={navigatorId}

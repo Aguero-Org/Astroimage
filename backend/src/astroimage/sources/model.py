@@ -33,6 +33,15 @@ class ExtendedSource(BaseModel):
 
     source_id: int
     rank: int
+    xcentroid: float
+    ycentroid: float
+    width_pixels: float
+    height_pixels: float
+    area_pixels: int
+    peak: float
+    mean: float
+    flux: float
+    relevance_score: float
     object_type: Literal["extended"] = "extended"
 
 
