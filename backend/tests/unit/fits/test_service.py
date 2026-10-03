@@ -137,6 +137,32 @@ async def test_update_record_metadata_persists_analyzed_payload() -> None:
     assert record.metadata_payload["hdus"]["images"] == []
 
 
+async def test_update_record_metadata_keeps_catalog_fields() -> None:
+    storage = _FakeStorage()
+    repository = _FakeRepository()
+    service = _service(storage, repository)
+    record = FitsRecord(
+        id=uuid4(),
+        object_key=f"fits/{uuid4()}.fits",
+        original_filename="hst_drz.fits",
+        size_bytes=7,
+        metadata_payload={
+            "source_name": "m31",
+            "mast": {
+                "data_uri": "mast:HST/product/hst_drz.fits",
+                "proposal_id": "12058",
+                "display_name": "Galaxia M31",
+            },
+            "hdus": {"selected": 0},
+        },
+    )
+
+    await service.update_record_metadata(record, b"payload")
+
+    assert record.metadata_payload["mast"]["display_name"] == "Galaxia M31"
+    assert record.metadata_payload["mast"]["proposal_id"] == "12058"
+
+
 async def test_store_bytes_rolls_back_record_when_upload_fails() -> None:
     storage = _FakeStorage()
     storage.fail_put = True

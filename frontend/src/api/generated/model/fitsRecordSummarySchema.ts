@@ -7,5 +7,14 @@
 
 export interface FitsRecordSummarySchema {
   record_id: string;
+  slug: string;
   name: string;
+  display_name: string;
+  instrument: string | null;
+  proposal_id: string;
+  filters: string | null;
+  observed_at: string | null;
+  created_at: string;
+  size_bytes: number;
+  data_uri: string;
 }

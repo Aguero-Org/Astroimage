@@ -2,6 +2,18 @@ function apiBaseUrl(): string {
   return import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000";
 }
 
+const CLIENT_ID_STORAGE_KEY = "astroimage.client-id";
+
+function clientId(): string {
+  const stored = localStorage.getItem(CLIENT_ID_STORAGE_KEY);
+  if (stored) {
+    return stored;
+  }
+  const generated = crypto.randomUUID();
+  localStorage.setItem(CLIENT_ID_STORAGE_KEY, generated);
+  return generated;
+}
+
 async function parseResponseBody(response: Response): Promise<unknown> {
   if (response.status === 204) {
     return undefined;
@@ -47,6 +59,7 @@ export async function customFetch<T>(
   const isFormData = body instanceof FormData;
   const isSearchParams = body instanceof URLSearchParams;
   const headers = new Headers(customHeaders);
+  headers.set("X-Client-Id", clientId());
   if (!isFormData && !isSearchParams && !headers.has("Content-Type")) {
     headers.set("Content-Type", "application/json");
   }

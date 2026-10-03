@@ -55,27 +55,27 @@ jobs:
           --health-retries 10
     steps:
       - uses: actions/checkout@v7
-      - uses: astral-sh/setup-uv@v6
+      - uses: astral-sh/setup-uv@v7
         with:
           enable-cache: true
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         with:
           python-version-file: backend/.python-version
-      - name: Start MinIO
+      - name: Start object storage
         working-directory: .
         run: |
           docker run -d --name minio \
             -p 9000:9000 \
-            -e MINIO_ROOT_USER=minioadmin \
-            -e MINIO_ROOT_PASSWORD=minioadmin \
-            quay.io/minio/minio:latest server /data --console-address :9001
+            -e RUSTFS_ACCESS_KEY=minioadmin \
+            -e RUSTFS_SECRET_KEY=minioadmin \
+            rustfs/rustfs:1.0.0 /data
           for _ in $(seq 1 30); do
-            if curl -sf http://127.0.0.1:9000/minio/health/live; then
+            if curl -sf http://127.0.0.1:9000/health; then
               exit 0
             fi
             sleep 1
           done
-          echo "MinIO did not become ready" >&2
+          echo "Object storage did not become ready" >&2
           docker logs minio >&2
           exit 1
       - name: Install dependencies
@@ -108,10 +108,10 @@ jobs:
         working-directory: frontend
     steps:
       - uses: actions/checkout@v7
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v6
         with:
           version: 11
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: pnpm

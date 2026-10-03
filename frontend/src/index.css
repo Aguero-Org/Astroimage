@@ -22,6 +22,7 @@
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
   --color-destructive: var(--destructive);
+  --color-gaia: var(--gaia);
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
@@ -58,9 +59,10 @@
     var(--palette-5) 55%,
     var(--palette-4)
   );
-  --accent: var(--palette-2);
+  --accent: color-mix(in srgb, var(--palette-2) 28%, white);
   --accent-foreground: var(--palette-5);
   --destructive: oklch(0.577 0.245 27.325);
+  --gaia: oklch(0.62 0.17 145);
   --border: color-mix(in srgb, var(--palette-5) 12%, var(--palette-1));
   --input: color-mix(in srgb, var(--palette-5) 12%, var(--palette-1));
   --ring: var(--palette-3);
@@ -68,8 +70,8 @@
   --sidebar-foreground: var(--foreground);
   --sidebar-primary: var(--primary);
   --sidebar-primary-foreground: var(--primary-foreground);
-  --sidebar-accent: var(--secondary);
-  --sidebar-accent-foreground: var(--secondary-foreground);
+  --sidebar-accent: var(--accent);
+  --sidebar-accent-foreground: var(--accent-foreground);
   --sidebar-border: var(--border);
   --sidebar-ring: var(--ring);
   --scrollbar: color-mix(in srgb, var(--palette-5) 38%, transparent);
@@ -93,9 +95,10 @@
     var(--palette-1) 62%,
     var(--palette-4)
   );
-  --accent: var(--palette-2);
-  --accent-foreground: var(--palette-5);
+  --accent: color-mix(in srgb, var(--palette-2) 28%, var(--palette-4));
+  --accent-foreground: var(--palette-1);
   --destructive: oklch(0.704 0.191 22.216);
+  --gaia: oklch(0.75 0.17 145);
   --border: color-mix(in srgb, var(--palette-1) 14%, transparent);
   --input: color-mix(in srgb, var(--palette-1) 14%, transparent);
   --ring: var(--palette-2);
@@ -103,8 +106,8 @@
   --sidebar-foreground: var(--foreground);
   --sidebar-primary: var(--primary);
   --sidebar-primary-foreground: var(--primary-foreground);
-  --sidebar-accent: var(--secondary);
-  --sidebar-accent-foreground: var(--secondary-foreground);
+  --sidebar-accent: var(--accent);
+  --sidebar-accent-foreground: var(--accent-foreground);
   --sidebar-border: var(--border);
   --sidebar-ring: var(--ring);
   --scrollbar: color-mix(in srgb, var(--palette-1) 38%, transparent);
@@ -129,6 +132,17 @@
   body {
     @apply bg-background text-foreground;
     margin: 0;
+  }
+
+  html:has([data-testid="glossary-page"]) {
+    scroll-behavior: smooth;
+    scroll-padding-top: var(--glossary-scroll-pad, 12rem);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html:has([data-testid="glossary-page"]) {
+      scroll-behavior: auto;
+    }
   }
 
   *::-webkit-scrollbar {
