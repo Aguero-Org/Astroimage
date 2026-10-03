@@ -22,6 +22,7 @@ class Settings(BaseSettings):
     minio_secret_key: str = "minioadmin"
     minio_bucket: str = "astroimage"
     minio_secure: bool = False
+    candidate_token_secret: str = "astroimage-dev-candidate-token"
 
     @computed_field  # type: ignore[prop-decorator]
     @property

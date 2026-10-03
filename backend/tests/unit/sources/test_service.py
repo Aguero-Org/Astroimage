@@ -7,10 +7,17 @@ import numpy as np
 import pytest
 
 from astroimage.fits.model import FitsRecord
-from astroimage.sources.model import PointSource, SourceDetectionResult
-from astroimage.sources.schema import PointDetectionConfigSchema
+from astroimage.sources.model import ExtendedSource, PointSource, SourceDetectionResult
+from astroimage.sources.schema import (
+    ExtendedDetectionConfigSchema,
+    PointDetectionConfigSchema,
+)
 from astroimage.sources.service import SourceDetectionService
-from tests.unit.sources.helpers import fits_bytes_from_image, synthetic_point_source_image
+from tests.unit.sources.helpers import (
+    fits_bytes_from_image,
+    synthetic_extended_source_image,
+    synthetic_point_source_image,
+)
 
 
 class _FakeFitsService:
@@ -64,10 +71,63 @@ def test_service_detects_point_sources_and_maps_schema() -> None:
 
     assert schema.source_name == result.source_name
     assert schema.summary.point_count == len(result.point_sources)
-    assert schema.summary.extended_count == 0
+    assert schema.summary.extended_count == len(result.extended_sources)
     assert len(schema.point_sources) == len(result.point_sources)
     assert schema.point_sources[0].object_type == "point"
-    assert schema.extended_sources == []
+    assert all(source.object_type == "extended" for source in schema.extended_sources)
+
+
+def test_service_detects_extended_sources_on_nebula() -> None:
+    image, _ = synthetic_extended_source_image()
+    payload = fits_bytes_from_image(image)
+
+    service = SourceDetectionService()
+    result = service.detect(payload, source_name="nebula.fits")
+
+    assert isinstance(result, SourceDetectionResult)
+    assert result.source_name == "nebula.fits"
+    assert len(result.extended_sources) >= 1
+    assert all(isinstance(source, ExtendedSource) for source in result.extended_sources)
+    assert all(source.relevance_score >= 0.0 for source in result.extended_sources)
+    ranks = [source.rank for source in result.extended_sources]
+    assert ranks == list(range(1, len(ranks) + 1))
+
+    schema = service.to_schema(result)
+
+    assert schema.summary.extended_count == len(schema.extended_sources)
+    assert schema.extended_sources[0].object_type == "extended"
+    assert schema.extended_sources[0].area_pixels > 0
+
+
+def test_service_extended_config_min_area_filters_regions() -> None:
+    image, _ = synthetic_extended_source_image()
+    payload = fits_bytes_from_image(image)
+
+    service = SourceDetectionService()
+    default_result = service.detect(
+        payload,
+        extended_config=ExtendedDetectionConfigSchema(),
+    )
+    filtered_result = service.detect(
+        payload,
+        extended_config=ExtendedDetectionConfigSchema(min_area=100_000_000),
+    )
+
+    assert len(default_result.extended_sources) >= 1
+    assert filtered_result.extended_sources == []
+
+
+def test_service_extended_config_sigma_filters_regions() -> None:
+    image, _ = synthetic_extended_source_image()
+    payload = fits_bytes_from_image(image)
+
+    service = SourceDetectionService()
+    result = service.detect(
+        payload,
+        extended_config=ExtendedDetectionConfigSchema(sigma=500.0),
+    )
+
+    assert result.extended_sources == []
 
 
 def test_service_empty_region_returns_no_sources() -> None:
