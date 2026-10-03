@@ -35,3 +35,23 @@ def fits_bytes_from_image(image: np.ndarray) -> bytes:
     buffer = io.BytesIO()
     fits.PrimaryHDU(image).writeto(buffer)
     return buffer.getvalue()
+
+
+def synthetic_extended_source_image(
+    size: int = 256,
+    *,
+    background_level: float = 100.0,
+    noise_sigma: float = 5.0,
+    peak: float = 200.0,
+    spread: float = 40.0,
+    center: tuple[float, float] = (128.0, 128.0),
+    seed: int = 11,
+) -> tuple[np.ndarray, np.ndarray]:
+    coordinates = np.mgrid[0:size, 0:size]
+    rng = np.random.default_rng(seed)
+    image = background_level + rng.normal(scale=noise_sigma, size=(size, size))
+    noise = rng.normal(scale=noise_sigma, size=(size, size))
+    center_y, center_x = center
+    distance_sq = (coordinates[1] - center_x) ** 2 + (coordinates[0] - center_y) ** 2
+    image = image + peak * np.exp(-distance_sq / (2.0 * spread**2))
+    return image, noise

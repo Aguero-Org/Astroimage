@@ -56,6 +56,7 @@ docker run --rm `
     -e SONAR_HOST_URL `
     -e SONAR_TOKEN `
     -v "${mount}:/usr/src" `
+    -v "/usr/src/backend/.cache" `
     -w /usr/src `
     sonarsource/sonar-scanner-cli:11
 

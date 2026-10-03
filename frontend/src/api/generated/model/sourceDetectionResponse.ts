@@ -13,4 +13,5 @@ export interface SourceDetectionResponse {
   summary: DetectionSummarySchema;
   point_sources?: PointSourceSchema[];
   extended_sources?: ExtendedSourceSchema[];
+  gaia_url?: string | null;
 }

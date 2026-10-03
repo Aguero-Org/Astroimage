@@ -62,22 +62,32 @@ describe("RenderViewForm", () => {
     );
   });
 
+  it("shows the hovered preset description under the select", async () => {
+    const { user } = renderForm();
+
+    await user.click(screen.getByTestId("render-preset"));
+    await user.hover(screen.getByTestId("render-preset-estructura-debil"));
+    expect(screen.getByTestId("render-preset-hover-hint")).toHaveTextContent(
+      "Halos",
+    );
+  });
+
   it("fills the form from a named render preset", async () => {
     const { onSubmit, user } = renderForm();
 
     await user.click(screen.getByTestId("render-preset"));
-    await user.click(screen.getByTestId("render-preset-cielo-profundo"));
+    await user.click(screen.getByTestId("render-preset-estructura-debil"));
     expect(screen.getByTestId("render-preset-outcome")).toHaveTextContent(
-      "nubes débiles",
+      "Halos",
     );
     await user.click(screen.getByTestId("render-view-submit"));
     expect(onSubmit).toHaveBeenCalledWith({
       stretch: "asinh",
       limits: "percentiles",
       colormap: "grey",
-      pmin: 0.5,
+      pmin: 0.25,
       pmax: 99.5,
-      gamma: 1.2,
+      gamma: 1.3,
     });
   });
 
@@ -97,7 +107,7 @@ describe("RenderViewForm", () => {
     const { onSubmit, user } = renderForm();
 
     await user.click(screen.getByTestId("render-preset"));
-    await user.click(screen.getByTestId("render-preset-nucleos"));
+    await user.click(screen.getByTestId("render-preset-mucho-brillo"));
     await user.click(screen.getByTestId("render-view-reset"));
     await user.click(screen.getByTestId("render-view-submit"));
     expect(onSubmit).toHaveBeenCalledWith(DEFAULT_RENDER_PARAMS);
