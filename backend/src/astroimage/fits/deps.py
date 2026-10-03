@@ -29,3 +29,10 @@ def fits_service_dependency(
     storage: Annotated[FitsStorage, Depends(fits_storage_dependency)],
 ) -> FitsService:
     return FitsService(reader, repository, storage)
+
+
+def fits_service_from_resources(
+    session: AsyncSession,
+    objects: ObjectStorage,
+) -> FitsService:
+    return FitsService(FitsReader(), FitsRepository(session), FitsStorage(objects))

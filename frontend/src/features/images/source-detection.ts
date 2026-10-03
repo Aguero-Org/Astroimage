@@ -1,38 +1,109 @@
 import type { DetectSourcesParams } from "@/api/generated/model";
 import type { NamedPreset } from "./named-preset";
 
+export const POINT_DETECTION_KEYS = [
+  "fwhm",
+  "sigma",
+  "min_snr",
+  "min_score",
+  "min_distance",
+  "visual_weight",
+  "visual_area_radius",
+  "visual_area_sigma",
+  "max_sources",
+] as const;
+
+export const EXTENDED_DETECTION_KEYS = [
+  "ext_sigma",
+  "ext_smooth_sigma",
+  "ext_min_area",
+  "ext_max_area",
+  "ext_bin_factor",
+  "ext_closing_iterations",
+  "ext_opening_iterations",
+  "ext_min_score",
+  "ext_max_sources",
+] as const;
+
+export type PointDetectionParams = Pick<
+  DetectSourcesParams,
+  (typeof POINT_DETECTION_KEYS)[number]
+>;
+
+export type ExtendedDetectionParams = Pick<
+  DetectSourcesParams,
+  (typeof EXTENDED_DETECTION_KEYS)[number]
+>;
+
 export type SourceDetectionParams = Omit<DetectSourcesParams, "hdu">;
 
-export const DEFAULT_SOURCE_DETECTION_PARAMS: SourceDetectionParams = {
-  fwhm: 5.5,
-  sigma: 9,
-  min_snr: 6,
+export const DEFAULT_POINT_DETECTION_PARAMS: Required<PointDetectionParams> = {
+  fwhm: 3,
+  sigma: 5,
+  min_snr: 5,
   min_score: 0.18,
-  min_distance: 4,
+  min_distance: 3,
   visual_weight: 0.8,
   visual_area_radius: 7,
   visual_area_sigma: 2,
   max_sources: 50,
 };
 
-export const SOURCE_DETECTION_PRESETS: NamedPreset<SourceDetectionParams>[] = [
+export const DEFAULT_EXTENDED_DETECTION_PARAMS: Required<ExtendedDetectionParams> =
   {
-    id: "estandar",
-    label: "Estándar",
-    outcome:
-      "Las estrellas que se ven claro, un número manejable de marcas, las más visibles arriba.",
-    hint: "Usala como primera detección.",
-    values: DEFAULT_SOURCE_DETECTION_PARAMS,
+    ext_sigma: 3,
+    ext_smooth_sigma: 8,
+    ext_min_area: 500,
+    ext_max_area: 0,
+    ext_bin_factor: 8,
+    ext_closing_iterations: 2,
+    ext_opening_iterations: 1,
+    ext_min_score: 0.2,
+    ext_max_sources: 3,
+  };
+
+export const DEFAULT_SOURCE_DETECTION_PARAMS: SourceDetectionParams = {
+  ...DEFAULT_POINT_DETECTION_PARAMS,
+  ...DEFAULT_EXTENDED_DETECTION_PARAMS,
+};
+
+export function pointDetectionParams(
+  values: SourceDetectionParams,
+): PointDetectionParams {
+  const selected: Partial<PointDetectionParams> = {};
+  for (const key of POINT_DETECTION_KEYS) {
+    selected[key] = values[key];
+  }
+  return selected as PointDetectionParams;
+}
+
+export function extendedDetectionParams(
+  values: SourceDetectionParams,
+): ExtendedDetectionParams {
+  const selected: Partial<ExtendedDetectionParams> = {};
+  for (const key of EXTENDED_DETECTION_KEYS) {
+    selected[key] = values[key];
+  }
+  return selected as ExtendedDetectionParams;
+}
+
+export const POINT_DETECTION_PRESETS: NamedPreset<PointDetectionParams>[] = [
+  {
+    id: "equilibrio",
+    label: "Equilibrio",
+    outcome: "Las estrellas que se ven claro, un número manejable de marcas.",
+    hint: "Primera detección.",
+    values: DEFAULT_POINT_DETECTION_PARAMS,
   },
   {
-    id: "conservador",
-    label: "Conservador",
-    outcome: "Pocas marcas, las más seguras. Casi no hay falsos.",
-    hint: "Usala para revisar a mano o cuando el estándar marca basura. En un campo pobre o de estrellas débiles puede quedar casi vacío.",
+    id: "mucho-ruido",
+    label: "Mucho ruido",
+    outcome: "Pocas marcas, las más seguras. Casi no hay falsos en el fondo.",
+    hint: "El equilibrio clava granito o basura. En un campo pobre puede quedar vacío.",
     values: {
-      fwhm: 5.5,
-      sigma: 12,
-      min_snr: 10,
+      fwhm: 3,
+      sigma: 10,
+      min_snr: 9,
       min_score: 0.35,
       min_distance: 5,
       visual_weight: 0.75,
@@ -42,32 +113,15 @@ export const SOURCE_DETECTION_PRESETS: NamedPreset<SourceDetectionParams>[] = [
     },
   },
   {
-    id: "campo-denso",
-    label: "Campo denso",
-    outcome: "Muchas más marcas, también débiles y pegadas.",
-    hint: "Usala en cúmulos o chips llenos de estrellas. No en nebulosa: va a clavar nudos de gas como si fueran estrellas. Tampoco si la imagen está borrosa.",
-    values: {
-      fwhm: 4,
-      sigma: 5,
-      min_snr: 4,
-      min_score: 0.1,
-      min_distance: 3,
-      visual_weight: 0.8,
-      visual_area_radius: 5,
-      visual_area_sigma: 1.5,
-      max_sources: 150,
-    },
-  },
-  {
-    id: "seeing-ancho",
-    label: "Seeing ancho",
+    id: "baja-resolucion",
+    label: "Baja resolución",
     outcome:
-      "Marcas más separadas, pensadas para estrellas gordas o una imagen poco nítida.",
-    hint: "Usala si ves discos grandes y el estándar pone dos puntos en la misma estrella. Si las estrellas son chicas y están apretadas, se come vecinas.",
+      "Una marca por estrella gorda o borrosa, no dos puntos en el mismo disco.",
+    hint: "Los perfiles se ven anchos. Si las estrellas son chicas y están apretadas, se come vecinas.",
     values: {
-      fwhm: 9,
-      sigma: 8,
-      min_snr: 6,
+      fwhm: 8,
+      sigma: 5,
+      min_snr: 5,
       min_score: 0.18,
       min_distance: 8,
       visual_weight: 0.8,
@@ -77,15 +131,20 @@ export const SOURCE_DETECTION_PRESETS: NamedPreset<SourceDetectionParams>[] = [
     },
   },
   {
-    id: "lo-mas-brillante",
-    label: "Lo más brillante",
-    outcome:
-      "Las mismas detecciones que el estándar, ordenadas por intensidad, no por quién se ve más grande.",
-    hint: "Usala si arriba del ranking hay manchas y abajo estrellas nítidas. No suma fuentes nuevas.",
+    id: "muchas-estrellas",
+    label: "Muchas estrellas",
+    outcome: "Más marcas, también débiles y pegadas.",
+    hint: "Cúmulo o chip lleno. No en nebulosa: toma nudos de gas por estrellas.",
     values: {
-      ...DEFAULT_SOURCE_DETECTION_PARAMS,
-      visual_weight: 0.25,
-      min_score: 0.15,
+      fwhm: 2.5,
+      sigma: 4,
+      min_snr: 4,
+      min_score: 0.1,
+      min_distance: 2,
+      visual_weight: 0.8,
+      visual_area_radius: 5,
+      visual_area_sigma: 1.5,
+      max_sources: 150,
     },
   },
 ];
