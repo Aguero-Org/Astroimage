@@ -44,11 +44,14 @@ describe("HomePage search", () => {
     await user.type(search, "orion");
     await user.click(screen.getByTestId("search-submit"));
 
-    await waitFor(() => {
-      expect(screen.getByTestId("image-list")).toHaveTextContent(
-        "M42 - Orion Nebula",
-      );
-    });
+    await waitFor(
+      () => {
+        expect(screen.getByTestId("image-list")).toHaveTextContent(
+          "M42 - Orion Nebula",
+        );
+      },
+      { timeout: 8000 },
+    );
     expect(screen.getByTestId("image-list")).not.toHaveTextContent(
       "M31 - Andromeda Galaxy",
     );

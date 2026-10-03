@@ -1,6 +1,6 @@
 import type { HistogramResponse } from "@/api/generated/model";
+import { BrandLoader } from "@/components/brand-loader";
 import { HelpHint } from "@/components/ui/help-hint";
-import { Skeleton } from "@/components/ui/skeleton";
 
 type PixelHistogramProps = {
   histogram: HistogramResponse | undefined;
@@ -36,7 +36,9 @@ export function PixelHistogram({
   showPercentiles,
 }: Readonly<PixelHistogramProps>) {
   if (isPending) {
-    return <Skeleton data-testid="histogram-loading" className="h-16 w-full" />;
+    return (
+      <BrandLoader testId="histogram-loading" label="Cargando histograma…" />
+    );
   }
   if (isError || !histogram || histogram.counts.length === 0) {
     return (
@@ -55,7 +57,11 @@ export function PixelHistogram({
     <div data-testid="pixel-histogram" className="mb-3 flex flex-col gap-1">
       <div className="flex items-center gap-1 text-xs font-medium">
         Histograma
-        <HelpHint label="Histograma" testId="help-histogram">
+        <HelpHint
+          label="Histograma"
+          testId="help-histogram"
+          glossaryId="histogram"
+        >
           Distribución de valores de píxel del HDU actual. Las líneas marcan los
           percentiles Pmin y Pmax usados al recortar el render.
         </HelpHint>
