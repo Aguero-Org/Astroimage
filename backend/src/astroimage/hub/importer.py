@@ -16,6 +16,8 @@ from astropy.io import fits
 from astroquery.mast import Observations
 from opentelemetry import trace
 
+from astroimage.shared.errors import NotFoundError, UpstreamServiceError
+
 _log = structlog.get_logger("astroimage.hub.importer")
 _tracer = trace.get_tracer("astroimage.hub.importer")
 
@@ -30,11 +32,11 @@ _FITS_SUFFIXES = (".fits", ".fit")
 _SCIENCE_PRODUCT_TYPE = "SCIENCE"
 
 
-class HubbleNotFoundError(ValueError):
+class HubbleNotFoundError(NotFoundError):
     """Raised when a target has no Hubble imaging or cannot be resolved."""
 
 
-class HubbleDownloadError(RuntimeError):
+class HubbleDownloadError(UpstreamServiceError):
     """Raised when a Hubble product cannot be downloaded."""
 
 
@@ -61,6 +63,8 @@ class HubbleProduct:
     instrument: str | None
     ra_deg: float
     dec_deg: float
+    filters: str | None = None
+    observed_at: str | None = None
 
 
 @dataclass(frozen=True)
@@ -84,6 +88,16 @@ def _row_str(row: Any, key: str) -> str | None:
 
 def _row_float(row: Any, key: str) -> float:
     return float(row[key])
+
+
+def _optional_str(row: Any, key: str) -> str | None:
+    try:
+        value = row[key]
+    except (KeyError, IndexError):
+        return None
+    if value is None:
+        return None
+    return str(value)
 
 
 def _row_int(row: Any, key: str) -> int | None:
@@ -126,10 +140,12 @@ def _product_from_row(product: Any, hst_rows: Any) -> HubbleProduct | None:
         instrument=_row_str(observation, "instrument_name"),
         ra_deg=_row_float(observation, "s_ra"),
         dec_deg=_row_float(observation, "s_dec"),
+        filters=_optional_str(observation, "filters"),
+        observed_at=_optional_str(observation, "t_min"),
     )
 
 
-def _download_url(data_uri: str) -> str:
+def mast_download_url(data_uri: str) -> str:
     return f"{MAST_DOWNLOAD_URL}?uri={quote(data_uri, safe=':/')}"
 
 
@@ -146,6 +162,53 @@ class HubbleImporter:
         self._http_client_factory = http_client_factory or (
             lambda: httpx.AsyncClient(timeout=DOWNLOAD_TIMEOUT_SECONDS)
         )
+
+    async def search_candidates(
+        self,
+        target_name: str,
+        *,
+        min_size_bytes: int | None,
+    ) -> list[HubbleProduct]:
+        return await asyncio.to_thread(
+            self._collect_candidates,
+            target_name,
+            min_size_bytes,
+        )
+
+    def _collect_candidates(
+        self,
+        target_name: str,
+        min_size_bytes: int | None,
+    ) -> list[HubbleProduct]:
+        coordinates = self._resolve(target_name)
+        products: list[HubbleProduct] = []
+        for mast_page in range(1, MAST_SEARCH_MAX_PAGES + 1):
+            observations = self._mast.query_criteria(
+                coordinates=coordinates,
+                radius=Angle(self._search_radius_deg * u.deg),
+                obs_collection=MAST_COLLECTION,
+                pagesize=MAST_SEARCH_PAGESIZE,
+                page=mast_page,
+            )
+            if observations is None or len(observations) == 0:
+                break
+            hst_rows = observations[:MAST_SEARCH_PAGESIZE]
+            product_rows = self._mast.get_product_list(hst_rows)
+            for product in product_rows:
+                hubble_product = _product_from_row(product, hst_rows)
+                if hubble_product is None:
+                    continue
+                if (
+                    min_size_bytes is not None
+                    and hubble_product.size_bytes is not None
+                    and hubble_product.size_bytes < min_size_bytes
+                ):
+                    continue
+                products.append(hubble_product)
+        unique: dict[str, HubbleProduct] = {}
+        for product in products:
+            unique.setdefault(product.data_uri, product)
+        return list(unique.values())
 
     async def fetch_image(self, target_name: str) -> ImportedImage:
         with _tracer.start_as_current_span("mast_search") as span:
@@ -174,9 +237,9 @@ class HubbleImporter:
 
         with _tracer.start_as_current_span("mast_download") as span:
             span.set_attribute("data_uri", product.data_uri)
-            download_url = _download_url(product.data_uri)
+            product_url = mast_download_url(product.data_uri)
             download_start = time.perf_counter()
-            payload = await self._download(download_url)
+            payload = await self._download(product_url)
             download_ms = round((time.perf_counter() - download_start) * 1000, 2)
             span.set_attribute("payload_bytes", len(payload))
             _log.info(
@@ -259,12 +322,16 @@ class HubbleImporter:
                 ) from exc
 
     def _annotate_header(self, payload: bytes, target_name: str, product: HubbleProduct) -> bytes:
-        with fits.open(io.BytesIO(payload)) as hdul:
-            header = hdul[0].header
-            header["AI_SRC"] = ("hubble-mast", "AstroImage fetch backend")
-            header["AI_TARG"] = (target_name, "Requested celestial body")
-            header["AI_OBS"] = (product.observation_id, "MAST observation id")
-            header["AI_MAST"] = (product.data_uri, "MAST product URI")
-            output = io.BytesIO()
-            hdul.writeto(output, overwrite=True)
-            return output.getvalue()
+        return annotate_fits_header(payload, target_name, product)
+
+
+def annotate_fits_header(payload: bytes, target_name: str, product: HubbleProduct) -> bytes:
+    with fits.open(io.BytesIO(payload)) as hdul:
+        header = hdul[0].header
+        header["AI_SRC"] = ("hubble-mast", "AstroImage fetch backend")
+        header["AI_TARG"] = (target_name, "Requested celestial body")
+        header["AI_OBS"] = (product.observation_id, "MAST observation id")
+        header["AI_MAST"] = (product.data_uri, "MAST product URI")
+        output = io.BytesIO()
+        hdul.writeto(output, overwrite=True)
+        return output.getvalue()

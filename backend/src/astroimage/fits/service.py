@@ -4,6 +4,7 @@ import time
 from collections.abc import Sequence
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Any
 from uuid import UUID, uuid4
 
 import structlog
@@ -16,6 +17,46 @@ from astroimage.fits.schema import FitsMetadataSchema, FitsRecordSummarySchema
 from astroimage.fits.storage import FitsStorage
 
 _log = structlog.get_logger("astroimage.fits.service")
+
+
+def _keeping_mast(metadata: dict[str, Any], previous: object) -> dict[str, Any]:
+    if not isinstance(previous, dict) or "mast" not in previous:
+        return metadata
+    return {**metadata, "mast": previous["mast"]}
+
+
+def _text_or_none(value: object) -> str | None:
+    if isinstance(value, str) and value != "":
+        return value
+    return None
+
+
+def _mast_fields(
+    record: FitsRecord,
+) -> tuple[str, str | None, str, str | None, str | None, str]:
+    payload = record.metadata_payload
+    mast = payload.get("mast") if isinstance(payload, dict) else None
+    if not isinstance(mast, dict):
+        raise ValueError(f"FITS record {record.id} is missing MAST provenance")
+    data_uri = mast.get("data_uri")
+    proposal_id = mast.get("proposal_id")
+    display_name = mast.get("display_name")
+    if not isinstance(data_uri, str) or data_uri == "":
+        raise ValueError(f"FITS record {record.id} is missing MAST data URI")
+    if not isinstance(proposal_id, str) or proposal_id == "":
+        raise ValueError(f"FITS record {record.id} is missing MAST proposal id")
+    if not isinstance(display_name, str) or display_name == "":
+        raise ValueError(f"FITS record {record.id} is missing display name")
+    return (
+        display_name,
+        _text_or_none(mast.get("instrument")),
+        proposal_id,
+        _text_or_none(mast.get("filters")),
+        _text_or_none(mast.get("observed_at")),
+        data_uri,
+    )
+
+
 _tracer = trace.get_tracer("astroimage.fits.service")
 
 
@@ -85,6 +126,12 @@ class FitsService:
     def to_schema(self, metadata: FitsMetadata) -> FitsMetadataSchema:
         return FitsMetadataSchema.model_validate(metadata.model_dump())
 
+    async def find_record_id_by_mast_data_uri(self, data_uri: str) -> UUID | None:
+        record = await self._repository.find_by_mast_data_uri(data_uri)
+        if record is None:
+            return None
+        return record.id
+
     async def store_bytes(
         self,
         payload: bytes,
@@ -92,6 +139,9 @@ class FitsService:
         source_name: str,
         hdu_index: int | None = None,
         analyze: bool = True,
+        slug: str | None = None,
+        original_filename: str | None = None,
+        provenance: dict[str, Any] | None = None,
     ) -> FitsRecord:
         with _tracer.start_as_current_span("fits_store_bytes") as span:
             span.set_attribute("source_name", source_name)
@@ -110,10 +160,13 @@ class FitsService:
                 }
             record_id = uuid4()
             object_key = self._storage.object_key_for(record_id, source_name)
+            if provenance is not None:
+                metadata_payload = {**metadata_payload, "mast": provenance}
             record = FitsRecord(
                 id=record_id,
                 object_key=object_key,
-                original_filename=source_name,
+                slug=slug or source_name,
+                original_filename=original_filename or source_name,
                 size_bytes=len(payload),
                 metadata_payload=metadata_payload,
             )
@@ -151,7 +204,10 @@ class FitsService:
                 hdu_index=hdu_index,
             )
             analyze_ms = round((time.perf_counter() - analyze_start) * 1000, 2)
-            record.metadata_payload = metadata.model_dump(mode="json")
+            record.metadata_payload = _keeping_mast(
+                metadata.model_dump(mode="json"),
+                record.metadata_payload,
+            )
             updated = await self._repository.update(record)
             _log.info(
                 "metadata_updated",
@@ -167,7 +223,15 @@ class FitsService:
 
     async def get_record_metadata(self, record_id: UUID) -> FitsMetadataSchema:
         record = await self.get_record(record_id)
-        return FitsMetadataSchema.model_validate(record.metadata_payload)
+        payload = record.metadata_payload
+        document = payload if isinstance(payload, dict) else {}
+        mast = document.get("mast")
+        public = {key: value for key, value in document.items() if key != "mast"}
+        if isinstance(mast, dict):
+            catalog_name = mast.get("display_name")
+            if isinstance(catalog_name, str) and catalog_name != "":
+                public["display_name"] = catalog_name
+        return FitsMetadataSchema.model_validate(public)
 
     async def list_records(self, *, offset: int = 0, limit: int = 100) -> Sequence[FitsRecord]:
         return await self._repository.list(offset=offset, limit=limit)
@@ -210,9 +274,19 @@ class FitsService:
 
     @staticmethod
     def _to_summary(record: FitsRecord) -> FitsRecordSummarySchema:
+        display_name, instrument, proposal_id, filters, observed_at, data_uri = _mast_fields(record)
         return FitsRecordSummarySchema(
             record_id=record.id,
+            slug=record.slug,
             name=record.original_filename,
+            display_name=display_name,
+            instrument=instrument,
+            proposal_id=proposal_id,
+            filters=filters,
+            observed_at=observed_at,
+            created_at=record.created_at,
+            size_bytes=record.size_bytes,
+            data_uri=data_uri,
         )
 
     async def get_payload(self, record: FitsRecord) -> bytes:
@@ -279,6 +353,7 @@ class FitsService:
                 record = FitsRecord(
                     id=record_id,
                     object_key=object_key,
+                    slug=filename,
                     original_filename=filename,
                     size_bytes=len(payload),
                     metadata_payload=metadata.model_dump(mode="json"),

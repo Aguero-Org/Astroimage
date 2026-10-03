@@ -58,6 +58,7 @@ class _FakeFitsService:
         return FitsRecord(
             id=self._id,
             object_key=f"fits/{self._id}.fits",
+            slug=source_name,
             original_filename=source_name,
             size_bytes=len(payload),
             created_at=datetime.now(UTC),
@@ -69,7 +70,19 @@ class _FakeFitsService:
 
     async def list_record_summaries(self, **kwargs: object) -> list[FitsRecordSummarySchema]:
         return [
-            FitsRecordSummarySchema(record_id=record.id, name=record.original_filename)
+            FitsRecordSummarySchema(
+                record_id=record.id,
+                slug=record.slug,
+                name=record.original_filename,
+                display_name=record.original_filename,
+                instrument=None,
+                proposal_id="1",
+                filters=None,
+                observed_at=None,
+                created_at=record.created_at,
+                size_bytes=record.size_bytes,
+                data_uri=f"mast:HST/product/{record.original_filename}",
+            )
             for record in self.records
         ]
 
@@ -79,7 +92,19 @@ class _FakeFitsService:
         **kwargs: object,
     ) -> list[FitsRecordSummarySchema]:
         return [
-            FitsRecordSummarySchema(record_id=record.id, name=record.original_filename)
+            FitsRecordSummarySchema(
+                record_id=record.id,
+                slug=record.slug,
+                name=record.original_filename,
+                display_name=record.original_filename,
+                instrument=None,
+                proposal_id="1",
+                filters=None,
+                observed_at=None,
+                created_at=record.created_at,
+                size_bytes=record.size_bytes,
+                data_uri=f"mast:HST/product/{record.original_filename}",
+            )
             for record in self.records
             if name.lower() in record.original_filename.lower()
         ]
@@ -89,6 +114,7 @@ def _make_record(name: str) -> FitsRecord:
     return FitsRecord(
         id=uuid4(),
         object_key=f"fits/{uuid4()}.fits",
+        slug=name,
         original_filename=name,
         size_bytes=1024,
         created_at=datetime.now(UTC),
@@ -106,7 +132,8 @@ async def test_service_fetches_image_and_returns_record_id() -> None:
     assert isinstance(result, FetchImageResponseSchema)
     assert result.record_id == fits_service._id
     assert fits_service.stored == [(image.payload, "M31", False)]
-    assert len(result.model_dump()) == 1
+    assert result.slug == "M31"
+    assert len(result.model_dump()) == 2
 
 
 async def test_service_propagates_not_found_error() -> None:
@@ -128,7 +155,7 @@ async def test_service_lists_records_as_summaries() -> None:
     result = await service.list_records()
 
     assert isinstance(result, ListRecordsResponseSchema)
-    assert [r.name for r in result.records] == ["hst_drz.fits", "hst_flt.fits"]
+    assert [record.name for record in result.records] == ["hst_flt.fits", "hst_drz.fits"]
 
 
 async def test_service_searches_records_by_name() -> None:
