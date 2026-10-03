@@ -40,7 +40,7 @@ export function HduSelector({
     <div className="flex flex-col gap-1 px-4 pb-3">
       <div className="flex items-center gap-1 text-xs text-muted-foreground">
         HDU
-        <HelpHint label="HDU" testId="help-hdu">
+        <HelpHint label="HDU" testId="help-hdu" glossaryId="hdu">
           Cada FITS puede traer varios planos de imagen. Render, detección e
           histograma usan el mismo HDU.
         </HelpHint>
@@ -51,7 +51,11 @@ export function HduSelector({
           onChange(Number(next));
         }}
       >
-        <SelectTrigger data-testid="hdu-selector" className="h-8">
+        <SelectTrigger
+          data-testid="hdu-selector"
+          className="h-8"
+          aria-label="HDU"
+        >
           <SelectValue />
         </SelectTrigger>
         <SelectContent>

@@ -30,20 +30,22 @@ export function BrandLogo({ className }: Readonly<BrandLogoProps>) {
       <polygon
         points="45,25 65,37 65,63 45,75 25,63 25,37"
         fill="none"
-        className="stroke-foreground"
+        stroke="currentColor"
         strokeWidth="4"
         mask={`url(#${maskId})`}
       />
-      <polygon
-        points="50,42 56,46 56,54 50,58 44,54 44,46"
-        className="fill-primary"
-      />
-      <polygon
-        points="55,25 75,37 75,63 55,75 35,63 35,37"
-        fill="none"
-        className="stroke-primary"
-        strokeWidth="4"
-      />
+      <g className="text-primary">
+        <polygon
+          points="50,42 56,46 56,54 50,58 44,54 44,46"
+          fill="currentColor"
+        />
+        <polygon
+          points="55,25 75,37 75,63 55,75 35,63 35,37"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="4"
+        />
+      </g>
     </svg>
   );
 }

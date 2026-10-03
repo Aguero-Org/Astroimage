@@ -31,6 +31,12 @@ def asgi_app() -> FastAPI:
 
 @pytest.fixture
 async def client(asgi_app: FastAPI) -> AsyncIterator[AsyncClient]:
+    from astroimage.shared.database import Base, create_engine_from_settings
+
+    engine = create_engine_from_settings(get_settings())
+    async with engine.begin() as connection:
+        await connection.run_sync(Base.metadata.create_all)
+    await engine.dispose()
     async with asgi_app.router.lifespan_context(asgi_app):
         transport = ASGITransport(app=asgi_app)
         async with AsyncClient(transport=transport, base_url="http://test") as async_client:

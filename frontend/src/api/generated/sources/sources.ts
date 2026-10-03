@@ -21,8 +21,13 @@ import type {
 
 import type {
   DetectSourcesParams,
+  GaiaJobStatusSchema,
+  GaiaVerificationResponse,
+  GetBestPresetParams,
   HTTPValidationError,
-  SourceDetectionResponse
+  SourceDetectionResponse,
+  SourcePresetResponse,
+  VerifySourcesGaiaParams
 } from '../model';
 
 import { customFetch } from '../../../lib/api-client';
@@ -170,6 +175,401 @@ export function useDetectSources<TData = Awaited<ReturnType<typeof detectSources
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getDetectSourcesQueryOptions(recordId,params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export type getBestPresetResponse200 = {
+  data: SourcePresetResponse
+  status: 200
+}
+
+export type getBestPresetResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+
+export type getBestPresetResponseSuccess = (getBestPresetResponse200) & {
+  headers: Headers;
+};
+export type getBestPresetResponseError = (getBestPresetResponse422) & {
+  headers: Headers;
+};
+
+export type getBestPresetResponse = (getBestPresetResponseSuccess | getBestPresetResponseError)
+
+export const getGetBestPresetUrl = (recordId: string,
+    params?: GetBestPresetParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/image/${recordId}/sources/bestPreset?${stringifiedParams}` : `/image/${recordId}/sources/bestPreset`
+}
+
+/**
+ * @summary Recommend detection parameters measured from this image
+ */
+export const getBestPreset = async (recordId: string,
+    params?: GetBestPresetParams, options?: Parameters<typeof customFetch>[1]): Promise<getBestPresetResponse> => {
+
+  return customFetch<getBestPresetResponse>(getGetBestPresetUrl(recordId,params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetBestPresetQueryKey = (recordId: string,
+    params?: GetBestPresetParams,) => {
+    return [
+    `/image/${recordId}/sources/bestPreset`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetBestPresetQueryOptions = <TData = Awaited<ReturnType<typeof getBestPreset>>, TError = HTTPValidationError>(recordId: string,
+    params?: GetBestPresetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getBestPreset>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetBestPresetQueryKey(recordId,params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getBestPreset>>> = ({ signal }) => getBestPreset(recordId,params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: recordId !== null && recordId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getBestPreset>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetBestPresetQueryResult = NonNullable<Awaited<ReturnType<typeof getBestPreset>>>
+export type GetBestPresetQueryError = HTTPValidationError
+
+
+export function useGetBestPreset<TData = Awaited<ReturnType<typeof getBestPreset>>, TError = HTTPValidationError>(
+ recordId: string,
+    params: undefined |  GetBestPresetParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getBestPreset>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getBestPreset>>,
+          TError,
+          Awaited<ReturnType<typeof getBestPreset>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetBestPreset<TData = Awaited<ReturnType<typeof getBestPreset>>, TError = HTTPValidationError>(
+ recordId: string,
+    params?: GetBestPresetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getBestPreset>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getBestPreset>>,
+          TError,
+          Awaited<ReturnType<typeof getBestPreset>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetBestPreset<TData = Awaited<ReturnType<typeof getBestPreset>>, TError = HTTPValidationError>(
+ recordId: string,
+    params?: GetBestPresetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getBestPreset>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Recommend detection parameters measured from this image
+ */
+
+export function useGetBestPreset<TData = Awaited<ReturnType<typeof getBestPreset>>, TError = HTTPValidationError>(
+ recordId: string,
+    params?: GetBestPresetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getBestPreset>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetBestPresetQueryOptions(recordId,params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export type verifySourcesGaiaResponse200 = {
+  data: GaiaVerificationResponse | GaiaJobStatusSchema
+  status: 200
+}
+
+export type verifySourcesGaiaResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+
+export type verifySourcesGaiaResponseSuccess = (verifySourcesGaiaResponse200) & {
+  headers: Headers;
+};
+export type verifySourcesGaiaResponseError = (verifySourcesGaiaResponse422) & {
+  headers: Headers;
+};
+
+export type verifySourcesGaiaResponse = (verifySourcesGaiaResponseSuccess | verifySourcesGaiaResponseError)
+
+export const getVerifySourcesGaiaUrl = (recordId: string,
+    params?: VerifySourcesGaiaParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/image/${recordId}/sources/gaia?${stringifiedParams}` : `/image/${recordId}/sources/gaia`
+}
+
+/**
+ * @summary Verify Sources Gaia
+ */
+export const verifySourcesGaia = async (recordId: string,
+    params?: VerifySourcesGaiaParams, options?: Parameters<typeof customFetch>[1]): Promise<verifySourcesGaiaResponse> => {
+
+  return customFetch<verifySourcesGaiaResponse>(getVerifySourcesGaiaUrl(recordId,params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getVerifySourcesGaiaQueryKey = (recordId: string,
+    params?: VerifySourcesGaiaParams,) => {
+    return [
+    `/image/${recordId}/sources/gaia`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getVerifySourcesGaiaQueryOptions = <TData = Awaited<ReturnType<typeof verifySourcesGaia>>, TError = HTTPValidationError>(recordId: string,
+    params?: VerifySourcesGaiaParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof verifySourcesGaia>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getVerifySourcesGaiaQueryKey(recordId,params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof verifySourcesGaia>>> = ({ signal }) => verifySourcesGaia(recordId,params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: recordId !== null && recordId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof verifySourcesGaia>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type VerifySourcesGaiaQueryResult = NonNullable<Awaited<ReturnType<typeof verifySourcesGaia>>>
+export type VerifySourcesGaiaQueryError = HTTPValidationError
+
+
+export function useVerifySourcesGaia<TData = Awaited<ReturnType<typeof verifySourcesGaia>>, TError = HTTPValidationError>(
+ recordId: string,
+    params: undefined |  VerifySourcesGaiaParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof verifySourcesGaia>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof verifySourcesGaia>>,
+          TError,
+          Awaited<ReturnType<typeof verifySourcesGaia>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useVerifySourcesGaia<TData = Awaited<ReturnType<typeof verifySourcesGaia>>, TError = HTTPValidationError>(
+ recordId: string,
+    params?: VerifySourcesGaiaParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof verifySourcesGaia>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof verifySourcesGaia>>,
+          TError,
+          Awaited<ReturnType<typeof verifySourcesGaia>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useVerifySourcesGaia<TData = Awaited<ReturnType<typeof verifySourcesGaia>>, TError = HTTPValidationError>(
+ recordId: string,
+    params?: VerifySourcesGaiaParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof verifySourcesGaia>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Verify Sources Gaia
+ */
+
+export function useVerifySourcesGaia<TData = Awaited<ReturnType<typeof verifySourcesGaia>>, TError = HTTPValidationError>(
+ recordId: string,
+    params?: VerifySourcesGaiaParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof verifySourcesGaia>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getVerifySourcesGaiaQueryOptions(recordId,params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export type getSourcesGaiaJobResponse200 = {
+  data: GaiaVerificationResponse | GaiaJobStatusSchema
+  status: 200
+}
+
+export type getSourcesGaiaJobResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+
+export type getSourcesGaiaJobResponseSuccess = (getSourcesGaiaJobResponse200) & {
+  headers: Headers;
+};
+export type getSourcesGaiaJobResponseError = (getSourcesGaiaJobResponse422) & {
+  headers: Headers;
+};
+
+export type getSourcesGaiaJobResponse = (getSourcesGaiaJobResponseSuccess | getSourcesGaiaJobResponseError)
+
+export const getGetSourcesGaiaJobUrl = (recordId: string,
+    jobId: string,) => {
+
+
+
+
+  return `/image/${recordId}/sources/gaia/jobs/${jobId}`
+}
+
+/**
+ * @summary Get Sources Gaia Job
+ */
+export const getSourcesGaiaJob = async (recordId: string,
+    jobId: string, options?: Parameters<typeof customFetch>[1]): Promise<getSourcesGaiaJobResponse> => {
+
+  return customFetch<getSourcesGaiaJobResponse>(getGetSourcesGaiaJobUrl(recordId,jobId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetSourcesGaiaJobQueryKey = (recordId: string,
+    jobId: string,) => {
+    return [
+    `/image/${recordId}/sources/gaia/jobs/${jobId}`
+    ] as const;
+    }
+
+
+export const getGetSourcesGaiaJobQueryOptions = <TData = Awaited<ReturnType<typeof getSourcesGaiaJob>>, TError = HTTPValidationError>(recordId: string,
+    jobId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSourcesGaiaJob>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetSourcesGaiaJobQueryKey(recordId,jobId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getSourcesGaiaJob>>> = ({ signal }) => getSourcesGaiaJob(recordId,jobId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: recordId !== null && recordId !== undefined && jobId !== null && jobId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getSourcesGaiaJob>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetSourcesGaiaJobQueryResult = NonNullable<Awaited<ReturnType<typeof getSourcesGaiaJob>>>
+export type GetSourcesGaiaJobQueryError = HTTPValidationError
+
+
+export function useGetSourcesGaiaJob<TData = Awaited<ReturnType<typeof getSourcesGaiaJob>>, TError = HTTPValidationError>(
+ recordId: string,
+    jobId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSourcesGaiaJob>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getSourcesGaiaJob>>,
+          TError,
+          Awaited<ReturnType<typeof getSourcesGaiaJob>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetSourcesGaiaJob<TData = Awaited<ReturnType<typeof getSourcesGaiaJob>>, TError = HTTPValidationError>(
+ recordId: string,
+    jobId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSourcesGaiaJob>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getSourcesGaiaJob>>,
+          TError,
+          Awaited<ReturnType<typeof getSourcesGaiaJob>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetSourcesGaiaJob<TData = Awaited<ReturnType<typeof getSourcesGaiaJob>>, TError = HTTPValidationError>(
+ recordId: string,
+    jobId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSourcesGaiaJob>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get Sources Gaia Job
+ */
+
+export function useGetSourcesGaiaJob<TData = Awaited<ReturnType<typeof getSourcesGaiaJob>>, TError = HTTPValidationError>(
+ recordId: string,
+    jobId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSourcesGaiaJob>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetSourcesGaiaJobQueryOptions(recordId,jobId,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
