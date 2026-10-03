@@ -373,3 +373,8 @@ async def test_fetch_image_download_failure(resolved_target: None) -> None:
 
     with pytest.raises(HubbleDownloadError):
         await importer.fetch_image("M31")
+
+
+def test_importer_errors_carry_http_statuses() -> None:
+    assert HubbleNotFoundError("nothing found").status_code == 404
+    assert HubbleDownloadError("mast is down").status_code == 502

@@ -94,7 +94,9 @@ async def db_session(db_engine: AsyncEngine) -> AsyncIterator[AsyncSession]:
             await session.rollback()
             raise
     async with db_engine.begin() as connection:
-        await connection.execute(text("TRUNCATE TABLE fits_records RESTART IDENTITY CASCADE"))
+        await connection.execute(
+            text("TRUNCATE TABLE fits_records, image_transfers RESTART IDENTITY CASCADE")
+        )
 
 
 @pytest.fixture

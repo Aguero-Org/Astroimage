@@ -14,8 +14,15 @@ _SKIP_PATHS = frozenset(
         "/image/{record_id}/histogram",
         "/image/{record_id}/info",
         "/image/{record_id}/sources",
+        "/image/{record_id}/sources/bestPreset",
+        "/image/{record_id}/sources/gaia",
+        "/image/{record_id}/sources/gaia/jobs/{job_id}",
         "/image",
         "/image/search",
+        "/image/search/select",
+        "/image/transfers/{transfer_id}",
+        "/image/transfers/{transfer_id}/cancel",
+        "/image/transfers/{transfer_id}/resume",
     }
 )
 
