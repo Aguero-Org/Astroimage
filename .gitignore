@@ -31,6 +31,7 @@ node_modules/
 dist-ssr/
 *.local
 playwright-report/
+.playwright-mcp/
 test-results/
 .vite/
 .turbo
