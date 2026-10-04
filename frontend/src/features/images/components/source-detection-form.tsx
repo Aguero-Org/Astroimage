@@ -160,12 +160,14 @@ const EXTENDED_FIELDS: FieldDefinition[] = [
     label: "Score mínimo",
     step: "0.01",
     help: "Puntuación de relevancia (0 a 1) mínima para conservar una estructura.",
+    glossaryId: "score",
   },
   {
     key: "ext_max_sources",
     label: "Máximo de estructuras",
     step: "1",
     help: "Tope de estructuras a devolver, ordenadas por relevancia. 0 significa sin límite.",
+    glossaryId: "max-sources",
   },
 ];
 

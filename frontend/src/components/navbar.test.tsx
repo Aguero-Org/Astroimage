@@ -1,6 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { describe, expect, it, vi } from "vitest";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import { Navbar } from "./navbar";
 
 vi.mock("@tanstack/react-router", () => ({
@@ -15,7 +16,11 @@ vi.mock("@tanstack/react-router", () => ({
 
 describe("Navbar", () => {
   it("renders a search button with a magnifying-glass icon", () => {
-    render(<Navbar />);
+    render(
+      <TooltipProvider delayDuration={0}>
+        <Navbar />
+      </TooltipProvider>,
+    );
 
     expect(screen.getByTestId("navbar")).toBeInTheDocument();
     expect(screen.getByTestId("navbar-logo")).toBeInTheDocument();

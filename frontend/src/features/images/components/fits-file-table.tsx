@@ -13,6 +13,7 @@ import { Table, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 export type FitsFileColumn = {
   field: string;
   label: string;
+  hint?: ReactNode;
 };
 
 type FitsFileTableProps = {
@@ -51,17 +52,22 @@ export function FitsFileTable({
                     : "none"
                 }
               >
-                <button
-                  type="button"
-                  className="inline-flex items-center gap-1"
-                  onClick={() => onSort(column.field)}
-                >
-                  {column.label}
-                  {active && order === "asc" && <ArrowUp className="size-3" />}
-                  {active && order === "desc" && (
-                    <ArrowDown className="size-3" />
-                  )}
-                </button>
+                <span className="inline-flex items-center gap-1">
+                  <button
+                    type="button"
+                    className="inline-flex items-center gap-1"
+                    onClick={() => onSort(column.field)}
+                  >
+                    {column.label}
+                    {active && order === "asc" && (
+                      <ArrowUp className="size-3" />
+                    )}
+                    {active && order === "desc" && (
+                      <ArrowDown className="size-3" />
+                    )}
+                  </button>
+                  {column.hint}
+                </span>
               </TableHead>
             );
           })}

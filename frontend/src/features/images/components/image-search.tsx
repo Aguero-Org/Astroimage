@@ -1,6 +1,7 @@
 import { Search } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { HelpHint } from "@/components/ui/help-hint";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 
@@ -58,6 +59,10 @@ function ImageSearchField({
         <Search className="size-4" />
         {isFetching ? "Buscando…" : "Buscar"}
       </Button>
+      <HelpHint label="Objeto celeste" testId="help-objeto" glossaryId="objeto">
+        Nombre del cielo, como M31 o NGC 1300. También acepta archivo o
+        instrumento y lista los recortes.
+      </HelpHint>
     </form>
   );
 }

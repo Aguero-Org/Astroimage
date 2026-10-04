@@ -76,7 +76,20 @@ export function ImageInspector({
           <CollapsibleSection id="view" title="Vista">
             {view}
           </CollapsibleSection>
-          <CollapsibleSection id="sources" title="Fuentes" defaultOpen>
+          <CollapsibleSection
+            id="sources"
+            title="Fuentes"
+            defaultOpen
+            hint={
+              <HelpHint
+                label="Detección de fuentes"
+                testId="help-deteccion"
+                glossaryId="deteccion"
+              >
+                Busca picos sobre el fondo y dibuja las marcas en la imagen.
+              </HelpHint>
+            }
+          >
             {sources}
           </CollapsibleSection>
           <CollapsibleSection
@@ -84,10 +97,33 @@ export function ImageInspector({
             id="selection"
             title="Selección"
             defaultOpen={selectionOpen}
+            hint={
+              <HelpHint
+                label="Selección"
+                testId="help-seleccion"
+                glossaryId="seleccion"
+              >
+                Datos de la marca elegida. Un punto muestra SNR y flujo; un
+                recuadro muestra área, ancho y alto.
+              </HelpHint>
+            }
           >
             {selection}
           </CollapsibleSection>
-          <CollapsibleSection id="archive" title="Archivo">
+          <CollapsibleSection
+            id="archive"
+            title="Archivo"
+            hint={
+              <HelpHint
+                label="Metadatos del archivo"
+                testId="help-metadatos"
+                glossaryId="metadatos"
+              >
+                Instrumento, tamaño, coordenadas y encabezado. El encabezado
+                crudo queda cerrado.
+              </HelpHint>
+            }
+          >
             {archive}
           </CollapsibleSection>
         </SidebarContent>

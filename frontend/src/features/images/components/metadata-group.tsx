@@ -90,10 +90,10 @@ export function MetadataGroup({
 
   return (
     <div data-testid={testId} className="mb-3">
-      <h3 className="group/section sticky top-8 z-20 -mx-2 h-8 bg-sidebar px-2 text-xs font-medium text-foreground">
+      <h3 className="group/section sticky top-8 z-20 -mx-2 flex h-8 items-center bg-sidebar px-2 text-xs font-medium text-foreground">
         <button
           type="button"
-          className="flex h-8 w-full cursor-pointer items-center gap-1 text-left"
+          className="flex h-8 min-w-0 flex-1 cursor-pointer items-center gap-1 text-left"
           aria-label={`Copiar ${title}`}
           data-testid={`copy-group-${testId}`}
           onClick={(event) => {
@@ -106,6 +106,14 @@ export function MetadataGroup({
           </span>
           <Copy className="size-3 shrink-0 text-muted-foreground opacity-0 group-hover/section:opacity-100" />
         </button>
+        <HelpHint
+          label={`Copiar ${title}`}
+          testId={`help-copy-${testId}`}
+          glossaryId="copiar-dato"
+        >
+          El título copia todas las líneas del grupo. Cada valor copia solo ese
+          dato.
+        </HelpHint>
       </h3>
       <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-xs">
         {rows.map((row) => (

@@ -11,6 +11,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { HelpHint } from "@/components/ui/help-hint";
 import {
   TableBody,
   TableCell,
@@ -67,7 +68,13 @@ export function ImageList({ query }: Readonly<ImageListProps>) {
 
   return (
     <section className="flex w-full flex-col gap-2">
-      <h2 className="text-sm font-medium">Imágenes disponibles</h2>
+      <h2 className="flex items-center gap-1 text-sm font-medium">
+        Imágenes disponibles
+        <HelpHint label="FITS" testId="help-fits" glossaryId="fits">
+          Cada fila es un FITS guardado. Se abre como imagen y sus metadatos van
+          al inspector.
+        </HelpHint>
+      </h2>
       {!!isPending && <BrandLoader label="Cargando imágenes…" />}
       {!!isError && <p className="text-sm text-destructive">Algo salió mal.</p>}
       {!isPending &&
@@ -89,7 +96,23 @@ export function ImageList({ query }: Readonly<ImageListProps>) {
       {!isPending && !isError && records.length > 0 && (
         <FitsFileTable
           testId="image-list"
-          columns={COLUMNS}
+          columns={COLUMNS.map((column) =>
+            column.field === "product_filename"
+              ? {
+                  ...column,
+                  hint: (
+                    <HelpHint
+                      label="Nombre de archivo"
+                      testId="help-slug-archivo"
+                      glossaryId="slug-archivo"
+                    >
+                      Nombre con el que se guardó el FITS. El enlace abre el
+                      visor.
+                    </HelpHint>
+                  ),
+                }
+              : column,
+          )}
           sort={sort}
           order={order}
           onSort={(field) => toggleSort(field as RecordSortField)}
