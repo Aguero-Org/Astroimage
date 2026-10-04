@@ -157,6 +157,8 @@ frontend/src/features/images/components/
   source-detection-form.tsx
   detection-field-input.tsx
   render-view-form.tsx
+  exclusive-choice.tsx
+  render-field.tsx
   named-preset-field.tsx
 frontend/src/features/images/render-view.ts
 frontend/src/features/images/source-detection.ts
