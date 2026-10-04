@@ -11,13 +11,13 @@ import {
 } from "@/components/ui/table";
 import {
   type CandidateSortField,
-  type CandidateSortOrder,
   formatBytes,
   useCandidateSearch,
   useSelectCandidate,
 } from "../candidate-api";
 import { formatWhen } from "../format-when";
 import { MastSourceLink } from "../mast-source-link";
+import { usePagedSort } from "../use-paged-sort";
 import { FilePager, FitsFileTable } from "./fits-file-table";
 import { ImportNameDialog } from "./import-name-dialog";
 import { TransferFeedback } from "./transfer-feedback";
@@ -36,22 +36,11 @@ type CandidateResultsProps = {
 };
 
 export function CandidateResults({ query }: Readonly<CandidateResultsProps>) {
-  const [page, setPage] = useState(1);
-  const [sort, setSort] = useState<CandidateSortField>("product_filename");
-  const [order, setOrder] = useState<CandidateSortOrder>("asc");
+  const { page, setPage, sort, order, toggleSort } =
+    usePagedSort<CandidateSortField>("product_filename", "asc");
   const [transferIds, setTransferIds] = useState<string[]>([]);
   const [pending, setPending] = useState<CandidateSchema | null>(null);
   const search = useCandidateSearch(query, page, sort, order);
-
-  function toggleSort(field: CandidateSortField) {
-    if (field === sort) {
-      setOrder((current) => (current === "asc" ? "desc" : "asc"));
-    } else {
-      setSort(field);
-      setOrder("asc");
-    }
-    setPage(1);
-  }
   const select = useSelectCandidate();
 
   if (query.trim().length === 0) {
@@ -92,7 +81,7 @@ export function CandidateResults({ query }: Readonly<CandidateResultsProps>) {
           columns={COLUMNS}
           sort={sort}
           order={order}
-          onSort={(field) => toggleSort(field as CandidateSortField)}
+          onSort={toggleSort}
           trailingHead={
             <>
               <TableHead>Fuente</TableHead>
