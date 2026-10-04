@@ -162,6 +162,9 @@ jobs:
           name: frontend-coverage
           path: frontend/coverage
 
+      - name: Normalize coverage paths for the monorepo
+        run: python3 sonar/normalize-coverage.py
+
       - name: Build scanner args
         id: sonar_args
         shell: bash
