@@ -25,7 +25,7 @@ Vite + React 19 client bundle. No server components, no Next.js, no second route
 | One component | local `useState` / `useReducer` |
 | A few siblings | nearest common parent |
 | Shareable filter, tab, or page | TanStack Router search params |
-| Rare and app-wide (theme) | React context |
+| Rare and app-wide (theme, palette) | Zustand, narrow selector, `localStorage` |
 | Frequent client/UI state read in many places | Zustand, with a narrow selector |
 
 Colocate state. Lift it only when two siblings must share it.

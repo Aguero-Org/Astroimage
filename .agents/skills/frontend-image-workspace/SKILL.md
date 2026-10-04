@@ -28,7 +28,7 @@ dashboard of cards.
 |---------|----------|------------|
 | Vista | render form + histogram + named presets + reset | — |
 | Fuentes | detection form + named presets + reset | still one form |
-| Selección | clicked point source (SNR, score, peak, flux) | catalog matches / scientific metadata |
+| Selección | clicked point source (SNR, score, peak, flux) or extended source (area, width, height, mean) | catalog matches / scientific metadata |
 | Archivo | grouped `/info` (instrumento, imagen, WCS, HDUs; header cerrado) | HDU selector |
 
 HDU is **workspace state** on the image page (not a field inside each form).
@@ -82,6 +82,8 @@ preset, overlay, search term, inspector section):
    the entry still exists and says when it shows up.
 5. Drop or rewrite entries that no longer match the UI.
 
+`entries.test.ts` fails when an entry id has no `glossaryId` literal in the app source, or when a literal names an entry that does not exist. Entry files and tests are not that source.
+
 Route: `/glossary`. Access: `GlossaryLink` (home and navbar). Do not invent
 a second glossary or a modal of definitions.
 
@@ -92,8 +94,8 @@ sources are one layer (`SourceMarkers`). Extended sources and future
 annotations are **sibling layers**, not extra props on `FitsImageViewer`.
 
 - Point sources have image coordinates (`xcentroid`, `ycentroid`).
-- Extended sources currently have no geometry in the API — list/count only
-  until the contract adds positions.
+- Extended sources have a box around that centroid (`width_pixels`,
+  `height_pixels`). `ExtendedSourceMarkers` draws it as a sibling layer.
 - Selecting an overlay item fills **Selección**; it does not open a modal.
 
 ## Exclusive choice controls
@@ -130,7 +132,8 @@ reloads schema defaults. Copy describes the **result**, not the algorithm.
 Editing a field after a preset shows **Personalizado**; the last named hint stays.
 HDU is not part of a preset.
 
-Zustand holds client/UI workspace state (drawer, selected overlay).
+The image page holds the drawer, the selected overlay, and the submitted
+render and detection params. It is the parent of the canvas and the inspector.
 TanStack Query remains the only server cache.
 Query keys must include render/detection params when those are wired.
 
@@ -149,6 +152,7 @@ frontend/src/features/images/components/
   image-inspector.tsx        # hamburger drawer + sections
   collapsible-section.tsx
   source-markers.tsx         # point layer
+  extended-source-markers.tsx # extended box layer
   source-detection-form.tsx
   render-view-form.tsx
   named-preset-field.tsx
