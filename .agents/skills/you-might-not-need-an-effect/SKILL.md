@@ -32,6 +32,7 @@ Ask why the code runs:
 | Calls `onChange` after its own state updates | Call `onChange` in the same event, or let the parent own the state |
 | Fetches in the child and pushes the result up | The parent fetches and passes the data down |
 | Subscribes to `window`, a store, or the browser | `useSyncExternalStore` |
+| The subscription must see the latest props without resubscribing | `useEffectEvent` for that read. The effect dependencies stay the identity of the external system |
 | Fetches so the screen matches the current query | An Effect is allowed. Ignore stale responses in its cleanup. Prefer the app's data client over a hand-written fetch |
 
 Do not add an Effect to transform data for rendering or to handle a user event.
