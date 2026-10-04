@@ -149,6 +149,7 @@ Query keys must include render/detection params when those are wired.
 ```text
 frontend/src/features/images/components/
   fits-image-viewer.tsx      # canvas + children slot for overlay layers
+  rendered-fits-section.tsx  # pending, error, and blob url for that canvas
   image-inspector.tsx        # hamburger drawer + sections
   collapsible-section.tsx
   source-markers.tsx         # point layer
