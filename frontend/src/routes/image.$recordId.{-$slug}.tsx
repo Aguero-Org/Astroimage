@@ -146,7 +146,7 @@ function ImageDetailPage() {
 
   const rendered =
     renderQuery.data?.status === 200 ? renderQuery.data.data : undefined;
-  const blob = rendered instanceof Blob ? rendered : undefined;
+  const blob = isBlob(rendered) ? rendered : undefined;
   const objectUrl = useObjectUrl(blob);
 
   return (
@@ -409,6 +409,11 @@ function resolveWorkspaceHdu(
 
 function formatQueryError(error: unknown): string {
   return error instanceof Error ? error.message : "error desconocido";
+}
+
+function isBlob(value: unknown): value is Blob {
+  // Node's fetch Blob and jsdom's Blob fail `instanceof` across each other.
+  return Object.prototype.toString.call(value) === "[object Blob]";
 }
 
 function useObjectUrl(blob: Blob | undefined): string | undefined {
