@@ -1,12 +1,15 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { MetadataGroup } from "./metadata-group";
 
 describe("MetadataGroup", () => {
   it("copies one value and the whole group", async () => {
-    const writeText = vi.fn().mockResolvedValue(undefined);
-    Object.assign(navigator, { clipboard: { writeText } });
+    const user = userEvent.setup();
+    const writeText = vi
+      .spyOn(navigator.clipboard, "writeText")
+      .mockResolvedValue();
     render(
       <TooltipProvider>
         <MetadataGroup
@@ -25,8 +28,8 @@ describe("MetadataGroup", () => {
       </TooltipProvider>,
     );
 
-    fireEvent.click(screen.getByTestId("copy-meta-sel-gaia-id"));
-    fireEvent.click(
+    await user.click(screen.getByTestId("copy-meta-sel-gaia-id"));
+    await user.click(
       screen.getByTestId("copy-group-archive-extended-selection"),
     );
 
