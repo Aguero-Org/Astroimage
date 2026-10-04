@@ -154,10 +154,12 @@ frontend/src/features/images/components/
   source-markers.tsx         # point layer
   extended-source-markers.tsx # extended box layer
   source-detection-form.tsx
+  detection-field-input.tsx
   render-view-form.tsx
   named-preset-field.tsx
 frontend/src/features/images/render-view.ts
 frontend/src/features/images/source-detection.ts
+frontend/src/features/images/source-detection-fields.ts
 frontend/src/features/images/named-preset.ts
 frontend/src/features/images/use-named-preset-draft.ts
 frontend/src/features/images/image-archive-groups.ts
