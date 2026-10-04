@@ -154,6 +154,8 @@ frontend/src/features/images/components/
   collapsible-section.tsx
   source-markers.tsx         # point layer
   extended-source-markers.tsx # extended box layer
+  source-selection.tsx
+  extended-source-details.tsx
   source-detection-form.tsx
   detection-field-input.tsx
   render-view-form.tsx
