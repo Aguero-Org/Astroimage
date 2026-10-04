@@ -68,8 +68,8 @@ export function ImageList({ query }: Readonly<ImageListProps>) {
   return (
     <section className="flex w-full flex-col gap-2">
       <h2 className="text-sm font-medium">Imágenes disponibles</h2>
-      {isPending && <BrandLoader label="Cargando imágenes…" />}
-      {isError && <p className="text-sm text-destructive">Algo salió mal.</p>}
+      {!!isPending && <BrandLoader label="Cargando imágenes…" />}
+      {!!isError && <p className="text-sm text-destructive">Algo salió mal.</p>}
       {!isPending &&
         !isError &&
         records.length === 0 &&
@@ -148,7 +148,7 @@ export function ImageList({ query }: Readonly<ImageListProps>) {
           </TableBody>
         </FitsFileTable>
       )}
-      {pageData && (
+      {pageData !== null && (
         <FilePager
           page={page}
           hasMore={pageData.has_more === true}

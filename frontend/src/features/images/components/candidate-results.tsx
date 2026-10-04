@@ -71,8 +71,8 @@ export function CandidateResults({ query }: Readonly<CandidateResultsProps>) {
   return (
     <section className="flex w-full flex-col gap-3">
       <h2 className="text-sm font-medium">Archivos de Hubble</h2>
-      {waiting && <BrandLoader label="Buscando en MAST…" />}
-      {search.isError && (
+      {!!waiting && <BrandLoader label="Buscando en MAST…" />}
+      {!!search.isError && (
         <p className="text-sm text-destructive">
           No se pudo buscar candidatos para{" "}
           <strong className="font-semibold">{query.trim()}</strong>.
@@ -129,7 +129,7 @@ export function CandidateResults({ query }: Readonly<CandidateResultsProps>) {
           </TableBody>
         </FitsFileTable>
       )}
-      {pageData && (
+      {pageData !== null && (
         <FilePager
           page={page}
           hasMore={pageData.has_more === true}
