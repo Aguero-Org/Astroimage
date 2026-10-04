@@ -144,10 +144,9 @@ function ImageDetailPage() {
       ? selectedSource.source_id
       : undefined;
 
-  const blob =
-    renderQuery.data?.status === 200
-      ? (renderQuery.data.data as Blob)
-      : undefined;
+  const rendered =
+    renderQuery.data?.status === 200 ? renderQuery.data.data : undefined;
+  const blob = rendered instanceof Blob ? rendered : undefined;
   const objectUrl = useObjectUrl(blob);
 
   return (

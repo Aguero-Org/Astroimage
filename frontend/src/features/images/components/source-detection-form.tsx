@@ -12,10 +12,8 @@ import {
   DEFAULT_EXTENDED_DETECTION_PARAMS,
   DEFAULT_POINT_DETECTION_PARAMS,
   DEFAULT_SOURCE_DETECTION_PARAMS,
-  EXTENDED_DETECTION_KEYS,
   type ExtendedDetectionParams,
   extendedDetectionParams,
-  POINT_DETECTION_KEYS,
   POINT_DETECTION_PRESETS,
   type PointDetectionParams,
   pointDetectionParams,
@@ -31,15 +29,15 @@ type SourceDetectionFormProps = {
   onSubmit: (params: SourceDetectionParams) => void;
 };
 
-type FieldDefinition = {
-  key: keyof SourceDetectionParams;
+type DetectionField<K extends string> = {
+  key: K;
   label: string;
   step: string;
   help: string;
-  glossaryId?: string;
+  glossaryId: string;
 };
 
-const POINT_FIELDS: FieldDefinition[] = [
+const POINT_FIELDS: DetectionField<keyof PointDetectionParams>[] = [
   {
     key: "fwhm",
     label: "FWHM",
@@ -105,7 +103,7 @@ const POINT_FIELDS: FieldDefinition[] = [
   },
 ];
 
-const EXTENDED_FIELDS: FieldDefinition[] = [
+const EXTENDED_FIELDS: DetectionField<keyof ExtendedDetectionParams>[] = [
   {
     key: "ext_sigma",
     label: "Sigma",
@@ -171,68 +169,112 @@ const EXTENDED_FIELDS: FieldDefinition[] = [
   },
 ];
 
-const INTEGER_EXTENDED_KEYS = [
-  "ext_max_sources",
-  "ext_min_area",
-  "ext_max_area",
-  "ext_bin_factor",
-  "ext_closing_iterations",
-  "ext_opening_iterations",
-] as const;
-
 function pointToDraft(
   params: PointDetectionParams,
 ): Record<keyof PointDetectionParams, string> {
-  const draft = {} as Record<keyof PointDetectionParams, string>;
-  for (const key of POINT_DETECTION_KEYS) {
-    draft[key] = String(params[key]);
-  }
-  return draft;
+  return {
+    fwhm: String(params.fwhm),
+    sigma: String(params.sigma),
+    min_snr: String(params.min_snr),
+    min_score: String(params.min_score),
+    min_distance: String(params.min_distance),
+    visual_weight: String(params.visual_weight),
+    visual_area_radius: String(params.visual_area_radius),
+    visual_area_sigma: String(params.visual_area_sigma),
+    max_sources: String(params.max_sources),
+  };
 }
 
 function extendedToDraft(
   params: ExtendedDetectionParams,
 ): Record<keyof ExtendedDetectionParams, string> {
-  const draft = {} as Record<keyof ExtendedDetectionParams, string>;
-  for (const key of EXTENDED_DETECTION_KEYS) {
-    draft[key] = String(params[key]);
-  }
-  return draft;
+  return {
+    ext_sigma: String(params.ext_sigma),
+    ext_smooth_sigma: String(params.ext_smooth_sigma),
+    ext_min_area: String(params.ext_min_area),
+    ext_max_area: String(params.ext_max_area),
+    ext_bin_factor: String(params.ext_bin_factor),
+    ext_closing_iterations: String(params.ext_closing_iterations),
+    ext_opening_iterations: String(params.ext_opening_iterations),
+    ext_min_score: String(params.ext_min_score),
+    ext_max_sources: String(params.ext_max_sources),
+  };
 }
 
 function parsePointDraft(
   draft: Record<keyof PointDetectionParams, string>,
 ): PointDetectionParams | null {
-  const parsed: Partial<PointDetectionParams> = {};
-  for (const key of POINT_DETECTION_KEYS) {
-    const numeric = readNumber(draft[key]);
-    if (numeric === null) {
-      return null;
-    }
-    parsed[key] = numeric;
+  const fwhm = readNumber(draft.fwhm);
+  const sigma = readNumber(draft.sigma);
+  const minSnr = readNumber(draft.min_snr);
+  const minScore = readNumber(draft.min_score);
+  const minDistance = readNumber(draft.min_distance);
+  const visualWeight = readNumber(draft.visual_weight);
+  const visualAreaRadius = readNumber(draft.visual_area_radius);
+  const visualAreaSigma = readNumber(draft.visual_area_sigma);
+  const maxSources = readNumber(draft.max_sources);
+  if (
+    fwhm === null ||
+    sigma === null ||
+    minSnr === null ||
+    minScore === null ||
+    minDistance === null ||
+    visualWeight === null ||
+    visualAreaRadius === null ||
+    visualAreaSigma === null ||
+    maxSources === null
+  ) {
+    return null;
   }
   return {
-    ...(parsed as PointDetectionParams),
-    max_sources: Math.round(parsed.max_sources ?? 0),
+    fwhm,
+    sigma,
+    min_snr: minSnr,
+    min_score: minScore,
+    min_distance: minDistance,
+    visual_weight: visualWeight,
+    visual_area_radius: visualAreaRadius,
+    visual_area_sigma: visualAreaSigma,
+    max_sources: Math.round(maxSources),
   };
 }
 
 function parseExtendedDraft(
   draft: Record<keyof ExtendedDetectionParams, string>,
 ): ExtendedDetectionParams | null {
-  const parsed: Partial<ExtendedDetectionParams> = {};
-  for (const key of EXTENDED_DETECTION_KEYS) {
-    const numeric = readNumber(draft[key]);
-    if (numeric === null) {
-      return null;
-    }
-    parsed[key] = numeric;
+  const extSigma = readNumber(draft.ext_sigma);
+  const extSmoothSigma = readNumber(draft.ext_smooth_sigma);
+  const extMinArea = readNumber(draft.ext_min_area);
+  const extMaxArea = readNumber(draft.ext_max_area);
+  const extBinFactor = readNumber(draft.ext_bin_factor);
+  const extClosing = readNumber(draft.ext_closing_iterations);
+  const extOpening = readNumber(draft.ext_opening_iterations);
+  const extMinScore = readNumber(draft.ext_min_score);
+  const extMaxSources = readNumber(draft.ext_max_sources);
+  if (
+    extSigma === null ||
+    extSmoothSigma === null ||
+    extMinArea === null ||
+    extMaxArea === null ||
+    extBinFactor === null ||
+    extClosing === null ||
+    extOpening === null ||
+    extMinScore === null ||
+    extMaxSources === null
+  ) {
+    return null;
   }
-  const values = parsed as ExtendedDetectionParams;
-  for (const key of INTEGER_EXTENDED_KEYS) {
-    values[key] = Math.round(values[key] ?? 0);
-  }
-  return parsed as ExtendedDetectionParams;
+  return {
+    ext_sigma: extSigma,
+    ext_smooth_sigma: extSmoothSigma,
+    ext_min_area: Math.round(extMinArea),
+    ext_max_area: Math.round(extMaxArea),
+    ext_bin_factor: Math.round(extBinFactor),
+    ext_closing_iterations: Math.round(extClosing),
+    ext_opening_iterations: Math.round(extOpening),
+    ext_min_score: extMinScore,
+    ext_max_sources: Math.round(extMaxSources),
+  };
 }
 
 function readNumber(raw: string): number | null {
@@ -369,7 +411,7 @@ export function SourceDetectionForm({
             <FieldInput
               key={field.key}
               field={field}
-              value={draft[field.key as keyof PointDetectionParams]}
+              value={draft[field.key]}
               isPending={isPending}
               onValueChange={(nextValue) => {
                 applyDraft({
@@ -402,7 +444,7 @@ export function SourceDetectionForm({
             <FieldInput
               key={field.key}
               field={field}
-              value={extendedDraft[field.key as keyof ExtendedDetectionParams]}
+              value={extendedDraft[field.key]}
               isPending={isPending}
               onValueChange={(nextValue) => {
                 setExtendedDraft((current) => ({
@@ -447,7 +489,7 @@ function FieldInput({
   isPending,
   onValueChange,
 }: Readonly<{
-  field: FieldDefinition;
+  field: DetectionField<string>;
   value: string;
   isPending: boolean;
   onValueChange: (value: string) => void;
