@@ -164,6 +164,7 @@ frontend/src/features/images/components/
   named-preset-field.tsx
 frontend/src/features/images/render-view.ts
 frontend/src/features/images/source-detection.ts
+frontend/src/features/images/fits-render-image-key.ts
 frontend/src/features/images/source-detection-fields.ts
 frontend/src/features/images/named-preset.ts
 frontend/src/features/images/use-named-preset-draft.ts

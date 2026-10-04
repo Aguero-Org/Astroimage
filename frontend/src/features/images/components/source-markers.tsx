@@ -1,7 +1,7 @@
 import { useCoordinates, useViewerEvent } from "@cellbytes/react-openseadragon";
 import { useState } from "react";
 import type { PointSourceSchema } from "@/api/generated/model";
-import { FITS_RENDER_IMAGE_KEY } from "../source-detection";
+import { FITS_RENDER_IMAGE_KEY } from "../fits-render-image-key";
 import { SourceMarker } from "./source-marker";
 
 type SourceMarkersProps = {
