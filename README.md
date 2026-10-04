@@ -171,7 +171,7 @@ Configuración raíz: [`sonar-project.properties`](./sonar-project.properties) (
 
 ## CI
 
-GitHub Actions corre en pushes y pull requests a `main`, `develop` y `feature/*`.
+GitHub Actions corre en pushes y pull requests a `main`, `develop`, `feature/*` y `chore/*`.
 
 - **Backend**: Ruff + mypy + import-linter + pytest + `astroimage openapi export` (detección de drift) + cobertura.
 - **Frontend**: Biome + tsc + cobertura Vitest + Playwright + build (en paralelo con el backend).
