@@ -8,7 +8,7 @@ from typing import Annotated, Any
 
 import numpy as np
 from astropy.io import fits
-from astropy.wcs import WCS, FITSFixedWarning
+from astropy.wcs import WCS, FITSFixedWarning, NoConvergence
 from pydantic import BaseModel, BeforeValidator, ConfigDict, Field
 
 
@@ -281,7 +281,7 @@ def _hdu_center(header: fits.Header, shape: list[int]) -> tuple[float | None, fl
         center = wcs.pixel_to_world(shape[1] / 2, shape[0] / 2)
         ra = float(center.ra.deg)
         dec = float(center.dec.deg)
-    except Exception:
+    except (AttributeError, NoConvergence, TypeError, ValueError):
         return None, None
     if ra < 0:
         ra += 360.0

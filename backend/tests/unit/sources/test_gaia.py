@@ -18,6 +18,7 @@ from astroimage.fits.model import FitsRecord
 from astroimage.fits.service import FitsService
 from astroimage.sources.gaia import (
     GaiaObject,
+    GaiaQueryError,
     match_sources_to_gaia,
     search_radius_arcsec,
 )
@@ -60,7 +61,7 @@ class _FakeGaiaProvider:
 
 class _FailingGaiaProvider:
     def search_cone(self, center: SkyCoord, radius_arcsec: float) -> list[GaiaObject]:
-        raise RuntimeError("provider boom")
+        raise GaiaQueryError("provider boom")
 
 
 class _SlowGaiaProvider:

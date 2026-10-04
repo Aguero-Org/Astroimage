@@ -40,6 +40,10 @@ class GaiaSourceMatch:
     gaia_gmag: float | None
 
 
+class GaiaQueryError(Exception):
+    """The Gaia archive did not return a catalog for this cone."""
+
+
 class GaiaCatalogProvider(Protocol):
     def search_cone(self, center: SkyCoord, radius_arcsec: float) -> list[GaiaObject]: ...
 
@@ -52,23 +56,30 @@ class AstroqueryGaiaProvider:
             center_dec=float(center.dec.deg),
             radius_arcsec=radius_arcsec,
         )
-        radius = Angle(radius_arcsec * u.arcsec)
-        job = Gaia.cone_search(center, radius=radius, columns=_GAIA_COLUMNS)
-        table = job.get_results()
-        if table is None or len(table) == 0:
-            return []
-        wanted = [column for column in _GAIA_COLUMNS if column in table.colnames]
-        objects: list[GaiaObject] = []
-        for row in table[wanted]:
-            objects.append(
-                GaiaObject(
-                    source_id=str(row["source_id"]),
-                    ra_deg=float(row["ra"]),
-                    dec_deg=float(row["dec"]),
-                    gmag=_optional_gmag(row["phot_g_mean_mag"]),
-                )
+        try:
+            return _read_cone(center, radius_arcsec)
+        except (KeyError, OSError, TypeError, ValueError) as exc:
+            raise GaiaQueryError(str(exc)) from exc
+
+
+def _read_cone(center: SkyCoord, radius_arcsec: float) -> list[GaiaObject]:
+    radius = Angle(radius_arcsec * u.arcsec)
+    job = Gaia.cone_search(center, radius=radius, columns=_GAIA_COLUMNS)
+    table = job.get_results()
+    if table is None or len(table) == 0:
+        return []
+    wanted = [column for column in _GAIA_COLUMNS if column in table.colnames]
+    objects: list[GaiaObject] = []
+    for row in table[wanted]:
+        objects.append(
+            GaiaObject(
+                source_id=str(row["source_id"]),
+                ra_deg=float(row["ra"]),
+                dec_deg=float(row["dec"]),
+                gmag=_optional_gmag(row["phot_g_mean_mag"]),
             )
-        return objects
+        )
+    return objects
 
 
 def match_sources_to_gaia(

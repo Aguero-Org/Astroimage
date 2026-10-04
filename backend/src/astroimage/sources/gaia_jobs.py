@@ -7,10 +7,12 @@ from collections.abc import Awaitable, Callable
 from uuid import UUID
 
 import structlog
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from astroimage.fits.service import FitsService
 from astroimage.shared.errors import AppError, as_app_error
+from astroimage.shared.object_storage import ObjectStorageError
 from astroimage.sources.cache import DetectionCache, detection_cache_key
 from astroimage.sources.gaia import GaiaCatalogProvider
 from astroimage.sources.schema import (
@@ -22,6 +24,16 @@ from astroimage.sources.schema import (
 from astroimage.sources.service import GaiaVerificationService, SourceDetectionService
 
 _log = structlog.get_logger("astroimage.sources.gaia_jobs")
+
+_STORED_JOB_ERRORS = (
+    AppError,
+    LookupError,
+    OSError,
+    ObjectStorageError,
+    RuntimeError,
+    SQLAlchemyError,
+    ValueError,
+)
 
 _LOGS: dict[str, Callable[..., None]] = {
     "warning": _log.warning,
@@ -148,7 +160,7 @@ class GaiaJobRegistry:
     ) -> None:
         try:
             result = await factory()
-        except Exception as exc:
+        except _STORED_JOB_ERRORS as exc:
             error = as_app_error(exc)
             log = _LOGS[error.log_level]
             log(
