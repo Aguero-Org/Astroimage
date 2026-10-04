@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { useGetImageInfo } from "@/api/generated/hub/hub";
 import type {
   ExtendedSourceSchema,
-  GaiaMatchSchema,
   PointSourceSchema,
 } from "@/api/generated/model";
 import {
@@ -23,6 +22,7 @@ import {
   GaiaCrossMatch,
   gaiaMatchedIds,
   gaiaMatchFor,
+  useGaiaCrossMatch,
 } from "@/features/images/components/gaia-cross-match";
 import { HduSelector } from "@/features/images/components/hdu-selector";
 import { ImageArchive } from "@/features/images/components/image-archive";
@@ -56,15 +56,41 @@ function ImageDetailPage() {
   const [workspace, setWorkspace] = useState<ImageWorkspaceUi>(
     DEFAULT_IMAGE_WORKSPACE,
   );
-  const [gaiaMatches, setGaiaMatches] = useState<GaiaMatchSchema[]>([]);
-  const { hdu, inspectorOpen, selectedSource, renderParams, detectionParams } =
+  const { inspectorOpen, selectedSource, renderParams, detectionParams } =
     workspace;
+  const infoQuery = useGetImageInfo(recordId);
+  const imageInfo =
+    infoQuery.data?.status === 200 ? infoQuery.data.data : undefined;
+  const imageHdus = imageInfo?.hdus.images ?? [];
+  const hdu = resolveWorkspaceHdu(
+    workspace.hdu,
+    imageHdus,
+    imageInfo?.hdus.selected ?? null,
+  );
+  const [hduScope, setHduScope] = useState({ recordId, hdu });
+  if (hduScope.recordId !== recordId) {
+    setHduScope({ recordId, hdu: null });
+    setWorkspace((current) => {
+      if (current.hdu === null && current.selectedSource === null) {
+        return current;
+      }
+      return { ...current, hdu: null, selectedSource: null };
+    });
+  } else if (hduScope.hdu !== hdu) {
+    setHduScope({ recordId, hdu });
+    if (selectedSource !== null) {
+      setWorkspace((current) =>
+        current.selectedSource === null
+          ? current
+          : { ...current, selectedSource: null },
+      );
+    }
+  }
   const renderQueryParams =
     hdu === null ? renderParams : { ...renderParams, hdu };
   const renderQuery = useRenderFitsImage(recordId, renderQueryParams, {
     query: { placeholderData: keepPreviousData },
   });
-  const infoQuery = useGetImageInfo(recordId);
   const sourcesQueryParams =
     hdu === null ? detectionParams : { ...detectionParams, hdu };
   const followOnsEnabled = followOnQueriesEnabled(renderQuery);
@@ -82,29 +108,7 @@ function ImageDetailPage() {
     hdu === null ? undefined : { hdu },
     { query: { enabled: false } },
   );
-  const imageInfo =
-    infoQuery.data?.status === 200 ? infoQuery.data.data : undefined;
-  const imageHdus = imageInfo?.hdus.images ?? [];
-
-  useEffect(() => {
-    const images = imageInfo?.hdus.images ?? [];
-    if (images.length <= 1) {
-      setWorkspace((current) => ({ ...current, hdu: null }));
-      return;
-    }
-    setWorkspace((current) => {
-      if (
-        current.hdu !== null &&
-        images.some((plane) => plane.index === current.hdu)
-      ) {
-        return current;
-      }
-      return {
-        ...current,
-        hdu: imageInfo?.hdus.selected ?? images[0]?.index ?? null,
-      };
-    });
-  }, [imageInfo]);
+  const gaia = useGaiaCrossMatch(recordId, sourcesQueryParams);
   const sourceName = imageInfo?.source_name;
   const pageTitle = imageDisplayTitle(sourceName, slug);
   const catalogName = imageInfo?.display_name?.trim() ?? "";
@@ -146,12 +150,6 @@ function ImageDetailPage() {
       : undefined;
   const objectUrl = useObjectUrl(blob);
 
-  useEffect(() => {
-    if (recordId || detectionParams || hdu !== undefined) {
-      setWorkspace((current) => ({ ...current, selectedSource: null }));
-    }
-  }, [recordId, detectionParams, hdu]);
-
   return (
     <main className="relative h-svh w-full overflow-hidden bg-black">
       <RenderedFitsSection
@@ -162,8 +160,8 @@ function ImageDetailPage() {
         label={titleWithDescription}
         pointSources={pointSources}
         extendedSources={extendedSources}
-        gaiaPointIds={gaiaMatchedIds(gaiaMatches, "point")}
-        gaiaExtendedIds={gaiaMatchedIds(gaiaMatches, "extended")}
+        gaiaPointIds={gaiaMatchedIds(gaia.matches, "point")}
+        gaiaExtendedIds={gaiaMatchedIds(gaia.matches, "extended")}
         selectedId={selectedPointId}
         selectedExtendedId={selectedExtendedId}
         onSelectSource={(source) => {
@@ -201,7 +199,7 @@ function ImageDetailPage() {
             gaiaMatch={
               selectedSource?.object_type
                 ? gaiaMatchFor(
-                    gaiaMatches,
+                    gaia.matches,
                     selectedSource.source_id,
                     selectedSource.object_type,
                   )
@@ -214,7 +212,12 @@ function ImageDetailPage() {
             images={imageHdus}
             value={hdu}
             onChange={(nextHdu) => {
-              setWorkspace((current) => ({ ...current, hdu: nextHdu }));
+              setHduScope({ recordId, hdu: nextHdu });
+              setWorkspace((current) => ({
+                ...current,
+                hdu: nextHdu,
+                selectedSource: null,
+              }));
             }}
           />
         }
@@ -266,6 +269,7 @@ function ImageDetailPage() {
                 setWorkspace((current) => ({
                   ...current,
                   detectionParams: params,
+                  selectedSource: null,
                 }));
               }}
             />
@@ -296,9 +300,10 @@ function ImageDetailPage() {
               </p>
             ) : null}
             <GaiaCrossMatch
-              recordId={recordId}
-              params={sourcesQueryParams}
-              onMatches={setGaiaMatches}
+              isFetching={gaia.isFetching}
+              isError={gaia.isError}
+              summary={gaia.summary}
+              onArm={gaia.arm}
             />
           </>
         }
@@ -387,6 +392,20 @@ function RenderedFitsSection({
       No hay imagen disponible.
     </p>
   );
+}
+
+function resolveWorkspaceHdu(
+  storedHdu: number | null,
+  images: readonly { index: number }[],
+  selectedHdu: number | null,
+): number | null {
+  if (images.length <= 1) {
+    return null;
+  }
+  if (storedHdu !== null && images.some((plane) => plane.index === storedHdu)) {
+    return storedHdu;
+  }
+  return selectedHdu ?? images[0]?.index ?? null;
 }
 
 function formatQueryError(error: unknown): string {

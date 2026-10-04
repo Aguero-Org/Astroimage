@@ -1,5 +1,5 @@
 import type { SyntheticEvent } from "react";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { HelpHint } from "@/components/ui/help-hint";
 import {
@@ -258,6 +258,8 @@ export function SourceDetectionForm({
     extendedToDraft(DEFAULT_EXTENDED_DETECTION_PARAMS),
   );
   const measured = bestPreset?.data;
+  const [appliedMeasurement, setAppliedMeasurement] =
+    useState<typeof measured>(undefined);
   const currentValues = useRef<SourceDetectionParams>(
     DEFAULT_SOURCE_DETECTION_PARAMS,
   );
@@ -265,11 +267,8 @@ export function SourceDetectionForm({
     ...(parseDraft() ?? DEFAULT_POINT_DETECTION_PARAMS),
     ...(parseExtendedDraft(extendedDraft) ?? DEFAULT_EXTENDED_DETECTION_PARAMS),
   };
-
-  useEffect(() => {
-    if (measured === undefined) {
-      return;
-    }
+  if (measured !== undefined && measured !== appliedMeasurement) {
+    setAppliedMeasurement(measured);
     applyParams(
       bestPresetPointParams(
         measured,
@@ -284,9 +283,7 @@ export function SourceDetectionForm({
         ),
       ),
     );
-    // Only a new answer re-applies the measurement, so typing in the form is
-    // never overwritten by the previous one.
-  }, [applyParams, measured]);
+  }
 
   function handleSubmit(event: SyntheticEvent<HTMLFormElement>) {
     event.preventDefault();
