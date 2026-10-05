@@ -29,8 +29,6 @@ export function useNamedPresetDraft<TParams, TDraft>({
       : matched;
   });
 
-  // Stable identities: the measured preset effect depends on applyParams, and a
-  // fresh closure every render would re-apply the measurement forever.
   const applyParams = useCallback(
     (next: TParams) => {
       setDraft(toDraft(next));

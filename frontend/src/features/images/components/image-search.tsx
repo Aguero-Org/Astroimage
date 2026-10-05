@@ -1,6 +1,7 @@
 import { Search } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { HelpHint } from "@/components/ui/help-hint";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 
@@ -11,7 +12,11 @@ type ImageSearchProps = {
   variant: "hero" | "navbar";
 };
 
-export function ImageSearch({
+export function ImageSearch(props: Readonly<ImageSearchProps>) {
+  return <ImageSearchField key={props.value} {...props} />;
+}
+
+function ImageSearchField({
   value,
   onSearch,
   isFetching = false,
@@ -19,10 +24,6 @@ export function ImageSearch({
 }: Readonly<ImageSearchProps>) {
   const [local, setLocal] = useState(value);
   const isNavbar = variant === "navbar";
-
-  useEffect(() => {
-    setLocal(value);
-  }, [value]);
 
   return (
     <form
@@ -58,6 +59,10 @@ export function ImageSearch({
         <Search className="size-4" />
         {isFetching ? "Buscando…" : "Buscar"}
       </Button>
+      <HelpHint label="Objeto celeste" testId="help-objeto" glossaryId="objeto">
+        Nombre del cielo, como M31 o NGC 1300. También acepta archivo o
+        instrumento y lista los recortes.
+      </HelpHint>
     </form>
   );
 }

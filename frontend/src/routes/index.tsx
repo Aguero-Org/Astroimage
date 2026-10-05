@@ -9,7 +9,7 @@ import { ImageSearch } from "@/features/images/components/image-search";
 
 export const Route = createFileRoute("/")({
   validateSearch: (search: Record<string, unknown>) => ({
-    query: (search.query as string) ?? "",
+    query: typeof search.query === "string" ? search.query : "",
   }),
   component: HomePage,
 });
