@@ -2,6 +2,7 @@ import { useViewer, useViewerEvent } from "@cellbytes/react-openseadragon";
 import { House, Maximize, Minimize, ZoomIn, ZoomOut } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { HelpHint } from "@/components/ui/help-hint";
 
 const ZOOM_STEP = 1.2;
 
@@ -84,6 +85,10 @@ export function FitsImageViewerToolbar() {
           <Maximize className="size-4" />
         )}
       </Button>
+      <HelpHint label="Pan y zoom" testId="help-pan-zoom" glossaryId="pan-zoom">
+        Arrastrá la imagen para moverla. Estos botones acercan, alejan, ajustan
+        a la vista o pasan a pantalla completa.
+      </HelpHint>
     </div>
   );
 }

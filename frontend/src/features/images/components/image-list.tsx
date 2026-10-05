@@ -3,14 +3,7 @@ import { Trash2 } from "lucide-react";
 import { useState } from "react";
 import { BrandLoader } from "@/components/brand-loader";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { HelpHint } from "@/components/ui/help-hint";
 import {
   TableBody,
   TableCell,
@@ -21,6 +14,8 @@ import { type RecordSortField, useDeleteImage, useImageRecords } from "../api";
 import { formatBytes } from "../candidate-api";
 import { formatWhen } from "../format-when";
 import { MastSourceLink } from "../mast-source-link";
+import { usePagedSort } from "../use-paged-sort";
+import { DeleteImageDialog } from "./delete-image-dialog";
 import { FilePager, FitsFileTable } from "./fits-file-table";
 
 type ImageListProps = {
@@ -39,9 +34,8 @@ const COLUMNS: { field: RecordSortField; label: string }[] = [
 ];
 
 export function ImageList({ query }: Readonly<ImageListProps>) {
-  const [page, setPage] = useState(1);
-  const [sort, setSort] = useState<RecordSortField>("created_at");
-  const [order, setOrder] = useState<"asc" | "desc">("desc");
+  const { page, setPage, sort, order, toggleSort } =
+    usePagedSort<RecordSortField>("created_at", "desc");
   const [pendingDelete, setPendingDelete] = useState<{
     id: string;
     name: string;
@@ -55,21 +49,17 @@ export function ImageList({ query }: Readonly<ImageListProps>) {
   const pageData = response?.status === 200 ? response.data : null;
   const records = pageData?.records ?? [];
 
-  function toggleSort(field: RecordSortField) {
-    if (field === sort) {
-      setOrder((current) => (current === "asc" ? "desc" : "asc"));
-    } else {
-      setSort(field);
-      setOrder("asc");
-    }
-    setPage(1);
-  }
-
   return (
     <section className="flex w-full flex-col gap-2">
-      <h2 className="text-sm font-medium">Imágenes disponibles</h2>
-      {isPending && <BrandLoader label="Cargando imágenes…" />}
-      {isError && <p className="text-sm text-destructive">Algo salió mal.</p>}
+      <h2 className="flex items-center gap-1 text-sm font-medium">
+        Imágenes disponibles
+        <HelpHint label="FITS" testId="help-fits" glossaryId="fits">
+          Cada fila es un FITS guardado. Se abre como imagen y sus metadatos van
+          al inspector.
+        </HelpHint>
+      </h2>
+      {!!isPending && <BrandLoader label="Cargando imágenes…" />}
+      {!!isError && <p className="text-sm text-destructive">Algo salió mal.</p>}
       {!isPending &&
         !isError &&
         records.length === 0 &&
@@ -89,10 +79,26 @@ export function ImageList({ query }: Readonly<ImageListProps>) {
       {!isPending && !isError && records.length > 0 && (
         <FitsFileTable
           testId="image-list"
-          columns={COLUMNS}
+          columns={COLUMNS.map((column) =>
+            column.field === "product_filename"
+              ? {
+                  ...column,
+                  hint: (
+                    <HelpHint
+                      label="Nombre de archivo"
+                      testId="help-slug-archivo"
+                      glossaryId="slug-archivo"
+                    >
+                      Nombre con el que se guardó el FITS. El enlace abre el
+                      visor.
+                    </HelpHint>
+                  ),
+                }
+              : column,
+          )}
           sort={sort}
           order={order}
-          onSort={(field) => toggleSort(field as RecordSortField)}
+          onSort={toggleSort}
           trailingHead={
             <>
               <TableHead>Fuente</TableHead>
@@ -148,61 +154,23 @@ export function ImageList({ query }: Readonly<ImageListProps>) {
           </TableBody>
         </FitsFileTable>
       )}
-      {pageData && (
+      {pageData !== null && (
         <FilePager
           page={page}
           hasMore={pageData.has_more === true}
           onPage={setPage}
         />
       )}
-      <Dialog
-        open={pendingDelete !== null}
-        onOpenChange={(open) => {
-          if (!open) {
+      <DeleteImageDialog
+        target={pendingDelete}
+        isPending={remove.isPending}
+        onCancel={() => setPendingDelete(null)}
+        onConfirm={(id) => {
+          void remove.mutateAsync({ recordId: id }).then(() => {
             setPendingDelete(null);
-          }
+          });
         }}
-      >
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Eliminar imagen</DialogTitle>
-            <DialogDescription>
-              Se borra{" "}
-              <strong className="font-semibold text-foreground">
-                {pendingDelete?.name}
-              </strong>{" "}
-              del servidor. El original en MAST no se toca.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setPendingDelete(null)}
-            >
-              Cancelar
-            </Button>
-            <Button
-              type="button"
-              variant="destructive"
-              data-testid="confirm-delete-image"
-              disabled={remove.isPending}
-              onClick={() => {
-                if (pendingDelete === null) {
-                  return;
-                }
-                void remove
-                  .mutateAsync({ recordId: pendingDelete.id })
-                  .then(() => {
-                    setPendingDelete(null);
-                  });
-              }}
-            >
-              Eliminar
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      />
     </section>
   );
 }

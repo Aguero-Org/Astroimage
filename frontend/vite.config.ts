@@ -32,6 +32,8 @@ export default defineConfig({
     environment: "jsdom",
     setupFiles: ["./src/test/setup.ts"],
     globals: true,
+    // Route tests wait up to 8s. The default 5s aborts the test before that.
+    testTimeout: 20_000,
     exclude: ["**/node_modules/**", "**/dist/**", "**/e2e/**"],
     coverage: {
       provider: "v8",

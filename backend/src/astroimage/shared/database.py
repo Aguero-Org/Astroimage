@@ -59,7 +59,7 @@ def _attach_query_logging(engine: AsyncEngine) -> None:
         try:
             if cursor.rowcount is not None:
                 rowcount = int(cursor.rowcount)
-        except Exception:
+        except (TypeError, ValueError):
             rowcount = -1
         logger.info(
             "db_query",

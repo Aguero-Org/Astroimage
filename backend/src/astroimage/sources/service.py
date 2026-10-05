@@ -42,6 +42,7 @@ from astroimage.sources.gaia import (
     AstroqueryGaiaProvider,
     GaiaCatalogProvider,
     GaiaObject,
+    GaiaQueryError,
     GaiaSourceMatch,
     match_sources_to_gaia,
     search_radius_arcsec,
@@ -641,7 +642,7 @@ class GaiaVerificationService:
                     fallback_center,
                     fallback_radius,
                 )
-            except Exception as exc:
+            except GaiaQueryError as exc:
                 _log.warning("gaia_fallback_failed", detail=str(exc))
                 fallback_objects = []
             if fallback_objects:
@@ -687,7 +688,7 @@ class GaiaVerificationService:
                 )
                 try:
                     objects = self.provider.search_cone(center, radius)
-                except Exception as exc:
+                except GaiaQueryError as exc:
                     _log.warning("gaia_provider_error", detail=str(exc))
                     error = f"Gaia query failed: {exc}"
                 queried = error is None

@@ -10,22 +10,23 @@ import {
 } from "@/components/ui/pagination";
 import { Table, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
-export type FitsFileColumn = {
-  field: string;
+export type FitsFileColumn<Field extends string = string> = {
+  field: Field;
   label: string;
+  hint?: ReactNode;
 };
 
-type FitsFileTableProps = {
-  columns: FitsFileColumn[];
+type FitsFileTableProps<Field extends string> = {
+  columns: readonly FitsFileColumn<Field>[];
   trailingHead?: ReactNode;
-  sort: string;
+  sort: Field;
   order: "asc" | "desc";
-  onSort: (field: string) => void;
+  onSort: (field: Field) => void;
   children: ReactNode;
   testId?: string;
 };
 
-export function FitsFileTable({
+export function FitsFileTable<Field extends string>({
   columns,
   trailingHead,
   sort,
@@ -33,7 +34,7 @@ export function FitsFileTable({
   onSort,
   children,
   testId,
-}: Readonly<FitsFileTableProps>) {
+}: Readonly<FitsFileTableProps<Field>>) {
   return (
     <Table data-testid={testId}>
       <TableHeader>
@@ -51,17 +52,22 @@ export function FitsFileTable({
                     : "none"
                 }
               >
-                <button
-                  type="button"
-                  className="inline-flex items-center gap-1"
-                  onClick={() => onSort(column.field)}
-                >
-                  {column.label}
-                  {active && order === "asc" && <ArrowUp className="size-3" />}
-                  {active && order === "desc" && (
-                    <ArrowDown className="size-3" />
-                  )}
-                </button>
+                <span className="inline-flex items-center gap-1">
+                  <button
+                    type="button"
+                    className="inline-flex items-center gap-1"
+                    onClick={() => onSort(column.field)}
+                  >
+                    {column.label}
+                    {active && order === "asc" && (
+                      <ArrowUp className="size-3" />
+                    )}
+                    {active && order === "desc" && (
+                      <ArrowDown className="size-3" />
+                    )}
+                  </button>
+                  {column.hint}
+                </span>
               </TableHead>
             );
           })}

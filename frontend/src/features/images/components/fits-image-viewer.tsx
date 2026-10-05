@@ -5,7 +5,7 @@ import {
 } from "@cellbytes/react-openseadragon";
 import { type ReactNode, useId, useMemo } from "react";
 import { cn } from "@/lib/utils";
-import { FITS_RENDER_IMAGE_KEY } from "../source-detection";
+import { FITS_RENDER_IMAGE_KEY } from "../fits-render-image-key";
 import { FitsImageViewerToolbar } from "./fits-image-viewer-toolbar";
 
 type FitsImageViewerProps = {

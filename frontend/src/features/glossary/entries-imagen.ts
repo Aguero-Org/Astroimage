@@ -14,8 +14,7 @@ export const IMAGEN_ENTRIES: GlossaryEntry[] = [
     name: "Nombre de archivo",
     group: "imagen",
     what: "Nombre con el que se guardó el FITS al descargarlo.",
-    inApp:
-      "Si es distinto del objeto buscado, el listado lo muestra debajo del nombre.",
+    inApp: "La columna Archivo muestra ese nombre. El enlace abre el visor.",
     where: "Inicio (listado)",
   },
   {
@@ -23,7 +22,8 @@ export const IMAGEN_ENTRIES: GlossaryEntry[] = [
     name: "Objeto celeste",
     group: "imagen",
     what: "Nombre con el que buscás el cielo: M31, NGC 1300, Orión…",
-    inApp: "La búsqueda pide ese nombre al archivo Hubble y lista recortes.",
+    inApp:
+      "El buscador del inicio lo manda al archivo Hubble y lista los recortes, además de aceptar archivo o instrumento.",
     where: "Inicio",
   },
   {

@@ -14,8 +14,9 @@ export const VISOR_ENTRIES: GlossaryEntry[] = [
     id: "seleccion",
     name: "Selección",
     group: "visor",
-    what: "Datos de la fuente puntual que acabás de marcar.",
-    inApp: "Un clic en un punto llena esta sección (SNR, score, pico, flujo).",
+    what: "Datos de la marca que acabás de elegir, puntual o extendida.",
+    inApp:
+      "Un clic en un punto muestra SNR, score, pico y flujo. Un clic en un recuadro muestra área, ancho, alto y media. Si hubo cruce con Gaia, también el id.",
     where: "Inspector → Selección",
   },
   {

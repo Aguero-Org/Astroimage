@@ -1,5 +1,6 @@
 import type { FitsMetadataSchema } from "@/api/generated/model";
 import { BrandLoader } from "@/components/brand-loader";
+import { HelpHint } from "@/components/ui/help-hint";
 import {
   archiveGroupRows,
   IMAGE_ARCHIVE_GROUPS,
@@ -37,7 +38,21 @@ export function ImageArchive({ info, isPending }: Readonly<ImageArchiveProps>) {
         />
       ))}
       {headerEntries.length > 0 && (
-        <CollapsibleSection id="archive-header" title="Header FITS" nested>
+        <CollapsibleSection
+          id="archive-header"
+          title="Header FITS"
+          nested
+          hint={
+            <HelpHint
+              label="Header FITS"
+              testId="help-encabezado"
+              glossaryId="encabezado"
+            >
+              Palabras clave crudas del archivo. Los grupos de arriba ya resumen
+              lo útil.
+            </HelpHint>
+          }
+        >
           <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-xs">
             {headerEntries.map(([key, headerValue]) => (
               <div key={key} className="contents">

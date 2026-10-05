@@ -30,5 +30,12 @@ describe("ImageArchive", () => {
     expect(screen.getByTestId("meta-shape")).toHaveTextContent("512 × 512");
     expect(screen.getByTestId("meta-wcs-present")).toHaveTextContent("Sí");
     expect(screen.queryByText("{")).not.toBeInTheDocument();
+    expect(screen.getByTestId("help-encabezado-glossary")).toHaveAttribute(
+      "href",
+      "/glossary#encabezado",
+    );
+    expect(
+      screen.getByTestId("help-copy-archive-instrument-glossary"),
+    ).toHaveAttribute("href", "/glossary#copiar-dato");
   });
 });

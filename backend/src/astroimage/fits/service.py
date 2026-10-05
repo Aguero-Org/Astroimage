@@ -35,8 +35,9 @@ def _mast_fields(
     record: FitsRecord,
 ) -> tuple[str, str | None, str, str | None, str | None, str]:
     payload = record.metadata_payload
-    mast = payload.get("mast") if isinstance(payload, dict) else None
-    if not isinstance(mast, dict):
+    raw_mast = payload.get("mast") if isinstance(payload, dict) else None
+    mast = raw_mast if isinstance(raw_mast, dict) else None
+    if mast is None:
         raise ValueError(f"FITS record {record.id} is missing MAST provenance")
     data_uri = mast.get("data_uri")
     proposal_id = mast.get("proposal_id")

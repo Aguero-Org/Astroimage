@@ -29,9 +29,6 @@ if (Test-Path ".\.venv\Scripts\pytest.exe") {
 if ($LASTEXITCODE -ne 0) {
     throw "backend pytest failed with exit $LASTEXITCODE"
 }
-$cov = Get-Content "coverage.xml" -Raw
-$cov = $cov -replace 'filename="src/', 'filename="backend/src/'
-Set-Content -Path "coverage.xml" -Value $cov -NoNewline
 Pop-Location
 
 Write-Host "==> Frontend tests + coverage"
@@ -40,15 +37,13 @@ pnpm test:coverage
 if ($LASTEXITCODE -ne 0) {
     throw "frontend vitest failed with exit $LASTEXITCODE"
 }
-$lcovPath = "coverage\lcov.info"
-if (-not (Test-Path $lcovPath)) {
-    throw "frontend coverage/lcov.info was not produced"
-}
-$lcov = Get-Content $lcovPath -Raw
-$lcov = $lcov -replace '\\', '/'
-$lcov = $lcov -replace 'SF:src/', 'SF:frontend/src/'
-Set-Content -Path $lcovPath -Value $lcov -NoNewline
 Pop-Location
+
+Write-Host "==> Normalize coverage paths"
+python (Join-Path $PSScriptRoot "normalize-coverage.py")
+if ($LASTEXITCODE -ne 0) {
+    throw "coverage path normalization failed with exit $LASTEXITCODE"
+}
 
 Write-Host "==> SonarScanner"
 $mount = ($RepoRoot.Path -replace '\\', '/')

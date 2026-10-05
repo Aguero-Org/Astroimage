@@ -97,7 +97,7 @@ export function TransferFeedback({
           : ""}
         {speed ? ` · ${speed}` : ""}
       </p>
-      {transfer.error && (
+      {transfer.error !== null && transfer.error !== "" && (
         <p className="text-xs text-destructive">{transfer.error}</p>
       )}
       <div className="flex gap-2">
@@ -116,7 +116,7 @@ export function TransferFeedback({
             Cancelar
           </Button>
         )}
-        {transfer.resumable && (
+        {!!transfer.resumable && (
           <Button
             type="button"
             size="sm"

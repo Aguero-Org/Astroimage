@@ -21,3 +21,17 @@ export const DEFAULT_IMAGE_WORKSPACE: ImageWorkspaceUi = {
   renderParams: DEFAULT_RENDER_PARAMS,
   detectionParams: DEFAULT_SOURCE_DETECTION_PARAMS,
 };
+
+export function resolveWorkspaceHdu(
+  storedHdu: number | null,
+  images: readonly { index: number }[],
+  selectedHdu: number | null,
+): number | null {
+  if (images.length <= 1) {
+    return null;
+  }
+  if (storedHdu !== null && images.some((plane) => plane.index === storedHdu)) {
+    return storedHdu;
+  }
+  return selectedHdu ?? images[0]?.index ?? null;
+}

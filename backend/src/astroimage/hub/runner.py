@@ -7,13 +7,16 @@ from uuid import UUID
 
 import httpx
 import structlog
+from astropy.io.fits import VerifyError
 from opentelemetry import trace
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from astroimage.fits.service import FitsService
 from astroimage.hub.importer import HubbleProduct, annotate_fits_header, mast_download_url
 from astroimage.hub.mast_fetch import (
     PART_BYTES,
+    MastFetchError,
     ResourceProbe,
     can_resume,
     identity_changed,
@@ -24,10 +27,21 @@ from astroimage.hub.model import ImageTransfer, TransferStatus
 from astroimage.hub.progress import moving_average_bytes_per_second
 from astroimage.hub.repository import TransferRepository
 from astroimage.hub.slug import product_slug
-from astroimage.shared.object_storage import ObjectStorage
+from astroimage.shared.object_storage import ObjectStorage, ObjectStorageError
 
 _log = structlog.get_logger("astroimage.hub.runner")
 _tracer = trace.get_tracer("astroimage.hub.runner")
+
+_TRANSFER_FAILURES = (
+    LookupError,
+    MastFetchError,
+    OSError,
+    ObjectStorageError,
+    SQLAlchemyError,
+    ValueError,
+    VerifyError,
+    httpx.HTTPError,
+)
 
 FitsFactory = Callable[[AsyncSession], FitsService]
 
@@ -56,7 +70,7 @@ class TransferRunner:
         except asyncio.CancelledError:
             await self._mark(transfer_id, TransferStatus.CANCELLED, error=None)
             raise
-        except Exception as exc:
+        except _TRANSFER_FAILURES as exc:
             _log.exception("transfer_failed", transfer_id=str(transfer_id))
             await self._mark(transfer_id, TransferStatus.FAILED, error=str(exc))
 
@@ -173,7 +187,7 @@ class TransferRunner:
         try:
             for key in await self._storage.list_object_keys(f"transfers/{transfer_id}/"):
                 await self._storage.remove(key)
-        except Exception as exc:
+        except (OSError, ObjectStorageError) as exc:
             _log.warning(
                 "transfer_parts_purge_failed",
                 transfer_id=str(transfer_id),
