@@ -1,0 +1,122 @@
+{
+  "layout": { "width": 1400, "height": 760 },
+  "_meta": { "themeId": "command", "colorMode": "light" },
+  "nodes": {
+    "user": { "x": 60, "y": 60, "size": "l" },
+    "spa_search": { "x": 60, "y": 230, "size": "l" },
+    "transfer_poll": { "x": 60, "y": 400, "size": "l" },
+    "hub_controller": { "x": 420, "y": 60, "size": "l" },
+    "error_handler": { "x": 740, "y": 60, "size": "l" },
+    "hub_service": { "x": 420, "y": 230, "size": "l" },
+    "hub_importer": { "x": 740, "y": 230, "size": "l" },
+    "transfer_runner": { "x": 420, "y": 400, "size": "l" },
+    "fits_service": { "x": 740, "y": 570, "size": "l" },
+    "mast_catalog": { "x": 1100, "y": 60, "size": "l" },
+    "postgres": { "x": 1100, "y": 230, "size": "l" },
+    "object_storage": { "x": 1100, "y": 400, "size": "l" },
+    "mast_download": { "x": 1100, "y": 570, "size": "l" }
+  },
+  "nodeData": {
+    "user": { "kind": "user", "name": "Usuario", "subtitle": "Navegador" },
+    "spa_search": {
+      "kind": "frontend",
+      "name": "ImageSearch + Results",
+      "subtitle": "routes/index.tsx · features/images",
+      "description": "Busca, ordena y selecciona"
+    },
+    "transfer_poll": {
+      "kind": "frontend",
+      "name": "Transfer polling",
+      "subtitle": "useImageTransfer · 1 s",
+      "description": "Progreso, cancelar y retomar"
+    },
+    "hub_controller": {
+      "kind": "backend",
+      "name": "hub/controller.py",
+      "subtitle": "FastAPI · /image/search · /select",
+      "description": "HTTP solo delega al servicio"
+    },
+    "hub_service": {
+      "kind": "backend",
+      "name": "HubbleImageService",
+      "subtitle": "hub/service.py",
+      "description": "Select, dedup data_uri, cancel y resume"
+    },
+    "hub_importer": {
+      "kind": "backend",
+      "name": "HubbleImporter",
+      "subtitle": "hub/importer.py · astroquery",
+      "description": "Lista SCIENCE FITS (MAST)"
+    },
+    "transfer_runner": {
+      "kind": "backend",
+      "name": "TransferRunner",
+      "subtitle": "hub/runner.py · BackgroundTasks",
+      "description": "Partes de 8 MiB con reintentos y probe"
+    },
+    "fits_service": {
+      "kind": "backend",
+      "name": "FitsService.store_bytes",
+      "subtitle": "fits/service.py · annotate header",
+      "description": "Guarda FITS y deja registro disponible"
+    },
+    "error_handler": {
+      "kind": "security",
+      "name": "shared/errors.py",
+      "subtitle": "AppError -> {detail}",
+      "description": "Traduce errores en un unico punto"
+    },
+    "postgres": {
+      "kind": "database",
+      "name": "PostgreSQL 16",
+      "subtitle": "image_transfers · fits_records",
+      "description": "Transfers, progreso y catalogo local"
+    },
+    "object_storage": {
+      "kind": "storage",
+      "name": "Object storage S3",
+      "subtitle": "MinIO / RustFS · FITS + parts",
+      "description": "part-XXXX; luego objeto final"
+    },
+    "mast_catalog": {
+      "kind": "external",
+      "name": "MAST Catalog",
+      "subtitle": "Observations query_criteria",
+      "description": "Catalogo HST (terceros)"
+    },
+    "mast_download": {
+      "kind": "external",
+      "name": "MAST Download",
+      "subtitle": "Download/file · Range 8 MiB",
+      "description": "Descarga por partes (terceros)"
+    }
+  },
+  "connectors": [
+    { "from": "user", "to": "spa_search", "fromAnchor": "bottom", "toAnchor": "top", "style": "https", "label": "usa" },
+    { "from": "spa_search", "to": "transfer_poll", "fromAnchor": "bottom", "toAnchor": "top", "style": "internal", "label": "al elegir, sigue transfer" },
+    { "from": "spa_search", "to": "hub_controller", "fromAnchor": "right", "toAnchor": "left", "style": "https", "label": "GET search · POST select" },
+    { "from": "transfer_poll", "to": "hub_controller", "fromAnchor": "right", "toAnchor": "left", "style": "https", "label": "GET transfer · cancel · resume" },
+    { "from": "hub_controller", "to": "hub_service", "fromAnchor": "bottom", "toAnchor": "top", "style": "internal" },
+    { "from": "hub_controller", "to": "error_handler", "fromAnchor": "right", "toAnchor": "left", "style": "internal", "label": "AppError" },
+    { "from": "hub_service", "to": "hub_importer", "fromAnchor": "right", "toAnchor": "left", "style": "internal", "label": "search_candidates" },
+    { "from": "hub_service", "to": "transfer_runner", "fromAnchor": "bottom", "toAnchor": "top", "style": "internal", "label": "select · dedup · start" },
+    { "from": "hub_importer", "to": "mast_catalog", "fromAnchor": "right", "toAnchor": "left", "style": "mast", "label": "query HST" },
+    { "from": "transfer_runner", "to": "mast_download", "fromAnchor": "bottom", "toAnchor": "top", "style": "mast", "label": "Range 8 MiB" },
+    { "from": "transfer_runner", "to": "object_storage", "fromAnchor": "right", "toAnchor": "left", "style": "s3", "label": "part-XXXX" },
+    { "from": "transfer_runner", "to": "fits_service", "fromAnchor": "bottom", "toAnchor": "top", "style": "internal", "label": "store_bytes" },
+    { "from": "fits_service", "to": "object_storage", "fromAnchor": "right", "toAnchor": "left", "style": "s3", "label": "FITS final" },
+    { "from": "fits_service", "to": "postgres", "fromAnchor": "right", "toAnchor": "left", "style": "sql", "label": "fits_records" }
+  ],
+  "connectorStyles": {
+    "https": { "color": "blue", "strokeWidth": 2, "label": "HTTPS" },
+    "internal": { "color": "zinc", "strokeWidth": 2 },
+    "mast": { "color": "orange", "strokeWidth": 2, "label": "MAST" },
+    "sql": { "color": "emerald", "strokeWidth": 2, "label": "SQL" },
+    "s3": { "color": "sky", "strokeWidth": 2, "label": "S3" }
+  },
+  "groups": [
+    { "id": "frontend", "x": 30, "y": 30, "width": 310, "height": 500, "type": "rect", "color": "zinc", "label": "Frontend · Vite + React SPA" },
+    { "id": "backend", "x": 390, "y": 30, "width": 600, "height": 680, "type": "rect", "color": "zinc", "label": "Backend · FastAPI astroimage" },
+    { "id": "data", "x": 1070, "y": 30, "width": 280, "height": 680, "type": "rect", "color": "zinc", "label": "Datos + terceros" }
+  ]
+}

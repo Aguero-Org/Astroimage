@@ -100,24 +100,48 @@ Permite analizar una imagen obtenida, identificar las fuentes presentes y contra
 
 # Diagrama de arquitectura
 
-El diagrama de arquitectura se realizará tomando como user story testigo **US5 - Buscar y obtener imágenes**.
+El diagrama de arquitectura se realiza tomando como user story testigo **US5 - Buscar y obtener imágenes**.
 
-> **PLACEHOLDER — DIAGRAMA DE ARQUITECTURA**
->
-> El diagrama debe mostrar cómo se resuelve técnicamente la US5, incluyendo:
->
-> - Los componentes propios que participan en el flujo.
-> - Los componentes de terceros involucrados.
-> - La separación entre frontend y backend.
-> - Las relaciones y comunicaciones entre los componentes.
-> - La responsabilidad de cada componente.
-> - Los nombres concretos de los componentes, evitando representar únicamente tecnologías genéricas como "Frontend", "Backend" o "Base de datos".
->
-> Debe representar el flujo de la búsqueda, selección y descarga de una imagen de Hubble hasta que la imagen queda disponible en la aplicación.
+![Diagrama de arquitectura US5](./architecture/entrega1-us5.svg)
+
+Fuente del diagrama (Arc, tema `command` claro, brutalista minimal de colores saturados): [`./architecture/entrega1-us5.arc.json`](./architecture/entrega1-us5.arc.json).
+Para regenerar el SVG (el CLI `arc` no expone temas; se usa el servidor MCP de Arc):
+`npx -y @arach/arc check docs/architecture/entrega1-us5.arc.json` (sin diagnósticos),
+`node docs/architecture/render-themed-svg.mjs docs/architecture/entrega1-us5.arc.json docs/architecture/entrega1-us5.svg command light transparent off` (fondo transparente, sin grilla)
+y luego `python docs/architecture/enlarge-secondary-text.py` (agranda el texto secundario de 9px a 11.5px, ya que Arc no ofrece escala de tipografía).
+
+Representa el flujo de búsqueda, selección y descarga de una imagen de Hubble hasta que queda disponible en la aplicación.
+La mitad izquierda es el **frontend** (Vite + React SPA); el centro es el **backend** (FastAPI `astroimage`); la derecha son **datos y terceros**.
+Los nombres son los componentes concretos del código, no tecnologías genéricas.
+
+### Flujo (búsqueda → disponible)
+
+1. El usuario busca un objeto (`ImageSearch + Results`) y recorre/ordena candidatas: `GET /image/search` → `HubbleImageService.search_candidates` → `HubbleImporter` (resuelve con `SkyCoord` y consulta `MAST Catalog` paginado) → orden, paginado y `candidate_token` firmado.
+2. Al seleccionar, `POST /image/search/select` → `select_candidate`: si ya está `COMPLETED` o activa la devuelve; si es retomable hace `resume`; si el `data_uri` ya tiene registro lo marca `COMPLETED`; si no, crea el `ImageTransfer` en `QUEUED` y lo arranca en `BackgroundTasks` (`TransferRunner`).
+3. `TransferRunner` hace `probe` (`Range: bytes=0-0`, con reintentos) y descarga por partes de 8 MiB (`read_range`) contra `MAST Download`, guardando cada parte en el object storage (`transfers/{id}/part-XXXX`) y el progreso/velocidad en PostgreSQL vía `TransferRepository` (patrón repositorio: sin flecha propia en el diagrama para no romper la grilla).
+4. El frontend sondea `GET /image/transfers/{id}` cada segundo (`Transfer polling`) y ofrece cancelar/retomar (`cancel`/`resume`); una parte interrumpida se retoma desde `bytes_transferred` validando `etag`/`last-modified`.
+5. Al completar las partes, el runner anota el header FITS y llama a `FitsService.store_bytes`: guarda el objeto final en el storage, crea el `fits_records` en PostgreSQL con proveniencia MAST, marca el transfer `COMPLETED` con `record_id`/`slug` y **purga las partes temporales**.
+6. La imagen queda disponible: `GET /image` (con `cuerpo_celeste`, paginado y orden) la lista desde el catálogo local.
+7. Los errores del flujo se traducen en `shared/errors.py` (`AppError` → cuerpo `{"detail": ...}`), un único punto antes del cliente.
 
 ### Componentes
 
-> **PLACEHOLDER — COMPONENTES DEL DIAGRAMA**
->
-> Para cada componente identificado en el diagrama se debe indicar brevemente su responsabilidad.
+| Componente | Responsabilidad |
+|---|---|
+| Usuario (navegador) | Actor de US5; busca, selecciona y sigue la descarga. |
+| ImageSearch + Results (`frontend/src/routes/index.tsx`, `features/images`) | UI de búsqueda, orden/paginado de candidatas y selección; usa el cliente Orval generado desde OpenAPI con TanStack Query. Propio. |
+| Transfer polling (`features/images/candidate-api.ts`, `useImageTransfer`) | Sondea `GET /image/transfers/{id}` cada 1 s, muestra progreso/velocidad y dispara cancelar/retomar. Propio. |
+| hub/controller.py (FastAPI) | Solo HTTP: `GET /image/search`, `POST /image/search/select`, `GET/POST /image/transfers/{id}[/cancel\|/resume]`, `GET /image`; delega al servicio. Propio. |
+| HubbleImageService (`hub/service.py`) | Orquesta búsqueda/select/dedup por `data_uri`, cancel/resume y arranque del runner. Propio. |
+| HubbleImporter (`hub/importer.py`, astroquery) | Resuelve el objeto (`SkyCoord.from_name`), filtra productos `SCIENCE` FITS y arma `HubbleProduct`. Propio. |
+| TransferRunner (`hub/runner.py`, `hub/mast_fetch.py`) | Descarga por partes de 8 MiB con `probe`, reintentos, validación de identidad (`etag`/`last-modified`) y registro de progreso. Propio. |
+| TransferRepository (`hub/repository.py`) | Persiste `image_transfers` y el progreso; usado por `HubbleImageService` y `TransferRunner`. Sin flecha propia (repositorio). Propio. |
+| FitsService.store_bytes (`fits/service.py`) | Anota el header, persiste el FITS final y crea el registro que deja la imagen disponible. Propio. |
+| shared/errors.py | Traduce todos los errores a `AppError` con cuerpo `{"detail"}` en un único punto. Propio. |
+| PostgreSQL 16 (`image_transfers`, `fits_records`) | Transfers con estado/progreso y catálogo local con proveniencia MAST. Propio (infraestructura). |
+| Object storage S3 (MinIO / RustFS) | Partes temporales `transfers/{id}/part-XXXX` y objeto FITS final. Propio (infraestructura). |
+| MAST Catalog (`Observations.query_criteria`, `get_product_list`) | Catálogo HST remoto por coordenadas. **Terceros** (STScI). |
+| MAST Download (`Download/file` + `Range`) | Descarga del producto FITS. **Terceros** (STScI). |
+
+Contrato: OpenAPI (`backend/openapi.json`) entre backend y frontend; el cliente se regenera con `pnpm generate:api` (Orval).
 
