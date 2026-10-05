@@ -104,12 +104,6 @@ El diagrama de arquitectura se realiza tomando como user story testigo **US5 - B
 
 ![Diagrama de arquitectura US5](./architecture/entrega1-us5.svg)
 
-Fuente del diagrama (Arc, tema `command` claro, brutalista minimal de colores saturados): [`./architecture/entrega1-us5.arc.json`](./architecture/entrega1-us5.arc.json).
-Para regenerar el SVG (el CLI `arc` no expone temas; se usa el servidor MCP de Arc):
-`npx -y @arach/arc check docs/architecture/entrega1-us5.arc.json` (sin diagnósticos),
-`node docs/architecture/render-themed-svg.mjs docs/architecture/entrega1-us5.arc.json docs/architecture/entrega1-us5.svg command light transparent off` (fondo transparente, sin grilla)
-y luego `python docs/architecture/enlarge-secondary-text.py` (agranda el texto secundario de 9px a 11.5px, ya que Arc no ofrece escala de tipografía).
-
 Representa el flujo de búsqueda, selección y descarga de una imagen de Hubble hasta que queda disponible en la aplicación.
 La mitad izquierda es el **frontend** (Vite + React SPA); el centro es el **backend** (FastAPI `astroimage`); la derecha son **datos y terceros**.
 Los nombres son los componentes concretos del código, no tecnologías genéricas.

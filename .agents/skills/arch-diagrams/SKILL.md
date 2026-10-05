@@ -20,7 +20,6 @@ componentes. Ejemplo completo: entrega 1 / US5 (`entrega1-us5.*`).
 ```bash
 npx -y @arach/arc check docs/architecture/<nombre>.arc.json
 node docs/architecture/render-themed-svg.mjs docs/architecture/<nombre>.arc.json docs/architecture/<nombre>.svg <tema> <modo> transparent off
-python docs/architecture/enlarge-secondary-text.py docs/architecture/<nombre>.svg
 ```
 
 - `check` debe quedar sin diagnósticos antes de renderizar.
@@ -58,9 +57,9 @@ queda disponible en la app:
 
 ## Límites de Arc (no pelear contra ellos)
 
-- Escala tipográfica fija: títulos 12px (`l`), secundario 9px. El script
-  `enlarge-secondary-text.py` lo lleva a 11.5px post-render; por eso las
-  descripciones deben tener ≤30 caracteres y los nombres ≤26.
+- Escala tipográfica fija: títulos 12px (`l`), secundario 9px, sin
+  opción de escala. Mantener descripciones concisas (≤35 caracteres) y
+  nombres ≤26 para que no desborden el bloque.
 - El SVG estático renderiza solo los labels de **estilo**
   (`HTTPS`, `MAST`, …), no los `label` por conector: la semántica de cada
   flecha vive en el JSON y en el texto de `entrega_N.md`.
