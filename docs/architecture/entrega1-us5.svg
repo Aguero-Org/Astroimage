@@ -63,7 +63,7 @@
     <g transform="translate(60 60)" clip-path="url(#clip-user)"><circle cx="209.75" cy="10.25" r="4.5" fill="#2490c4" opacity="0.25"/><circle cx="209.75" cy="10.25" r="2" fill="#2490c4"/></g>
     <g transform="translate(60 60)" clip-path="url(#clip-user)">
     <text x="110" y="42.1" text-anchor="middle" fill="#0c1014" font-size="12" font-weight="500" font-family="&#39;Space Grotesk&#39;, system-ui, sans-serif" letter-spacing="-0.165">Usuario</text>
-    <text x="110" y="55.7" text-anchor="middle" fill="#3a4248" opacity="0.72" font-size="11.5" font-family="&#39;Space Grotesk&#39;, system-ui, sans-serif">Navegador</text>
+    <text x="110" y="55.7" text-anchor="middle" fill="#3a4248" opacity="0.72" font-size="9" font-family="&#39;Space Grotesk&#39;, system-ui, sans-serif">Navegador</text>
     </g>
   </g>
   <g opacity="0.88">
@@ -72,8 +72,8 @@
     <g transform="translate(60 230)" clip-path="url(#clip-spa_search)"><circle cx="209.75" cy="10.25" r="4.5" fill="#5a68e8" opacity="0.25"/><circle cx="209.75" cy="10.25" r="2" fill="#5a68e8"/></g>
     <g transform="translate(60 230)" clip-path="url(#clip-spa_search)">
     <text x="110" y="35.6" text-anchor="middle" fill="#0c1014" font-size="12" font-weight="500" font-family="&#39;Space Grotesk&#39;, system-ui, sans-serif" letter-spacing="-0.165">ImageSearch + Results</text>
-    <text x="110" y="49.2" text-anchor="middle" fill="#3a4248" opacity="0.72" font-size="11.5" font-family="&#39;Space Grotesk&#39;, system-ui, sans-serif">routes/index.tsx · features/images</text>
-    <text x="110" y="62.2" text-anchor="middle" fill="#3a4248" opacity="0.65" font-size="11.5" font-family="&#39;Space Grotesk&#39;, system-ui, sans-serif">Busca, ordena y selecciona</text>
+    <text x="110" y="49.2" text-anchor="middle" fill="#3a4248" opacity="0.72" font-size="9" font-family="&#39;Space Grotesk&#39;, system-ui, sans-serif">routes/index.tsx · features/images</text>
+    <text x="110" y="62.2" text-anchor="middle" fill="#3a4248" opacity="0.65" font-size="9" font-family="&#39;Space Grotesk&#39;, system-ui, sans-serif">Busca, ordena y selecciona</text>
     </g>
   </g>
   <g opacity="0.88">
@@ -82,8 +82,8 @@
     <g transform="translate(60 400)" clip-path="url(#clip-transfer_poll)"><circle cx="209.75" cy="10.25" r="4.5" fill="#5a68e8" opacity="0.25"/><circle cx="209.75" cy="10.25" r="2" fill="#5a68e8"/></g>
     <g transform="translate(60 400)" clip-path="url(#clip-transfer_poll)">
     <text x="110" y="35.6" text-anchor="middle" fill="#0c1014" font-size="12" font-weight="500" font-family="&#39;Space Grotesk&#39;, system-ui, sans-serif" letter-spacing="-0.165">Transfer polling</text>
-    <text x="110" y="49.2" text-anchor="middle" fill="#3a4248" opacity="0.72" font-size="11.5" font-family="&#39;Space Grotesk&#39;, system-ui, sans-serif">useImageTransfer · 1 s</text>
-    <text x="110" y="62.2" text-anchor="middle" fill="#3a4248" opacity="0.65" font-size="11.5" font-family="&#39;Space Grotesk&#39;, system-ui, sans-serif">Progreso, cancelar y retomar</text>
+    <text x="110" y="49.2" text-anchor="middle" fill="#3a4248" opacity="0.72" font-size="9" font-family="&#39;Space Grotesk&#39;, system-ui, sans-serif">useImageTransfer · 1 s</text>
+    <text x="110" y="62.2" text-anchor="middle" fill="#3a4248" opacity="0.65" font-size="9" font-family="&#39;Space Grotesk&#39;, system-ui, sans-serif">Progreso, cancelar y retomar</text>
     </g>
   </g>
   <g opacity="0.88">
@@ -92,8 +92,8 @@
     <g transform="translate(420 60)" clip-path="url(#clip-hub_controller)"><circle cx="209.75" cy="10.25" r="4.5" fill="#2b7fd4" opacity="0.25"/><circle cx="209.75" cy="10.25" r="2" fill="#2b7fd4"/></g>
     <g transform="translate(420 60)" clip-path="url(#clip-hub_controller)">
     <text x="110" y="35.6" text-anchor="middle" fill="#0c1014" font-size="12" font-weight="500" font-family="&#39;Space Grotesk&#39;, system-ui, sans-serif" letter-spacing="-0.165">hub/controller.py</text>
-    <text x="110" y="49.2" text-anchor="middle" fill="#3a4248" opacity="0.72" font-size="11.5" font-family="&#39;Space Grotesk&#39;, system-ui, sans-serif">FastAPI · /image/search · /select</text>
-    <text x="110" y="62.2" text-anchor="middle" fill="#3a4248" opacity="0.65" font-size="11.5" font-family="&#39;Space Grotesk&#39;, system-ui, sans-serif">HTTP solo delega al servicio</text>
+    <text x="110" y="49.2" text-anchor="middle" fill="#3a4248" opacity="0.72" font-size="9" font-family="&#39;Space Grotesk&#39;, system-ui, sans-serif">FastAPI · /image/search · /select</text>
+    <text x="110" y="62.2" text-anchor="middle" fill="#3a4248" opacity="0.65" font-size="9" font-family="&#39;Space Grotesk&#39;, system-ui, sans-serif">HTTP solo delega al servicio</text>
     </g>
   </g>
   <g opacity="0.88">
@@ -102,8 +102,8 @@
     <g transform="translate(740 60)" clip-path="url(#clip-error_handler)"><circle cx="209.75" cy="10.25" r="4.5" fill="#c44e5c" opacity="0.25"/><circle cx="209.75" cy="10.25" r="2" fill="#c44e5c"/></g>
     <g transform="translate(740 60)" clip-path="url(#clip-error_handler)">
     <text x="110" y="35.6" text-anchor="middle" fill="#0c1014" font-size="12" font-weight="500" font-family="&#39;Space Grotesk&#39;, system-ui, sans-serif" letter-spacing="-0.165">shared/errors.py</text>
-    <text x="110" y="49.2" text-anchor="middle" fill="#3a4248" opacity="0.72" font-size="11.5" font-family="&#39;Space Grotesk&#39;, system-ui, sans-serif">AppError -&gt; {detail}</text>
-    <text x="110" y="62.2" text-anchor="middle" fill="#3a4248" opacity="0.65" font-size="11.5" font-family="&#39;Space Grotesk&#39;, system-ui, sans-serif">Traduce errores en un unico punto</text>
+    <text x="110" y="49.2" text-anchor="middle" fill="#3a4248" opacity="0.72" font-size="9" font-family="&#39;Space Grotesk&#39;, system-ui, sans-serif">AppError -&gt; {detail}</text>
+    <text x="110" y="62.2" text-anchor="middle" fill="#3a4248" opacity="0.65" font-size="9" font-family="&#39;Space Grotesk&#39;, system-ui, sans-serif">Traduce errores en un unico punto</text>
     </g>
   </g>
   <g opacity="0.88">
@@ -112,8 +112,8 @@
     <g transform="translate(420 230)" clip-path="url(#clip-hub_service)"><circle cx="209.75" cy="10.25" r="4.5" fill="#2b7fd4" opacity="0.25"/><circle cx="209.75" cy="10.25" r="2" fill="#2b7fd4"/></g>
     <g transform="translate(420 230)" clip-path="url(#clip-hub_service)">
     <text x="110" y="35.6" text-anchor="middle" fill="#0c1014" font-size="12" font-weight="500" font-family="&#39;Space Grotesk&#39;, system-ui, sans-serif" letter-spacing="-0.165">HubbleImageService</text>
-    <text x="110" y="49.2" text-anchor="middle" fill="#3a4248" opacity="0.72" font-size="11.5" font-family="&#39;Space Grotesk&#39;, system-ui, sans-serif">hub/service.py</text>
-    <text x="110" y="62.2" text-anchor="middle" fill="#3a4248" opacity="0.65" font-size="11.5" font-family="&#39;Space Grotesk&#39;, system-ui, sans-serif">Select, dedup data_uri, cancel y resume</text>
+    <text x="110" y="49.2" text-anchor="middle" fill="#3a4248" opacity="0.72" font-size="9" font-family="&#39;Space Grotesk&#39;, system-ui, sans-serif">hub/service.py</text>
+    <text x="110" y="62.2" text-anchor="middle" fill="#3a4248" opacity="0.65" font-size="9" font-family="&#39;Space Grotesk&#39;, system-ui, sans-serif">Select, dedup data_uri, cancel y resume</text>
     </g>
   </g>
   <g opacity="0.88">
@@ -122,8 +122,8 @@
     <g transform="translate(740 230)" clip-path="url(#clip-hub_importer)"><circle cx="209.75" cy="10.25" r="4.5" fill="#2b7fd4" opacity="0.25"/><circle cx="209.75" cy="10.25" r="2" fill="#2b7fd4"/></g>
     <g transform="translate(740 230)" clip-path="url(#clip-hub_importer)">
     <text x="110" y="35.6" text-anchor="middle" fill="#0c1014" font-size="12" font-weight="500" font-family="&#39;Space Grotesk&#39;, system-ui, sans-serif" letter-spacing="-0.165">HubbleImporter</text>
-    <text x="110" y="49.2" text-anchor="middle" fill="#3a4248" opacity="0.72" font-size="11.5" font-family="&#39;Space Grotesk&#39;, system-ui, sans-serif">hub/importer.py · astroquery</text>
-    <text x="110" y="62.2" text-anchor="middle" fill="#3a4248" opacity="0.65" font-size="11.5" font-family="&#39;Space Grotesk&#39;, system-ui, sans-serif">Lista SCIENCE FITS (MAST)</text>
+    <text x="110" y="49.2" text-anchor="middle" fill="#3a4248" opacity="0.72" font-size="9" font-family="&#39;Space Grotesk&#39;, system-ui, sans-serif">hub/importer.py · astroquery</text>
+    <text x="110" y="62.2" text-anchor="middle" fill="#3a4248" opacity="0.65" font-size="9" font-family="&#39;Space Grotesk&#39;, system-ui, sans-serif">Lista SCIENCE FITS (MAST)</text>
     </g>
   </g>
   <g opacity="0.88">
@@ -132,8 +132,8 @@
     <g transform="translate(420 400)" clip-path="url(#clip-transfer_runner)"><circle cx="209.75" cy="10.25" r="4.5" fill="#2b7fd4" opacity="0.25"/><circle cx="209.75" cy="10.25" r="2" fill="#2b7fd4"/></g>
     <g transform="translate(420 400)" clip-path="url(#clip-transfer_runner)">
     <text x="110" y="35.6" text-anchor="middle" fill="#0c1014" font-size="12" font-weight="500" font-family="&#39;Space Grotesk&#39;, system-ui, sans-serif" letter-spacing="-0.165">TransferRunner</text>
-    <text x="110" y="49.2" text-anchor="middle" fill="#3a4248" opacity="0.72" font-size="11.5" font-family="&#39;Space Grotesk&#39;, system-ui, sans-serif">hub/runner.py · BackgroundTasks</text>
-    <text x="110" y="62.2" text-anchor="middle" fill="#3a4248" opacity="0.65" font-size="11.5" font-family="&#39;Space Grotesk&#39;, system-ui, sans-serif">Partes de 8 MiB con reintentos y probe</text>
+    <text x="110" y="49.2" text-anchor="middle" fill="#3a4248" opacity="0.72" font-size="9" font-family="&#39;Space Grotesk&#39;, system-ui, sans-serif">hub/runner.py · BackgroundTasks</text>
+    <text x="110" y="62.2" text-anchor="middle" fill="#3a4248" opacity="0.65" font-size="9" font-family="&#39;Space Grotesk&#39;, system-ui, sans-serif">Partes de 8 MiB con reintentos y probe</text>
     </g>
   </g>
   <g opacity="0.88">
@@ -142,8 +142,8 @@
     <g transform="translate(740 570)" clip-path="url(#clip-fits_service)"><circle cx="209.75" cy="10.25" r="4.5" fill="#2b7fd4" opacity="0.25"/><circle cx="209.75" cy="10.25" r="2" fill="#2b7fd4"/></g>
     <g transform="translate(740 570)" clip-path="url(#clip-fits_service)">
     <text x="110" y="35.6" text-anchor="middle" fill="#0c1014" font-size="12" font-weight="500" font-family="&#39;Space Grotesk&#39;, system-ui, sans-serif" letter-spacing="-0.165">FitsService.store_bytes</text>
-    <text x="110" y="49.2" text-anchor="middle" fill="#3a4248" opacity="0.72" font-size="11.5" font-family="&#39;Space Grotesk&#39;, system-ui, sans-serif">fits/service.py · annotate header</text>
-    <text x="110" y="62.2" text-anchor="middle" fill="#3a4248" opacity="0.65" font-size="11.5" font-family="&#39;Space Grotesk&#39;, system-ui, sans-serif">Guarda FITS y deja registro disponible</text>
+    <text x="110" y="49.2" text-anchor="middle" fill="#3a4248" opacity="0.72" font-size="9" font-family="&#39;Space Grotesk&#39;, system-ui, sans-serif">fits/service.py · annotate header</text>
+    <text x="110" y="62.2" text-anchor="middle" fill="#3a4248" opacity="0.65" font-size="9" font-family="&#39;Space Grotesk&#39;, system-ui, sans-serif">Guarda FITS y deja registro disponible</text>
     </g>
   </g>
   <g opacity="0.88">
@@ -152,8 +152,8 @@
     <g transform="translate(1100 60)" clip-path="url(#clip-mast_catalog)"><circle cx="209.75" cy="10.25" r="4.5" fill="#5c6878" opacity="0.25"/><circle cx="209.75" cy="10.25" r="2" fill="#5c6878"/></g>
     <g transform="translate(1100 60)" clip-path="url(#clip-mast_catalog)">
     <text x="110" y="35.6" text-anchor="middle" fill="#0c1014" font-size="12" font-weight="500" font-family="&#39;Space Grotesk&#39;, system-ui, sans-serif" letter-spacing="-0.165">MAST Catalog</text>
-    <text x="110" y="49.2" text-anchor="middle" fill="#3a4248" opacity="0.72" font-size="11.5" font-family="&#39;Space Grotesk&#39;, system-ui, sans-serif">Observations query_criteria</text>
-    <text x="110" y="62.2" text-anchor="middle" fill="#3a4248" opacity="0.65" font-size="11.5" font-family="&#39;Space Grotesk&#39;, system-ui, sans-serif">Catalogo HST (terceros)</text>
+    <text x="110" y="49.2" text-anchor="middle" fill="#3a4248" opacity="0.72" font-size="9" font-family="&#39;Space Grotesk&#39;, system-ui, sans-serif">Observations query_criteria</text>
+    <text x="110" y="62.2" text-anchor="middle" fill="#3a4248" opacity="0.65" font-size="9" font-family="&#39;Space Grotesk&#39;, system-ui, sans-serif">Catalogo HST (terceros)</text>
     </g>
   </g>
   <g opacity="0.88">
@@ -162,8 +162,8 @@
     <g transform="translate(1100 230)" clip-path="url(#clip-postgres)"><circle cx="209.75" cy="10.25" r="4.5" fill="#1f9a84" opacity="0.25"/><circle cx="209.75" cy="10.25" r="2" fill="#1f9a84"/></g>
     <g transform="translate(1100 230)" clip-path="url(#clip-postgres)">
     <text x="110" y="35.6" text-anchor="middle" fill="#0c1014" font-size="12" font-weight="500" font-family="&#39;Space Grotesk&#39;, system-ui, sans-serif" letter-spacing="-0.165">PostgreSQL 16</text>
-    <text x="110" y="49.2" text-anchor="middle" fill="#3a4248" opacity="0.72" font-size="11.5" font-family="&#39;Space Grotesk&#39;, system-ui, sans-serif">image_transfers · fits_records</text>
-    <text x="110" y="62.2" text-anchor="middle" fill="#3a4248" opacity="0.65" font-size="11.5" font-family="&#39;Space Grotesk&#39;, system-ui, sans-serif">Transfers, progreso y catalogo local</text>
+    <text x="110" y="49.2" text-anchor="middle" fill="#3a4248" opacity="0.72" font-size="9" font-family="&#39;Space Grotesk&#39;, system-ui, sans-serif">image_transfers · fits_records</text>
+    <text x="110" y="62.2" text-anchor="middle" fill="#3a4248" opacity="0.65" font-size="9" font-family="&#39;Space Grotesk&#39;, system-ui, sans-serif">Transfers, progreso y catalogo local</text>
     </g>
   </g>
   <g opacity="0.88">
@@ -172,8 +172,8 @@
     <g transform="translate(1100 400)" clip-path="url(#clip-object_storage)"><circle cx="209.75" cy="10.25" r="4.5" fill="#1f9a84" opacity="0.25"/><circle cx="209.75" cy="10.25" r="2" fill="#1f9a84"/></g>
     <g transform="translate(1100 400)" clip-path="url(#clip-object_storage)">
     <text x="110" y="35.6" text-anchor="middle" fill="#0c1014" font-size="12" font-weight="500" font-family="&#39;Space Grotesk&#39;, system-ui, sans-serif" letter-spacing="-0.165">Object storage S3</text>
-    <text x="110" y="49.2" text-anchor="middle" fill="#3a4248" opacity="0.72" font-size="11.5" font-family="&#39;Space Grotesk&#39;, system-ui, sans-serif">MinIO / RustFS · FITS + parts</text>
-    <text x="110" y="62.2" text-anchor="middle" fill="#3a4248" opacity="0.65" font-size="11.5" font-family="&#39;Space Grotesk&#39;, system-ui, sans-serif">part-XXXX; luego objeto final</text>
+    <text x="110" y="49.2" text-anchor="middle" fill="#3a4248" opacity="0.72" font-size="9" font-family="&#39;Space Grotesk&#39;, system-ui, sans-serif">MinIO / RustFS · FITS + parts</text>
+    <text x="110" y="62.2" text-anchor="middle" fill="#3a4248" opacity="0.65" font-size="9" font-family="&#39;Space Grotesk&#39;, system-ui, sans-serif">part-XXXX; luego objeto final</text>
     </g>
   </g>
   <g opacity="0.88">
@@ -182,8 +182,8 @@
     <g transform="translate(1100 570)" clip-path="url(#clip-mast_download)"><circle cx="209.75" cy="10.25" r="4.5" fill="#5c6878" opacity="0.25"/><circle cx="209.75" cy="10.25" r="2" fill="#5c6878"/></g>
     <g transform="translate(1100 570)" clip-path="url(#clip-mast_download)">
     <text x="110" y="35.6" text-anchor="middle" fill="#0c1014" font-size="12" font-weight="500" font-family="&#39;Space Grotesk&#39;, system-ui, sans-serif" letter-spacing="-0.165">MAST Download</text>
-    <text x="110" y="49.2" text-anchor="middle" fill="#3a4248" opacity="0.72" font-size="11.5" font-family="&#39;Space Grotesk&#39;, system-ui, sans-serif">Download/file · Range 8 MiB</text>
-    <text x="110" y="62.2" text-anchor="middle" fill="#3a4248" opacity="0.65" font-size="11.5" font-family="&#39;Space Grotesk&#39;, system-ui, sans-serif">Descarga por partes (terceros)</text>
+    <text x="110" y="49.2" text-anchor="middle" fill="#3a4248" opacity="0.72" font-size="9" font-family="&#39;Space Grotesk&#39;, system-ui, sans-serif">Download/file · Range 8 MiB</text>
+    <text x="110" y="62.2" text-anchor="middle" fill="#3a4248" opacity="0.65" font-size="9" font-family="&#39;Space Grotesk&#39;, system-ui, sans-serif">Descarga por partes (terceros)</text>
     </g>
   </g>
   <path d="M -8 16 V -8 H 16 M 1384 -8 H 1408 V 16 M 1408 744 V 768 H 1384 M 16 768 H -8 V 744" stroke="#5c6878" stroke-width="1" fill="none" />
