@@ -178,7 +178,7 @@ jobs:
           echo "args=${args[*]}" >> "$GITHUB_OUTPUT"
 
       - name: SonarQube scan
-        uses: SonarSource/sonarqube-scan-action@v7
+        uses: SonarSource/sonarqube-scan-action@v8
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ vars.SONAR_HOST_URL }}
