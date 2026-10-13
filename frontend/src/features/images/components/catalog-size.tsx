@@ -28,7 +28,7 @@ export function CatalogSize({ bytes, value }: Readonly<CatalogSizeProps>) {
             light
               ? "border-gaia/40 bg-gaia/15 text-gaia"
               : mid
-                ? "border-amber-500/40 bg-amber-500/15 text-amber-700 dark:text-amber-300"
+                ? "border-amber-500/40 bg-amber-500/15 text-amber-800 dark:text-amber-300"
                 : heavy
                   ? "border-destructive/40 bg-destructive/15 text-destructive"
                   : undefined
