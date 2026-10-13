@@ -1,7 +1,10 @@
 import { Calendar, CalendarPlus, Filter, Hash, Telescope } from "lucide-react";
+import { DateBadge } from "@/components/ui/date-badge";
+import { IconValue } from "@/components/ui/icon-value";
 import { formatBytes } from "../candidate-api";
 import { formatWhen } from "../format-when";
-import { CatalogDate, CatalogIconValue, CatalogSize } from "./catalog-card";
+import { CatalogSize } from "./catalog-size";
+import { orUnavailable } from "./catalog-value";
 
 export const catalogLabels = {
   displayName: "Nombre de la imagen",
@@ -33,30 +36,30 @@ export function CatalogFacts({
 }: Readonly<CatalogFactsProps>) {
   return (
     <>
-      <CatalogIconValue
+      <IconValue
         label={catalogLabels.instrument}
-        value={instrument}
+        value={orUnavailable(instrument)}
         icon={Telescope}
       />
-      <CatalogIconValue
+      <IconValue
         label={catalogLabels.proposal}
-        value={proposalId}
+        value={orUnavailable(proposalId)}
         icon={Hash}
       />
-      <CatalogIconValue
+      <IconValue
         label={catalogLabels.filters}
-        value={filters}
+        value={orUnavailable(filters)}
         icon={Filter}
       />
-      <CatalogDate
+      <DateBadge
         label={catalogLabels.observed}
-        value={formatWhen(observedAt)}
+        value={orUnavailable(formatWhen(observedAt))}
         icon={Calendar}
       />
       {importedAt !== undefined && (
-        <CatalogDate
+        <DateBadge
           label={catalogLabels.imported}
-          value={formatWhen(importedAt)}
+          value={orUnavailable(formatWhen(importedAt))}
           icon={CalendarPlus}
         />
       )}

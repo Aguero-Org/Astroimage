@@ -14,19 +14,18 @@ import type { ReactNode } from "react";
 import { useState } from "react";
 import { BrandLoader } from "@/components/brand-loader";
 import { Button } from "@/components/ui/button";
+import { FilePager } from "@/components/ui/file-pager";
 import { HelpHint } from "@/components/ui/help-hint";
+import { SortControls, type SortField } from "@/components/ui/sort-controls";
+import { SummaryCard } from "@/components/ui/summary-card";
+import { glossaryPath } from "@/features/glossary/entries";
 import { type RecordSortField, useDeleteImage, useImageRecords } from "../api";
 import { MastSourceLink } from "../mast-source-link";
 import { usePagedSort } from "../use-paged-sort";
-import {
-  CatalogCard,
-  CatalogList,
-  CatalogSort,
-  type CatalogSortField,
-} from "./catalog-card";
 import { CatalogFacts, catalogLabels } from "./catalog-facts";
 import { DeleteImageDialog } from "./delete-image-dialog";
-import { FilePager } from "./fits-file-table";
+
+const filenameGlossary = { glossaryId: "slug-archivo" } as const;
 
 type ImageListProps = {
   query: string;
@@ -63,7 +62,7 @@ function RecordViewerLink({
   );
 }
 
-const SORT_FIELDS: CatalogSortField<RecordSortField>[] = [
+const SORT_FIELDS: SortField<RecordSortField>[] = [
   { field: "display_name", label: catalogLabels.displayName, icon: Type },
   { field: "product_filename", label: catalogLabels.filename, icon: File },
   { field: "instrument", label: catalogLabels.instrument, icon: Telescope },
@@ -96,18 +95,18 @@ export function ImageList({ query }: Readonly<ImageListProps>) {
         <h2 className="flex items-center gap-1 text-sm font-medium">
           Imágenes disponibles
           <HelpHint label="FITS" testId="help-fits" glossaryId="fits">
-            Cada ficha es un FITS guardado. El nombre abre el visor.
-          </HelpHint>
-          <HelpHint
-            label="Nombre de archivo"
-            testId="help-slug-archivo"
-            glossaryId="slug-archivo"
-          >
-            Nombre con el que se guardó el FITS. El enlace abre el visor.
+            Cada ficha es un FITS guardado. El{" "}
+            <a
+              href={glossaryPath(filenameGlossary.glossaryId)}
+              className="underline"
+            >
+              nombre de archivo
+            </a>{" "}
+            abre el visor.
           </HelpHint>
         </h2>
         {!isPending && !isError && records.length > 0 && (
-          <CatalogSort
+          <SortControls
             fields={SORT_FIELDS}
             sort={sort}
             order={order}
@@ -134,9 +133,9 @@ export function ImageList({ query }: Readonly<ImageListProps>) {
           </p>
         ))}
       {!isPending && !isError && records.length > 0 && (
-        <CatalogList testId="image-list">
+        <ul data-testid="image-list" className="flex w-full flex-col gap-3">
           {records.map((record) => (
-            <CatalogCard
+            <SummaryCard
               key={record.record_id}
               testId="image-list-item"
               title={
@@ -186,7 +185,7 @@ export function ImageList({ query }: Readonly<ImageListProps>) {
               }
             />
           ))}
-        </CatalogList>
+        </ul>
       )}
       {pageData !== null && (
         <FilePager

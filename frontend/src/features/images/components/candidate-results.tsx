@@ -11,6 +11,9 @@ import { useState } from "react";
 import type { CandidateSchema } from "@/api/generated/model";
 import { BrandLoader } from "@/components/brand-loader";
 import { Button } from "@/components/ui/button";
+import { FilePager } from "@/components/ui/file-pager";
+import { SortControls, type SortField } from "@/components/ui/sort-controls";
+import { SummaryCard } from "@/components/ui/summary-card";
 import {
   Tooltip,
   TooltipContent,
@@ -23,18 +26,11 @@ import {
 } from "../candidate-api";
 import { MastSourceLink } from "../mast-source-link";
 import { usePagedSort } from "../use-paged-sort";
-import {
-  CatalogCard,
-  CatalogList,
-  CatalogSort,
-  type CatalogSortField,
-} from "./catalog-card";
 import { CatalogFacts, catalogLabels } from "./catalog-facts";
-import { FilePager } from "./fits-file-table";
 import { ImportNameDialog } from "./import-name-dialog";
 import { TransferFeedback } from "./transfer-feedback";
 
-const SORT_FIELDS: CatalogSortField<CandidateSortField>[] = [
+const SORT_FIELDS: SortField<CandidateSortField>[] = [
   { field: "product_filename", label: catalogLabels.filename, icon: File },
   { field: "instrument", label: catalogLabels.instrument, icon: Telescope },
   { field: "proposal_id", label: catalogLabels.proposal, icon: Hash },
@@ -74,7 +70,7 @@ export function CandidateResults({ query }: Readonly<CandidateResultsProps>) {
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h2 className="text-sm font-medium">Archivos de Hubble</h2>
         {pageData && pageData.items.length > 0 && (
-          <CatalogSort
+          <SortControls
             fields={SORT_FIELDS}
             sort={sort}
             order={order}
@@ -99,9 +95,9 @@ export function CandidateResults({ query }: Readonly<CandidateResultsProps>) {
         </p>
       )}
       {pageData && pageData.items.length > 0 && (
-        <CatalogList>
+        <ul className="flex w-full flex-col gap-3">
           {pageData.items.map((item) => (
-            <CatalogCard
+            <SummaryCard
               key={item.data_uri}
               title={item.product_filename}
               meta={
@@ -139,7 +135,7 @@ export function CandidateResults({ query }: Readonly<CandidateResultsProps>) {
               }
             />
           ))}
-        </CatalogList>
+        </ul>
       )}
       {pageData !== null && (
         <FilePager
