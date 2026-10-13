@@ -14,6 +14,7 @@ import type { ReactNode } from "react";
 import { useState } from "react";
 import { BrandLoader } from "@/components/brand-loader";
 import { Button } from "@/components/ui/button";
+import { HelpHint } from "@/components/ui/help-hint";
 import { type RecordSortField, useDeleteImage, useImageRecords } from "../api";
 import { MastSourceLink } from "../mast-source-link";
 import { usePagedSort } from "../use-paged-sort";
@@ -92,7 +93,19 @@ export function ImageList({ query }: Readonly<ImageListProps>) {
   return (
     <section className="flex w-full flex-col gap-2">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h2 className="text-sm font-medium">Imágenes disponibles</h2>
+        <h2 className="flex items-center gap-1 text-sm font-medium">
+          Imágenes disponibles
+          <HelpHint label="FITS" testId="help-fits" glossaryId="fits">
+            Cada ficha es un FITS guardado. El nombre abre el visor.
+          </HelpHint>
+          <HelpHint
+            label="Nombre de archivo"
+            testId="help-slug-archivo"
+            glossaryId="slug-archivo"
+          >
+            Nombre con el que se guardó el FITS. El enlace abre el visor.
+          </HelpHint>
+        </h2>
         {!isPending && !isError && records.length > 0 && (
           <CatalogSort
             fields={SORT_FIELDS}
