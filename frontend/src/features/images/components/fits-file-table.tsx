@@ -1,5 +1,3 @@
-import { ArrowDown, ArrowUp } from "lucide-react";
-import type { ReactNode } from "react";
 import {
   Pagination,
   PaginationContent,
@@ -8,76 +6,6 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
-import { Table, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-
-export type FitsFileColumn<Field extends string = string> = {
-  field: Field;
-  label: string;
-  hint?: ReactNode;
-};
-
-type FitsFileTableProps<Field extends string> = {
-  columns: readonly FitsFileColumn<Field>[];
-  trailingHead?: ReactNode;
-  sort: Field;
-  order: "asc" | "desc";
-  onSort: (field: Field) => void;
-  children: ReactNode;
-  testId?: string;
-};
-
-export function FitsFileTable<Field extends string>({
-  columns,
-  trailingHead,
-  sort,
-  order,
-  onSort,
-  children,
-  testId,
-}: Readonly<FitsFileTableProps<Field>>) {
-  return (
-    <Table data-testid={testId}>
-      <TableHeader>
-        <TableRow>
-          {columns.map((column) => {
-            const active = sort === column.field;
-            return (
-              <TableHead
-                key={column.field}
-                aria-sort={
-                  active
-                    ? order === "asc"
-                      ? "ascending"
-                      : "descending"
-                    : "none"
-                }
-              >
-                <span className="inline-flex items-center gap-1">
-                  <button
-                    type="button"
-                    className="inline-flex items-center gap-1"
-                    onClick={() => onSort(column.field)}
-                  >
-                    {column.label}
-                    {active && order === "asc" && (
-                      <ArrowUp className="size-3" />
-                    )}
-                    {active && order === "desc" && (
-                      <ArrowDown className="size-3" />
-                    )}
-                  </button>
-                  {column.hint}
-                </span>
-              </TableHead>
-            );
-          })}
-          {trailingHead}
-        </TableRow>
-      </TableHeader>
-      {children}
-    </Table>
-  );
-}
 
 type FilePagerProps = {
   page: number;

@@ -37,7 +37,7 @@ function HomePage() {
           navigate({ to: "/", search: { query: nextQuery } });
         }}
       />
-      <div className="mx-auto flex w-full max-w-6xl flex-col gap-6">
+      <div className="mx-auto flex w-full max-w-4xl flex-col gap-6">
         <CandidateResults key={`candidates-${query}`} query={query} />
         {query.trim().length > 0 && <Separator />}
         <ImageList key={`stored-${query}`} query={query} />
