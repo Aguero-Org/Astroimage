@@ -31,7 +31,7 @@ def read_candidate_token(token: str, secret: str) -> dict[str, Any]:
     try:
         decoded = base64.urlsafe_b64decode(body + padding).decode("utf-8")
         payload = json.loads(decoded)
-    except (ValueError, UnicodeDecodeError, json.JSONDecodeError) as exc:
+    except ValueError as exc:
         raise InvalidCandidateTokenError("candidate token payload is invalid") from exc
     if not isinstance(payload, dict) or "data_uri" not in payload:
         raise InvalidCandidateTokenError("candidate token payload is invalid")

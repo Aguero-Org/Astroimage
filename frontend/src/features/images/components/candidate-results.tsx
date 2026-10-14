@@ -91,7 +91,7 @@ export function CandidateResults({ query }: Readonly<CandidateResultsProps>) {
           <strong className="font-semibold text-foreground">
             {query.trim()}
           </strong>
-          .
+          {"."}
         </p>
       )}
       {pageData && pageData.items.length > 0 && (

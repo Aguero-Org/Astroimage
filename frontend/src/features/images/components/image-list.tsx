@@ -129,7 +129,7 @@ export function ImageList({ query }: Readonly<ImageListProps>) {
             <strong className="font-semibold text-foreground">
               {query.trim()}
             </strong>
-            .
+            {"."}
           </p>
         ))}
       {!isPending && !isError && records.length > 0 && (
