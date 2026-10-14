@@ -17,6 +17,7 @@ import {
 } from "@/api/generated/sources/sources";
 import { BrandLoader } from "@/components/brand-loader";
 import { HelpHint } from "@/components/ui/help-hint";
+import { ScientificWorkspace } from "@/features/catalogs/components/scientific-workspace";
 import { ExtendedSourceMarkers } from "@/features/images/components/extended-source-markers";
 import { FitsImageViewer } from "@/features/images/components/fits-image-viewer";
 import {
@@ -57,6 +58,7 @@ function ImageDetailPage() {
     DEFAULT_IMAGE_WORKSPACE,
   );
   const [gaiaMatches, setGaiaMatches] = useState<GaiaMatchSchema[]>([]);
+  const [gaiaDoneFor, setGaiaDoneFor] = useState<string | null>(null);
   const { hdu, inspectorOpen, selectedSource, renderParams, detectionParams } =
     workspace;
   const renderQueryParams =
@@ -152,158 +154,184 @@ function ImageDetailPage() {
     }
   }, [recordId, detectionParams, hdu]);
 
+  useEffect(() => {
+    setGaiaMatches((current) => (current.length === 0 ? current : []));
+    setGaiaDoneFor((current) => (current === recordId ? current : null));
+  }, [recordId]);
+
+  const scientificParams = hdu === null ? undefined : { hdu };
+
   return (
     <main className="relative h-svh w-full overflow-hidden bg-black">
-      <RenderedFitsSection
-        isPending={renderQuery.isPending}
-        isError={renderQuery.isError}
-        error={renderQuery.error}
-        objectUrl={objectUrl}
-        label={titleWithDescription}
-        pointSources={pointSources}
-        extendedSources={extendedSources}
-        gaiaPointIds={gaiaMatchedIds(gaiaMatches, "point")}
-        gaiaExtendedIds={gaiaMatchedIds(gaiaMatches, "extended")}
-        selectedId={selectedPointId}
-        selectedExtendedId={selectedExtendedId}
-        onSelectSource={(source) => {
-          setWorkspace((current) => ({
-            ...current,
-            selectedSource: source,
-            inspectorOpen: true,
-          }));
-        }}
-      />
+      <ScientificWorkspace
+        recordId={recordId}
+        enabled={gaiaDoneFor === recordId}
+        params={scientificParams}
+        preview={objectUrl}
+        image={
+          <>
+            <RenderedFitsSection
+              isPending={renderQuery.isPending}
+              isError={renderQuery.isError}
+              error={renderQuery.error}
+              objectUrl={objectUrl}
+              label={titleWithDescription}
+              pointSources={pointSources}
+              extendedSources={extendedSources}
+              gaiaPointIds={gaiaMatchedIds(gaiaMatches, "point")}
+              gaiaExtendedIds={gaiaMatchedIds(gaiaMatches, "extended")}
+              selectedId={selectedPointId}
+              selectedExtendedId={selectedExtendedId}
+              onSelectSource={(source) => {
+                setWorkspace((current) => ({
+                  ...current,
+                  selectedSource: source,
+                  inspectorOpen: true,
+                }));
+              }}
+            />
 
-      <ImageInspector
-        title={
-          <h1
-            data-testid="image-detail-title"
-            className="min-w-0 rounded-md bg-black/75 px-3 py-1 text-xl font-semibold leading-snug text-white"
-          >
-            {pageTitle}
-            {catalogName.length > 0 && catalogName !== pageTitle && (
-              <span className="font-medium text-white/80">
-                {" "}
-                · {catalogName}
-              </span>
-            )}
-          </h1>
-        }
-        open={inspectorOpen}
-        onOpenChange={(open) => {
-          setWorkspace((current) => ({ ...current, inspectorOpen: open }));
-        }}
-        selectionOpen={selectedSource !== null}
-        selection={
-          <SourceSelection
-            source={selectedSource}
-            gaiaMatch={
-              selectedSource?.object_type
-                ? gaiaMatchFor(
-                    gaiaMatches,
-                    selectedSource.source_id,
-                    selectedSource.object_type,
-                  )
-                : undefined
-            }
-          />
-        }
-        workspace={
-          <HduSelector
-            images={imageHdus}
-            value={hdu}
-            onChange={(nextHdu) => {
-              setWorkspace((current) => ({ ...current, hdu: nextHdu }));
-            }}
-          />
-        }
-        view={
-          <>
-            <PixelHistogram
-              histogram={
-                histogramQuery.data?.status === 200
-                  ? histogramQuery.data.data
-                  : undefined
-              }
-              isPending={histogramQuery.isPending}
-              isError={histogramQuery.isError}
-              pmin={renderParams.pmin}
-              pmax={renderParams.pmax}
-              showPercentiles={renderParams.limits === "percentiles"}
-            />
-            <RenderViewForm
-              isPending={renderQuery.isFetching}
-              onSubmit={(params) => {
-                setWorkspace((current) => ({
-                  ...current,
-                  renderParams: params,
-                }));
-              }}
-            />
-          </>
-        }
-        sources={
-          <>
-            <p className="mb-3 text-xs text-muted-foreground">
-              Ajusta los parámetros y lanza el análisis. Los puntos y las
-              estructuras extendidas se marcan sobre la imagen.
-            </p>
-            <SourceDetectionForm
-              isPending={sourcesQuery.isFetching}
-              bestPreset={{
-                isPending: bestPresetQuery.isFetching,
-                isError: bestPresetQuery.isError,
-                data:
-                  bestPresetQuery.data?.status === 200
-                    ? bestPresetQuery.data.data
-                    : undefined,
-                request: () => {
-                  void bestPresetQuery.refetch();
-                },
-              }}
-              onSubmit={(params) => {
-                setWorkspace((current) => ({
-                  ...current,
-                  detectionParams: params,
-                }));
-              }}
-            />
-            {sourcesQuery.isError ? (
-              <p
-                data-testid="detect-error"
-                className="mt-2 text-sm text-destructive"
-              >
-                Error al detectar fuentes:{" "}
-                {formatQueryError(sourcesQuery.error)}
-              </p>
-            ) : null}
-            {detectionSummary ? (
-              <p
-                data-testid="detect-summary"
-                className="mt-2 flex items-center gap-1 text-sm text-muted-foreground"
-              >
-                {detectionSummary.point_count} puntuales,{" "}
-                {detectionSummary.extended_count} extendidas
-                <HelpHint
-                  label="resumen de fuentes"
-                  testId="help-detect-summary"
-                  glossaryId="fuente-extendida"
+            <ImageInspector
+              title={
+                <h1
+                  data-testid="image-detail-title"
+                  className="min-w-0 rounded-md bg-black/75 px-3 py-1 text-xl font-semibold leading-snug text-white"
                 >
-                  Las puntuales son estrellas o picos nítidos; las extendidas
-                  son nebulosas o galaxias y se marcan con recuadros.
-                </HelpHint>
-              </p>
-            ) : null}
-            <GaiaCrossMatch
-              recordId={recordId}
-              params={sourcesQueryParams}
-              onMatches={setGaiaMatches}
+                  {pageTitle}
+                  {catalogName.length > 0 && catalogName !== pageTitle && (
+                    <span className="font-medium text-white/80">
+                      {" "}
+                      · {catalogName}
+                    </span>
+                  )}
+                </h1>
+              }
+              open={inspectorOpen}
+              onOpenChange={(open) => {
+                setWorkspace((current) => ({
+                  ...current,
+                  inspectorOpen: open,
+                }));
+              }}
+              selectionOpen={selectedSource !== null}
+              selection={
+                <SourceSelection
+                  source={selectedSource}
+                  gaiaMatch={
+                    selectedSource?.object_type
+                      ? gaiaMatchFor(
+                          gaiaMatches,
+                          selectedSource.source_id,
+                          selectedSource.object_type,
+                        )
+                      : undefined
+                  }
+                />
+              }
+              workspace={
+                <HduSelector
+                  images={imageHdus}
+                  value={hdu}
+                  onChange={(nextHdu) => {
+                    setWorkspace((current) => ({ ...current, hdu: nextHdu }));
+                  }}
+                />
+              }
+              view={
+                <>
+                  <PixelHistogram
+                    histogram={
+                      histogramQuery.data?.status === 200
+                        ? histogramQuery.data.data
+                        : undefined
+                    }
+                    isPending={histogramQuery.isPending}
+                    isError={histogramQuery.isError}
+                    pmin={renderParams.pmin}
+                    pmax={renderParams.pmax}
+                    showPercentiles={renderParams.limits === "percentiles"}
+                  />
+                  <RenderViewForm
+                    isPending={renderQuery.isFetching}
+                    onSubmit={(params) => {
+                      setWorkspace((current) => ({
+                        ...current,
+                        renderParams: params,
+                      }));
+                    }}
+                  />
+                </>
+              }
+              sources={
+                <>
+                  <p className="mb-3 text-xs text-muted-foreground">
+                    Ajusta los parámetros y lanza el análisis. Los puntos y las
+                    estructuras extendidas se marcan sobre la imagen.
+                  </p>
+                  <SourceDetectionForm
+                    isPending={sourcesQuery.isFetching}
+                    bestPreset={{
+                      isPending: bestPresetQuery.isFetching,
+                      isError: bestPresetQuery.isError,
+                      data:
+                        bestPresetQuery.data?.status === 200
+                          ? bestPresetQuery.data.data
+                          : undefined,
+                      request: () => {
+                        void bestPresetQuery.refetch();
+                      },
+                    }}
+                    onSubmit={(params) => {
+                      setWorkspace((current) => ({
+                        ...current,
+                        detectionParams: params,
+                      }));
+                    }}
+                  />
+                  {sourcesQuery.isError ? (
+                    <p
+                      data-testid="detect-error"
+                      className="mt-2 text-sm text-destructive"
+                    >
+                      Error al detectar fuentes:{" "}
+                      {formatQueryError(sourcesQuery.error)}
+                    </p>
+                  ) : null}
+                  {detectionSummary ? (
+                    <p
+                      data-testid="detect-summary"
+                      className="mt-2 flex items-center gap-1 text-sm text-muted-foreground"
+                    >
+                      {detectionSummary.point_count} puntuales,{" "}
+                      {detectionSummary.extended_count} extendidas
+                      <HelpHint
+                        label="resumen de fuentes"
+                        testId="help-detect-summary"
+                        glossaryId="fuente-extendida"
+                      >
+                        Las puntuales son estrellas o picos nítidos; las
+                        extendidas son nebulosas o galaxias y se marcan con
+                        recuadros.
+                      </HelpHint>
+                    </p>
+                  ) : null}
+                  <GaiaCrossMatch
+                    recordId={recordId}
+                    params={sourcesQueryParams}
+                    enabled={detectionSummary !== undefined}
+                    onMatches={setGaiaMatches}
+                    onResult={() => setGaiaDoneFor(recordId)}
+                  />
+                </>
+              }
+              archive={
+                <ImageArchive
+                  info={imageInfo}
+                  isPending={infoQuery.isPending}
+                />
+              }
             />
           </>
-        }
-        archive={
-          <ImageArchive info={imageInfo} isPending={infoQuery.isPending} />
         }
       />
     </main>

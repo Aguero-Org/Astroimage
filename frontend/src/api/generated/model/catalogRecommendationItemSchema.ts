@@ -24,6 +24,8 @@ export interface CatalogRecommendationItemSchema {
   total_score?: number;
   catalogue_title?: string | null;
   catalogue_authors?: string | null;
+  catalogue_description?: string | null;
+  catalogue_keywords?: string | null;
   catalogue_bibcode?: string | null;
   catalogue_doi?: string | null;
   catalogue_doi_url?: string | null;

@@ -54,6 +54,8 @@ class CatalogEvaluation:
     catalogue_id: str
     metadata: CatalogMetadata
     match_type: str
+    catalogue_description: str | None = None
+    catalogue_keywords: str | None = None
     separation_arcsec: float | None = None
     object_found_in_table: bool = False
     object_identifier: str | None = None

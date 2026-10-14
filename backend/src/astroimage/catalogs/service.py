@@ -362,10 +362,13 @@ class CatalogRecommendationService:
         identifier = identifier_score(identifier_match)
         paper = paper_score(paper_bibcode)
         doi = doi_score(paper_doi)
+        description = readme_data.description or readme_data.abstract
         return CatalogEvaluation(
             catalogue_id=catalogue_id,
             metadata=metadata,
             match_type=classify_match(identifier_match, paper_bibcode or None),
+            catalogue_description=description or None,
+            catalogue_keywords=readme_data.keywords or None,
             separation_arcsec=best.row.separation_arcsec if best else None,
             object_found_in_table=identifier_match,
             object_identifier=("; ".join(best.identifiers) if best and best.identifiers else None),
@@ -523,6 +526,8 @@ class CatalogRecommendationService:
                     total_score=evaluation.total_score,
                     catalogue_title=evaluation.metadata.title,
                     catalogue_authors=evaluation.metadata.authors,
+                    catalogue_description=evaluation.catalogue_description,
+                    catalogue_keywords=evaluation.catalogue_keywords,
                     catalogue_bibcode=evaluation.catalogue_bibcode,
                     catalogue_doi=evaluation.catalogue_doi,
                     catalogue_doi_url=evaluation.catalogue_doi_url,

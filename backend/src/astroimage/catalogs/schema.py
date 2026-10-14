@@ -49,6 +49,8 @@ class CatalogRecommendationItemSchema(BaseModel):
     total_score: float = 0.0
     catalogue_title: str | None = None
     catalogue_authors: str | None = None
+    catalogue_description: str | None = None
+    catalogue_keywords: str | None = None
     catalogue_bibcode: str | None = None
     catalogue_doi: str | None = None
     catalogue_doi_url: str | None = None

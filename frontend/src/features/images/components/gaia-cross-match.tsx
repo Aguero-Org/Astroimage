@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import type {
   GaiaJobStatusSchema,
   GaiaMatchSchema,
@@ -9,23 +9,25 @@ import {
   useGetSourcesGaiaJob,
   useVerifySourcesGaia,
 } from "@/api/generated/sources/sources";
-import { Button } from "@/components/ui/button";
 import { HelpHint } from "@/components/ui/help-hint";
 
 type GaiaCrossMatchProps = {
   recordId: string;
   params: VerifySourcesGaiaParams;
+  enabled: boolean;
   onMatches: (matches: GaiaMatchSchema[]) => void;
+  onResult?: (result: GaiaVerificationResponse) => void;
 };
 
 export function GaiaCrossMatch({
   recordId,
   params,
+  enabled,
   onMatches,
+  onResult,
 }: Readonly<GaiaCrossMatchProps>) {
-  const [armed, setArmed] = useState(false);
   const verifyQuery = useVerifySourcesGaia(recordId, params, {
-    query: { enabled: armed },
+    query: { enabled },
   });
   const verifyBody =
     verifyQuery.data?.status === 200 ? verifyQuery.data.data : undefined;
@@ -48,22 +50,23 @@ export function GaiaCrossMatch({
     onMatches(result?.matches ?? []);
   }, [onMatches, result]);
 
+  useEffect(() => {
+    if (result) {
+      onResult?.(result);
+    }
+  }, [onResult, result]);
+
+  const busy = verifyQuery.isFetching || jobQuery.isFetching;
+
   return (
     <div data-testid="gaia-cross-match" className="mt-3 flex flex-col gap-2">
       <div className="flex items-center gap-1">
-        <Button
-          type="button"
-          variant="outline"
-          data-testid="gaia-cross-match-submit"
-          disabled={verifyQuery.isFetching || jobQuery.isFetching}
-          onClick={() => {
-            setArmed(true);
-          }}
+        <span
+          data-testid="gaia-status"
+          className="text-sm text-muted-foreground"
         >
-          {verifyQuery.isFetching || jobQuery.isFetching
-            ? "Cruzando…"
-            : "Cruzar con Gaia"}
-        </Button>
+          {busy ? "Cruzando con Gaia…" : "Cruce con Gaia"}
+        </span>
         <HelpHint label="Cruce con Gaia" testId="help-gaia" glossaryId="gaia">
           Compara las detecciones de esta imagen con el catálogo Gaia.
         </HelpHint>

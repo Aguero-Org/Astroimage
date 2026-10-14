@@ -2040,6 +2040,28 @@
             ],
             "title": "Catalogue Authors"
           },
+          "catalogue_description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Catalogue Description"
+          },
+          "catalogue_keywords": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Catalogue Keywords"
+          },
           "catalogue_bibcode": {
             "anyOf": [
               {
