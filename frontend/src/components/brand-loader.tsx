@@ -13,8 +13,7 @@ export function BrandLoader({
   testId,
 }: Readonly<BrandLoaderProps>) {
   return (
-    <div
-      role="status"
+    <output
       data-testid={testId}
       className={cn(
         "flex flex-row items-center justify-center gap-3 text-foreground",
@@ -23,6 +22,6 @@ export function BrandLoader({
     >
       <BrandLogo className="size-8 shrink-0 animate-pulse text-foreground" />
       <p className="text-sm text-foreground">{label}</p>
-    </div>
+    </output>
   );
 }

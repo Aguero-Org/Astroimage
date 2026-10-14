@@ -7,7 +7,7 @@ const Table = React.forwardRef<
   React.HTMLAttributes<HTMLTableElement>
 >(({ className, ...props }, ref) => (
   <div className="relative w-full overflow-auto">
-    <table
+    <table // NOSONAR callers pass TableHeader; this primitive cannot invent a header row
       ref={ref}
       className={cn("w-full caption-bottom text-sm", className)}
       {...props}
