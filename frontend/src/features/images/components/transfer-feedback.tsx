@@ -74,22 +74,12 @@ export function TransferFeedback({
         {percent !== null ? ` · ${percent}%` : ""}
         {remaining ? ` · ${remaining}` : ""}
       </p>
-      <div
-        className="h-2 overflow-hidden rounded-full bg-muted"
-        role="progressbar"
-        aria-valuemin={0}
-        aria-valuemax={100}
-        aria-valuenow={percent ?? undefined}
-      >
-        <div
-          className={
-            percent === null
-              ? "h-full w-1/3 animate-pulse bg-primary"
-              : "h-full bg-primary"
-          }
-          style={percent === null ? undefined : { width: `${percent}%` }}
-        />
-      </div>
+      <progress
+        className="h-2 w-full appearance-none overflow-hidden rounded-full bg-muted [&::-moz-progress-bar]:bg-primary [&::-webkit-progress-bar]:bg-muted [&::-webkit-progress-value]:bg-primary"
+        max={100}
+        value={percent ?? undefined}
+        aria-label="Progreso de la importación"
+      />
       <p className="text-xs text-muted-foreground">
         {formatBytes(transfer.bytes_transferred)}
         {transfer.total_bytes !== null

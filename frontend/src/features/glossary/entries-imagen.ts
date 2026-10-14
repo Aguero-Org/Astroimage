@@ -14,7 +14,7 @@ export const IMAGEN_ENTRIES: GlossaryEntry[] = [
     name: "Nombre de archivo",
     group: "imagen",
     what: "Nombre con el que se guardó el FITS al descargarlo.",
-    inApp: "La columna Archivo muestra ese nombre. El enlace abre el visor.",
+    inApp: "La ficha del inicio muestra ese nombre. El enlace abre el visor.",
     where: "Inicio (listado)",
   },
   {

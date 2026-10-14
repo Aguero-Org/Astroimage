@@ -45,7 +45,7 @@ export function ImportNameDialog({
             <strong className="font-semibold text-foreground">
               {filename}
             </strong>
-            .
+            {"."}
           </DialogDescription>
         </DialogHeader>
         <label className="flex flex-col gap-1 text-sm" htmlFor="display-name">

@@ -42,7 +42,7 @@ function writeWithSelection(value: string): boolean {
   area.style.left = "-9999px";
   document.body.append(area);
   area.select();
-  const copied = document.execCommand("copy");
+  const copied = document.execCommand("copy"); // NOSONAR — fallback when clipboard.writeText rejects
   area.remove();
   return copied;
 }

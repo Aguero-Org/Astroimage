@@ -98,7 +98,6 @@ class TransferRunner:
                     )
                 ):
                     await self._reset_parts(transfer)
-                    transfer = await self._load(transfer_id)
                 await self._store_identity(transfer_id, probe)
                 transfer = await self._load(transfer_id)
                 await self._copy_parts(client, url, transfer)
