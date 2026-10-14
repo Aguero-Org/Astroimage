@@ -1386,6 +1386,252 @@
         }
       }
     },
+    "/image/{record_id}/catalogs/recommendations": {
+      "get": {
+        "tags": [
+          "catalogs"
+        ],
+        "summary": "Rank VizieR catalogues and papers relevant to this image",
+        "operationId": "recommendCatalogs",
+        "parameters": [
+          {
+            "name": "record_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Stored FITS record id",
+              "title": "Record Id"
+            },
+            "description": "Stored FITS record id"
+          },
+          {
+            "name": "hdu",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Optional image HDU index; defaults to the first 2D image HDU",
+              "title": "Hdu"
+            },
+            "description": "Optional image HDU index; defaults to the first 2D image HDU"
+          },
+          {
+            "name": "identifiers",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Known object identifiers",
+              "title": "Identifiers"
+            },
+            "description": "Known object identifiers"
+          },
+          {
+            "name": "search_radius_arcsec",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number",
+              "minimum": 0.0,
+              "description": "VizieR cone radius in arcsec",
+              "default": 10.0,
+              "title": "Search Radius Arcsec"
+            },
+            "description": "VizieR cone radius in arcsec"
+          },
+          {
+            "name": "max_catalogues",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "Cap on catalogues evaluated",
+              "default": 100,
+              "title": "Max Catalogues"
+            },
+            "description": "Cap on catalogues evaluated"
+          },
+          {
+            "name": "include_papers",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": true,
+              "title": "Include Papers"
+            }
+          },
+          {
+            "name": "row_limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "Row cap requested from VizieR per catalogue",
+              "default": 50,
+              "title": "Row Limit"
+            },
+            "description": "Row cap requested from VizieR per catalogue"
+          },
+          {
+            "name": "crossmatch",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false,
+              "title": "Crossmatch"
+            }
+          },
+          {
+            "name": "crossmatch_top",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "How many top catalogues to crossmatch",
+              "default": 5,
+              "title": "Crossmatch Top"
+            },
+            "description": "How many top catalogues to crossmatch"
+          },
+          {
+            "name": "crossmatch_radius_arcsec",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number",
+              "minimum": 0.0,
+              "description": "Crossmatch radius in arcsec",
+              "default": 2.5,
+              "title": "Crossmatch Radius Arcsec"
+            },
+            "description": "Crossmatch radius in arcsec"
+          },
+          {
+            "name": "X-Client-Id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "anonymous",
+              "title": "X-Client-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/CatalogRecommendationResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/CatalogJobStatusSchema"
+                    }
+                  ],
+                  "title": "Response Recommendcatalogs"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/image/{record_id}/catalogs/recommendations/jobs/{job_id}": {
+      "get": {
+        "tags": [
+          "catalogs"
+        ],
+        "summary": "Get Catalogs Job",
+        "operationId": "getCatalogsJob",
+        "parameters": [
+          {
+            "name": "record_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Stored FITS record id",
+              "title": "Record Id"
+            },
+            "description": "Stored FITS record id"
+          },
+          {
+            "name": "job_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Job id returned by the recommendation endpoint",
+              "title": "Job Id"
+            },
+            "description": "Job id returned by the recommendation endpoint"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/CatalogRecommendationResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/CatalogJobStatusSchema"
+                    }
+                  ],
+                  "title": "Response Getcatalogsjob"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/image/{record_id}/histogram": {
       "get": {
         "tags": [
@@ -1618,6 +1864,507 @@
           "data_uri"
         ],
         "title": "CandidateSchema"
+      },
+      "CatalogCrossmatchSchema": {
+        "properties": {
+          "catalogue_id": {
+            "type": "string",
+            "title": "Catalogue Id"
+          },
+          "match_radius_arcsec": {
+            "type": "number",
+            "title": "Match Radius Arcsec"
+          },
+          "detection_count": {
+            "type": "integer",
+            "title": "Detection Count",
+            "default": 0
+          },
+          "matched_count": {
+            "type": "integer",
+            "title": "Matched Count",
+            "default": 0
+          },
+          "matches": {
+            "items": {
+              "$ref": "#/components/schemas/CrossmatchRowSchema"
+            },
+            "type": "array",
+            "title": "Matches"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "catalogue_id",
+          "match_radius_arcsec"
+        ],
+        "title": "CatalogCrossmatchSchema"
+      },
+      "CatalogJobStatusSchema": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "const": "pending",
+            "title": "Status",
+            "default": "pending"
+          },
+          "job_id": {
+            "type": "string",
+            "title": "Job Id"
+          },
+          "record_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Record Id"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "job_id",
+          "record_id"
+        ],
+        "title": "CatalogJobStatusSchema"
+      },
+      "CatalogRecommendationItemSchema": {
+        "properties": {
+          "rank": {
+            "type": "integer",
+            "title": "Rank"
+          },
+          "catalogue_id": {
+            "type": "string",
+            "title": "Catalogue Id"
+          },
+          "match_type": {
+            "type": "string",
+            "enum": [
+              "OBJECT_IN_TABLE",
+              "CATALOGUE_ONLY"
+            ],
+            "title": "Match Type"
+          },
+          "separation_arcsec": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Separation Arcsec"
+          },
+          "object_found_in_table": {
+            "type": "boolean",
+            "title": "Object Found In Table",
+            "default": false
+          },
+          "object_identifier": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Object Identifier"
+          },
+          "identifier_columns": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Identifier Columns"
+          },
+          "spatial_match": {
+            "type": "boolean",
+            "title": "Spatial Match",
+            "default": false
+          },
+          "identifier_match": {
+            "type": "boolean",
+            "title": "Identifier Match",
+            "default": false
+          },
+          "spatial_score": {
+            "type": "number",
+            "title": "Spatial Score",
+            "default": 0.0
+          },
+          "identifier_score": {
+            "type": "number",
+            "title": "Identifier Score",
+            "default": 0.0
+          },
+          "paper_score": {
+            "type": "number",
+            "title": "Paper Score",
+            "default": 0.0
+          },
+          "doi_score": {
+            "type": "number",
+            "title": "Doi Score",
+            "default": 0.0
+          },
+          "total_score": {
+            "type": "number",
+            "title": "Total Score",
+            "default": 0.0
+          },
+          "catalogue_title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Catalogue Title"
+          },
+          "catalogue_authors": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Catalogue Authors"
+          },
+          "catalogue_bibcode": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Catalogue Bibcode"
+          },
+          "catalogue_doi": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Catalogue Doi"
+          },
+          "catalogue_doi_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Catalogue Doi Url"
+          },
+          "paper_bibcode": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Paper Bibcode"
+          },
+          "paper_doi": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Paper Doi"
+          },
+          "paper_doi_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Paper Doi Url"
+          },
+          "paper_ads_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Paper Ads Url"
+          },
+          "vizier_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Vizier Url"
+          },
+          "readme_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Readme Url"
+          },
+          "readme_bibcodes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Readme Bibcodes"
+          },
+          "readme_dois": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Readme Dois"
+          },
+          "crossmatch": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CatalogCrossmatchSchema"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "rank",
+          "catalogue_id",
+          "match_type"
+        ],
+        "title": "CatalogRecommendationItemSchema"
+      },
+      "CatalogRecommendationResponse": {
+        "properties": {
+          "source_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Name"
+          },
+          "ra_deg": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ra Deg"
+          },
+          "dec_deg": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dec Deg"
+          },
+          "radius_arcsec": {
+            "type": "number",
+            "title": "Radius Arcsec",
+            "default": 0.0
+          },
+          "include_papers": {
+            "type": "boolean",
+            "title": "Include Papers",
+            "default": true
+          },
+          "wcs_present": {
+            "type": "boolean",
+            "title": "Wcs Present",
+            "default": false
+          },
+          "queried": {
+            "type": "boolean",
+            "title": "Queried",
+            "default": false
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          },
+          "summary": {
+            "$ref": "#/components/schemas/CatalogRecommendationSummarySchema"
+          },
+          "recommendations": {
+            "items": {
+              "$ref": "#/components/schemas/CatalogRecommendationItemSchema"
+            },
+            "type": "array",
+            "title": "Recommendations"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "CatalogRecommendationResponse"
+      },
+      "CatalogRecommendationSummarySchema": {
+        "properties": {
+          "catalogue_count": {
+            "type": "integer",
+            "title": "Catalogue Count",
+            "default": 0
+          },
+          "object_in_table_count": {
+            "type": "integer",
+            "title": "Object In Table Count",
+            "default": 0
+          },
+          "queried_catalogue_count": {
+            "type": "integer",
+            "title": "Queried Catalogue Count",
+            "default": 0
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "CatalogRecommendationSummarySchema"
+      },
+      "CrossmatchRowSchema": {
+        "properties": {
+          "catalogue_row_index": {
+            "type": "integer",
+            "title": "Catalogue Row Index"
+          },
+          "ra_deg": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ra Deg"
+          },
+          "dec_deg": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dec Deg"
+          },
+          "object_identifier": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Object Identifier"
+          },
+          "detection_source_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Detection Source Id"
+          },
+          "object_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Object Type"
+          },
+          "separation_arcsec": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Separation Arcsec"
+          },
+          "matched": {
+            "type": "boolean",
+            "title": "Matched",
+            "default": false
+          },
+          "probability": {
+            "type": "number",
+            "title": "Probability",
+            "default": 0.0
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "catalogue_row_index"
+        ],
+        "title": "CrossmatchRowSchema"
       },
       "DetectionSummarySchema": {
         "properties": {
