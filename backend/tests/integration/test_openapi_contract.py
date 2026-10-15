@@ -17,6 +17,8 @@ _SKIP_PATHS = frozenset(
         "/image/{record_id}/sources/bestPreset",
         "/image/{record_id}/sources/gaia",
         "/image/{record_id}/sources/gaia/jobs/{job_id}",
+        "/image/{record_id}/catalogs/recommendations",
+        "/image/{record_id}/catalogs/recommendations/jobs/{job_id}",
         "/image",
         "/image/search",
         "/image/search/select",

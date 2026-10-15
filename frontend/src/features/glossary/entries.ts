@@ -1,3 +1,4 @@
+import { CATALOGOS_ENTRIES } from "./entries-catalogo";
 import { FUENTES_ENTRIES } from "./entries-fuentes";
 import { IMAGEN_ENTRIES } from "./entries-imagen";
 import { VISOR_ENTRIES } from "./entries-visor";
@@ -14,6 +15,7 @@ export const GLOSSARY_ENTRIES: GlossaryEntry[] = [
   ...IMAGEN_ENTRIES,
   ...VISTA_ENTRIES,
   ...FUENTES_ENTRIES,
+  ...CATALOGOS_ENTRIES,
   ...VISOR_ENTRIES,
 ];
 

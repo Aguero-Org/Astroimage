@@ -6,6 +6,7 @@ from fastapi import APIRouter, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.exc import ProgrammingError
 
+from astroimage.catalogs.controller import router as catalogs_router
 from astroimage.config import Settings, get_settings
 from astroimage.fits.controller import router as fits_router
 from astroimage.health.controller import router as health_router
@@ -31,6 +32,7 @@ def build_api_router() -> APIRouter:
     api_router.include_router(fits_router)
     api_router.include_router(hub_router)
     api_router.include_router(sources_router)
+    api_router.include_router(catalogs_router)
     api_router.include_router(render_router)
     return api_router
 

@@ -2,6 +2,7 @@ import { HttpResponse, http } from "msw";
 import {
   filterRecords,
   findRecord,
+  mockGaiaVerification,
   mockRecords,
   mockSourceDetection,
 } from "../data/image";
@@ -102,6 +103,28 @@ export const imageHandlers = [
     }
     return HttpResponse.json(mockSourceDetection(record));
   }),
+
+  http.get(`${apiBaseUrl}/image/:recordId/sources/gaia`, ({ params }) => {
+    const record = findRecord(params.recordId as string);
+    if (!record) {
+      return HttpResponse.json({ detail: "Image not found" }, { status: 404 });
+    }
+    return HttpResponse.json(mockGaiaVerification(record));
+  }),
+
+  http.get(
+    `${apiBaseUrl}/image/:recordId/sources/gaia/jobs/:jobId`,
+    ({ params }) => {
+      const record = findRecord(params.recordId as string);
+      if (!record) {
+        return HttpResponse.json(
+          { detail: "Image not found" },
+          { status: 404 },
+        );
+      }
+      return HttpResponse.json(mockGaiaVerification(record));
+    },
+  ),
 
   http.get(`${apiBaseUrl}/image/:recordId/histogram`, ({ params }) => {
     const record = findRecord(params.recordId as string);

@@ -2,6 +2,7 @@ export const GLOSSARY_GROUPS = [
   { id: "imagen", title: "Imagen y archivo" },
   { id: "vista", title: "Cómo se ve la imagen" },
   { id: "fuentes", title: "Fuentes" },
+  { id: "catalogos", title: "Catálogos y publicaciones" },
   { id: "visor", title: "Uso del visor" },
 ] as const;
 

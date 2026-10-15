@@ -1,0 +1,1 @@
+"""VizieR catalog recommendation feature."""

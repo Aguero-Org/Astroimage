@@ -11,6 +11,7 @@ import {
   useGetBestPreset,
 } from "@/api/generated/sources/sources";
 import { HelpHint } from "@/components/ui/help-hint";
+import { ScientificWorkspace } from "@/features/catalogs/components/scientific-workspace";
 import {
   GaiaCrossMatch,
   gaiaMatchedIds,
@@ -22,7 +23,10 @@ import { ImageArchive } from "@/features/images/components/image-archive";
 import { ImageInspector } from "@/features/images/components/image-inspector";
 import { PixelHistogram } from "@/features/images/components/pixel-histogram";
 import { RenderViewForm } from "@/features/images/components/render-view-form";
-import { RenderedFitsSection } from "@/features/images/components/rendered-fits-section";
+import {
+  RenderedFitsSection,
+  useRenderedObjectUrl,
+} from "@/features/images/components/rendered-fits-section";
 import { SourceDetectionForm } from "@/features/images/components/source-detection-form";
 import { SourceSelection } from "@/features/images/components/source-selection";
 import { formatQueryError } from "@/features/images/format-query-error";
@@ -158,7 +162,13 @@ function ImageDetailPage() {
     hdu === null ? undefined : { hdu },
     { query: { enabled: false } },
   );
-  const gaia = useGaiaCrossMatch(recordId, sourcesQueryParams);
+  const detected = responseData(sourcesQuery.data);
+  const detectionSummary = detected?.summary;
+  const gaia = useGaiaCrossMatch(
+    recordId,
+    sourcesQueryParams,
+    detectionSummary !== undefined,
+  );
   const sourceName = imageInfo?.source_name;
   const pageTitle = imageDisplayTitle(sourceName, slug);
   const catalogName = imageInfo?.display_name?.trim() ?? "";
@@ -170,166 +180,183 @@ function ImageDetailPage() {
       document.title = DEFAULT_DOCUMENT_TITLE;
     };
   }, [titleWithDescription]);
-  const detected = responseData(sourcesQuery.data);
   const pointSources = detected?.point_sources ?? [];
   const extendedSources = detected?.extended_sources ?? [];
-  const detectionSummary = detected?.summary;
   const selectedPointId = sourceId(selectedSource, "point");
   const selectedExtendedId = sourceId(selectedSource, "extended");
   const rendered = responseData(renderQuery.data);
+  const preview = useRenderedObjectUrl(rendered);
+
+  const scientificParams = hdu === null ? undefined : { hdu };
 
   return (
     <main className="relative h-svh w-full overflow-hidden bg-black">
-      <RenderedFitsSection
-        isPending={renderQuery.isPending}
-        isError={renderQuery.isError}
-        error={renderQuery.error}
-        rendered={rendered}
-        label={titleWithDescription}
-        pointSources={pointSources}
-        extendedSources={extendedSources}
-        gaiaPointIds={gaiaMatchedIds(gaia.matches, "point")}
-        gaiaExtendedIds={gaiaMatchedIds(gaia.matches, "extended")}
-        selectedId={selectedPointId}
-        selectedExtendedId={selectedExtendedId}
-        onSelectSource={(source) => {
-          setWorkspace((current) => ({
-            ...current,
-            selectedSource: source,
-            inspectorOpen: true,
-          }));
-        }}
-      />
+      <ScientificWorkspace
+        recordId={recordId}
+        enabled={gaia.summary !== undefined}
+        params={scientificParams}
+        preview={preview}
+        image={
+          <>
+            <RenderedFitsSection
+              isPending={renderQuery.isPending}
+              isError={renderQuery.isError}
+              error={renderQuery.error}
+              rendered={rendered}
+              label={titleWithDescription}
+              pointSources={pointSources}
+              extendedSources={extendedSources}
+              gaiaPointIds={gaiaMatchedIds(gaia.matches, "point")}
+              gaiaExtendedIds={gaiaMatchedIds(gaia.matches, "extended")}
+              selectedId={selectedPointId}
+              selectedExtendedId={selectedExtendedId}
+              onSelectSource={(source) => {
+                setWorkspace((current) => ({
+                  ...current,
+                  selectedSource: source,
+                  inspectorOpen: true,
+                }));
+              }}
+            />
 
-      <ImageInspector
-        title={
-          <h1
-            data-testid="image-detail-title"
-            className="min-w-0 rounded-md bg-black/75 px-3 py-1 text-xl font-semibold leading-snug text-white"
-          >
-            {pageTitle}
-            {catalogName.length > 0 && catalogName !== pageTitle && (
-              <span className="font-medium text-white/80">
-                {" "}
-                · {catalogName}
-              </span>
-            )}
-          </h1>
-        }
-        open={inspectorOpen}
-        onOpenChange={(open) => {
-          setWorkspace((current) => ({ ...current, inspectorOpen: open }));
-        }}
-        selectionOpen={selectedSource !== null}
-        selection={
-          <SourceSelection
-            source={selectedSource}
-            gaiaMatch={
-              selectedSource?.object_type
-                ? gaiaMatchFor(
-                    gaia.matches,
-                    selectedSource.source_id,
-                    selectedSource.object_type,
-                  )
-                : undefined
-            }
-          />
-        }
-        workspace={
-          <HduSelector
-            images={imageHdus}
-            value={hdu}
-            onChange={(nextHdu) => {
-              setHduScope({ recordId, hdu: nextHdu });
-              setWorkspace((current) => ({
-                ...current,
-                hdu: nextHdu,
-                selectedSource: null,
-              }));
-            }}
-          />
-        }
-        view={
-          <>
-            <PixelHistogram
-              histogram={responseData(histogramQuery.data)}
-              isPending={histogramQuery.isPending}
-              isError={histogramQuery.isError}
-              pmin={renderParams.pmin}
-              pmax={renderParams.pmax}
-              showPercentiles={renderParams.limits === "percentiles"}
-            />
-            <RenderViewForm
-              isPending={renderQuery.isFetching}
-              onSubmit={(params) => {
-                setWorkspace((current) => ({
-                  ...current,
-                  renderParams: params,
-                }));
-              }}
-            />
-          </>
-        }
-        sources={
-          <>
-            <p className="mb-3 text-xs text-muted-foreground">
-              Ajusta los parámetros y lanza el análisis. Los puntos y las
-              estructuras extendidas se marcan sobre la imagen.
-            </p>
-            <SourceDetectionForm
-              isPending={sourcesQuery.isFetching}
-              bestPreset={{
-                isPending: bestPresetQuery.isFetching,
-                isError: bestPresetQuery.isError,
-                data: responseData(bestPresetQuery.data),
-                request: () => {
-                  void bestPresetQuery.refetch();
-                },
-              }}
-              onSubmit={(params) => {
-                setWorkspace((current) => ({
-                  ...current,
-                  detectionParams: params,
-                  selectedSource: null,
-                }));
-              }}
-            />
-            {sourcesQuery.isError ? (
-              <p
-                data-testid="detect-error"
-                className="mt-2 text-sm text-destructive"
-              >
-                Error al detectar fuentes:{" "}
-                {formatQueryError(sourcesQuery.error)}
-              </p>
-            ) : null}
-            {detectionSummary ? (
-              <p
-                data-testid="detect-summary"
-                className="mt-2 flex items-center gap-1 text-sm text-muted-foreground"
-              >
-                {detectionSummary.point_count} puntuales,{" "}
-                {detectionSummary.extended_count} extendidas
-                <HelpHint
-                  label="resumen de fuentes"
-                  testId="help-detect-summary"
-                  glossaryId="fuente-extendida"
+            <ImageInspector
+              title={
+                <h1
+                  data-testid="image-detail-title"
+                  className="min-w-0 rounded-md bg-black/75 px-3 py-1 text-xl font-semibold leading-snug text-white"
                 >
-                  Las puntuales son estrellas o picos nítidos; las extendidas
-                  son nebulosas o galaxias y se marcan con recuadros.
-                </HelpHint>
-              </p>
-            ) : null}
-            <GaiaCrossMatch
-              isFetching={gaia.isFetching}
-              isError={gaia.isError}
-              summary={gaia.summary}
-              onArm={gaia.arm}
+                  {pageTitle}
+                  {catalogName.length > 0 && catalogName !== pageTitle && (
+                    <span className="font-medium text-white/80">
+                      {" "}
+                      · {catalogName}
+                    </span>
+                  )}
+                </h1>
+              }
+              open={inspectorOpen}
+              onOpenChange={(open) => {
+                setWorkspace((current) => ({
+                  ...current,
+                  inspectorOpen: open,
+                }));
+              }}
+              selectionOpen={selectedSource !== null}
+              selection={
+                <SourceSelection
+                  source={selectedSource}
+                  gaiaMatch={
+                    selectedSource?.object_type
+                      ? gaiaMatchFor(
+                          gaia.matches,
+                          selectedSource.source_id,
+                          selectedSource.object_type,
+                        )
+                      : undefined
+                  }
+                />
+              }
+              workspace={
+                <HduSelector
+                  images={imageHdus}
+                  value={hdu}
+                  onChange={(nextHdu) => {
+                    setHduScope({ recordId, hdu: nextHdu });
+                    setWorkspace((current) => ({
+                      ...current,
+                      hdu: nextHdu,
+                      selectedSource: null,
+                    }));
+                  }}
+                />
+              }
+              view={
+                <>
+                  <PixelHistogram
+                    histogram={responseData(histogramQuery.data)}
+                    isPending={histogramQuery.isPending}
+                    isError={histogramQuery.isError}
+                    pmin={renderParams.pmin}
+                    pmax={renderParams.pmax}
+                    showPercentiles={renderParams.limits === "percentiles"}
+                  />
+                  <RenderViewForm
+                    isPending={renderQuery.isFetching}
+                    onSubmit={(params) => {
+                      setWorkspace((current) => ({
+                        ...current,
+                        renderParams: params,
+                      }));
+                    }}
+                  />
+                </>
+              }
+              sources={
+                <>
+                  <p className="mb-3 text-xs text-muted-foreground">
+                    Ajusta los parámetros y lanza el análisis. Los puntos y las
+                    estructuras extendidas se marcan sobre la imagen.
+                  </p>
+                  <SourceDetectionForm
+                    isPending={sourcesQuery.isFetching}
+                    bestPreset={{
+                      isPending: bestPresetQuery.isFetching,
+                      isError: bestPresetQuery.isError,
+                      data: responseData(bestPresetQuery.data),
+                      request: () => {
+                        void bestPresetQuery.refetch();
+                      },
+                    }}
+                    onSubmit={(params) => {
+                      setWorkspace((current) => ({
+                        ...current,
+                        detectionParams: params,
+                        selectedSource: null,
+                      }));
+                    }}
+                  />
+                  {sourcesQuery.isError ? (
+                    <p
+                      data-testid="detect-error"
+                      className="mt-2 text-sm text-destructive"
+                    >
+                      Error al detectar fuentes:{" "}
+                      {formatQueryError(sourcesQuery.error)}
+                    </p>
+                  ) : null}
+                  {detectionSummary ? (
+                    <p
+                      data-testid="detect-summary"
+                      className="mt-2 flex items-center gap-1 text-sm text-muted-foreground"
+                    >
+                      {detectionSummary.point_count} puntuales,{" "}
+                      {detectionSummary.extended_count} extendidas
+                      <HelpHint
+                        label="resumen de fuentes"
+                        testId="help-detect-summary"
+                        glossaryId="fuente-extendida"
+                      >
+                        Las puntuales son estrellas o picos nítidos; las
+                        extendidas son nebulosas o galaxias y se marcan con
+                        recuadros.
+                      </HelpHint>
+                    </p>
+                  ) : null}
+                  <GaiaCrossMatch
+                    isFetching={gaia.isFetching}
+                    isError={gaia.isError}
+                    summary={gaia.summary}
+                  />
+                </>
+              }
+              archive={
+                <ImageArchive
+                  info={imageInfo}
+                  isPending={infoQuery.isPending}
+                />
+              }
             />
           </>
-        }
-        archive={
-          <ImageArchive info={imageInfo} isPending={infoQuery.isPending} />
         }
       />
     </main>

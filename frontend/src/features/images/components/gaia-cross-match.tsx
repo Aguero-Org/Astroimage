@@ -1,4 +1,3 @@
-import { useState } from "react";
 import type {
   GaiaJobStatusSchema,
   GaiaMatchSchema,
@@ -9,23 +8,21 @@ import {
   useGetSourcesGaiaJob,
   useVerifySourcesGaia,
 } from "@/api/generated/sources/sources";
-import { Button } from "@/components/ui/button";
 import { HelpHint } from "@/components/ui/help-hint";
 
 type GaiaCrossMatchProps = {
   isFetching: boolean;
   isError: boolean;
   summary: GaiaVerificationResponse["summary"];
-  onArm: () => void;
 };
 
 export function useGaiaCrossMatch(
   recordId: string,
   params: VerifySourcesGaiaParams,
+  enabled: boolean,
 ) {
-  const [armed, setArmed] = useState(false);
   const verifyQuery = useVerifySourcesGaia(recordId, params, {
-    query: { enabled: armed },
+    query: { enabled },
   });
   const verifyBody =
     verifyQuery.data?.status === 200 ? verifyQuery.data.data : undefined;
@@ -48,9 +45,6 @@ export function useGaiaCrossMatch(
     summary: result?.summary,
     isFetching: verifyQuery.isFetching || jobQuery.isFetching,
     isError: verifyQuery.isError || jobQuery.isError,
-    arm() {
-      setArmed(true);
-    },
   };
 }
 
@@ -58,20 +52,16 @@ export function GaiaCrossMatch({
   isFetching,
   isError,
   summary,
-  onArm,
 }: Readonly<GaiaCrossMatchProps>) {
   return (
     <div data-testid="gaia-cross-match" className="mt-3 flex flex-col gap-2">
       <div className="flex items-center gap-1">
-        <Button
-          type="button"
-          variant="outline"
-          data-testid="gaia-cross-match-submit"
-          disabled={isFetching}
-          onClick={onArm}
+        <span
+          data-testid="gaia-status"
+          className="text-sm text-muted-foreground"
         >
-          {isFetching ? "Cruzando…" : "Cruzar con Gaia"}
-        </Button>
+          {isFetching ? "Cruzando con Gaia…" : "Cruce con Gaia"}
+        </span>
         <HelpHint label="Cruce con Gaia" testId="help-gaia" glossaryId="gaia">
           Compara las detecciones de esta imagen con el catálogo Gaia.
         </HelpHint>

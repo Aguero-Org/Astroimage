@@ -36,7 +36,7 @@ export function RenderedFitsSection({
   selectedExtendedId?: number;
   onSelectSource?: (source: PointSourceSchema | ExtendedSourceSchema) => void;
 }>) {
-  const objectUrl = useObjectUrl(isBlob(rendered) ? rendered : undefined);
+  const objectUrl = useRenderedObjectUrl(rendered);
   if (isPending) {
     return (
       <div
@@ -92,6 +92,10 @@ export function RenderedFitsSection({
 function isBlob(value: unknown): value is Blob {
   // Node's fetch Blob and jsdom's Blob fail `instanceof` across each other.
   return Object.prototype.toString.call(value) === "[object Blob]";
+}
+
+export function useRenderedObjectUrl(rendered: unknown): string | undefined {
+  return useObjectUrl(isBlob(rendered) ? rendered : undefined);
 }
 
 function useObjectUrl(blob: Blob | undefined): string | undefined {

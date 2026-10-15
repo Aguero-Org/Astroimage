@@ -146,6 +146,26 @@ describe("ImageDetailPage", () => {
     expect(screen.getByTestId("meta-sel-area")).toHaveTextContent("640 px²");
   });
 
+  it("cross-matches with Gaia automatically and opens recommendations", async () => {
+    renderImageDetail("m31");
+
+    await waitFor(
+      () => {
+        expect(screen.getByTestId("gaia-summary")).toHaveTextContent(
+          "Puntuales 1/1",
+        );
+      },
+      { timeout: 8000 },
+    );
+    expect(screen.getByTestId("scientific-workspace")).toBeInTheDocument();
+    await waitFor(
+      () => {
+        expect(screen.getByTestId("catalog-list")).toBeInTheDocument();
+      },
+      { timeout: 8000 },
+    );
+  });
+
   it("searches from the navbar and shows filtered home results", async () => {
     const user = userEvent.setup();
     renderImageDetail("m31");
