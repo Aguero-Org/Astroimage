@@ -21,12 +21,7 @@ from astroimage.shared.errors import AppError, as_app_error
 from astroimage.sources.cache import DetectionCache
 from astroimage.sources.service import SourceDetectionService
 
-_log = structlog.get_logger("astroimage.catalogs.jobs")
-
-_LOGS: dict[str, Callable[..., None]] = {
-    "warning": _log.warning,
-    "error": _log.error,
-}
+logger = structlog.get_logger("astroimage.catalogs.jobs")
 
 
 class CatalogBackgroundRecommend:
@@ -128,20 +123,29 @@ class CatalogJobRegistry:
     ) -> None:
         try:
             result = await factory()
-        except Exception as exc:  # noqa: BLE001 — a job records every failure instead of crashing the task
+        except Exception as exc:
             error = as_app_error(exc)
-            log = _LOGS[error.log_level]
-            log(
-                "catalog_job_failed",
-                job_id=key,
-                error_type=type(error).__name__,
-                detail=error.message,
-            )
+            if error.log_level == "warning":
+                logger.warning(
+                    "catalog_job_failed",
+                    job_id=key,
+                    error_type=type(error).__name__,
+                    detail=error.message,
+                    exc_info=exc,
+                )
+            else:
+                logger.error(
+                    "catalog_job_failed",
+                    job_id=key,
+                    error_type=type(error).__name__,
+                    detail=error.message,
+                    exc_info=exc,
+                )
             self._store_failure(key, error)
             return
         finally:
             self._running.pop(key, None)
-        _log.info("catalog_job_completed", job_id=key)
+        logger.info("catalog_job_completed", job_id=key)
         self._store_done(key, result)
 
     def _store_done(self, key: str, result: CatalogRecommendationResponse) -> None:

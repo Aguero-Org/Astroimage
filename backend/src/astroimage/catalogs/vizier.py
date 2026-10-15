@@ -10,7 +10,7 @@ from astroquery.vizier import Vizier
 
 from astroimage.catalogs.model import CatalogMetadata, CatalogRow, CatalogTable
 
-_log = structlog.get_logger("astroimage.catalogs.vizier")
+logger = structlog.get_logger("astroimage.catalogs.vizier")
 
 # `+_r` is the angular distance of each row from the query centre; it is the
 # same column the reference notebook relies on for the spatial score.
@@ -44,7 +44,7 @@ class AstroqueryVizierProvider:
         *,
         row_limit: int,
     ) -> list[CatalogTable]:
-        _log.info(
+        logger.info(
             "vizier_query",
             center_ra=float(center.ra.deg),
             center_dec=float(center.dec.deg),
@@ -59,8 +59,13 @@ class AstroqueryVizierProvider:
     def catalog_metadata(self, catalogue_id: str) -> CatalogMetadata:
         try:
             metadata = Vizier.get_catalog_metadata(catalog=catalogue_id)
-        except Exception as exc:  # noqa: BLE001 — metadata lookup must survive any TAP error
-            _log.warning("vizier_metadata_failed", catalogue_id=catalogue_id, detail=str(exc))
+        except Exception as exc:
+            logger.warning(
+                "vizier_metadata_failed",
+                catalogue_id=catalogue_id,
+                detail=str(exc),
+                exc_info=exc,
+            )
             return CatalogMetadata(catalogue_id=catalogue_id)
         if metadata is None or len(metadata) == 0:
             return CatalogMetadata(catalogue_id=catalogue_id)
