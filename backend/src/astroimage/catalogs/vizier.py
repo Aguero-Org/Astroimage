@@ -59,7 +59,7 @@ class AstroqueryVizierProvider:
     def catalog_metadata(self, catalogue_id: str) -> CatalogMetadata:
         try:
             metadata = Vizier.get_catalog_metadata(catalog=catalogue_id)
-        except Exception as exc:  # pragma: no cover - network/tap errors
+        except Exception as exc:  # noqa: BLE001 — metadata lookup must survive any TAP error
             _log.warning("vizier_metadata_failed", catalogue_id=catalogue_id, detail=str(exc))
             return CatalogMetadata(catalogue_id=catalogue_id)
         if metadata is None or len(metadata) == 0:

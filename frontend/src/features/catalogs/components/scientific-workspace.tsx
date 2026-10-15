@@ -321,14 +321,25 @@ function ScientificSidebar({
               onChange={(event) => setQuery(event.target.value)}
             />
             {tab === "catalogs" ? (
-              <FilterChips
-                legend="Tipo de coincidencia"
-                name="catalogue-match"
-                testIdPrefix="catalog-filter"
-                options={MATCH_OPTIONS}
-                value={match}
-                onSelect={setMatch}
-              />
+              <div className="flex items-center gap-1">
+                <FilterChips
+                  legend="Tipo de coincidencia"
+                  name="catalogue-match"
+                  testIdPrefix="catalog-filter"
+                  options={MATCH_OPTIONS}
+                  value={match}
+                  onSelect={setMatch}
+                />
+                <HelpHint
+                  label="Coincidencia por objeto"
+                  testId="help-match"
+                  glossaryId="coincidencia-objeto"
+                >
+                  Objeto identificado significa que el identificador aparece en
+                  el catálogo. Solo catálogo indica cobertura de la región sin
+                  esa coincidencia.
+                </HelpHint>
+              </div>
             ) : (
               <FilterChips
                 legend="Tipo de publicación"

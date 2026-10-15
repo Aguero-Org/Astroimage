@@ -128,7 +128,7 @@ class CatalogJobRegistry:
     ) -> None:
         try:
             result = await factory()
-        except Exception as exc:
+        except Exception as exc:  # noqa: BLE001 — a job records every failure instead of crashing the task
             error = as_app_error(exc)
             log = _LOGS[error.log_level]
             log(

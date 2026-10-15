@@ -39,11 +39,19 @@ export function PublicationCard({
           </div>
           <p
             data-testid="publication-kind"
-            className="mt-0.5 text-xs text-muted-foreground"
+            className="mt-0.5 flex items-center gap-1 text-xs text-muted-foreground"
           >
             {isCataloguePaper
               ? "Artículo del catálogo"
               : "Referencia citada en el ReadMe"}
+            <HelpHint
+              label="Publicación asociada"
+              testId="help-publication-kind"
+              glossaryId="publicacion-vizier"
+            >
+              Artículo que describe el catálogo o que su documentación cita, con
+              enlace a ADS o al DOI.
+            </HelpHint>
           </p>
           {publication.catalogueNames.length > 0 ? (
             <p

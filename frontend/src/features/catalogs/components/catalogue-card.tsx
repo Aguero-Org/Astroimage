@@ -6,6 +6,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
+import { HelpHint } from "@/components/ui/help-hint";
 import {
   adsUrlForBibcode,
   catalogueCrossmatchNote,
@@ -99,7 +100,11 @@ export function CatalogueCard({
         <CollapsibleContent data-testid="catalogue-card-detail">
           <div className="flex flex-col gap-3 border-t border-sidebar-border p-2">
             {reason.detail || crossmatch ? (
-              <DetailSection title="Por qué se recomienda">
+              <DetailSection
+                title="Por qué se recomienda"
+                glossaryId="recomendacion-catalogo"
+                hint="Explica si el objeto aparece en el catálogo o si el catálogo solo cubre la región."
+              >
                 {reason.detail ? (
                   <p className="text-xs text-muted-foreground">
                     {reason.detail}
@@ -116,7 +121,11 @@ export function CatalogueCard({
               </DetailSection>
             ) : null}
             {rows.length > 0 ? (
-              <DetailSection title="Datos del catálogo">
+              <DetailSection
+                title="Datos del catálogo"
+                glossaryId="catalogo-vizier"
+                hint="Tabla de VizieR rankeada para esta imagen, con su título, autores y enlaces."
+              >
                 <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-xs">
                   {rows.map((row) => (
                     <Fragment key={row.label}>
@@ -157,11 +166,23 @@ export function CatalogueCard({
 function DetailSection({
   title,
   children,
-}: Readonly<{ title: string; children: ReactNode }>) {
+  glossaryId,
+  hint,
+}: Readonly<{
+  title: string;
+  children: ReactNode;
+  glossaryId?: string;
+  hint?: string;
+}>) {
   return (
     <section className="flex flex-col gap-1">
-      <h4 className="text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">
+      <h4 className="flex items-center gap-1 text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">
         {title}
+        {glossaryId && hint ? (
+          <HelpHint label={title} glossaryId={glossaryId}>
+            {hint}
+          </HelpHint>
+        ) : null}
       </h4>
       {children}
     </section>

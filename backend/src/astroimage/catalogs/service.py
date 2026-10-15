@@ -237,7 +237,7 @@ class CatalogRecommendationService:
         except TimeoutError:
             _log.warning("vizier_query_timed_out", timeout_s=self._query_timeout_s)
             return [], f"VizieR query timed out after {self._query_timeout_s} seconds"
-        except Exception as exc:
+        except Exception as exc:  # noqa: BLE001 — VizieR failures become an empty result, not a 500
             _log.warning("vizier_query_failed", detail=str(exc))
             return [], f"VizieR query failed: {exc}"
         return list(tables), None
