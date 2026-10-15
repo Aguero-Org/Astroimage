@@ -45,6 +45,18 @@ describe("ImageInspector", () => {
       screen.getByTestId("inspector-section-selection"),
     ).toBeInTheDocument();
     expect(screen.getByTestId("inspector-section-archive")).toBeInTheDocument();
+    expect(screen.getByTestId("help-deteccion-glossary")).toHaveAttribute(
+      "href",
+      "/glossary#deteccion",
+    );
+    expect(screen.getByTestId("help-seleccion-glossary")).toHaveAttribute(
+      "href",
+      "/glossary#seleccion",
+    );
+    expect(screen.getByTestId("help-metadatos-glossary")).toHaveAttribute(
+      "href",
+      "/glossary#metadatos",
+    );
     expect(screen.getByTestId("image-detail-title")).toBeInTheDocument();
     expect(
       screen.getByTestId("inspector-toggle").parentElement,

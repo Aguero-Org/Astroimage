@@ -90,8 +90,9 @@ class GitHubReleaseCatalog:
 
     def _view_assets(self, tag: str) -> list[ReleaseAsset]:
         raw = self._gh("release", "view", tag, "--repo", self._repo, "--json", "assets")
-        payload = json.loads(raw)
-        if not isinstance(payload, dict):
+        parsed = json.loads(raw)
+        payload = parsed if isinstance(parsed, dict) else None
+        if payload is None:
             raise RuntimeError("gh release view payload is not an object")
         assets = payload.get("assets")
         if not isinstance(assets, list):

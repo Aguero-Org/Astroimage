@@ -8,6 +8,41 @@ export type RenderViewParams = Required<
   >
 >;
 
+type RenderNumericKey = "pmin" | "pmax" | "gamma";
+
+export type RenderDraft = Omit<RenderViewParams, RenderNumericKey> &
+  Record<RenderNumericKey, string>;
+
+export function paramsToDraft(params: RenderViewParams): RenderDraft {
+  return {
+    ...params,
+    pmin: String(params.pmin),
+    pmax: String(params.pmax),
+    gamma: String(params.gamma),
+  };
+}
+
+export function parseRenderDraft(draft: RenderDraft): RenderViewParams | null {
+  const pmin = Number(draft.pmin);
+  const pmax = Number(draft.pmax);
+  const gamma = Number(draft.gamma);
+  if (
+    !Number.isFinite(pmin) ||
+    !Number.isFinite(pmax) ||
+    !Number.isFinite(gamma)
+  ) {
+    return null;
+  }
+  return {
+    stretch: draft.stretch,
+    limits: draft.limits,
+    colormap: draft.colormap,
+    pmin,
+    pmax,
+    gamma,
+  };
+}
+
 export const DEFAULT_RENDER_PARAMS: RenderViewParams = {
   stretch: "linear",
   limits: "percentiles",

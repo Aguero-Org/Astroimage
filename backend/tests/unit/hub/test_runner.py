@@ -5,11 +5,11 @@ from uuid import UUID
 import pytest
 
 from astroimage.hub.runner import TransferRunner
-from astroimage.shared.object_storage import ObjectStorage
+from astroimage.shared.object_storage import ObjectStorage, ObjectStorageError
 
 
 class _Storage(ObjectStorage):
-    def __init__(self, keys: list[str], *, fail: bool = False) -> None:
+    def __init__(self, keys: list[str], *, fail: Exception | None = None) -> None:
         self.keys = keys
         self.fail = fail
         self.removed: list[str] = []
@@ -27,8 +27,8 @@ class _Storage(ObjectStorage):
         raise AssertionError("not used")
 
     async def remove(self, object_key: str) -> None:
-        if self.fail:
-            raise OSError("minio unreachable")
+        if self.fail is not None:
+            raise self.fail
         self.removed.append(object_key)
 
     async def list_object_keys(self, prefix: str) -> list[str]:
@@ -66,9 +66,13 @@ async def test_purge_parts_removes_every_chunk_of_the_transfer() -> None:
 
 
 @pytest.mark.asyncio
-async def test_purge_parts_swallows_storage_errors() -> None:
+@pytest.mark.parametrize(
+    "storage_error",
+    [OSError("minio unreachable"), ObjectStorageError("minio unreachable")],
+)
+async def test_purge_parts_swallows_storage_errors(storage_error: Exception) -> None:
     transfer_id = UUID("33333333-3333-3333-3333-333333333333")
-    storage = _Storage([f"transfers/{transfer_id}/part-0000"], fail=True)
+    storage = _Storage([f"transfers/{transfer_id}/part-0000"], fail=storage_error)
 
     await _runner(storage)._purge_parts(transfer_id)
 

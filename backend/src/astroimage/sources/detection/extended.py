@@ -74,7 +74,7 @@ def _work_rms(
     if background_rms is not None:
         try:
             external_rms = float(np.nanmedian(np.asarray(background_rms)))
-        except Exception:
+        except (TypeError, ValueError):
             external_rms = np.nan
     else:
         external_rms = np.nan

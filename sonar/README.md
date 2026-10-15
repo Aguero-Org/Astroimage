@@ -15,7 +15,7 @@ Wait until the container is healthy (`docker compose -f sonar/docker-compose.yml
 
 ## Create a project token
 
-1. Create project **Manually** with key `astroimage` (matches `sonar-project.properties`).
+1. Create project **Manually** with key `Astroimage` (matches `sonar-project.properties`; the key is case-sensitive).
 2. Generate a **User token** (My Account → Security) or a project analysis token.
 3. Export it:
 
@@ -50,8 +50,9 @@ powershell -ExecutionPolicy Bypass -File sonar/run-analysis.ps1
 bash sonar/run-analysis.sh
 ```
 
-The script runs backend + frontend tests with coverage, fixes monorepo report
-paths, and uploads the analysis with `sonarsource/sonar-scanner-cli`.
+The script runs backend + frontend tests with coverage, rewrites report
+paths for the monorepo (`sonar/normalize-coverage.py`), and uploads the
+analysis with `sonarsource/sonar-scanner-cli`.
 
 Dashboard: http://localhost:9002/dashboard?id=Astroimage
 
@@ -69,9 +70,30 @@ GitHub Actions job `sonar` runs when `SONAR_ENABLED=true`.
 | `SONAR_HOST_URL` | variable | SonarQube only | e.g. `https://sonar.example.com` |
 | `SONAR_ORGANIZATION` | variable | SonarCloud only | organization key |
 
-Project key defaults to `astroimage` (`sonar-project.properties`).
+Project key defaults to `Astroimage` (`sonar-project.properties`).
 
-## Quality gate
+## Quality profile and quality gate
 
-The CI job waits for the Quality Gate and fails if status is not `OK`.
-Adjust gate conditions in the SonarQube UI (Coverage, Duplications, Maintainability, Reliability, Security).
+Use the built-in **Sonar way** profile and the built-in **Sonar way**
+quality gate. Do not copy the rule set into a custom profile. On a server
+that splits the built-in profiles into Sonar way core, extended, and
+comprehensive, keep **Sonar way core** as the baseline and extend it only
+for a single justified rule.
+
+The Sonar way gate applies to new code: no new issues, all new security
+hotspots reviewed, coverage at least 80%, duplicated lines at most 3%.
+It does not require cleaning historical code. `sonar.qualitygate.wait=true`
+makes the scanner wait for that gate. CI also runs
+`sonarqube-quality-gate-action`. New code detection needs full git history
+(`fetch-depth: 0` in the workflow).
+
+Ruff, mypy, Biome, and `tsc` stay in CI. Do not import their reports
+(`sonar.python.ruff.reportPaths`, `sonar.python.mypy.reportPaths`, or a
+generic Biome import). Sonar cannot manage those rules in the profile, and
+the same finding would fail both gates. The one local exception is
+`css:S4662` on `frontend/src/index.css` (Tailwind at-rules).
+
+Coverage reports are written from each workspace (`src/...`).
+`sonar/normalize-coverage.py` rewrites them to `backend/src/...` and
+`frontend/src/...` before the scan. CI runs that script after downloading
+the coverage artifacts.

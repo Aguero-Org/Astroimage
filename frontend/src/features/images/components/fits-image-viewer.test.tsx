@@ -1,5 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import { FitsImageViewer } from "./fits-image-viewer";
 
 vi.mock("@cellbytes/react-openseadragon", () => ({
@@ -26,10 +27,12 @@ vi.mock("@cellbytes/react-openseadragon", () => ({
 describe("FitsImageViewer", () => {
   it("mounts the OpenSeadragon container, toolbar, and tiled image", () => {
     render(
-      <FitsImageViewer
-        imageUrl="blob:http://localhost/fits-preview"
-        label="m31 render"
-      />,
+      <TooltipProvider delayDuration={0}>
+        <FitsImageViewer
+          imageUrl="blob:http://localhost/fits-preview"
+          label="m31 render"
+        />
+      </TooltipProvider>,
     );
 
     expect(screen.getByTestId("fits-viewer")).toBeInTheDocument();

@@ -21,7 +21,7 @@ export function GlossaryHeader({
       <div className="mx-auto max-w-2xl lg:mx-0 lg:max-w-3xl">
         <div className="flex flex-wrap items-end justify-between gap-3">
           <h1 className="text-4xl font-semibold tracking-tight">Glosario</h1>
-          {lastImage && (
+          {lastImage !== null && (
             <Link
               to="/image/$recordId/{-$slug}"
               params={{ recordId: lastImage.recordId, slug: lastImage.slug }}

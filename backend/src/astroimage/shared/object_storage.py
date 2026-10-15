@@ -3,6 +3,10 @@ from __future__ import annotations
 from typing import Protocol
 
 
+class ObjectStorageError(Exception):
+    """The object store could not complete an operation."""
+
+
 class ObjectStorage(Protocol):
     async def put_bytes(
         self,

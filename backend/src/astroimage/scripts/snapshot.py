@@ -40,7 +40,7 @@ def build_manifest(*, name: str, record_count: int) -> SnapshotManifest:
 def snapshot_path(path: str | Path) -> Path:
     resolved = Path(path)
     name = resolved.name.lower()
-    if name.endswith(".tar.gz") or name.endswith(".tgz"):
+    if name.endswith((".tar.gz", ".tgz")):
         return resolved
     return resolved.with_name(resolved.name + _SNAPSHOT_SUFFIX)
 

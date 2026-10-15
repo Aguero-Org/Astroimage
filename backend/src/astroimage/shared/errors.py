@@ -122,7 +122,9 @@ def _log_safely(level: LogLevel, event: str, /, **kwargs: object) -> None:
         _LOGS[level](event, **kwargs)
 
 
-async def app_error_handler(request: Request, exc: AppError) -> JSONResponse:
+async def app_error_handler(  # NOSONAR S7503 — registration awaits this handler
+    request: Request, exc: AppError
+) -> JSONResponse:
     _log_safely(
         exc.log_level,
         "request_failed",
@@ -135,7 +137,9 @@ async def app_error_handler(request: Request, exc: AppError) -> JSONResponse:
     return _error_response(exc)
 
 
-async def internal_error_handler(request: Request, exc: Exception) -> JSONResponse:
+async def internal_error_handler(  # NOSONAR S7503 — registration awaits this handler
+    request: Request, exc: Exception
+) -> JSONResponse:
     _log_safely(
         "error",
         "request_crashed",

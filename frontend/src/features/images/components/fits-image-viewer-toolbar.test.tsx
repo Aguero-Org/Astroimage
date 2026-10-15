@@ -1,6 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import { FitsImageViewerToolbar } from "./fits-image-viewer-toolbar";
 
 const viewport = {
@@ -21,7 +22,11 @@ vi.mock("@cellbytes/react-openseadragon", () => ({
 describe("FitsImageViewerToolbar", () => {
   it("zooms, fits, and toggles full screen through the viewer API", async () => {
     const user = userEvent.setup();
-    render(<FitsImageViewerToolbar />);
+    render(
+      <TooltipProvider delayDuration={0}>
+        <FitsImageViewerToolbar />
+      </TooltipProvider>,
+    );
 
     await user.click(screen.getByTestId("fits-toolbar-zoom-in"));
     expect(viewport.zoomBy).toHaveBeenCalledWith(1.2);
@@ -35,5 +40,9 @@ describe("FitsImageViewerToolbar", () => {
 
     await user.click(screen.getByTestId("fits-toolbar-fullscreen"));
     expect(viewer.setFullScreen).toHaveBeenCalledWith(true);
+    expect(screen.getByTestId("help-pan-zoom-glossary")).toHaveAttribute(
+      "href",
+      "/glossary#pan-zoom",
+    );
   });
 });

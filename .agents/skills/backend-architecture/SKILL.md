@@ -3,7 +3,8 @@ name: backend-architecture
 description: >-
   Feature-based FastAPI backend layout for astroimage. Use when adding or
   changing backend features, modules, tests, imports, architecture rules,
-  shared infrastructure, or when unsure where a backend file belongs.
+  shared infrastructure, the request session, error responses, or when
+  unsure where a backend file belongs. Language-level Python is the python skill.
 ---
 
 # Backend architecture (feature-based)
@@ -224,6 +225,19 @@ might eventually need something similar — extract later with a clear API.
 - structlog JSON logs; Prometheus `/metrics`; OTLP traces
 - uv + Ruff + mypy strict + import-linter + pytestarch
 - OpenAPI is the only backend↔frontend contract (`backend/openapi.json`)
+
+## HTTP and I/O
+
+These match the code that already exists. Do not invent a second shape.
+
+- I/O routes are `async def`. Blocking scientific work leaves the event loop (see the python skill). No `requests` and no sync `psycopg` on a request. Alembic keeps the sync driver for migrations only.
+- One database session per request, in `shared/deps.py`: commit after the request succeeds, roll back and re-raise on failure. Controllers and services do not commit that session. Scripts and the hub runner own the sessions they open.
+- Request resources are `Annotated[..., Depends(...)]`. Do not build the engine or a session at import time.
+- Settings come from `astroimage.config`. Features do not read `os.environ` themselves.
+- Raise `AppError` from `shared/errors.py`. The handler answers with FastAPI's `{"detail": ...}` body, including 422 validation. Do not add an `{"error": {"code", "message"}}` envelope. An unknown exception becomes the generic internal message, never `str(exc)`.
+- Pydantic v2 only: `.model_dump()`, `.model_validate()`, `ConfigDict`. One `schema.py` per feature. Do not require a Create/Update/Response trio when the route is not that shape, and do not put secrets or storage credentials on a response model.
+- CORS stays the configured Vite origin. Never `allow_origins=["*"]` together with credentials.
+- Auth, rate limits, and task queues stay out of scope. No JWT, no password hashing, no Celery or ARQ. `BackgroundTasks` only for a side effect that may be dropped with the worker.
 
 ## Enforcement
 

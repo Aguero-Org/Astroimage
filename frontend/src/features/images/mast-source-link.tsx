@@ -1,3 +1,10 @@
+import { SquareArrowOutUpRight } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+
 type MastSourceLinkProps = {
   dataUri: string;
 };
@@ -8,15 +15,20 @@ export function mastFileUrl(dataUri: string): string {
 
 export function MastSourceLink({ dataUri }: Readonly<MastSourceLinkProps>) {
   return (
-    <a
-      href={mastFileUrl(dataUri)}
-      target="_blank"
-      rel="noreferrer"
-      title={dataUri}
-      className="block max-w-56 truncate font-mono text-xs text-primary underline-offset-2 hover:underline dark:text-ring"
-      onClick={(event) => event.stopPropagation()}
-    >
-      {dataUri}
-    </a>
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <a
+          href={mastFileUrl(dataUri)}
+          target="_blank"
+          rel="noreferrer"
+          aria-label={`Archivo original en MAST: ${dataUri}`}
+          className="inline-flex size-8 items-center justify-center rounded-md text-primary hover:bg-accent dark:text-ring"
+          onClick={(event) => event.stopPropagation()}
+        >
+          <SquareArrowOutUpRight className="size-4" />
+        </a>
+      </TooltipTrigger>
+      <TooltipContent>{dataUri}</TooltipContent>
+    </Tooltip>
   );
 }

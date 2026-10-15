@@ -49,7 +49,8 @@ export const FUENTES_ENTRIES: GlossaryEntry[] = [
     name: "Score",
     group: "fuentes",
     what: "Puntuación de relevancia (0 a 1) que mezcla aspecto visual y forma.",
-    inApp: "Filtra candidatos poco convincentes y ordena el ranking.",
+    inApp:
+      "Filtra candidatos poco convincentes y ordena el ranking. En fuentes extendidas el control se llama Score mínimo.",
     where: "Inspector → Fuentes y Selección",
   },
   {
@@ -65,7 +66,8 @@ export const FUENTES_ENTRIES: GlossaryEntry[] = [
     name: "Máximo de fuentes",
     group: "fuentes",
     what: "Tope de fuentes a devolver, ordenadas por relevancia.",
-    inApp: "0 significa sin límite. Baja el número si hay demasiadas marcas.",
+    inApp:
+      "0 significa sin límite. Baja el número si hay demasiadas marcas. En fuentes extendidas el control se llama Máximo de estructuras.",
     where: "Inspector → Fuentes",
   },
   {

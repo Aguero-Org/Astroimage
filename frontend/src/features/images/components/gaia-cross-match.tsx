@@ -1,4 +1,3 @@
-import { useEffect } from "react";
 import type {
   GaiaJobStatusSchema,
   GaiaMatchSchema,
@@ -12,20 +11,16 @@ import {
 import { HelpHint } from "@/components/ui/help-hint";
 
 type GaiaCrossMatchProps = {
-  recordId: string;
-  params: VerifySourcesGaiaParams;
-  enabled: boolean;
-  onMatches: (matches: GaiaMatchSchema[]) => void;
-  onResult?: (result: GaiaVerificationResponse) => void;
+  isFetching: boolean;
+  isError: boolean;
+  summary: GaiaVerificationResponse["summary"];
 };
 
-export function GaiaCrossMatch({
-  recordId,
-  params,
-  enabled,
-  onMatches,
-  onResult,
-}: Readonly<GaiaCrossMatchProps>) {
+export function useGaiaCrossMatch(
+  recordId: string,
+  params: VerifySourcesGaiaParams,
+  enabled: boolean,
+) {
   const verifyQuery = useVerifySourcesGaia(recordId, params, {
     query: { enabled },
   });
@@ -45,19 +40,19 @@ export function GaiaCrossMatch({
   const jobBody =
     jobQuery.data?.status === 200 ? jobQuery.data.data : undefined;
   const result = gaiaVerificationResult(jobBody, verifyBody);
+  return {
+    matches: result?.matches ?? [],
+    summary: result?.summary,
+    isFetching: verifyQuery.isFetching || jobQuery.isFetching,
+    isError: verifyQuery.isError || jobQuery.isError,
+  };
+}
 
-  useEffect(() => {
-    onMatches(result?.matches ?? []);
-  }, [onMatches, result]);
-
-  useEffect(() => {
-    if (result) {
-      onResult?.(result);
-    }
-  }, [onResult, result]);
-
-  const busy = verifyQuery.isFetching || jobQuery.isFetching;
-
+export function GaiaCrossMatch({
+  isFetching,
+  isError,
+  summary,
+}: Readonly<GaiaCrossMatchProps>) {
   return (
     <div data-testid="gaia-cross-match" className="mt-3 flex flex-col gap-2">
       <div className="flex items-center gap-1">
@@ -65,23 +60,22 @@ export function GaiaCrossMatch({
           data-testid="gaia-status"
           className="text-sm text-muted-foreground"
         >
-          {busy ? "Cruzando con Gaia…" : "Cruce con Gaia"}
+          {isFetching ? "Cruzando con Gaia…" : "Cruce con Gaia"}
         </span>
         <HelpHint label="Cruce con Gaia" testId="help-gaia" glossaryId="gaia">
           Compara las detecciones de esta imagen con el catálogo Gaia.
         </HelpHint>
       </div>
-      {verifyQuery.isError || jobQuery.isError ? (
+      {isError ? (
         <p data-testid="gaia-error" className="text-sm text-destructive">
           No se pudo cruzar con Gaia.
         </p>
       ) : null}
-      {result?.summary ? (
+      {summary ? (
         <p data-testid="gaia-summary" className="text-sm text-muted-foreground">
-          Puntuales {result.summary.point?.matched ?? 0}/
-          {result.summary.point?.count ?? 0}. Extendidas{" "}
-          {result.summary.extended?.matched ?? 0}/
-          {result.summary.extended?.count ?? 0}.
+          Puntuales {summary.point?.matched ?? 0}/{summary.point?.count ?? 0}.
+          Extendidas {summary.extended?.matched ?? 0}/
+          {summary.extended?.count ?? 0}.
         </p>
       ) : null}
     </div>

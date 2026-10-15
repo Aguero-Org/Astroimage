@@ -18,27 +18,16 @@ echo "==> Backend tests + coverage"
 (
   cd backend
   uv run pytest -q
-  python -c "
-from pathlib import Path
-p = Path('coverage.xml')
-p.write_text(p.read_text(encoding='utf-8').replace('filename=\"src/', 'filename=\"backend/src/'), encoding='utf-8')
-"
 )
 
 echo "==> Frontend tests + coverage"
 (
   cd frontend
   pnpm test:coverage
-  python -c "
-from pathlib import Path
-p = Path('coverage/lcov.info')
-if not p.is_file():
-    raise SystemExit('frontend coverage/lcov.info was not produced')
-text = p.read_text(encoding='utf-8').replace('\\\\', '/')
-text = text.replace('SF:src/', 'SF:frontend/src/')
-p.write_text(text, encoding='utf-8')
-"
 )
+
+echo "==> Normalize coverage paths"
+python3 sonar/normalize-coverage.py
 
 echo "==> SonarScanner"
 export MSYS_NO_PATHCONV=1

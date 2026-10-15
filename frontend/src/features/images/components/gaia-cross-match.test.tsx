@@ -1,7 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { GaiaCrossMatch } from "./gaia-cross-match";
+import { GaiaCrossMatch, useGaiaCrossMatch } from "./gaia-cross-match";
 
 const verify = vi.fn();
 const job = vi.fn();
@@ -13,9 +13,26 @@ vi.mock("@/api/generated/sources/sources", () => ({
 
 const idle = { data: undefined, isFetching: false, isError: false };
 
+function GaiaHarness({ enabled }: { enabled: boolean }) {
+  const gaia = useGaiaCrossMatch("m31", {}, enabled);
+  return (
+    <TooltipProvider delayDuration={0}>
+      <GaiaCrossMatch
+        isFetching={gaia.isFetching}
+        isError={gaia.isError}
+        summary={gaia.summary}
+      />
+      <ul data-testid="gaia-matches">
+        {gaia.matches.map((match) => (
+          <li key={match.source_id}>{match.source_id}</li>
+        ))}
+      </ul>
+    </TooltipProvider>
+  );
+}
+
 describe("GaiaCrossMatch", () => {
-  it("cross-matches automatically when enabled and reports the summary", async () => {
-    const onMatches = vi.fn();
+  it("cross-matches when detection is ready and reports the summary", () => {
     verify.mockImplementation(
       (
         _recordId: string,
@@ -24,39 +41,18 @@ describe("GaiaCrossMatch", () => {
       ) => (options?.query?.enabled ? verifyResponse() : idle),
     );
     job.mockReturnValue(idle);
-    render(
-      <TooltipProvider delayDuration={0}>
-        <GaiaCrossMatch
-          recordId="m31"
-          params={{}}
-          enabled
-          onMatches={onMatches}
-        />
-      </TooltipProvider>,
-    );
+    render(<GaiaHarness enabled />);
 
-    expect(await screen.findByTestId("gaia-summary")).toHaveTextContent(
+    expect(screen.getByTestId("gaia-summary")).toHaveTextContent(
       "Puntuales 2/4",
     );
-    expect(onMatches).toHaveBeenCalledWith([
-      expect.objectContaining({ source_id: 1, gaia_match: true }),
-    ]);
+    expect(screen.getByTestId("gaia-matches")).toHaveTextContent("1");
   });
 
   it("stays idle until detection finishes", () => {
-    const onMatches = vi.fn();
     verify.mockReturnValue(idle);
     job.mockReturnValue(idle);
-    render(
-      <TooltipProvider delayDuration={0}>
-        <GaiaCrossMatch
-          recordId="m31"
-          params={{}}
-          enabled={false}
-          onMatches={onMatches}
-        />
-      </TooltipProvider>,
-    );
+    render(<GaiaHarness enabled={false} />);
 
     expect(verify).toHaveBeenCalledWith(
       "m31",

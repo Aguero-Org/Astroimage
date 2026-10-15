@@ -121,7 +121,7 @@ Intra-feature dependency direction:
 Enforced by `tests/architecture/test_modules_architecture.py` (pytestarch) and
 import-linter contracts in `backend/pyproject.toml`.
 
-Agent skill (on-demand workflow): `.agents/skills/backend-architecture/SKILL.md`.
+On-demand workflows: `.agents/skills/backend-architecture/SKILL.md` (layout, session, errors) and `.agents/skills/python/SKILL.md` (typing, async, logging). Service shape stays the backend skill.
 
 ## Backend tests layout
 
@@ -160,6 +160,8 @@ Do not create empty test files for symmetry.
 - Playwright
 
 Do not mix TanStack Query with a global client store for server data.
+
+On-demand workflows: `.agents/skills/react-spa/SKILL.md` (where state and routes live), `.agents/skills/typescript/SKILL.md` (types and tsconfig), `.agents/skills/you-might-not-need-an-effect/SKILL.md`, `.agents/skills/vercel-composition-patterns/SKILL.md`.
 
 Theming is shadcn CSS variables in `frontend/src/index.css` (`:root` / `.dark`).
 Do not hardcode brand colors on components; use tokens (`bg-background`,

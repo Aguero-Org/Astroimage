@@ -70,21 +70,33 @@ export const DEFAULT_SOURCE_DETECTION_PARAMS: SourceDetectionParams = {
 export function pointDetectionParams(
   values: SourceDetectionParams,
 ): PointDetectionParams {
-  const selected: Partial<PointDetectionParams> = {};
-  for (const key of POINT_DETECTION_KEYS) {
-    selected[key] = values[key];
-  }
-  return selected as PointDetectionParams;
+  return {
+    fwhm: values.fwhm,
+    sigma: values.sigma,
+    min_snr: values.min_snr,
+    min_score: values.min_score,
+    min_distance: values.min_distance,
+    visual_weight: values.visual_weight,
+    visual_area_radius: values.visual_area_radius,
+    visual_area_sigma: values.visual_area_sigma,
+    max_sources: values.max_sources,
+  };
 }
 
 export function extendedDetectionParams(
   values: SourceDetectionParams,
 ): ExtendedDetectionParams {
-  const selected: Partial<ExtendedDetectionParams> = {};
-  for (const key of EXTENDED_DETECTION_KEYS) {
-    selected[key] = values[key];
-  }
-  return selected as ExtendedDetectionParams;
+  return {
+    ext_sigma: values.ext_sigma,
+    ext_smooth_sigma: values.ext_smooth_sigma,
+    ext_min_area: values.ext_min_area,
+    ext_max_area: values.ext_max_area,
+    ext_bin_factor: values.ext_bin_factor,
+    ext_closing_iterations: values.ext_closing_iterations,
+    ext_opening_iterations: values.ext_opening_iterations,
+    ext_min_score: values.ext_min_score,
+    ext_max_sources: values.ext_max_sources,
+  };
 }
 
 export const POINT_DETECTION_PRESETS: NamedPreset<PointDetectionParams>[] = [
@@ -148,5 +160,3 @@ export const POINT_DETECTION_PRESETS: NamedPreset<PointDetectionParams>[] = [
     },
   },
 ];
-
-export const FITS_RENDER_IMAGE_KEY = "fits-render";

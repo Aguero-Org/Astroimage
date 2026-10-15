@@ -2,7 +2,7 @@ import { useCoordinates, useViewerEvent } from "@cellbytes/react-openseadragon";
 import { useState } from "react";
 import type { ExtendedSourceSchema } from "@/api/generated/model";
 import { cn } from "@/lib/utils";
-import { FITS_RENDER_IMAGE_KEY } from "../source-detection";
+import { FITS_RENDER_IMAGE_KEY } from "../fits-render-image-key";
 
 type ExtendedSourceMarkersProps = {
   sources: ExtendedSourceSchema[];

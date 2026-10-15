@@ -1,59 +1,20 @@
-import type { ReactNode, SyntheticEvent } from "react";
+import type { SyntheticEvent } from "react";
 import { Button } from "@/components/ui/button";
-import { HelpHint } from "@/components/ui/help-hint";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import {
   COLORMAP_OPTIONS,
   DEFAULT_RENDER_PARAMS,
   LIMITS_OPTIONS,
+  paramsToDraft,
+  parseRenderDraft,
   RENDER_PRESETS,
   type RenderViewParams,
   STRETCH_OPTIONS,
 } from "../render-view";
 import { useNamedPresetDraft } from "../use-named-preset-draft";
 import { DecimalInput } from "./decimal-input";
+import { ExclusiveChoice } from "./exclusive-choice";
 import { NamedPresetField } from "./named-preset-field";
-
-type RenderNumericKey = "pmin" | "pmax" | "gamma";
-
-type RenderDraft = Omit<RenderViewParams, RenderNumericKey> &
-  Record<RenderNumericKey, string>;
-
-function paramsToDraft(params: RenderViewParams): RenderDraft {
-  return {
-    ...params,
-    pmin: String(params.pmin),
-    pmax: String(params.pmax),
-    gamma: String(params.gamma),
-  };
-}
-
-function parseRenderDraft(draft: RenderDraft): RenderViewParams | null {
-  const pmin = Number(draft.pmin);
-  const pmax = Number(draft.pmax);
-  const gamma = Number(draft.gamma);
-  if (
-    !Number.isFinite(pmin) ||
-    !Number.isFinite(pmax) ||
-    !Number.isFinite(gamma)
-  ) {
-    return null;
-  }
-  return {
-    stretch: draft.stretch,
-    limits: draft.limits,
-    colormap: draft.colormap,
-    pmin,
-    pmax,
-    gamma,
-  };
-}
+import { RenderField } from "./render-field";
 
 type RenderViewFormProps = {
   isPending: boolean;
@@ -99,7 +60,7 @@ export function RenderViewForm({
           applyParams(preset.values);
         }}
       />
-      <Field
+      <RenderField
         label="Stretch"
         testId="render-stretch"
         glossaryId="stretch"
@@ -114,8 +75,8 @@ export function RenderViewForm({
             applyDraft({ ...draft, stretch });
           }}
         />
-      </Field>
-      <Field
+      </RenderField>
+      <RenderField
         label="Límites"
         testId="render-limits"
         glossaryId="limits"
@@ -130,8 +91,8 @@ export function RenderViewForm({
             applyDraft({ ...draft, limits });
           }}
         />
-      </Field>
-      <Field
+      </RenderField>
+      <RenderField
         label="Mapa de color"
         testId="render-colormap"
         glossaryId="colormap"
@@ -146,9 +107,9 @@ export function RenderViewForm({
             applyDraft({ ...draft, colormap });
           }}
         />
-      </Field>
+      </RenderField>
       <div className="grid grid-cols-2 gap-3">
-        <Field
+        <RenderField
           label="Pmin"
           testId="render-pmin"
           glossaryId="pmin"
@@ -164,8 +125,8 @@ export function RenderViewForm({
               applyDraft({ ...draft, pmin });
             }}
           />
-        </Field>
-        <Field
+        </RenderField>
+        <RenderField
           label="Pmax"
           testId="render-pmax"
           glossaryId="pmax"
@@ -181,9 +142,9 @@ export function RenderViewForm({
               applyDraft({ ...draft, pmax });
             }}
           />
-        </Field>
+        </RenderField>
       </div>
-      <Field
+      <RenderField
         label="Gamma"
         testId="render-gamma"
         glossaryId="gamma"
@@ -199,7 +160,7 @@ export function RenderViewForm({
             applyDraft({ ...draft, gamma });
           }}
         />
-      </Field>
+      </RenderField>
       <div className="flex flex-wrap gap-2">
         <Button
           type="submit"
@@ -221,111 +182,5 @@ export function RenderViewForm({
         </Button>
       </div>
     </form>
-  );
-}
-
-const SELECT_THRESHOLD = 5;
-
-type ChoiceOption<T extends string> = { value: T; label: string };
-
-function ExclusiveChoice<T extends string>({
-  name,
-  value,
-  options,
-  disabled,
-  onChange,
-}: Readonly<{
-  name: string;
-  value: T;
-  options: readonly ChoiceOption<T>[];
-  disabled: boolean;
-  onChange: (value: T) => void;
-}>) {
-  if (options.length >= SELECT_THRESHOLD) {
-    return (
-      <Select value={value} onValueChange={onChange} disabled={disabled}>
-        <SelectTrigger
-          id={`render-${name}`}
-          data-testid={`render-field-${name}`}
-          aria-label={name}
-        >
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          {options.map((option) => (
-            <SelectItem
-              key={option.value}
-              value={option.value}
-              data-testid={`render-field-${name}-${option.value}`}
-            >
-              {option.label}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-    );
-  }
-
-  return (
-    <div
-      role="radiogroup"
-      data-testid={`render-field-${name}`}
-      className="flex flex-col gap-1"
-    >
-      {options.map((option) => {
-        const optionId = `render-${name}-${option.value}`;
-        return (
-          <label
-            key={option.value}
-            htmlFor={optionId}
-            className="flex cursor-pointer items-center gap-2 text-sm"
-          >
-            <input
-              id={optionId}
-              data-testid={`render-field-${name}-${option.value}`}
-              type="radio"
-              name={name}
-              value={option.value}
-              checked={value === option.value}
-              disabled={disabled}
-              onChange={() => {
-                onChange(option.value);
-              }}
-            />
-            {option.label}
-          </label>
-        );
-      })}
-    </div>
-  );
-}
-
-function Field({
-  label,
-  testId,
-  help,
-  glossaryId,
-  children,
-}: Readonly<{
-  label: string;
-  testId: string;
-  help: string;
-  glossaryId?: string;
-  children: ReactNode;
-}>) {
-  return (
-    <fieldset className="flex flex-col gap-1 text-sm">
-      <legend className="mb-1 flex items-center gap-1">
-        <span className="text-muted-foreground">{label}</span>
-        <HelpHint
-          label={label}
-          testId={`render-help-${testId.replace("render-", "")}`}
-          glossaryId={glossaryId}
-        >
-          {help}
-        </HelpHint>
-      </legend>
-      {children}
-    </fieldset>
   );
 }

@@ -3,10 +3,14 @@ from __future__ import annotations
 import asyncio
 import io
 
+import urllib3
 from minio import Minio
-from minio.error import S3Error
+from minio.error import MinioException, S3Error
 
 from astroimage.config import Settings
+from astroimage.shared.object_storage import ObjectStorageError
+
+_CLIENT_ERRORS = (MinioException, urllib3.exceptions.HTTPError)
 
 
 def create_object_storage_client(settings: Settings) -> Minio:
@@ -35,34 +39,47 @@ class MinioObjectStorage:
         *,
         content_type: str,
     ) -> None:
-        await asyncio.to_thread(
-            self._client.put_object,
-            self._bucket,
-            object_key,
-            io.BytesIO(payload),
-            len(payload),
-            content_type=content_type,
-        )
+        try:
+            await asyncio.to_thread(
+                self._client.put_object,
+                self._bucket,
+                object_key,
+                io.BytesIO(payload),
+                len(payload),
+                content_type=content_type,
+            )
+        except _CLIENT_ERRORS as exc:
+            raise ObjectStorageError(str(exc)) from exc
 
     async def get_bytes(self, object_key: str) -> bytes:
         try:
             response = await asyncio.to_thread(self._client.get_object, self._bucket, object_key)
         except S3Error as exc:
             raise LookupError(f"object not found: {object_key}") from exc
+        except _CLIENT_ERRORS as exc:
+            raise ObjectStorageError(str(exc)) from exc
         try:
             return response.read()
+        except _CLIENT_ERRORS as exc:
+            raise ObjectStorageError(str(exc)) from exc
         finally:
             response.close()
             response.release_conn()
 
     async def list_object_keys(self, prefix: str) -> list[str]:
-        objects = await asyncio.to_thread(
-            self._client.list_objects,
-            self._bucket,
-            prefix=prefix,
-            recursive=True,
-        )
-        return [obj.object_name for obj in objects]
+        try:
+            objects = await asyncio.to_thread(
+                self._client.list_objects,
+                self._bucket,
+                prefix=prefix,
+                recursive=True,
+            )
+            return [obj.object_name for obj in objects]
+        except _CLIENT_ERRORS as exc:
+            raise ObjectStorageError(str(exc)) from exc
 
     async def remove(self, object_key: str) -> None:
-        await asyncio.to_thread(self._client.remove_object, self._bucket, object_key)
+        try:
+            await asyncio.to_thread(self._client.remove_object, self._bucket, object_key)
+        except _CLIENT_ERRORS as exc:
+            raise ObjectStorageError(str(exc)) from exc
