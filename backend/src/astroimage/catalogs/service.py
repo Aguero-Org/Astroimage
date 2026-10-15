@@ -11,7 +11,6 @@ from uuid import UUID
 
 import astropy.units as u
 import numpy as np
-import structlog
 from astropy.coordinates import SkyCoord
 from astropy.io import fits
 from astropy.wcs import WCS, FITSFixedWarning
@@ -57,9 +56,9 @@ from astroimage.catalogs.scoring import (
 from astroimage.catalogs.vizier import VizierCatalogProvider
 from astroimage.fits.reader import FitsMetadata, FitsReader
 from astroimage.fits.service import FitsService
+from astroimage.shared.logging import catalog_service_log as _log
 from astroimage.sources.service import SourceDetectionService
 
-logger = structlog.get_logger("astroimage.catalogs.service")
 _VIZIER_EXECUTOR = ThreadPoolExecutor(max_workers=4, thread_name_prefix="vizier")
 _README_EXECUTOR = ThreadPoolExecutor(max_workers=8, thread_name_prefix="catalog-readme")
 _DEFAULT_QUERY_TIMEOUT_S = 180.0
@@ -146,7 +145,7 @@ class CatalogRecommendationService:
         )
         cached = self._cache.get(key)
         if cached is not None:
-            logger.info("catalog_cache_hit", record_id=str(record_id), client_id=client_id)
+            _log.info("catalog_cache_hit", record_id=str(record_id), client_id=client_id)
             return cached
         record = await self._fits.get_record(record_id)
         payload = await self._fits.get_payload(record)
@@ -179,7 +178,7 @@ class CatalogRecommendationService:
         )
         wcs = _world_coordinates(metadata)
         if wcs is None:
-            logger.info(
+            _log.info(
                 "catalog_recommend_skipped", reason="no wcs", source_name=metadata.source_name
             )
             return CatalogRecommendationResponse(
@@ -235,10 +234,10 @@ class CatalogRecommendationService:
         try:
             tables = await asyncio.wait_for(future, timeout=self._query_timeout_s)
         except TimeoutError:
-            logger.warning("vizier_query_timed_out", timeout_s=self._query_timeout_s)
+            _log.warning("vizier_query_timed_out", timeout_s=self._query_timeout_s)
             return [], f"VizieR query timed out after {self._query_timeout_s} seconds"
         except Exception as exc:
-            logger.warning("vizier_query_failed", detail=str(exc), exc_info=exc)
+            _log.warning("vizier_query_failed", detail=str(exc), exc_info=exc)
             return [], f"VizieR query failed: {exc}"
         return list(tables), None
 
@@ -266,7 +265,7 @@ class CatalogRecommendationService:
         pairs: list[tuple[CatalogEvaluation, CatalogTable]] = []
         for table, result in zip(selected, results, strict=True):
             if isinstance(result, BaseException):
-                logger.warning(
+                _log.warning(
                     "vizier_catalogue_failed",
                     catalogue_id=table.catalogue_id,
                     detail=str(result),

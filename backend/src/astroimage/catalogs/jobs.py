@@ -5,7 +5,6 @@ from collections import OrderedDict
 from collections.abc import Awaitable, Callable
 from uuid import UUID
 
-import structlog
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from astroimage.catalogs.cache import CatalogRecommendationCache
@@ -18,10 +17,9 @@ from astroimage.catalogs.service import CatalogRecommendationService
 from astroimage.catalogs.vizier import VizierCatalogProvider
 from astroimage.fits.service import FitsService
 from astroimage.shared.errors import AppError, as_app_error
+from astroimage.shared.logging import catalog_jobs_log as _log
 from astroimage.sources.cache import DetectionCache
 from astroimage.sources.service import SourceDetectionService
-
-logger = structlog.get_logger("astroimage.catalogs.jobs")
 
 
 class CatalogBackgroundRecommend:
@@ -126,7 +124,7 @@ class CatalogJobRegistry:
         except Exception as exc:
             error = as_app_error(exc)
             if error.log_level == "warning":
-                logger.warning(
+                _log.warning(
                     "catalog_job_failed",
                     job_id=key,
                     error_type=type(error).__name__,
@@ -134,7 +132,7 @@ class CatalogJobRegistry:
                     exc_info=exc,
                 )
             else:
-                logger.error(
+                _log.error(
                     "catalog_job_failed",
                     job_id=key,
                     error_type=type(error).__name__,
@@ -145,7 +143,7 @@ class CatalogJobRegistry:
             return
         finally:
             self._running.pop(key, None)
-        logger.info("catalog_job_completed", job_id=key)
+        _log.info("catalog_job_completed", job_id=key)
         self._store_done(key, result)
 
     def _store_done(self, key: str, result: CatalogRecommendationResponse) -> None:

@@ -65,6 +65,15 @@ target-version = "py312"
 src = ["src", "tests"]
 
 [tool.ruff.lint]
+# Imported as `_log`. Ruff only treats that binding as a logger when the
+# qualified name is listed here, which is what lets `except Exception` stand
+# once the call records `exc_info`.
+logger-objects = [
+    "astroimage.shared.logging.catalog_jobs_log",
+    "astroimage.shared.logging.catalog_service_log",
+    "astroimage.shared.logging.catalog_vizier_log",
+]
+
 # Snapshot of the Ruff 0.16.9 default set. `select` replaces that
 # default, so the codes are pinned instead of using linter prefixes
 # or ALL. Prefixes also enable formatting rules (already covered by

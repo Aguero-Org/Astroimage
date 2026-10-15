@@ -4,13 +4,11 @@ from typing import Any, Protocol
 
 import astropy.units as u
 import numpy as np
-import structlog
 from astropy.coordinates import Angle, SkyCoord
 from astroquery.vizier import Vizier
 
 from astroimage.catalogs.model import CatalogMetadata, CatalogRow, CatalogTable
-
-logger = structlog.get_logger("astroimage.catalogs.vizier")
+from astroimage.shared.logging import catalog_vizier_log as _log
 
 # `+_r` is the angular distance of each row from the query centre; it is the
 # same column the reference notebook relies on for the spatial score.
@@ -44,7 +42,7 @@ class AstroqueryVizierProvider:
         *,
         row_limit: int,
     ) -> list[CatalogTable]:
-        logger.info(
+        _log.info(
             "vizier_query",
             center_ra=float(center.ra.deg),
             center_dec=float(center.dec.deg),
@@ -60,7 +58,7 @@ class AstroqueryVizierProvider:
         try:
             metadata = Vizier.get_catalog_metadata(catalog=catalogue_id)
         except Exception as exc:
-            logger.warning(
+            _log.warning(
                 "vizier_metadata_failed",
                 catalogue_id=catalogue_id,
                 detail=str(exc),
