@@ -88,13 +88,20 @@ def find_identifiers_in_row(
     matched: list[str] = []
     columns: list[str] = []
     for column, text in values:
-        normalized_value = normalize_identifier(text)
-        if not normalized_value:
-            continue
-        for normalized_id, original_id in normalized_known.items():
-            if normalized_id and normalized_id in normalized_value:
-                if original_id not in matched:
-                    matched.append(original_id)
-                if column not in columns:
-                    columns.append(column)
+        for original_id in _identifiers_in_text(text, normalized_known):
+            if original_id not in matched:
+                matched.append(original_id)
+            if column not in columns:
+                columns.append(column)
     return tuple(matched), tuple(columns)
+
+
+def _identifiers_in_text(text: str, normalized_known: Mapping[str, str]) -> list[str]:
+    normalized_value = normalize_identifier(text)
+    if not normalized_value:
+        return []
+    return [
+        original_id
+        for normalized_id, original_id in normalized_known.items()
+        if normalized_id and normalized_id in normalized_value
+    ]
