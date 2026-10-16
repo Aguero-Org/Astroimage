@@ -13,6 +13,12 @@ import { GlossaryToc } from "./glossary-toc";
 
 const STICKY_STACK_IDS = ["navbar", "glossary-header"] as const;
 
+// Switch to the next entry before the current one is fully hidden, so the
+// highlight leads the reader instead of trailing the sticky chrome.
+const ACTIVE_SWITCH_MARGIN_PX = 120;
+
+const DEFAULT_DOCUMENT_TITLE = "Glosario - Astroimage";
+
 export function GlossaryPage() {
   const [query, setQuery] = useState("");
   const location = useLocation();
@@ -37,9 +43,23 @@ export function GlossaryPage() {
     [sections],
   );
   const activeId = useScrollSpy(entryIds, {
-    offsetPx: stickyOffset,
+    offsetPx: stickyOffset + ACTIVE_SWITCH_MARGIN_PX,
     fallbackId: hashId,
   });
+
+  const activeName = sections
+    .flatMap((section) => section.entries)
+    .find((entry) => entry.id === activeId)?.name;
+
+  useEffect(() => {
+    const previousTitle = document.title;
+    document.title = activeName
+      ? `${activeName} - Astroimage`
+      : DEFAULT_DOCUMENT_TITLE;
+    return () => {
+      document.title = previousTitle;
+    };
+  }, [activeName]);
 
   useEffect(() => {
     const root = document.documentElement;

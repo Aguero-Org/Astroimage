@@ -29,6 +29,7 @@ function renderGlossary(hash = "") {
 describe("GlossaryPage", () => {
   afterEach(() => {
     sessionStorage.removeItem(LAST_IMAGE_RECORD_KEY);
+    document.title = "";
   });
 
   it("groups entries and filters by name", async () => {
@@ -64,7 +65,12 @@ describe("GlossaryPage", () => {
       "data-active",
       "true",
     );
+    expect(document.title).toBe("FWHM - Astroimage");
     expect(screen.getByTestId("glossary-toc")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Fuentes" })).toHaveAttribute(
+      "data-active",
+      "true",
+    );
     await user.click(screen.getByTestId("glossary-copy-fwhm"));
     expect(writeText).toHaveBeenCalledWith(
       expect.stringContaining("/glossary#fwhm"),
