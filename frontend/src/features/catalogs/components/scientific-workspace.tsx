@@ -8,7 +8,10 @@ import {
   useRef,
   useState,
 } from "react";
-import type { RecommendCatalogsParams } from "@/api/generated/model";
+import type {
+  CatalogRecommendationItemSchema,
+  RecommendCatalogsParams,
+} from "@/api/generated/model";
 import { Button } from "@/components/ui/button";
 import { HelpHint } from "@/components/ui/help-hint";
 import { Input } from "@/components/ui/input";
@@ -20,6 +23,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import {
+  type CatalogPublication,
   type CatalogueMatchFilter,
   filterCatalogues,
   filterPublications,
@@ -398,33 +402,12 @@ function ScientificSidebar({
       );
     }
     if (tab === "catalogs") {
-      if (items.length === 0) {
-        return (
-          <RecommendationInfo testId="catalogs-empty">
-            No se encontraron catálogos para esta región del cielo.
-          </RecommendationInfo>
-        );
-      }
-      if (catalogues.length === 0) {
-        return (
-          <RecommendationInfo testId="catalogs-info">
-            Ningún catálogo coincide con la búsqueda.
-          </RecommendationInfo>
-        );
-      }
       return (
-        <div
-          data-testid="catalog-list"
-          className="flex flex-col gap-2 px-2 py-2"
-        >
-          {catalogues.map((item) => (
-            <CatalogueCard
-              key={item.catalogue_id}
-              item={item}
-              radiusArcsec={result.radius_arcsec}
-            />
-          ))}
-        </div>
+        <CatalogList
+          items={items}
+          matches={catalogues}
+          radiusArcsec={result.radius_arcsec}
+        />
       );
     }
     if (publications.length === 0) {
@@ -443,17 +426,63 @@ function ScientificSidebar({
         </RecommendationInfo>
       );
     }
+    return <PublicationList items={papers} />;
+  }
+}
+
+type CatalogListProps = {
+  items: CatalogRecommendationItemSchema[];
+  matches: CatalogRecommendationItemSchema[];
+  radiusArcsec?: number;
+};
+
+function CatalogList({
+  items,
+  matches,
+  radiusArcsec,
+}: Readonly<CatalogListProps>) {
+  if (items.length === 0) {
     return (
-      <div
-        data-testid="publication-list"
-        className="flex flex-col gap-2 px-2 py-2"
-      >
-        {papers.map((publication) => (
-          <PublicationCard key={publication.id} publication={publication} />
-        ))}
-      </div>
+      <RecommendationInfo testId="catalogs-empty">
+        No se encontraron catálogos para esta región del cielo.
+      </RecommendationInfo>
     );
   }
+  if (matches.length === 0) {
+    return (
+      <RecommendationInfo testId="catalogs-info">
+        Ningún catálogo coincide con la búsqueda.
+      </RecommendationInfo>
+    );
+  }
+  return (
+    <div data-testid="catalog-list" className="flex flex-col gap-2 px-2 py-2">
+      {matches.map((item) => (
+        <CatalogueCard
+          key={item.catalogue_id}
+          item={item}
+          radiusArcsec={radiusArcsec}
+        />
+      ))}
+    </div>
+  );
+}
+
+type PublicationListProps = {
+  items: CatalogPublication[];
+};
+
+function PublicationList({ items }: Readonly<PublicationListProps>) {
+  return (
+    <div
+      data-testid="publication-list"
+      className="flex flex-col gap-2 px-2 py-2"
+    >
+      {items.map((publication) => (
+        <PublicationCard key={publication.id} publication={publication} />
+      ))}
+    </div>
+  );
 }
 
 const MATCH_OPTIONS: { value: CatalogueMatchFilter; label: string }[] = [

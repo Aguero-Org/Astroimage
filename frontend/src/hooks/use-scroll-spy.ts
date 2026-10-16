@@ -7,10 +7,17 @@ type ScrollSpyOptions = {
 
 function subscribe(onStoreChange: () => void) {
   window.addEventListener("scroll", onStoreChange, { passive: true });
+  // Scroll events do not bubble, but the capture phase reaches a nested
+  // scroll container (drawers, panels), so listen there too.
+  document.addEventListener("scroll", onStoreChange, {
+    capture: true,
+    passive: true,
+  });
   window.addEventListener("resize", onStoreChange);
   window.addEventListener("astroimage-scroll-spy", onStoreChange);
   return () => {
     window.removeEventListener("scroll", onStoreChange);
+    document.removeEventListener("scroll", onStoreChange, true);
     window.removeEventListener("resize", onStoreChange);
     window.removeEventListener("astroimage-scroll-spy", onStoreChange);
   };
@@ -41,21 +48,16 @@ function measureActiveId(
     if (!node) {
       return [];
     }
-    return [{ id, top: node.getBoundingClientRect().top }];
+    const rect = node.getBoundingClientRect();
+    return [{ id, bottom: rect.bottom }];
   });
   if (measured.length === 0) {
     return null;
   }
-  if (measured.every((item) => item.top === 0)) {
-    return null;
-  }
-  let current = measured[0]?.id ?? "";
-  for (const item of measured) {
-    if (item.top - offsetPx <= 0) {
-      current = item.id;
-    }
-  }
-  return current;
+  // Active = first article still visible below the sticky chrome. Falling
+  // back to "last heading that crossed the line" left the highlight lagging:
+  // the previous article was already hidden but stayed selected.
+  return measured.find((item) => item.bottom > offsetPx)?.id ?? null;
 }
 
 export function useScrollSpy(

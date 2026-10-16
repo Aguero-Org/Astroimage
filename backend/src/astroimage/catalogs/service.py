@@ -73,6 +73,15 @@ class _ObjectRow:
     identifier_match: bool
 
 
+@dataclass(frozen=True)
+class _BestMatch:
+    separation_arcsec: float | None
+    object_identifier: str | None
+    identifier_columns: str | None
+    spatial_match: bool
+    identifier_match: bool
+
+
 class _DetectedSource(Protocol):
     @property
     def source_id(self) -> int: ...
@@ -344,6 +353,18 @@ class CatalogRecommendationService:
             ),
         )
 
+    @staticmethod
+    def _best_match(best: _ObjectRow | None) -> _BestMatch:
+        if best is None:
+            return _BestMatch(None, None, None, False, False)
+        return _BestMatch(
+            separation_arcsec=best.row.separation_arcsec,
+            object_identifier="; ".join(best.identifiers) if best.identifiers else None,
+            identifier_columns="; ".join(best.columns) if best.columns else None,
+            spatial_match=bool(best.spatial_match),
+            identifier_match=bool(best.identifier_match),
+        )
+
     def _score(
         self,
         catalogue_id: str,
@@ -356,24 +377,24 @@ class CatalogRecommendationService:
         paper_bibcode = determine_paper_bibcode(metadata.origin_article, readme_data)
         paper_doi = determine_paper_doi(paper_bibcode, readme_data, metadata.doi)
         catalogue_doi = clean_doi(metadata.doi)
-        spatial = separation_score(best.row.separation_arcsec if best else None)
-        identifier_match = bool(best and best.identifier_match)
-        identifier = identifier_score(identifier_match)
+        match = self._best_match(best)
+        spatial = separation_score(match.separation_arcsec)
+        identifier = identifier_score(match.identifier_match)
         paper = paper_score(paper_bibcode)
         doi = doi_score(paper_doi)
         description = readme_data.description or readme_data.abstract
         return CatalogEvaluation(
             catalogue_id=catalogue_id,
             metadata=metadata,
-            match_type=classify_match(identifier_match, paper_bibcode or None),
+            match_type=classify_match(match.identifier_match, paper_bibcode or None),
             catalogue_description=description or None,
             catalogue_keywords=readme_data.keywords or None,
-            separation_arcsec=best.row.separation_arcsec if best else None,
-            object_found_in_table=identifier_match,
-            object_identifier=("; ".join(best.identifiers) if best and best.identifiers else None),
-            identifier_columns="; ".join(best.columns) if best and best.columns else None,
-            spatial_match=bool(best and best.spatial_match),
-            identifier_match=bool(best and best.identifier_match),
+            separation_arcsec=match.separation_arcsec,
+            object_found_in_table=match.identifier_match,
+            object_identifier=match.object_identifier,
+            identifier_columns=match.identifier_columns,
+            spatial_match=match.spatial_match,
+            identifier_match=match.identifier_match,
             spatial_score=spatial,
             identifier_score=identifier,
             paper_score=paper,

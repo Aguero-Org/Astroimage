@@ -1,6 +1,6 @@
 import type { HistogramResponse } from "@/api/generated/model";
-import { BrandLoader } from "@/components/brand-loader";
 import { HelpHint } from "@/components/ui/help-hint";
+import { Skeleton } from "@/components/ui/skeleton";
 
 type PixelHistogramProps = {
   histogram: HistogramResponse | undefined;
@@ -37,7 +37,18 @@ export function PixelHistogram({
 }: Readonly<PixelHistogramProps>) {
   if (isPending) {
     return (
-      <BrandLoader testId="histogram-loading" label="Cargando histograma…" />
+      <output
+        data-testid="histogram-loading"
+        className="mb-3 flex flex-col gap-1"
+      >
+        <span className="sr-only">Cargando histograma…</span>
+        <Skeleton className="h-4 w-24" aria-hidden />
+        <Skeleton className="h-16 w-full rounded-md" aria-hidden />
+        <div className="flex justify-between" aria-hidden>
+          <Skeleton className="h-3 w-10" />
+          <Skeleton className="h-3 w-10" />
+        </div>
+      </output>
     );
   }
   if (isError || !histogram || histogram.counts.length === 0) {

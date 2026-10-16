@@ -2,7 +2,10 @@ import {
   useGetCatalogsJob,
   useRecommendCatalogs,
 } from "@/api/generated/catalogs/catalogs";
-import type { RecommendCatalogsParams } from "@/api/generated/model";
+import type {
+  CatalogRecommendationResponse,
+  RecommendCatalogsParams,
+} from "@/api/generated/model";
 import {
   collectPublications,
   isCatalogJobStatus,
@@ -51,11 +54,12 @@ export function useCatalogRecommendations({
 
   const jobBody =
     jobQuery.data?.status === 200 ? jobQuery.data.data : undefined;
-  const result = isCatalogRecommendation(jobBody)
-    ? jobBody
-    : isCatalogRecommendation(body)
-      ? body
-      : undefined;
+  let result: CatalogRecommendationResponse | undefined;
+  if (isCatalogRecommendation(jobBody)) {
+    result = jobBody;
+  } else if (isCatalogRecommendation(body)) {
+    result = body;
+  }
 
   const isError = query.isError || jobQuery.isError;
   const isLoading = enabled && result === undefined && !isError;

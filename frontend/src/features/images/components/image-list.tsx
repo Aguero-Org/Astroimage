@@ -12,12 +12,11 @@ import {
 } from "lucide-react";
 import type { ReactNode } from "react";
 import { useState } from "react";
-import { BrandLoader } from "@/components/brand-loader";
 import { Button } from "@/components/ui/button";
 import { FilePager } from "@/components/ui/file-pager";
 import { HelpHint } from "@/components/ui/help-hint";
 import { SortControls, type SortField } from "@/components/ui/sort-controls";
-import { SummaryCard } from "@/components/ui/summary-card";
+import { SummaryCard, SummaryCardSkeleton } from "@/components/ui/summary-card";
 import { glossaryPath } from "@/features/glossary/entries";
 import { type RecordSortField, useDeleteImage, useImageRecords } from "../api";
 import { MastSourceLink } from "../mast-source-link";
@@ -61,6 +60,8 @@ function RecordViewerLink({
     </Link>
   );
 }
+
+const SKELETON_ROWS = [0, 1, 2];
 
 const SORT_FIELDS: SortField<RecordSortField>[] = [
   { field: "display_name", label: catalogLabels.displayName, icon: Type },
@@ -114,7 +115,20 @@ export function ImageList({ query }: Readonly<ImageListProps>) {
           />
         )}
       </div>
-      {!!isPending && <BrandLoader label="Cargando imágenes…" />}
+      {!!isPending && (
+        <output className="block">
+          <span className="sr-only">Cargando imágenes…</span>
+          <ul
+            data-testid="image-list-skeleton"
+            className="flex w-full flex-col gap-3"
+            aria-hidden
+          >
+            {SKELETON_ROWS.map((row) => (
+              <SummaryCardSkeleton key={row} />
+            ))}
+          </ul>
+        </output>
+      )}
       {!!isError && <p className="text-sm text-destructive">Algo salió mal.</p>}
       {!isPending &&
         !isError &&

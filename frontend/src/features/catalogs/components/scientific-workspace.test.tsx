@@ -162,6 +162,6 @@ describe("ScientificWorkspace", () => {
 
     await screen.findByTestId("recommendations-error");
     await user.click(screen.getByTestId("recommendations-retry"));
-    await screen.findByTestId("catalog-list");
+    expect(await screen.findByTestId("catalog-list")).toBeInTheDocument();
   });
 });

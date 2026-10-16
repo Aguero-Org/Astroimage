@@ -15,20 +15,37 @@ export function RecommendationInfo({ testId, children }: Readonly<InfoProps>) {
   );
 }
 
+const SKELETON_ROWS = [0, 1, 2];
+
 export function RecommendationLoading() {
   return (
-    <div
+    <output
       data-testid="recommendations-loading"
-      aria-live="polite"
       className="flex flex-col gap-2 px-2 py-3"
     >
-      <p className="text-sm text-muted-foreground">
+      <span className="sr-only">
         Buscando catálogos y publicaciones para la región de esta imagen…
-      </p>
-      {[0, 1, 2].map((row) => (
-        <Skeleton key={row} className="h-16 w-full rounded-lg" />
-      ))}
-    </div>
+      </span>
+      <div className="flex flex-col gap-2" aria-hidden>
+        {SKELETON_ROWS.map((row) => (
+          <article
+            key={row}
+            className="rounded-lg border border-sidebar-border bg-sidebar-accent/30 p-2"
+          >
+            <div className="flex items-start gap-2">
+              <Skeleton className="mt-0.5 size-4 shrink-0 rounded-sm" />
+              <div className="min-w-0 flex-1">
+                <Skeleton className="h-4 w-3/5" />
+                <Skeleton className="mt-1 h-3 w-2/5" />
+                <Skeleton className="mt-1.5 h-4 w-20 rounded-full" />
+                <Skeleton className="mt-1 h-3 w-full" />
+                <Skeleton className="mt-1 h-3 w-4/5" />
+              </div>
+            </div>
+          </article>
+        ))}
+      </div>
+    </output>
   );
 }
 
