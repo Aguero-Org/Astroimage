@@ -9,11 +9,10 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import type { CandidateSchema } from "@/api/generated/model";
-import { BrandLoader } from "@/components/brand-loader";
 import { Button } from "@/components/ui/button";
 import { FilePager } from "@/components/ui/file-pager";
 import { SortControls, type SortField } from "@/components/ui/sort-controls";
-import { SummaryCard } from "@/components/ui/summary-card";
+import { SummaryCard, SummaryCardSkeleton } from "@/components/ui/summary-card";
 import {
   Tooltip,
   TooltipContent,
@@ -29,6 +28,8 @@ import { usePagedSort } from "../use-paged-sort";
 import { CatalogFacts, catalogLabels } from "./catalog-facts";
 import { ImportNameDialog } from "./import-name-dialog";
 import { TransferFeedback } from "./transfer-feedback";
+
+const SKELETON_ROWS = [0, 1, 2];
 
 const SORT_FIELDS: SortField<CandidateSortField>[] = [
   { field: "product_filename", label: catalogLabels.filename, icon: File },
@@ -78,7 +79,20 @@ export function CandidateResults({ query }: Readonly<CandidateResultsProps>) {
           />
         )}
       </div>
-      {!!waiting && <BrandLoader label="Buscando en MAST…" />}
+      {!!waiting && (
+        <output className="block">
+          <span className="sr-only">Buscando en MAST…</span>
+          <ul
+            data-testid="candidate-results-skeleton"
+            className="flex w-full flex-col gap-3"
+            aria-hidden
+          >
+            {SKELETON_ROWS.map((row) => (
+              <SummaryCardSkeleton key={row} />
+            ))}
+          </ul>
+        </output>
+      )}
       {!!search.isError && (
         <p className="text-sm text-destructive">
           No se pudo buscar candidatos para{" "}
