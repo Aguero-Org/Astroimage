@@ -9,6 +9,7 @@ import {
   useVerifySourcesGaia,
 } from "@/api/generated/sources/sources";
 import { HelpHint } from "@/components/ui/help-hint";
+import { Skeleton } from "@/components/ui/skeleton";
 
 type GaiaCrossMatchProps = {
   isFetching: boolean;
@@ -66,18 +67,21 @@ export function GaiaCrossMatch({
           Compara las detecciones de esta imagen con el catálogo Gaia.
         </HelpHint>
       </div>
-      {isError ? (
+      {!!isError && (
         <p data-testid="gaia-error" className="text-sm text-destructive">
           No se pudo cruzar con Gaia.
         </p>
-      ) : null}
-      {summary ? (
+      )}
+      {!!summary && (
         <p data-testid="gaia-summary" className="text-sm text-muted-foreground">
           Puntuales {summary.point?.matched ?? 0}/{summary.point?.count ?? 0}.
           Extendidas {summary.extended?.matched ?? 0}/
           {summary.extended?.count ?? 0}.
         </p>
-      ) : null}
+      )}
+      {!summary && !isError && isFetching && (
+        <Skeleton data-testid="gaia-loading" className="h-5 w-44" aria-hidden />
+      )}
     </div>
   );
 }

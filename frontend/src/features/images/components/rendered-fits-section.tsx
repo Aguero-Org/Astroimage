@@ -3,11 +3,13 @@ import type {
   ExtendedSourceSchema,
   PointSourceSchema,
 } from "@/api/generated/model";
-import { BrandLoader } from "@/components/brand-loader";
+import { Skeleton } from "@/components/ui/skeleton";
 import { ExtendedSourceMarkers } from "@/features/images/components/extended-source-markers";
 import { FitsImageViewer } from "@/features/images/components/fits-image-viewer";
 import { SourceMarkers } from "@/features/images/components/source-markers";
 import { formatQueryError } from "@/features/images/format-query-error";
+
+const SKELETON_TOOLS = [0, 1, 2, 3];
 
 export function RenderedFitsSection({
   isPending,
@@ -39,15 +41,29 @@ export function RenderedFitsSection({
   const objectUrl = useRenderedObjectUrl(rendered);
   if (isPending) {
     return (
-      <div
+      <output
         data-testid="render-loading"
-        className="flex h-full w-full items-center justify-center"
+        aria-label="Renderizando imagen…"
+        className="block relative h-full w-full overflow-hidden bg-black"
       >
-        <BrandLoader
-          className="rounded-lg bg-background px-4 py-3 text-foreground shadow-lg ring-1 ring-border dark:bg-card"
-          label="Renderizando imagen…"
+        <span className="sr-only">Renderizando imagen…</span>
+        <Skeleton
+          className="absolute inset-0 rounded-none bg-white/5"
+          aria-hidden
         />
-      </div>
+        <div
+          className="absolute top-16 right-3 flex gap-1 rounded-lg border border-sidebar-border bg-sidebar p-1 shadow-sm sm:top-20 sm:right-8"
+          aria-hidden
+        >
+          {SKELETON_TOOLS.map((tool) => (
+            <Skeleton key={tool} className="size-9 rounded-md" />
+          ))}
+        </div>
+        <Skeleton
+          className="absolute right-3 bottom-3 h-28 w-40 rounded-md bg-white/10 sm:right-8 sm:bottom-8"
+          aria-hidden
+        />
+      </output>
     );
   }
   if (isError) {
