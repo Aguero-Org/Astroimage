@@ -16,6 +16,7 @@ import {
   catalogueSeparation,
   doiUrlFor,
   shortenText,
+  trimmedOrUndefined,
 } from "../catalog-recommendations";
 
 type CatalogueCardProps = {
@@ -28,7 +29,7 @@ export function CatalogueCard({
   radiusArcsec,
 }: Readonly<CatalogueCardProps>) {
   const title = catalogueName(item);
-  const authors = item.catalogue_authors?.trim() || undefined;
+  const authors = trimmedOrUndefined(item.catalogue_authors);
   const description = shortenText(item.catalogue_description, 220);
   const reason = catalogueReason(item);
   const crossmatch = catalogueCrossmatchNote(item);

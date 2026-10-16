@@ -61,10 +61,9 @@ export function catalogueReason(
 ): CatalogueReason {
   if (item.identifier_match) {
     const columns = item.identifier_columns?.trim();
+    const columnsNote = columns ? ` (columnas ${columns})` : "";
     const detail = item.object_identifier
-      ? `El identificador ${item.object_identifier} aparece en este catálogo${
-          columns ? ` (columnas ${columns})` : ""
-        }.`
+      ? `El identificador ${item.object_identifier} aparece en este catálogo${columnsNote}.`
       : "El identificador buscado aparece en este catálogo.";
     return {
       headline: "El objeto buscado aparece en este catálogo",
@@ -128,73 +127,108 @@ export function collectPublications(
   items: readonly CatalogRecommendationItemSchema[],
 ): CatalogPublication[] {
   const publications = new Map<string, CatalogPublication>();
-
-  function add(publication: CatalogPublication) {
-    const existing = publications.get(publication.id);
-    if (existing) {
-      existing.catalogueIds = [
-        ...new Set([...existing.catalogueIds, ...publication.catalogueIds]),
-      ];
-      existing.catalogueNames = [
-        ...new Set([...existing.catalogueNames, ...publication.catalogueNames]),
-      ];
-      return;
-    }
-    publications.set(publication.id, publication);
-  }
-
   for (const item of items) {
     const name = catalogueName(item);
-    const bibcode = item.paper_bibcode?.trim() || undefined;
-    const doi = item.paper_doi?.trim() || undefined;
-    if (bibcode || doi) {
-      add({
-        id: publicationKey(bibcode, doi),
-        bibcode,
-        doi,
-        doiUrl:
-          item.paper_doi_url?.trim() || (doi ? doiUrlFor(doi) : undefined),
-        adsUrl:
-          item.paper_ads_url?.trim() ||
-          (bibcode ? adsUrlForBibcode(bibcode) : undefined),
-        kind: "catalogue-paper",
-        catalogueIds: [item.catalogue_id],
-        catalogueNames: [name],
-      });
-    }
-
-    for (const raw of item.readme_bibcodes ?? []) {
-      const readmeBibcode = raw.trim();
-      if (readmeBibcode.length === 0) {
-        continue;
-      }
-      add({
-        id: publicationKey(readmeBibcode, undefined),
-        bibcode: readmeBibcode,
-        adsUrl: adsUrlForBibcode(readmeBibcode),
-        kind: "readme-reference",
-        catalogueIds: [item.catalogue_id],
-        catalogueNames: [name],
-      });
-    }
-
-    for (const raw of item.readme_dois ?? []) {
-      const readmeDoi = raw.trim();
-      if (readmeDoi.length === 0) {
-        continue;
-      }
-      add({
-        id: publicationKey(undefined, readmeDoi),
-        doi: readmeDoi,
-        doiUrl: doiUrlFor(readmeDoi),
-        kind: "readme-reference",
-        catalogueIds: [item.catalogue_id],
-        catalogueNames: [name],
-      });
-    }
+    addCataloguePaper(publications, item, name);
+    addReadmeBibcodes(publications, item, name);
+    addReadmeDois(publications, item, name);
   }
-
   return [...publications.values()];
+}
+
+function addPublication(
+  publications: Map<string, CatalogPublication>,
+  publication: CatalogPublication,
+): void {
+  const existing = publications.get(publication.id);
+  if (!existing) {
+    publications.set(publication.id, publication);
+    return;
+  }
+  existing.catalogueIds = [
+    ...new Set([...existing.catalogueIds, ...publication.catalogueIds]),
+  ];
+  existing.catalogueNames = [
+    ...new Set([...existing.catalogueNames, ...publication.catalogueNames]),
+  ];
+}
+
+function addCataloguePaper(
+  publications: Map<string, CatalogPublication>,
+  item: CatalogRecommendationItemSchema,
+  name: string,
+): void {
+  const bibcode = trimmedOrUndefined(item.paper_bibcode);
+  const doi = trimmedOrUndefined(item.paper_doi);
+  if (!bibcode && !doi) {
+    return;
+  }
+  addPublication(publications, {
+    id: publicationKey(bibcode, doi),
+    bibcode,
+    doi,
+    doiUrl:
+      trimmedOrUndefined(item.paper_doi_url) ??
+      (doi ? doiUrlFor(doi) : undefined),
+    adsUrl:
+      trimmedOrUndefined(item.paper_ads_url) ??
+      (bibcode ? adsUrlForBibcode(bibcode) : undefined),
+    kind: "catalogue-paper",
+    catalogueIds: [item.catalogue_id],
+    catalogueNames: [name],
+  });
+}
+
+function addReadmeBibcodes(
+  publications: Map<string, CatalogPublication>,
+  item: CatalogRecommendationItemSchema,
+  name: string,
+): void {
+  for (const raw of item.readme_bibcodes ?? []) {
+    const readmeBibcode = raw.trim();
+    if (readmeBibcode.length === 0) {
+      continue;
+    }
+    addPublication(publications, {
+      id: publicationKey(readmeBibcode, undefined),
+      bibcode: readmeBibcode,
+      adsUrl: adsUrlForBibcode(readmeBibcode),
+      kind: "readme-reference",
+      catalogueIds: [item.catalogue_id],
+      catalogueNames: [name],
+    });
+  }
+}
+
+function addReadmeDois(
+  publications: Map<string, CatalogPublication>,
+  item: CatalogRecommendationItemSchema,
+  name: string,
+): void {
+  for (const raw of item.readme_dois ?? []) {
+    const readmeDoi = raw.trim();
+    if (readmeDoi.length === 0) {
+      continue;
+    }
+    addPublication(publications, {
+      id: publicationKey(undefined, readmeDoi),
+      doi: readmeDoi,
+      doiUrl: doiUrlFor(readmeDoi),
+      kind: "readme-reference",
+      catalogueIds: [item.catalogue_id],
+      catalogueNames: [name],
+    });
+  }
+}
+
+export function trimmedOrUndefined(
+  value: string | null | undefined,
+): string | undefined {
+  const trimmed = value?.trim();
+  if (!trimmed) {
+    return undefined;
+  }
+  return trimmed;
 }
 
 export function publicationLabel(publication: CatalogPublication): string {
