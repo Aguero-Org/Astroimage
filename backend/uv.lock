@@ -2677,14 +2677,14 @@ wheels = [
 
 [[package]]
 name = "pytestarch"
-version = "4.0.1"
+version = "5.0.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "networkx" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/42/a2/88b37e1133457c224155c29ae3619915977063e44fbf0d1780012aeb6a3e/pytestarch-4.0.1.tar.gz", hash = "sha256:2f288eb8a8a818d3d89a45180d1756c4db2885a7a1281c4ac019665ed97db6b9", size = 42727, upload-time = "2025-08-08T12:54:43.928Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/65/4f/33f3cff527ef67017867d63f95b78a04fbd11806ba1cb7e41284af15e7aa/pytestarch-5.0.0.tar.gz", hash = "sha256:52487e171a9f784ddaa5bcde1891757176a89365849a28cdc262ff43814b5a25", size = 44597, upload-time = "2026-10-11T09:55:28.399Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/ac/6e/8b6079324672f03fd4b914345ecd2df95a04caf658faf4d7f7e7fa97d543/pytestarch-4.0.1-py3-none-any.whl", hash = "sha256:4dd5adc363b3e1fde72d4b34564f03e62f715cc5e38f1c3a347b0f1cc92168fe", size = 61982, upload-time = "2025-08-08T12:54:42.818Z" },
+    { url = "https://files.pythonhosted.org/packages/69/03/bd88f7cfbb07503708e081209dae4ecc8f35c8f82826016517126f0562b9/pytestarch-5.0.0-py3-none-any.whl", hash = "sha256:b36a6b0c4f1cadf60394264fa5d1a8aec82f3bee46d5fb77d08406c50800dd71", size = 63350, upload-time = "2026-10-11T09:55:26.939Z" },
 ]
 
 [[package]]
