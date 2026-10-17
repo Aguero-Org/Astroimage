@@ -27,7 +27,9 @@ node docs/architecture/render-themed-svg.mjs docs/architecture/<nombre>.arc.json
   tema por defecto). Para un tema hay que usar `render-themed-svg.mjs`,
   que llama a `render_svg` del servidor MCP de Arc con `theme`/`mode`.
 - Tema vigente para entregas: `command` claro, fondo blanco (`#ffffff`),
-  sin grilla (brutalista minimal, colores saturados). Cambiarlo es un
+  sin grilla (brutalista minimal, colores saturados). El render aplana
+  los rellenos con alfa sobre blanco: GitHub en modo oscuro muestra la
+  página a través de un `fill` transparente. Cambiar el tema es un
   argumento; si se cambia, actualizar la nota de tema en `entrega_N.md`.
 
 ## Contenido exigido por la entrega
