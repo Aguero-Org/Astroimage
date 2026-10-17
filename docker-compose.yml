@@ -7,7 +7,7 @@ services:
       - "8000:8000"
     environment:
       DATABASE_URL: postgresql+asyncpg://astroimage:astroimage@postgres:5432/astroimage
-      CORS_ORIGINS: '["http://localhost:5173", "http://127.0.0.1:5173"]'
+      CORS_ORIGINS: '["http://localhost:5173", "http://127.0.0.1:5173", "http://localhost:4173", "http://127.0.0.1:4173"]'
       LOG_LEVEL: info
       ENVIRONMENT: development
       OTLP_ENDPOINT: http://host.docker.internal:4318/v1/traces
