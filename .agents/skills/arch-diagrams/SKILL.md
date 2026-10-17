@@ -19,15 +19,15 @@ componentes. Ejemplo completo: entrega 1 / US5 (`entrega1-us5.*`).
 
 ```bash
 npx -y @arach/arc check docs/architecture/<nombre>.arc.json
-node docs/architecture/render-themed-svg.mjs docs/architecture/<nombre>.arc.json docs/architecture/<nombre>.svg <tema> <modo> transparent off
+node docs/architecture/render-themed-svg.mjs docs/architecture/<nombre>.arc.json docs/architecture/<nombre>.svg <tema> <modo> "#ffffff" off
 ```
 
 - `check` debe quedar sin diagnósticos antes de renderizar.
 - El CLI `arc render` **no aplica temas** (ignora `_meta`; siempre sale el
   tema por defecto). Para un tema hay que usar `render-themed-svg.mjs`,
   que llama a `render_svg` del servidor MCP de Arc con `theme`/`mode`.
-- Tema vigente para entregas: `command` claro, fondo transparente, sin
-  grilla (brutalista minimal, colores saturados). Cambiarlo es un
+- Tema vigente para entregas: `command` claro, fondo blanco (`#ffffff`),
+  sin grilla (brutalista minimal, colores saturados). Cambiarlo es un
   argumento; si se cambia, actualizar la nota de tema en `entrega_N.md`.
 
 ## Contenido exigido por la entrega
