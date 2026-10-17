@@ -137,5 +137,3 @@ Los nombres son los componentes concretos del código, no tecnologías genérica
 | MAST Catalog (`Observations.query_criteria`, `get_product_list`) | Catálogo HST remoto por coordenadas. **Terceros** (STScI). |
 | MAST Download (`Download/file` + `Range`) | Descarga del producto FITS. **Terceros** (STScI). |
 
-Contrato: OpenAPI (`backend/openapi.json`) entre backend y frontend; el cliente se regenera con `pnpm generate:api` (Orval).
-
