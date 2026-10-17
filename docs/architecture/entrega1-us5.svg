@@ -1,11 +1,11 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="800" viewBox="-20 -20 1440 800">
+<svg style="background-color:#ffffff" xmlns="http://www.w3.org/2000/svg" width="1440" height="800" viewBox="-20 -20 1440 800">
   <defs><filter id="arc-glow" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="2"/></filter></defs>
   <rect x="-20" y="-20" width="1440" height="800" fill="#ffffff"/>
-  <rect x="30" y="30" width="310" height="500" rx="8" fill="#5c68780f" stroke="#5c6878" stroke-opacity="0.55" stroke-width="1.5"/>
+  <rect x="30" y="30" width="310" height="500" rx="8" fill="#f5f6f7" stroke="#5c6878" stroke-opacity="0.55" stroke-width="1.5"/>
   <text x="42" y="49" fill="#5c6878" font-size="11" font-weight="600" letter-spacing="0.7" font-family="&#39;Space Grotesk&#39;, system-ui, sans-serif">Frontend · Vite + React SPA</text>
-  <rect x="390" y="30" width="600" height="680" rx="8" fill="#5c68780f" stroke="#5c6878" stroke-opacity="0.55" stroke-width="1.5"/>
+  <rect x="390" y="30" width="600" height="680" rx="8" fill="#f5f6f7" stroke="#5c6878" stroke-opacity="0.55" stroke-width="1.5"/>
   <text x="402" y="49" fill="#5c6878" font-size="11" font-weight="600" letter-spacing="0.7" font-family="&#39;Space Grotesk&#39;, system-ui, sans-serif">Backend · FastAPI astroimage</text>
-  <rect x="1070" y="30" width="280" height="680" rx="8" fill="#5c68780f" stroke="#5c6878" stroke-opacity="0.55" stroke-width="1.5"/>
+  <rect x="1070" y="30" width="280" height="680" rx="8" fill="#f5f6f7" stroke="#5c6878" stroke-opacity="0.55" stroke-width="1.5"/>
   <text x="1082" y="49" fill="#5c6878" font-size="11" font-weight="600" letter-spacing="0.7" font-family="&#39;Space Grotesk&#39;, system-ui, sans-serif">Datos + terceros</text>
   <path d="M 170 150 C 170 190, 170 190, 170 230" fill="none" stroke="#2b7fd4" stroke-width="6" stroke-opacity="0.18" stroke-linecap="round" filter="url(#arc-glow)"/>
   <path d="M 170 150 C 170 190, 170 190, 170 230" fill="none" stroke="#2b7fd4" stroke-width="2"/>
@@ -58,7 +58,7 @@
   <path d="M -7 -4 L 0 0 L -7 4" fill="none" stroke="#1f9a84" stroke-width="1.5" stroke-linecap="square" transform="translate(1100 275) rotate(0)"/>
   <text x="1038" y="449" text-anchor="start" fill="#1f9a84" font-size="10" font-family="&#39;JetBrains Mono&#39;, ui-monospace, monospace">SQL</text>
   <g opacity="0.88">
-    <path d="M 11 0 L 209 0 L 220 11 L 220 79 L 209 90 L 11 90 L 0 79 L 0 11 Z" transform="translate(60 60)" fill="#2490c41a" stroke="#2490c4" stroke-width="1" stroke-opacity="0.6"/>
+    <path d="M 11 0 L 209 0 L 220 11 L 220 79 L 209 90 L 11 90 L 0 79 L 0 11 Z" transform="translate(60 60)" fill="#e9f4f9" stroke="#2490c4" stroke-width="1" stroke-opacity="0.6"/>
     <defs><clipPath id="clip-user"><path d="M 11 0 L 209 0 L 220 11 L 220 79 L 209 90 L 11 90 L 0 79 L 0 11 Z"/></clipPath></defs>
     <g transform="translate(60 60)" clip-path="url(#clip-user)"><circle cx="209.75" cy="10.25" r="4.5" fill="#2490c4" opacity="0.25"/><circle cx="209.75" cy="10.25" r="2" fill="#2490c4"/></g>
     <g transform="translate(60 60)" clip-path="url(#clip-user)">
@@ -67,7 +67,7 @@
     </g>
   </g>
   <g opacity="0.88">
-    <path d="M 11 0 L 209 0 L 220 11 L 220 79 L 209 90 L 11 90 L 0 79 L 0 11 Z" transform="translate(60 230)" fill="#5a68e81a" stroke="#5a68e8" stroke-width="1" stroke-opacity="0.6"/>
+    <path d="M 11 0 L 209 0 L 220 11 L 220 79 L 209 90 L 11 90 L 0 79 L 0 11 Z" transform="translate(60 230)" fill="#eef0fd" stroke="#5a68e8" stroke-width="1" stroke-opacity="0.6"/>
     <defs><clipPath id="clip-spa_search"><path d="M 11 0 L 209 0 L 220 11 L 220 79 L 209 90 L 11 90 L 0 79 L 0 11 Z"/></clipPath></defs>
     <g transform="translate(60 230)" clip-path="url(#clip-spa_search)"><circle cx="209.75" cy="10.25" r="4.5" fill="#5a68e8" opacity="0.25"/><circle cx="209.75" cy="10.25" r="2" fill="#5a68e8"/></g>
     <g transform="translate(60 230)" clip-path="url(#clip-spa_search)">
@@ -77,7 +77,7 @@
     </g>
   </g>
   <g opacity="0.88">
-    <path d="M 11 0 L 209 0 L 220 11 L 220 79 L 209 90 L 11 90 L 0 79 L 0 11 Z" transform="translate(60 400)" fill="#5a68e81a" stroke="#5a68e8" stroke-width="1" stroke-opacity="0.6"/>
+    <path d="M 11 0 L 209 0 L 220 11 L 220 79 L 209 90 L 11 90 L 0 79 L 0 11 Z" transform="translate(60 400)" fill="#eef0fd" stroke="#5a68e8" stroke-width="1" stroke-opacity="0.6"/>
     <defs><clipPath id="clip-transfer_poll"><path d="M 11 0 L 209 0 L 220 11 L 220 79 L 209 90 L 11 90 L 0 79 L 0 11 Z"/></clipPath></defs>
     <g transform="translate(60 400)" clip-path="url(#clip-transfer_poll)"><circle cx="209.75" cy="10.25" r="4.5" fill="#5a68e8" opacity="0.25"/><circle cx="209.75" cy="10.25" r="2" fill="#5a68e8"/></g>
     <g transform="translate(60 400)" clip-path="url(#clip-transfer_poll)">
@@ -87,7 +87,7 @@
     </g>
   </g>
   <g opacity="0.88">
-    <path d="M 11 0 L 209 0 L 220 11 L 220 79 L 209 90 L 11 90 L 0 79 L 0 11 Z" transform="translate(420 60)" fill="#2b7fd41a" stroke="#2b7fd4" stroke-width="1" stroke-opacity="0.65"/>
+    <path d="M 11 0 L 209 0 L 220 11 L 220 79 L 209 90 L 11 90 L 0 79 L 0 11 Z" transform="translate(420 60)" fill="#e9f2fb" stroke="#2b7fd4" stroke-width="1" stroke-opacity="0.65"/>
     <defs><clipPath id="clip-hub_controller"><path d="M 11 0 L 209 0 L 220 11 L 220 79 L 209 90 L 11 90 L 0 79 L 0 11 Z"/></clipPath></defs>
     <g transform="translate(420 60)" clip-path="url(#clip-hub_controller)"><circle cx="209.75" cy="10.25" r="4.5" fill="#2b7fd4" opacity="0.25"/><circle cx="209.75" cy="10.25" r="2" fill="#2b7fd4"/></g>
     <g transform="translate(420 60)" clip-path="url(#clip-hub_controller)">
@@ -97,7 +97,7 @@
     </g>
   </g>
   <g opacity="0.88">
-    <path d="M 11 0 L 209 0 L 220 11 L 220 79 L 209 90 L 11 90 L 0 79 L 0 11 Z" transform="translate(740 60)" fill="#c44e5c1a" stroke="#c44e5c" stroke-width="1" stroke-opacity="0.55"/>
+    <path d="M 11 0 L 209 0 L 220 11 L 220 79 L 209 90 L 11 90 L 0 79 L 0 11 Z" transform="translate(740 60)" fill="#f9edee" stroke="#c44e5c" stroke-width="1" stroke-opacity="0.55"/>
     <defs><clipPath id="clip-error_handler"><path d="M 11 0 L 209 0 L 220 11 L 220 79 L 209 90 L 11 90 L 0 79 L 0 11 Z"/></clipPath></defs>
     <g transform="translate(740 60)" clip-path="url(#clip-error_handler)"><circle cx="209.75" cy="10.25" r="4.5" fill="#c44e5c" opacity="0.25"/><circle cx="209.75" cy="10.25" r="2" fill="#c44e5c"/></g>
     <g transform="translate(740 60)" clip-path="url(#clip-error_handler)">
@@ -107,7 +107,7 @@
     </g>
   </g>
   <g opacity="0.88">
-    <path d="M 11 0 L 209 0 L 220 11 L 220 79 L 209 90 L 11 90 L 0 79 L 0 11 Z" transform="translate(420 230)" fill="#2b7fd41a" stroke="#2b7fd4" stroke-width="1" stroke-opacity="0.65"/>
+    <path d="M 11 0 L 209 0 L 220 11 L 220 79 L 209 90 L 11 90 L 0 79 L 0 11 Z" transform="translate(420 230)" fill="#e9f2fb" stroke="#2b7fd4" stroke-width="1" stroke-opacity="0.65"/>
     <defs><clipPath id="clip-hub_service"><path d="M 11 0 L 209 0 L 220 11 L 220 79 L 209 90 L 11 90 L 0 79 L 0 11 Z"/></clipPath></defs>
     <g transform="translate(420 230)" clip-path="url(#clip-hub_service)"><circle cx="209.75" cy="10.25" r="4.5" fill="#2b7fd4" opacity="0.25"/><circle cx="209.75" cy="10.25" r="2" fill="#2b7fd4"/></g>
     <g transform="translate(420 230)" clip-path="url(#clip-hub_service)">
@@ -117,7 +117,7 @@
     </g>
   </g>
   <g opacity="0.88">
-    <path d="M 11 0 L 209 0 L 220 11 L 220 79 L 209 90 L 11 90 L 0 79 L 0 11 Z" transform="translate(740 230)" fill="#2b7fd41a" stroke="#2b7fd4" stroke-width="1" stroke-opacity="0.65"/>
+    <path d="M 11 0 L 209 0 L 220 11 L 220 79 L 209 90 L 11 90 L 0 79 L 0 11 Z" transform="translate(740 230)" fill="#e9f2fb" stroke="#2b7fd4" stroke-width="1" stroke-opacity="0.65"/>
     <defs><clipPath id="clip-hub_importer"><path d="M 11 0 L 209 0 L 220 11 L 220 79 L 209 90 L 11 90 L 0 79 L 0 11 Z"/></clipPath></defs>
     <g transform="translate(740 230)" clip-path="url(#clip-hub_importer)"><circle cx="209.75" cy="10.25" r="4.5" fill="#2b7fd4" opacity="0.25"/><circle cx="209.75" cy="10.25" r="2" fill="#2b7fd4"/></g>
     <g transform="translate(740 230)" clip-path="url(#clip-hub_importer)">
@@ -127,7 +127,7 @@
     </g>
   </g>
   <g opacity="0.88">
-    <path d="M 11 0 L 209 0 L 220 11 L 220 79 L 209 90 L 11 90 L 0 79 L 0 11 Z" transform="translate(420 400)" fill="#2b7fd41a" stroke="#2b7fd4" stroke-width="1" stroke-opacity="0.65"/>
+    <path d="M 11 0 L 209 0 L 220 11 L 220 79 L 209 90 L 11 90 L 0 79 L 0 11 Z" transform="translate(420 400)" fill="#e9f2fb" stroke="#2b7fd4" stroke-width="1" stroke-opacity="0.65"/>
     <defs><clipPath id="clip-transfer_runner"><path d="M 11 0 L 209 0 L 220 11 L 220 79 L 209 90 L 11 90 L 0 79 L 0 11 Z"/></clipPath></defs>
     <g transform="translate(420 400)" clip-path="url(#clip-transfer_runner)"><circle cx="209.75" cy="10.25" r="4.5" fill="#2b7fd4" opacity="0.25"/><circle cx="209.75" cy="10.25" r="2" fill="#2b7fd4"/></g>
     <g transform="translate(420 400)" clip-path="url(#clip-transfer_runner)">
@@ -137,7 +137,7 @@
     </g>
   </g>
   <g opacity="0.88">
-    <path d="M 11 0 L 209 0 L 220 11 L 220 79 L 209 90 L 11 90 L 0 79 L 0 11 Z" transform="translate(740 570)" fill="#2b7fd41a" stroke="#2b7fd4" stroke-width="1" stroke-opacity="0.65"/>
+    <path d="M 11 0 L 209 0 L 220 11 L 220 79 L 209 90 L 11 90 L 0 79 L 0 11 Z" transform="translate(740 570)" fill="#e9f2fb" stroke="#2b7fd4" stroke-width="1" stroke-opacity="0.65"/>
     <defs><clipPath id="clip-fits_service"><path d="M 11 0 L 209 0 L 220 11 L 220 79 L 209 90 L 11 90 L 0 79 L 0 11 Z"/></clipPath></defs>
     <g transform="translate(740 570)" clip-path="url(#clip-fits_service)"><circle cx="209.75" cy="10.25" r="4.5" fill="#2b7fd4" opacity="0.25"/><circle cx="209.75" cy="10.25" r="2" fill="#2b7fd4"/></g>
     <g transform="translate(740 570)" clip-path="url(#clip-fits_service)">
@@ -147,7 +147,7 @@
     </g>
   </g>
   <g opacity="0.88">
-    <path d="M 11 0 L 209 0 L 220 11 L 220 79 L 209 90 L 11 90 L 0 79 L 0 11 Z" transform="translate(1100 60)" fill="#5c68781a" stroke="#5c6878" stroke-width="1" stroke-opacity="0.55"/>
+    <path d="M 11 0 L 209 0 L 220 11 L 220 79 L 209 90 L 11 90 L 0 79 L 0 11 Z" transform="translate(1100 60)" fill="#eef0f1" stroke="#5c6878" stroke-width="1" stroke-opacity="0.55"/>
     <defs><clipPath id="clip-mast_catalog"><path d="M 11 0 L 209 0 L 220 11 L 220 79 L 209 90 L 11 90 L 0 79 L 0 11 Z"/></clipPath></defs>
     <g transform="translate(1100 60)" clip-path="url(#clip-mast_catalog)"><circle cx="209.75" cy="10.25" r="4.5" fill="#5c6878" opacity="0.25"/><circle cx="209.75" cy="10.25" r="2" fill="#5c6878"/></g>
     <g transform="translate(1100 60)" clip-path="url(#clip-mast_catalog)">
@@ -157,7 +157,7 @@
     </g>
   </g>
   <g opacity="0.88">
-    <path d="M 11 0 L 209 0 L 220 11 L 220 79 L 209 90 L 11 90 L 0 79 L 0 11 Z" transform="translate(1100 230)" fill="#1f9a841a" stroke="#1f9a84" stroke-width="1" stroke-opacity="0.6"/>
+    <path d="M 11 0 L 209 0 L 220 11 L 220 79 L 209 90 L 11 90 L 0 79 L 0 11 Z" transform="translate(1100 230)" fill="#e8f5f2" stroke="#1f9a84" stroke-width="1" stroke-opacity="0.6"/>
     <defs><clipPath id="clip-postgres"><path d="M 11 0 L 209 0 L 220 11 L 220 79 L 209 90 L 11 90 L 0 79 L 0 11 Z"/></clipPath></defs>
     <g transform="translate(1100 230)" clip-path="url(#clip-postgres)"><circle cx="209.75" cy="10.25" r="4.5" fill="#1f9a84" opacity="0.25"/><circle cx="209.75" cy="10.25" r="2" fill="#1f9a84"/></g>
     <g transform="translate(1100 230)" clip-path="url(#clip-postgres)">
@@ -167,7 +167,7 @@
     </g>
   </g>
   <g opacity="0.88">
-    <path d="M 11 0 L 209 0 L 220 11 L 220 79 L 209 90 L 11 90 L 0 79 L 0 11 Z" transform="translate(1100 400)" fill="#1f9a841a" stroke="#1f9a84" stroke-width="1" stroke-opacity="0.6"/>
+    <path d="M 11 0 L 209 0 L 220 11 L 220 79 L 209 90 L 11 90 L 0 79 L 0 11 Z" transform="translate(1100 400)" fill="#e8f5f2" stroke="#1f9a84" stroke-width="1" stroke-opacity="0.6"/>
     <defs><clipPath id="clip-object_storage"><path d="M 11 0 L 209 0 L 220 11 L 220 79 L 209 90 L 11 90 L 0 79 L 0 11 Z"/></clipPath></defs>
     <g transform="translate(1100 400)" clip-path="url(#clip-object_storage)"><circle cx="209.75" cy="10.25" r="4.5" fill="#1f9a84" opacity="0.25"/><circle cx="209.75" cy="10.25" r="2" fill="#1f9a84"/></g>
     <g transform="translate(1100 400)" clip-path="url(#clip-object_storage)">
@@ -177,7 +177,7 @@
     </g>
   </g>
   <g opacity="0.88">
-    <path d="M 11 0 L 209 0 L 220 11 L 220 79 L 209 90 L 11 90 L 0 79 L 0 11 Z" transform="translate(1100 570)" fill="#5c68781a" stroke="#5c6878" stroke-width="1" stroke-opacity="0.55"/>
+    <path d="M 11 0 L 209 0 L 220 11 L 220 79 L 209 90 L 11 90 L 0 79 L 0 11 Z" transform="translate(1100 570)" fill="#eef0f1" stroke="#5c6878" stroke-width="1" stroke-opacity="0.55"/>
     <defs><clipPath id="clip-mast_download"><path d="M 11 0 L 209 0 L 220 11 L 220 79 L 209 90 L 11 90 L 0 79 L 0 11 Z"/></clipPath></defs>
     <g transform="translate(1100 570)" clip-path="url(#clip-mast_download)"><circle cx="209.75" cy="10.25" r="4.5" fill="#5c6878" opacity="0.25"/><circle cx="209.75" cy="10.25" r="2" fill="#5c6878"/></g>
     <g transform="translate(1100 570)" clip-path="url(#clip-mast_download)">
