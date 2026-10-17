@@ -12,7 +12,8 @@ description: >-
 
 Fuente de verdad: `docs/architecture/<entrega>-<us>.arc.json` (datos del
 diagrama) + `docs/architecture/<entrega>-<us>.svg` (render). El documento
-de entrega (`docs/entrega_N.md`) embebe el SVG y agrega flujo + tabla de
+de entrega (`docs/entrega_N.md`) embebe el PNG (no el SVG: GitHub
+lo muestra transparente) y agrega flujo + tabla de
 componentes. Ejemplo completo: entrega 1 / US5 (`entrega1-us5.*`).
 
 ## Pipeline (siempre en este orden, desde la raíz)
