@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1440" height="800" viewBox="-20 -20 1440 800">
   <defs><filter id="arc-glow" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="2"/></filter></defs>
-  <rect x="-20" y="-20" width="1440" height="800" fill="transparent"/>
+  <rect x="-20" y="-20" width="1440" height="800" fill="#ffffff"/>
   <rect x="30" y="30" width="310" height="500" rx="8" fill="#5c68780f" stroke="#5c6878" stroke-opacity="0.55" stroke-width="1.5"/>
   <text x="42" y="49" fill="#5c6878" font-size="11" font-weight="600" letter-spacing="0.7" font-family="&#39;Space Grotesk&#39;, system-ui, sans-serif">Frontend · Vite + React SPA</text>
   <rect x="390" y="30" width="600" height="680" rx="8" fill="#5c68780f" stroke="#5c6878" stroke-opacity="0.55" stroke-width="1.5"/>
