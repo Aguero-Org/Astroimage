@@ -9,7 +9,8 @@ para detectar tests que pasan sin comprobar el comportamiento.
 ## Alcance
 
 - Backend: siete módulos de cálculo y render, con sus tests unitarios actuales.
-- Frontend: `src/lib` completo y una muestra de `catalogs` e `images`.
+- Frontend: `src/lib`, `catalogs` e `images` completos; la corrida vigente puede ser
+  dirigida a un subconjunto.
 - Los reportes y la caché son artefactos locales; no se versionan.
 
 ## Cierre de branch
@@ -218,8 +219,10 @@ pnpm exec stryker run --mutate "src/features/catalogs/catalog-recommendations.ts
 
 Cada corrida sobrescribe `frontend/reports/mutation/index.html` y
 `frontend/reports/mutation/mutation.json`; el reporte corresponderá siempre al
-último comando ejecutado. El reporte actual en el repo local es el de la muestra de
-features.
+último comando ejecutado. El reporte actual en el repo local es el de la corrida
+dirigida de los cuatro archivos de `images` tocados por el baseline:
+`rendered-fits-section.tsx`, `image-workspace.ts`, `last-record.ts` y
+`use-last-image-record.ts`.
 
 ### Resultado actual
 
@@ -239,7 +242,7 @@ features.
 
 Mutation score total: **95,33 %**; sobre código cubierto: **96,62 %**.
 
-Muestra de features (2 archivos, 337 mutantes):
+Muestra inicial de features (2 archivos, 337 mutantes):
 
 | Archivo | Killed | Survived | No coverage | Total |
 | --- | ---: | ---: | ---: | ---: |
@@ -248,6 +251,28 @@ Muestra de features (2 archivos, 337 mutantes):
 | **Total** | **328** | **9** | **0** | **337** |
 
 Mutation score total: **97,33 %**; sobre código cubierto: **97,33 %**.
+
+### Corridas completas y dirigidas (2026-10-21)
+
+| Alcance | Score | Supervivientes | Notas |
+| --- | ---: | ---: | --- |
+| `catalogs` completo | 67,35 % | 178 | Deuda preexistente de UI (formularios, tabs, filtros). |
+| `images` completo | ~36 % | ~1220 | Deuda preexistente de UI; sin triaje individual. |
+| `images` (4 archivos tocados) | 98,29 % | 2 | Ambos equivalentes; detalle abajo. |
+
+Las corridas completas se ejecutaron para dimensionar la deuda, no para cerrarla:
+los supervivientes se concentran en UI preexistente y no se revisaron uno por uno.
+El efecto de auto-apertura de `ScientificWorkspace` quedó cubierto; sus ~58
+supervivientes restantes son UI preexistente, salvo dos casos enmascarados o
+equivalentes (`useState(false)` normalizado por el efecto y las dependencias
+`[width]` del resize sin cobertura).
+
+Los 2 supervivientes de la corrida dirigida de `images` son equivalentes:
+
+- `resolveWorkspaceHdu`: cambiar `storedHdu !== null` por `true` no altera el
+  resultado porque, si `storedHdu` es null, ningún plano puede tener índice null.
+- `images[0]?.index`: el optional chaining es equivalente por el early return
+  cuando `images.length <= 1`.
 
 Los 7 supervivientes de `src/lib` (5 survived + 2 no coverage) y los 9 de
 `catalog-recommendations.ts` se revisaron y son equivalentes:
@@ -287,8 +312,10 @@ al 100 %.
 - Los mutation scores no son comparables con el coverage porcentual.
 - Algunos mutantes son equivalentes; el score no debe interpretarse como porcentaje
   exacto de bugs detectables.
-- La corrida frontend de referencia cubre `src/lib` y solo dos archivos de features.
-- Las corridas completas de `catalogs` e `images` son costosas y no se ejecutaron
-  todavía.
+- La corrida frontend de referencia cubre `src/lib`, `catalogs` e `images` completos;
+  el reporte local actual es la corrida dirigida de `images`.
+- El triaje individual de los supervivientes completos (178 en `catalogs` y ~1220 en
+  `images`) sigue pendiente; se concentran en UI preexistente.
+- `use-scroll-spy` y `use-document-title` no están incluidos en el `mutate` de Stryker.
 - No hay job de CI ni Quality Gate de mutation testing. `break: null` y la ausencia
   de un paso en GitHub Actions son intencionales en esta etapa.
