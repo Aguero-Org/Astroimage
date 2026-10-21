@@ -7,12 +7,12 @@ import numpy as np
 import pytest
 
 from astroimage.fits.model import FitsRecord
+from astroimage.sources.detection_service import SourceDetectionService
 from astroimage.sources.model import ExtendedSource, PointSource, SourceDetectionResult
 from astroimage.sources.schema import (
     ExtendedDetectionConfigSchema,
     PointDetectionConfigSchema,
 )
-from astroimage.sources.service import SourceDetectionService
 from tests.unit.sources.helpers import (
     fits_bytes_from_image,
     synthetic_extended_source_image,
