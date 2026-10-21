@@ -22,7 +22,7 @@ export type BestPreset = {
   isPending: boolean;
   isError: boolean;
   data: SourcePresetResponse | undefined;
-  request: () => void;
+  request: () => Promise<SourcePresetResponse | undefined>;
 };
 
 export const NO_MEASUREMENT_SUMMARY =

@@ -255,9 +255,8 @@ function ImageWorkspacePage({
                       isPending: bestPresetQuery.isFetching,
                       isError: bestPresetQuery.isError,
                       data: bestPresetQuery.data,
-                      request: () => {
-                        void bestPresetQuery.refetch();
-                      },
+                      request: () =>
+                        bestPresetQuery.refetch().then((result) => result.data),
                     }}
                     onSubmit={(params) => {
                       setWorkspace((current) => ({
