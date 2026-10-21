@@ -11,6 +11,7 @@ import {
 import { HelpHint } from "@/components/ui/help-hint";
 import { Skeleton } from "@/components/ui/skeleton";
 import { okData } from "@/lib/api-response";
+import { pendingJobId, polledJobResult } from "@/lib/polled-job";
 
 type GaiaCrossMatchProps = {
   isFetching: boolean;
@@ -23,31 +24,34 @@ export function useGaiaCrossMatch(
   params: VerifySourcesGaiaParams,
   enabled: boolean,
 ) {
-  const verifyQuery = useVerifySourcesGaia(recordId, params, {
+  const start = useVerifySourcesGaia(recordId, params, {
     query: {
       enabled,
       select: (response) =>
         response.status === 200 ? response.data : undefined,
     },
   });
-  const verifyBody = verifyQuery.data;
-  const pendingJobId = isGaiaJob(verifyBody) ? verifyBody.job_id : undefined;
-  const jobQuery = useGetSourcesGaiaJob(recordId, pendingJobId ?? "", {
+  const jobId = pendingJobId(start.data, isGaiaJob);
+  const job = useGetSourcesGaiaJob(recordId, jobId ?? "", {
     query: {
-      enabled: pendingJobId !== undefined,
+      enabled: jobId !== undefined,
       select: (response) =>
         response.status === 200 ? response.data : undefined,
       refetchInterval: (query) =>
         isGaiaJob(okData(query.state.data)) ? 2000 : false,
     },
   });
-  const jobBody = jobQuery.data;
-  const result = gaiaVerificationResult(jobBody, verifyBody);
+  const { result, isFetching, isError } = polledJobResult({
+    start,
+    job,
+    isJob: isGaiaJob,
+    isResult: isGaiaVerification,
+  });
   return {
     matches: result?.matches ?? [],
     summary: result?.summary,
-    isFetching: verifyQuery.isFetching || jobQuery.isFetching,
-    isError: verifyQuery.isError || jobQuery.isError,
+    isFetching,
+    isError,
   };
 }
 
@@ -112,19 +116,6 @@ export function gaiaMatchFor(
 }
 
 type GaiaBody = GaiaVerificationResponse | GaiaJobStatusSchema | undefined;
-
-function gaiaVerificationResult(
-  jobBody: GaiaBody,
-  verifyBody: GaiaBody,
-): GaiaVerificationResponse | undefined {
-  if (isGaiaVerification(jobBody)) {
-    return jobBody;
-  }
-  if (isGaiaVerification(verifyBody)) {
-    return verifyBody;
-  }
-  return undefined;
-}
 
 function isGaiaJob(value: GaiaBody): value is GaiaJobStatusSchema {
   return (

@@ -2,11 +2,9 @@ import {
   useGetCatalogsJob,
   useRecommendCatalogs,
 } from "@/api/generated/catalogs/catalogs";
-import type {
-  CatalogRecommendationResponse,
-  RecommendCatalogsParams,
-} from "@/api/generated/model";
+import type { RecommendCatalogsParams } from "@/api/generated/model";
 import { okData } from "@/lib/api-response";
+import { pendingJobId, polledJobResult } from "@/lib/polled-job";
 import {
   collectPublications,
   isCatalogJobStatus,
@@ -27,7 +25,7 @@ export function useCatalogRecommendations({
   params,
   enabled,
 }: UseCatalogRecommendationsOptions) {
-  const query = useRecommendCatalogs(recordId, params, {
+  const started = useRecommendCatalogs(recordId, params, {
     query: {
       enabled,
       staleTime: RESULT_STALE_TIME_MS,
@@ -37,50 +35,35 @@ export function useCatalogRecommendations({
     },
   });
 
-  const body = query.data;
-  const pendingJobId = isCatalogJobStatus(body) ? body.job_id : undefined;
-
-  const jobQuery = useGetCatalogsJob(recordId, pendingJobId ?? "", {
+  const jobId = pendingJobId(started.data, isCatalogJobStatus);
+  const job = useGetCatalogsJob(recordId, jobId ?? "", {
     query: {
-      enabled: enabled && pendingJobId !== undefined,
+      enabled: enabled && jobId !== undefined,
       retry: false,
       select: (response) =>
         response.status === 200 ? response.data : undefined,
-      refetchInterval: (job) => {
-        if (job.state.status === "error") {
+      refetchInterval: (query) => {
+        if (query.state.status === "error") {
           return false;
         }
-        return isCatalogRecommendation(okData(job.state.data))
+        return isCatalogRecommendation(okData(query.state.data))
           ? false
           : JOB_POLL_INTERVAL_MS;
       },
     },
   });
 
-  const jobBody = jobQuery.data;
-  let result: CatalogRecommendationResponse | undefined;
-  if (isCatalogRecommendation(jobBody)) {
-    result = jobBody;
-  } else if (isCatalogRecommendation(body)) {
-    result = body;
-  }
-
-  const isError = query.isError || jobQuery.isError;
-  const isLoading = enabled && result === undefined && !isError;
-  const isFetching = query.isFetching || jobQuery.isFetching;
-  const error = query.error ?? jobQuery.error;
-
-  function refetch() {
-    void query.refetch();
-    if (pendingJobId !== undefined) {
-      void jobQuery.refetch();
-    }
-  }
+  const { result, isFetching, isError, error, refetch } = polledJobResult({
+    start: started,
+    job,
+    isJob: isCatalogJobStatus,
+    isResult: isCatalogRecommendation,
+  });
 
   return {
     result,
     publications: collectPublications(result?.recommendations ?? []),
-    isLoading,
+    isLoading: enabled && result === undefined && !isError,
     isFetching,
     isError,
     errorMessage: formatError(error),
