@@ -222,46 +222,52 @@ Cada corrida sobrescribe `frontend/reports/mutation/index.html` y
 último comando ejecutado. El reporte actual en el repo local es el de la muestra de
 features.
 
-### Resultado inicial
+### Resultado actual
 
 `src/lib` (8 archivos, 150 mutantes):
 
 | Archivo | Killed | Survived | No coverage | Total |
 | --- | ---: | ---: | ---: | ---: |
-| `api-client.ts` | 39 | 14 | 2 | 55 |
-| `api-response.ts` | 4 | 2 | 0 | 6 |
-| `palettes.ts` | 4 | 2 | 6 | 12 |
-| `polled-job.ts` | 13 | 2 | 0 | 15 |
+| `api-client.ts` | 54 | 1 | 0 | 55 |
+| `api-response.ts` | 6 | 0 | 0 | 6 |
+| `palettes.ts` | 11 | 1 | 0 | 12 |
+| `polled-job.ts` | 15 | 0 | 0 | 15 |
 | `query-client.ts` | 5 | 0 | 0 | 5 |
-| `theme-store.ts` | 9 | 10 | 12 | 31 |
-| `theme.ts` | 5 | 2 | 18 | 25 |
+| `theme-store.ts` | 26 | 3 | 2 | 31 |
+| `theme.ts` | 25 | 0 | 0 | 25 |
 | `utils.ts` | 1 | 0 | 0 | 1 |
-| **Total** | **80** | **32** | **38** | **150** |
+| **Total** | **143** | **5** | **2** | **150** |
 
-Mutation score total: **53,33 %**; sobre código cubierto: **71,43 %**.
+Mutation score total: **95,33 %**; sobre código cubierto: **96,62 %**.
 
 Muestra de features (2 archivos, 337 mutantes):
 
 | Archivo | Killed | Survived | No coverage | Total |
 | --- | ---: | ---: | ---: | ---: |
-| `catalogs/catalog-recommendations.ts` | 163 | 94 | 12 | 269 |
-| `images/image-title.ts` | 33 | 26 | 9 | 68 |
-| **Total** | **196** | **120** | **21** | **337** |
+| `catalogs/catalog-recommendations.ts` | 260 | 9 | 0 | 269 |
+| `images/image-title.ts` | 68 | 0 | 0 | 68 |
+| **Total** | **328** | **9** | **0** | **337** |
 
-Mutation score total: **58,16 %**; sobre código cubierto: **62,03 %**.
+Mutation score total: **97,33 %**; sobre código cubierto: **97,33 %**.
 
-### Hallazgos iniciales
+Los 7 supervivientes de `src/lib` (5 survived + 2 no coverage) y los 9 de
+`catalog-recommendations.ts` se revisaron y son equivalentes:
 
-- `theme.ts` y `theme-store.ts` tienen muchos mutantes sin cobertura: no hay tests
-  dedicados para resolución, persistencia y toggle del tema.
-- En `api-client.ts` sobreviven defaults, claves de `localStorage`, mensajes de
-  `ApiError` y la rama que añade `Content-Type: application/json`.
-- `image-title.ts` sobrevive a la mayoría de variaciones del regex UUID; conviene
-  añadir casos válidos e inválidos, no solo un caso feliz.
-- `polled-job.ts` sobrevive a mutaciones de `isFetching`; el estado combinado no se
-  comprueba con suficiente precisión.
-- La muestra de features no es la feature completa: `test:mutation:catalogs` e
-  `test:mutation:images` siguen pendientes como corridas de referencia.
+- `api-client.ts`: el fallback de `content-type` a `"Stryker was here!"` solo se usa
+  en `.includes("json")`; sin cabecera y con cuerpo no JSON la rama útil es el Blob.
+- `palettes.ts`: `true && value in PALETTES` coincide con `value !== null`; `null in
+  PALETTES` devuelve `false` sin lanzar.
+- `theme-store.ts`: las ramas `typeof document === "undefined"` no se alcanzan en el
+  SPA, y `set({})` no altera nada mientras exista una sola paleta.
+- `catalog-recommendations.ts`: `title && true` y `title.length >= 0` no cambian el
+  resultado porque `title` ya viene de `trim()`; `detail` siempre es no vacío; el
+  early return de query vacía equivale a `includes("")`; `boundary >= 0` es
+  inalcanzable cuando el texto ya está trimmeado.
+
+Se añadieron tests de tema, `api-client`, `api-response`, `polled-job`, títulos de
+imagen (UUID exactos, hashes finales, extensiones), y recomendaciones de catálogo
+(columnas, región, DOI/ReadMe, filtros, truncado y enlaces). `image-title.ts` queda
+al 100 %.
 
 ## Cómo revisar un superviviente
 

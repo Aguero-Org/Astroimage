@@ -61,6 +61,27 @@ describe("polledJobResult", () => {
     );
   });
 
+  it("is fetching when either query is fetching", () => {
+    const idle = combine(undefined, undefined);
+    expect(idle.isFetching).toBe(false);
+
+    const startBusy = polledJobResult({
+      start: query({ job_id: "job-1" }, { isFetching: true }),
+      job: query(undefined),
+      isJob,
+      isResult,
+    });
+    expect(startBusy.isFetching).toBe(true);
+
+    const jobBusy = polledJobResult({
+      start: query({ job_id: "job-1" }),
+      job: query(undefined, { isFetching: true }),
+      isJob,
+      isResult,
+    });
+    expect(jobBusy.isFetching).toBe(true);
+  });
+
   it("merges loading, error, and error details from both queries", () => {
     const startError = new Error("start failed");
     const view = polledJobResult({
