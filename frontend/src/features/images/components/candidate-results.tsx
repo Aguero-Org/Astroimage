@@ -9,10 +9,7 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { useSelectHubbleCandidate } from "@/api/generated/hub/hub";
-import type {
-  CandidatePageSchema,
-  CandidateSchema,
-} from "@/api/generated/model";
+import type { CandidateSchema } from "@/api/generated/model";
 import { Button } from "@/components/ui/button";
 import { FilePager } from "@/components/ui/file-pager";
 import { SortControls, type SortField } from "@/components/ui/sort-controls";
@@ -24,6 +21,7 @@ import {
 } from "@/components/ui/tooltip";
 import { type CandidateSortField, useCandidateSearch } from "../candidate-api";
 import { MastSourceLink } from "../mast-source-link";
+import { resultsView } from "../results-view";
 import { usePagedSort } from "../use-paged-sort";
 import { CatalogFacts, catalogLabels } from "./catalog-facts";
 import { ImportNameDialog } from "./import-name-dialog";
@@ -56,7 +54,9 @@ export function CandidateResults({ query }: Readonly<CandidateResultsProps>) {
     return null;
   }
 
-  const view = resultsView(search);
+  const view = resultsView(search, {
+    isEmpty: (page) => page.items.length === 0,
+  });
 
   return (
     <section className="flex w-full flex-col gap-3">
@@ -185,33 +185,4 @@ export function CandidateResults({ query }: Readonly<CandidateResultsProps>) {
       ))}
     </section>
   );
-}
-
-export type ResultsView =
-  | { status: "loading" }
-  | { status: "error" }
-  | { status: "idle" }
-  | { status: "empty"; page: CandidatePageSchema }
-  | { status: "ready"; page: CandidatePageSchema };
-
-export function resultsView(search: {
-  data: CandidatePageSchema | null | undefined;
-  isPlaceholderData: boolean;
-  isPending: boolean;
-  isFetching: boolean;
-  isError: boolean;
-}): ResultsView {
-  const pageData = search.isPlaceholderData ? null : (search.data ?? null);
-  if (search.isError) {
-    return { status: "error" };
-  }
-  if (pageData === null) {
-    return search.isPending || search.isFetching
-      ? { status: "loading" }
-      : { status: "idle" };
-  }
-  if (pageData.items.length === 0) {
-    return { status: "empty", page: pageData };
-  }
-  return { status: "ready", page: pageData };
 }

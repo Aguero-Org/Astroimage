@@ -20,6 +20,10 @@ export type ImageTransfer = TransferStatusSchema;
 
 const ACTIVE = new Set(["queued", "transferring", "annotating", "storing"]);
 
+export function isActiveTransfer(status: string | undefined): boolean {
+  return status !== undefined && ACTIVE.has(status);
+}
+
 export function formatBytes(value: number | null): string {
   if (value === null) {
     return "—";
@@ -72,7 +76,7 @@ export function useImageTransfer(transferId: string | null) {
             queryKey: getListHubbleImagesQueryKey(),
           });
         }
-        return status !== undefined && ACTIVE.has(status) ? 1000 : false;
+        return isActiveTransfer(status) ? 1000 : false;
       },
     },
   });

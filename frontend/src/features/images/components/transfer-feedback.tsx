@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import {
   formatBytes,
   type ImageTransfer,
+  isActiveTransfer,
   useCancelTransfer,
   useImageTransfer,
   useResumeTransfer,
@@ -90,10 +91,7 @@ export function TransferFeedback({
         <p className="text-xs text-destructive">{transfer.error}</p>
       )}
       <div className="flex gap-2">
-        {(transfer.status === "queued" ||
-          transfer.status === "transferring" ||
-          transfer.status === "annotating" ||
-          transfer.status === "storing") && (
+        {isActiveTransfer(transfer.status) && (
           <Button
             type="button"
             variant="outline"

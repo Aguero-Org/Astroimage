@@ -11,32 +11,30 @@ import { formatQueryError } from "@/features/images/format-query-error";
 
 const SKELETON_TOOLS = [0, 1, 2, 3];
 
+export type SourceOverlays = {
+  pointSources: PointSourceSchema[];
+  extendedSources: ExtendedSourceSchema[];
+  gaiaPointIds: ReadonlySet<number>;
+  gaiaExtendedIds: ReadonlySet<number>;
+  selectedPointId?: number;
+  selectedExtendedId?: number;
+  onSelect?: (source: PointSourceSchema | ExtendedSourceSchema) => void;
+};
+
 export function RenderedFitsSection({
   isPending,
   isError,
   error,
   rendered,
   label,
-  pointSources,
-  extendedSources,
-  gaiaPointIds,
-  gaiaExtendedIds,
-  selectedId,
-  selectedExtendedId,
-  onSelectSource,
+  sources,
 }: Readonly<{
   isPending: boolean;
   isError: boolean;
   error: unknown;
   rendered: unknown;
   label: string;
-  pointSources: PointSourceSchema[];
-  extendedSources: ExtendedSourceSchema[];
-  gaiaPointIds: ReadonlySet<number>;
-  gaiaExtendedIds: ReadonlySet<number>;
-  selectedId?: number;
-  selectedExtendedId?: number;
-  onSelectSource?: (source: PointSourceSchema | ExtendedSourceSchema) => void;
+  sources: SourceOverlays;
 }>) {
   const objectUrl = useRenderedObjectUrl(rendered);
   if (isPending) {
@@ -84,16 +82,16 @@ export function RenderedFitsSection({
         className="h-full rounded-none border-0"
       >
         <ExtendedSourceMarkers
-          sources={extendedSources}
-          selectedId={selectedExtendedId}
-          gaiaMatchedIds={gaiaExtendedIds}
-          onSelect={onSelectSource}
+          sources={sources.extendedSources}
+          selectedId={sources.selectedExtendedId}
+          gaiaMatchedIds={sources.gaiaExtendedIds}
+          onSelect={sources.onSelect}
         />
         <SourceMarkers
-          sources={pointSources}
-          selectedId={selectedId}
-          gaiaMatchedIds={gaiaPointIds}
-          onSelect={onSelectSource}
+          sources={sources.pointSources}
+          selectedId={sources.selectedPointId}
+          gaiaMatchedIds={sources.gaiaPointIds}
+          onSelect={sources.onSelect}
         />
       </FitsImageViewer>
     );

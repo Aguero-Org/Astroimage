@@ -157,18 +157,20 @@ function ImageWorkspacePage({
               error={renderQuery.error}
               rendered={rendered}
               label={titleWithDescription}
-              pointSources={pointSources}
-              extendedSources={extendedSources}
-              gaiaPointIds={gaiaMatchedIds(gaia.matches, "point")}
-              gaiaExtendedIds={gaiaMatchedIds(gaia.matches, "extended")}
-              selectedId={selectedPointId}
-              selectedExtendedId={selectedExtendedId}
-              onSelectSource={(source) => {
-                setWorkspace((current) => ({
-                  ...current,
-                  selectedSource: source,
-                  inspectorOpen: true,
-                }));
+              sources={{
+                pointSources,
+                extendedSources,
+                gaiaPointIds: gaiaMatchedIds(gaia.matches, "point"),
+                gaiaExtendedIds: gaiaMatchedIds(gaia.matches, "extended"),
+                selectedPointId,
+                selectedExtendedId,
+                onSelect: (source) => {
+                  setWorkspace((current) => ({
+                    ...current,
+                    selectedSource: source,
+                    inspectorOpen: true,
+                  }));
+                },
               }}
             />
 
