@@ -91,6 +91,7 @@ class CatalogRecommendationSummarySchema(BaseModel):
 class CatalogRecommendationResponse(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
+    status: Literal["completed"]
     source_name: str | None = None
     ra_deg: float | None = None
     dec_deg: float | None = None
@@ -108,6 +109,6 @@ class CatalogRecommendationResponse(BaseModel):
 class CatalogJobStatusSchema(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    status: Literal["pending"] = "pending"
+    status: Literal["pending"]
     job_id: str
     record_id: UUID

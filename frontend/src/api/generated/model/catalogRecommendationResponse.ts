@@ -8,6 +8,7 @@ import type { CatalogRecommendationItemSchema } from './catalogRecommendationIte
 import type { CatalogRecommendationSummarySchema } from './catalogRecommendationSummarySchema';
 
 export interface CatalogRecommendationResponse {
+  status: 'completed';
   source_name?: string | null;
   ra_deg?: number | null;
   dec_deg?: number | null;

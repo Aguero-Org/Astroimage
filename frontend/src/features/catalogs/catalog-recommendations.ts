@@ -34,13 +34,13 @@ export type CatalogPublication = {
 export function isCatalogJobStatus(
   value: CatalogRecommendationBody | undefined,
 ): value is CatalogJobStatusSchema {
-  return value !== undefined && "job_id" in value;
+  return value?.status === "pending";
 }
 
 export function isCatalogRecommendation(
   value: CatalogRecommendationBody | undefined,
 ): value is CatalogRecommendationResponse {
-  return value !== undefined && "recommendations" in value;
+  return value?.status === "completed";
 }
 
 export function catalogueName(item: CatalogRecommendationItemSchema): string {

@@ -1906,8 +1906,7 @@
           "status": {
             "type": "string",
             "const": "pending",
-            "title": "Status",
-            "default": "pending"
+            "title": "Status"
           },
           "job_id": {
             "type": "string",
@@ -1922,6 +1921,7 @@
         "additionalProperties": false,
         "type": "object",
         "required": [
+          "status",
           "job_id",
           "record_id"
         ],
@@ -2197,6 +2197,11 @@
       },
       "CatalogRecommendationResponse": {
         "properties": {
+          "status": {
+            "type": "string",
+            "const": "completed",
+            "title": "Status"
+          },
           "source_name": {
             "anyOf": [
               {
@@ -2274,6 +2279,9 @@
         },
         "additionalProperties": false,
         "type": "object",
+        "required": [
+          "status"
+        ],
         "title": "CatalogRecommendationResponse"
       },
       "CatalogRecommendationSummarySchema": {
@@ -3141,8 +3149,7 @@
           "status": {
             "type": "string",
             "const": "pending",
-            "title": "Status",
-            "default": "pending"
+            "title": "Status"
           },
           "job_id": {
             "type": "string",
@@ -3157,6 +3164,7 @@
         "additionalProperties": false,
         "type": "object",
         "required": [
+          "status",
           "job_id",
           "record_id"
         ],
@@ -3312,6 +3320,11 @@
       },
       "GaiaVerificationResponse": {
         "properties": {
+          "status": {
+            "type": "string",
+            "const": "completed",
+            "title": "Status"
+          },
           "source_name": {
             "anyOf": [
               {
@@ -3366,6 +3379,7 @@
         "additionalProperties": false,
         "type": "object",
         "required": [
+          "status",
           "match_radius_arcsec",
           "probability_power"
         ],

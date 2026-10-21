@@ -61,6 +61,7 @@ export function mockGaiaVerification(
   record: MockImageRecord,
 ): GaiaVerificationResponse {
   return {
+    status: "completed",
     source_name: record.name,
     match_radius_arcsec: 1,
     probability_power: 0.9,

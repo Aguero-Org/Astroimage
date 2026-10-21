@@ -191,6 +191,7 @@ class CatalogRecommendationService:
                 "catalog_recommend_skipped", reason="no wcs", source_name=metadata.source_name
             )
             return CatalogRecommendationResponse(
+                status="completed",
                 source_name=metadata.source_name,
                 radius_arcsec=resolved.search_radius_arcsec,
                 include_papers=resolved.include_papers,
@@ -201,6 +202,7 @@ class CatalogRecommendationService:
         tables, error = await self._query_vizier(center, resolved)
         if error is not None:
             return CatalogRecommendationResponse(
+                status="completed",
                 source_name=metadata.source_name,
                 ra_deg=float(center.ra.deg),
                 dec_deg=float(center.dec.deg),
@@ -574,6 +576,7 @@ class CatalogRecommendationService:
         recommendations: list[CatalogRecommendationItemSchema],
     ) -> CatalogRecommendationResponse:
         return CatalogRecommendationResponse(
+            status="completed",
             source_name=source_name,
             ra_deg=float(center.ra.deg),
             dec_deg=float(center.dec.deg),

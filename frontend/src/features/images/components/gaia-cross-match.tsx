@@ -118,15 +118,11 @@ export function gaiaMatchFor(
 type GaiaBody = GaiaVerificationResponse | GaiaJobStatusSchema | undefined;
 
 function isGaiaJob(value: GaiaBody): value is GaiaJobStatusSchema {
-  return (
-    value !== undefined &&
-    "job_id" in value &&
-    !("match_radius_arcsec" in value)
-  );
+  return value?.status === "pending";
 }
 
 function isGaiaVerification(
   value: GaiaBody,
 ): value is GaiaVerificationResponse {
-  return value !== undefined && "match_radius_arcsec" in value;
+  return value?.status === "completed";
 }

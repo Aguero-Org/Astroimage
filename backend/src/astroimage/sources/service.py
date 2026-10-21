@@ -769,6 +769,7 @@ class GaiaVerificationService:
             error=error,
         )
         return GaiaVerificationResponse(
+            status="completed",
             source_name=prepared.source_name,
             match_radius_arcsec=prepared.match_config.match_radius_arcsec,
             probability_power=prepared.match_config.probability_power,

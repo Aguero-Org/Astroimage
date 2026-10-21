@@ -38,6 +38,7 @@ def _params(
 
 def _success_response() -> GaiaVerificationResponse:
     return GaiaVerificationResponse(
+        status="completed",
         match_radius_arcsec=4.0,
         probability_power=2.0,
         queried=True,

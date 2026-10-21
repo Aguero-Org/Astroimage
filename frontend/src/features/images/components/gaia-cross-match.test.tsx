@@ -68,6 +68,7 @@ describe("GaiaCrossMatch", () => {
 function verifyResponse() {
   return {
     data: {
+      status: "completed",
       match_radius_arcsec: 1,
       probability_power: 1,
       summary: {

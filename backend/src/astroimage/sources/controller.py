@@ -410,7 +410,7 @@ async def get_sources_gaia_job(
     if completed is not None:
         return completed
     if jobs.is_running(job_id):
-        return GaiaJobStatusSchema(job_id=job_id, record_id=record_id)
+        return GaiaJobStatusSchema(status="pending", job_id=job_id, record_id=record_id)
     failure = jobs.get_failure(job_id)
     if failure is not None:
         raise failure

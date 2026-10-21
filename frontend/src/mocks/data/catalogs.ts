@@ -2,6 +2,7 @@ import type { CatalogRecommendationResponse } from "@/api/generated/model";
 
 export function mockCatalogRecommendation(): CatalogRecommendationResponse {
   return {
+    status: "completed",
     source_name: "M31",
     ra_deg: 10.6847,
     dec_deg: 41.2691,
