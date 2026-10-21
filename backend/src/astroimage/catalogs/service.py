@@ -2,18 +2,15 @@ from __future__ import annotations
 
 import asyncio
 import functools
-import warnings
 from collections.abc import Sequence
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from typing import Protocol
 from uuid import UUID
 
-import astropy.units as u
 import numpy as np
 from astropy.coordinates import SkyCoord
-from astropy.io import fits
-from astropy.wcs import WCS, FITSFixedWarning
+from astropy.wcs import WCS
 
 from astroimage.catalogs.cache import CatalogRecommendationCache, recommendation_cache_key
 from astroimage.catalogs.crossmatch import crossmatch_catalog
@@ -54,8 +51,9 @@ from astroimage.catalogs.scoring import (
     total_score,
 )
 from astroimage.catalogs.vizier import VizierCatalogProvider
-from astroimage.fits.reader import FitsMetadata, FitsReader
+from astroimage.fits.reader import FitsReader
 from astroimage.fits.service import FitsService
+from astroimage.fits.wcs import field_center, to_sky, world_coordinates
 from astroimage.shared.logging import catalog_service_log as _log
 from astroimage.sources.service import SourceDetectionService
 
@@ -91,27 +89,6 @@ class _DetectedSource(Protocol):
 
     @property
     def ycentroid(self) -> float: ...
-
-
-def _world_coordinates(metadata: FitsMetadata) -> WCS | None:
-    if not metadata.wcs.present:
-        return None
-    header = fits.Header()
-    for key, value in metadata.header.items():
-        header[key] = value
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore", FITSFixedWarning)
-        return WCS(header, naxis=2, relax=True)
-
-
-def _field_center(wcs: WCS) -> SkyCoord:
-    crval = wcs.wcs.crval
-    return SkyCoord(ra=float(crval[0]) * u.deg, dec=float(crval[1]) * u.deg, frame="icrs")
-
-
-def _to_sky(wcs: WCS, x: float, y: float) -> SkyCoord:
-    world = wcs.pixel_to_world(x, y)
-    return SkyCoord(ra=float(world.ra.deg) * u.deg, dec=float(world.dec.deg) * u.deg, frame="icrs")
 
 
 class CatalogRecommendationService:
@@ -185,7 +162,7 @@ class CatalogRecommendationService:
             source_name=source_name,
             hdu_index=hdu_index,
         )
-        wcs = _world_coordinates(metadata)
+        wcs = world_coordinates(metadata)
         if wcs is None:
             _log.info(
                 "catalog_recommend_skipped", reason="no wcs", source_name=metadata.source_name
@@ -198,7 +175,7 @@ class CatalogRecommendationService:
                 wcs_present=False,
                 queried=False,
             )
-        center = _field_center(wcs)
+        center = field_center(wcs)
         tables, error = await self._query_vizier(center, resolved)
         if error is not None:
             return CatalogRecommendationResponse(
@@ -456,7 +433,7 @@ class CatalogRecommendationService:
     ) -> list[DetectionCoordinate]:
         detections: list[DetectionCoordinate] = []
         for point in point_sources:
-            coord = _to_sky(wcs, point.xcentroid, point.ycentroid)
+            coord = to_sky(wcs, point.xcentroid, point.ycentroid)
             detections.append(
                 DetectionCoordinate(
                     source_id=point.source_id,
@@ -466,7 +443,7 @@ class CatalogRecommendationService:
                 )
             )
         for extended in extended_sources:
-            coord = _to_sky(wcs, extended.xcentroid, extended.ycentroid)
+            coord = to_sky(wcs, extended.xcentroid, extended.ycentroid)
             detections.append(
                 DetectionCoordinate(
                     source_id=extended.source_id,
