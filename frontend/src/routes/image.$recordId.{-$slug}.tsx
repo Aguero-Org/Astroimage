@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import type {
   DetectSourcesParams,
   RenderFitsImageParams,
@@ -33,11 +33,11 @@ import { SourceSelection } from "@/features/images/components/source-selection";
 import { formatQueryError } from "@/features/images/format-query-error";
 import { imageDisplayTitle } from "@/features/images/image-title";
 import {
-  DEFAULT_IMAGE_WORKSPACE,
   type ImageWorkspaceUi,
   resolveWorkspaceHdu,
 } from "@/features/images/image-workspace";
 import { rememberLastImageRecord } from "@/features/images/last-record";
+import { useImageWorkspace } from "@/features/images/use-image-workspace";
 import { followOnQueriesEnabled } from "@/features/images/workspace-queries";
 
 const DEFAULT_DOCUMENT_TITLE = "Astroimage 🌌";
@@ -79,9 +79,7 @@ function ImageWorkspacePage({
     rememberLastImageRecord(recordId, slug);
   }, [recordId, slug]);
 
-  const [workspace, setWorkspace] = useState<ImageWorkspaceUi>(
-    DEFAULT_IMAGE_WORKSPACE,
-  );
+  const [workspace, dispatch] = useImageWorkspace();
   const { inspectorOpen, selectedSource, renderParams, detectionParams } =
     workspace;
   const infoQuery = useImageInfo(recordId);
@@ -165,13 +163,8 @@ function ImageWorkspacePage({
                 gaiaExtendedIds: gaiaMatchedIds(gaia.matches, "extended"),
                 selectedPointId,
                 selectedExtendedId,
-                onSelect: (source) => {
-                  setWorkspace((current) => ({
-                    ...current,
-                    selectedSource: source,
-                    inspectorOpen: true,
-                  }));
-                },
+                onSelect: (source) =>
+                  dispatch({ type: "select-source", source }),
               }}
             />
 
@@ -191,12 +184,9 @@ function ImageWorkspacePage({
                 </h1>
               }
               open={inspectorOpen}
-              onOpenChange={(open) => {
-                setWorkspace((current) => ({
-                  ...current,
-                  inspectorOpen: open,
-                }));
-              }}
+              onOpenChange={(open) =>
+                dispatch({ type: "set-inspector-open", open })
+              }
               selectionOpen={selectedSource !== null}
               selection={
                 <SourceSelection
@@ -216,13 +206,9 @@ function ImageWorkspacePage({
                 <HduSelector
                   images={imageHdus}
                   value={hdu}
-                  onChange={(nextHdu) => {
-                    setWorkspace((current) => ({
-                      ...current,
-                      hdu: nextHdu,
-                      selectedSource: null,
-                    }));
-                  }}
+                  onChange={(nextHdu) =>
+                    dispatch({ type: "set-hdu", hdu: nextHdu })
+                  }
                 />
               }
               view={
@@ -237,12 +223,9 @@ function ImageWorkspacePage({
                   />
                   <RenderViewForm
                     isPending={renderQuery.isFetching}
-                    onSubmit={(params) => {
-                      setWorkspace((current) => ({
-                        ...current,
-                        renderParams: params,
-                      }));
-                    }}
+                    onSubmit={(params) =>
+                      dispatch({ type: "set-render-params", params })
+                    }
                   />
                 </>
               }
@@ -261,13 +244,9 @@ function ImageWorkspacePage({
                       request: () =>
                         bestPresetQuery.refetch().then((result) => result.data),
                     }}
-                    onSubmit={(params) => {
-                      setWorkspace((current) => ({
-                        ...current,
-                        detectionParams: params,
-                        selectedSource: null,
-                      }));
-                    }}
+                    onSubmit={(params) =>
+                      dispatch({ type: "set-detection-params", params })
+                    }
                   />
                   {sourcesQuery.isError ? (
                     <p
