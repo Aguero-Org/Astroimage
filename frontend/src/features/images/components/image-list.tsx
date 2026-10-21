@@ -87,7 +87,7 @@ export function ImageList({ query }: Readonly<ImageListProps>) {
     isError,
   } = useImageRecords(query, page, sort, order);
   const remove = useDeleteImage();
-  const pageData = response?.status === 200 ? response.data : null;
+  const pageData = response ?? null;
   const records = pageData?.records ?? [];
 
   return (

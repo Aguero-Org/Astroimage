@@ -38,8 +38,7 @@ export function TransferFeedback({
   transferId,
 }: Readonly<{ transferId: string }>) {
   const transferQuery = useImageTransfer(transferId);
-  const transfer =
-    transferQuery.data?.status === 200 ? transferQuery.data.data : null;
+  const transfer = transferQuery.data ?? null;
   const cancel = useCancelTransfer();
   const resume = useResumeTransfer();
   if (transfer === null) {

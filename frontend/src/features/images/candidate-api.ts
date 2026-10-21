@@ -12,6 +12,7 @@ import type {
   SearchHubbleCandidatesSort,
   TransferStatusSchema,
 } from "@/api/generated/model";
+import { okData } from "@/lib/api-response";
 
 export type CandidateSortField = SearchHubbleCandidatesSort;
 export type CandidateSortOrder = SearchHubbleCandidatesOrder;
@@ -62,9 +63,10 @@ export function useImageTransfer(transferId: string | null) {
   return useGetImageTransfer(transferId ?? "", {
     query: {
       enabled: transferId !== null,
+      select: (response) =>
+        response.status === 200 ? response.data : undefined,
       refetchInterval: (query) => {
-        const body = query.state.data;
-        const status = body?.status === 200 ? body.data.status : undefined;
+        const status = okData<TransferStatusSchema>(query.state.data)?.status;
         if (status === "completed") {
           void queryClient.invalidateQueries({
             queryKey: getListHubbleImagesQueryKey(),

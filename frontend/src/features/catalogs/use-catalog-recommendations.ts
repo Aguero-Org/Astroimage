@@ -6,6 +6,7 @@ import type {
   CatalogRecommendationResponse,
   RecommendCatalogsParams,
 } from "@/api/generated/model";
+import { okData } from "@/lib/api-response";
 import {
   collectPublications,
   isCatalogJobStatus,
@@ -31,29 +32,32 @@ export function useCatalogRecommendations({
       enabled,
       staleTime: RESULT_STALE_TIME_MS,
       retry: false,
+      select: (response) =>
+        response.status === 200 ? response.data : undefined,
     },
   });
 
-  const body = query.data?.status === 200 ? query.data.data : undefined;
+  const body = query.data;
   const pendingJobId = isCatalogJobStatus(body) ? body.job_id : undefined;
 
   const jobQuery = useGetCatalogsJob(recordId, pendingJobId ?? "", {
     query: {
       enabled: enabled && pendingJobId !== undefined,
       retry: false,
+      select: (response) =>
+        response.status === 200 ? response.data : undefined,
       refetchInterval: (job) => {
         if (job.state.status === "error") {
           return false;
         }
-        const jobBody =
-          job.state.data?.status === 200 ? job.state.data.data : undefined;
-        return isCatalogRecommendation(jobBody) ? false : JOB_POLL_INTERVAL_MS;
+        return isCatalogRecommendation(okData(job.state.data))
+          ? false
+          : JOB_POLL_INTERVAL_MS;
       },
     },
   });
 
-  const jobBody =
-    jobQuery.data?.status === 200 ? jobQuery.data.data : undefined;
+  const jobBody = jobQuery.data;
   let result: CatalogRecommendationResponse | undefined;
   if (isCatalogRecommendation(jobBody)) {
     result = jobBody;

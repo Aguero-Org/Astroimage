@@ -53,7 +53,7 @@ function transfer(overrides: Partial<ImageTransfer> = {}): ImageTransfer {
 
 function show(body: ImageTransfer | null) {
   useImageTransfer.mockReturnValue(
-    body === null ? { data: undefined } : { data: { status: 200, data: body } },
+    body === null ? { data: undefined } : { data: body },
   );
 }
 

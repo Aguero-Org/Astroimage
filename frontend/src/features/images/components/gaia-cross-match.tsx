@@ -10,6 +10,7 @@ import {
 } from "@/api/generated/sources/sources";
 import { HelpHint } from "@/components/ui/help-hint";
 import { Skeleton } from "@/components/ui/skeleton";
+import { okData } from "@/lib/api-response";
 
 type GaiaCrossMatchProps = {
   isFetching: boolean;
@@ -23,23 +24,24 @@ export function useGaiaCrossMatch(
   enabled: boolean,
 ) {
   const verifyQuery = useVerifySourcesGaia(recordId, params, {
-    query: { enabled },
+    query: {
+      enabled,
+      select: (response) =>
+        response.status === 200 ? response.data : undefined,
+    },
   });
-  const verifyBody =
-    verifyQuery.data?.status === 200 ? verifyQuery.data.data : undefined;
+  const verifyBody = verifyQuery.data;
   const pendingJobId = isGaiaJob(verifyBody) ? verifyBody.job_id : undefined;
   const jobQuery = useGetSourcesGaiaJob(recordId, pendingJobId ?? "", {
     query: {
       enabled: pendingJobId !== undefined,
-      refetchInterval: (query) => {
-        const body =
-          query.state.data?.status === 200 ? query.state.data.data : undefined;
-        return isGaiaJob(body) ? 2000 : false;
-      },
+      select: (response) =>
+        response.status === 200 ? response.data : undefined,
+      refetchInterval: (query) =>
+        isGaiaJob(okData(query.state.data)) ? 2000 : false,
     },
   });
-  const jobBody =
-    jobQuery.data?.status === 200 ? jobQuery.data.data : undefined;
+  const jobBody = jobQuery.data;
   const result = gaiaVerificationResult(jobBody, verifyBody);
   return {
     matches: result?.matches ?? [],

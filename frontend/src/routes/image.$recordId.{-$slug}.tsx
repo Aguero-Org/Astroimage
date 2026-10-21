@@ -1,17 +1,18 @@
-import { keepPreviousData } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { type Dispatch, type SetStateAction, useEffect, useState } from "react";
-import { useGetImageInfo } from "@/api/generated/hub/hub";
-import {
-  useRenderFitsHistogram,
-  useRenderFitsImage,
-} from "@/api/generated/render/render";
-import {
-  useDetectSources,
-  useGetBestPreset,
-} from "@/api/generated/sources/sources";
+import type {
+  DetectSourcesParams,
+  RenderFitsImageParams,
+} from "@/api/generated/model";
 import { HelpHint } from "@/components/ui/help-hint";
 import { ScientificWorkspace } from "@/features/catalogs/components/scientific-workspace";
+import {
+  useBestPreset,
+  useImageHistogram,
+  useImageInfo,
+  useImageRender,
+  useSourceDetection,
+} from "@/features/images/api";
 import {
   GaiaCrossMatch,
   gaiaMatchedIds,
@@ -40,25 +41,6 @@ import { rememberLastImageRecord } from "@/features/images/last-record";
 import { followOnQueriesEnabled } from "@/features/images/workspace-queries";
 
 const DEFAULT_DOCUMENT_TITLE = "Astroimage 🌌";
-
-function responseData<R extends { status: number; data: unknown }>(
-  data: R | undefined,
-): Extract<R, { status: 200 }>["data"] | undefined {
-  if (data?.status !== 200) {
-    return undefined;
-  }
-  return data.data as Extract<R, { status: 200 }>["data"];
-}
-
-function withHdu<T extends object>(
-  hdu: number | null,
-  params: T,
-): T | (T & { hdu: number }) {
-  if (hdu === null) {
-    return params;
-  }
-  return { ...params, hdu };
-}
 
 function joinedTitle(pageTitle: string, catalogName: string): string {
   if (catalogName.length === 0 || catalogName === pageTitle) {
@@ -125,8 +107,8 @@ function ImageDetailPage() {
   );
   const { inspectorOpen, selectedSource, renderParams, detectionParams } =
     workspace;
-  const infoQuery = useGetImageInfo(recordId);
-  const imageInfo = responseData(infoQuery.data);
+  const infoQuery = useImageInfo(recordId);
+  const imageInfo = infoQuery.data;
   const imageHdus = imageInfo?.hdus.images ?? [];
   const hdu = resolveWorkspaceHdu(
     workspace.hdu,
@@ -142,27 +124,30 @@ function ImageDetailPage() {
     setHduScope,
     setWorkspace,
   );
-  const renderQueryParams = withHdu(hdu, renderParams);
-  const renderQuery = useRenderFitsImage(recordId, renderQueryParams, {
-    query: { placeholderData: keepPreviousData },
-  });
-  const sourcesQueryParams = withHdu(hdu, detectionParams);
+  const renderQueryParams: RenderFitsImageParams = {
+    ...renderParams,
+    hdu: hdu ?? undefined,
+  };
+  const renderQuery = useImageRender(recordId, renderQueryParams);
+  const sourcesQueryParams: DetectSourcesParams = {
+    ...detectionParams,
+    hdu: hdu ?? undefined,
+  };
   const followOnsEnabled = followOnQueriesEnabled(renderQuery);
-  const sourcesQuery = useDetectSources(recordId, sourcesQueryParams, {
-    query: { enabled: followOnsEnabled },
-  });
-  const histogramParams = withHdu(hdu, { bins: 64 });
-  const histogramQuery = useRenderFitsHistogram(recordId, histogramParams, {
-    query: { enabled: followOnsEnabled },
-  });
+  const sourcesQuery = useSourceDetection(
+    recordId,
+    sourcesQueryParams,
+    followOnsEnabled,
+  );
+  const histogramQuery = useImageHistogram(
+    recordId,
+    { bins: 64, hdu: hdu ?? undefined },
+    followOnsEnabled,
+  );
   // Measuring the PSF is expensive, so this only runs when the inspector asks
   // for it instead of on every visit to the image.
-  const bestPresetQuery = useGetBestPreset(
-    recordId,
-    hdu === null ? undefined : { hdu },
-    { query: { enabled: false } },
-  );
-  const detected = responseData(sourcesQuery.data);
+  const bestPresetQuery = useBestPreset(recordId, hdu);
+  const detected = sourcesQuery.data;
   const detectionSummary = detected?.summary;
   const gaia = useGaiaCrossMatch(
     recordId,
@@ -184,7 +169,7 @@ function ImageDetailPage() {
   const extendedSources = detected?.extended_sources ?? [];
   const selectedPointId = sourceId(selectedSource, "point");
   const selectedExtendedId = sourceId(selectedSource, "extended");
-  const rendered = responseData(renderQuery.data);
+  const rendered = renderQuery.data;
   const preview = useRenderedObjectUrl(rendered);
 
   const scientificParams = hdu === null ? undefined : { hdu };
@@ -273,7 +258,7 @@ function ImageDetailPage() {
               view={
                 <>
                   <PixelHistogram
-                    histogram={responseData(histogramQuery.data)}
+                    histogram={histogramQuery.data}
                     isPending={histogramQuery.isPending}
                     isError={histogramQuery.isError}
                     pmin={renderParams.pmin}
@@ -302,7 +287,7 @@ function ImageDetailPage() {
                     bestPreset={{
                       isPending: bestPresetQuery.isFetching,
                       isError: bestPresetQuery.isError,
-                      data: responseData(bestPresetQuery.data),
+                      data: bestPresetQuery.data,
                       request: () => {
                         void bestPresetQuery.refetch();
                       },
