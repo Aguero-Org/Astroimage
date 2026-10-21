@@ -21,11 +21,40 @@ export type SourceOverlays = {
   onSelect?: (source: PointSourceSchema | ExtendedSourceSchema) => void;
 };
 
+function RenderSkeleton() {
+  return (
+    <output
+      data-testid="render-loading"
+      aria-label="Renderizando imagen…"
+      className="block relative h-full w-full overflow-hidden bg-black"
+    >
+      <span className="sr-only">Renderizando imagen…</span>
+      <Skeleton
+        className="absolute inset-0 rounded-none bg-white/5"
+        aria-hidden
+      />
+      <div
+        className="absolute top-16 right-3 flex gap-1 rounded-lg border border-sidebar-border bg-sidebar p-1 shadow-sm sm:top-20 sm:right-8"
+        aria-hidden
+      >
+        {SKELETON_TOOLS.map((tool) => (
+          <Skeleton key={tool} className="size-9 rounded-md" />
+        ))}
+      </div>
+      <Skeleton
+        className="absolute right-3 bottom-3 h-28 w-40 rounded-md bg-white/10 sm:right-8 sm:bottom-8"
+        aria-hidden
+      />
+    </output>
+  );
+}
+
 export function RenderedFitsSection({
   isPending,
   isError,
   error,
   rendered,
+  imageUrl,
   label,
   sources,
 }: Readonly<{
@@ -33,36 +62,12 @@ export function RenderedFitsSection({
   isError: boolean;
   error: unknown;
   rendered: unknown;
+  imageUrl: string | undefined;
   label: string;
   sources: SourceOverlays;
 }>) {
-  const objectUrl = useRenderedObjectUrl(rendered);
   if (isPending) {
-    return (
-      <output
-        data-testid="render-loading"
-        aria-label="Renderizando imagen…"
-        className="block relative h-full w-full overflow-hidden bg-black"
-      >
-        <span className="sr-only">Renderizando imagen…</span>
-        <Skeleton
-          className="absolute inset-0 rounded-none bg-white/5"
-          aria-hidden
-        />
-        <div
-          className="absolute top-16 right-3 flex gap-1 rounded-lg border border-sidebar-border bg-sidebar p-1 shadow-sm sm:top-20 sm:right-8"
-          aria-hidden
-        >
-          {SKELETON_TOOLS.map((tool) => (
-            <Skeleton key={tool} className="size-9 rounded-md" />
-          ))}
-        </div>
-        <Skeleton
-          className="absolute right-3 bottom-3 h-28 w-40 rounded-md bg-white/10 sm:right-8 sm:bottom-8"
-          aria-hidden
-        />
-      </output>
-    );
+    return <RenderSkeleton />;
   }
   if (isError) {
     return (
@@ -74,10 +79,13 @@ export function RenderedFitsSection({
       </p>
     );
   }
-  if (objectUrl) {
+  if (isBlob(rendered) && imageUrl === undefined) {
+    return <RenderSkeleton />;
+  }
+  if (imageUrl) {
     return (
       <FitsImageViewer
-        imageUrl={objectUrl}
+        imageUrl={imageUrl}
         label={label}
         className="h-full rounded-none border-0"
       >

@@ -156,6 +156,7 @@ function ImageWorkspacePage({
               isError={renderQuery.isError}
               error={renderQuery.error}
               rendered={rendered}
+              imageUrl={preview}
               label={titleWithDescription}
               sources={{
                 pointSources,
