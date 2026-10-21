@@ -9,6 +9,7 @@ import structlog
 from fastapi import APIRouter, Depends, Header, Path, Query
 
 from astroimage.shared.errors import InternalServerError, NotFoundError
+from astroimage.shared.query import HduIndex
 from astroimage.sources.deps import (
     gaia_background_dependency,
     gaia_job_registry_dependency,
@@ -36,10 +37,6 @@ _log = structlog.get_logger("astroimage.sources.controller")
 RecordId = Annotated[
     UUID,
     Path(description="Stored FITS record id"),
-]
-HduIndex = Annotated[
-    int,
-    Query(ge=0, description="Optional image HDU index; defaults to the first 2D image HDU"),
 ]
 
 FwhmParam = Annotated[float, Query(ge=0.5)]
@@ -177,7 +174,7 @@ async def detect_sources(
     record_id: RecordId,
     service: Annotated[SourceDetectionService, Depends(source_service_dependency)],
     client_id: Annotated[str, Header(alias="X-Client-Id")] = "anonymous",
-    hdu: HduIndex = None,  # type: ignore[assignment]  # nullable default, non-nullable query
+    hdu: HduIndex = None,
     fwhm: FwhmParam = _DEFAULTS.fwhm,
     sigma: SigmaParam = _DEFAULTS.sigma,
     min_snr: MinSnrParam = _DEFAULTS.min_snr,
@@ -283,7 +280,7 @@ async def get_best_preset(
     record_id: RecordId,
     service: Annotated[SourceDetectionService, Depends(source_service_dependency)],
     client_id: Annotated[str, Header(alias="X-Client-Id")] = "anonymous",
-    hdu: HduIndex = None,  # type: ignore[assignment]  # nullable default, non-nullable query
+    hdu: HduIndex = None,
 ) -> SourcePresetResponse:
     _log.info("best_preset_start", record_id=str(record_id), client_id=client_id)
     return await service.recommend_preset(
@@ -304,7 +301,7 @@ async def verify_sources_gaia(
     background: Annotated[GaiaBackgroundVerify, Depends(gaia_background_dependency)],
     jobs: Annotated[GaiaJobRegistry, Depends(gaia_job_registry_dependency)],
     client_id: Annotated[str, Header(alias="X-Client-Id")] = "anonymous",
-    hdu: HduIndex = None,  # type: ignore[assignment]  # nullable default, non-nullable query
+    hdu: HduIndex = None,
     fwhm: FwhmParam = _DEFAULTS.fwhm,
     sigma: SigmaParam = _DEFAULTS.sigma,
     min_snr: MinSnrParam = _DEFAULTS.min_snr,
@@ -410,7 +407,7 @@ async def get_sources_gaia_job(
     if completed is not None:
         return completed
     if jobs.is_running(job_id):
-        return GaiaJobStatusSchema(job_id=job_id, record_id=record_id)
+        return GaiaJobStatusSchema(status="pending", job_id=job_id, record_id=record_id)
     failure = jobs.get_failure(job_id)
     if failure is not None:
         raise failure

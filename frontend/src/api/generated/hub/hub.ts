@@ -343,8 +343,16 @@ export const selectHubbleCandidate = async (selectCandidateRequestSchema: Select
     const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
     if (!h) return {};
     if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Array.isArray(h)) return Object.fromEntries(h);
-    return h;
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
   };
 return customFetch<selectHubbleCandidateResponse>(getSelectHubbleCandidateUrl(),
   {
@@ -359,11 +367,13 @@ return customFetch<selectHubbleCandidateResponse>(getSelectHubbleCandidateUrl(),
 
 
 
+export const getSelectHubbleCandidateMutationKey = () => ['selectHubbleCandidate'] as const;
+
 export const getSelectHubbleCandidateMutationOptions = <TError = HTTPValidationError,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof selectHubbleCandidate>>, TError,SelectHubbleCandidateMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof selectHubbleCandidate>>, TError,SelectHubbleCandidateMutationVariables, TContext> => {
 
-const mutationKey = ['selectHubbleCandidate'];
+const mutationKey = getSelectHubbleCandidateMutationKey();
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -568,11 +578,13 @@ export const cancelImageTransfer = async (transferId: string, options?: Paramete
 
 
 
+export const getCancelImageTransferMutationKey = () => ['cancelImageTransfer'] as const;
+
 export const getCancelImageTransferMutationOptions = <TError = HTTPValidationError,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof cancelImageTransfer>>, TError,CancelImageTransferMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof cancelImageTransfer>>, TError,CancelImageTransferMutationVariables, TContext> => {
 
-const mutationKey = ['cancelImageTransfer'];
+const mutationKey = getCancelImageTransferMutationKey();
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -658,11 +670,13 @@ export const resumeImageTransfer = async (transferId: string, options?: Paramete
 
 
 
+export const getResumeImageTransferMutationKey = () => ['resumeImageTransfer'] as const;
+
 export const getResumeImageTransferMutationOptions = <TError = HTTPValidationError,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof resumeImageTransfer>>, TError,ResumeImageTransferMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof resumeImageTransfer>>, TError,ResumeImageTransferMutationVariables, TContext> => {
 
-const mutationKey = ['resumeImageTransfer'];
+const mutationKey = getResumeImageTransferMutationKey();
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -748,11 +762,13 @@ export const deleteHubbleImage = async (recordId: string, options?: Parameters<t
 
 
 
+export const getDeleteHubbleImageMutationKey = () => ['deleteHubbleImage'] as const;
+
 export const getDeleteHubbleImageMutationOptions = <TError = HTTPValidationError,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteHubbleImage>>, TError,DeleteHubbleImageMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof deleteHubbleImage>>, TError,DeleteHubbleImageMutationVariables, TContext> => {
 
-const mutationKey = ['deleteHubbleImage'];
+const mutationKey = getDeleteHubbleImageMutationKey();
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options

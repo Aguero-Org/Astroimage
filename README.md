@@ -121,6 +121,21 @@ pnpm generate:api             # cliente Orval
 
 Componentes shadcn: `pnpm dlx shadcn@latest add <component>`.
 
+### Mutation testing
+
+Guía, comandos y resultados: [`docs/mutation-testing.md`](./docs/mutation-testing.md).
+
+```bash
+# Backend (WSL)
+wsl.exe -d Ubuntu -- bash -lc "cd /mnt/d/repos/tip/Astroimage/backend && UV_PROJECT_ENVIRONMENT=/tmp/astroimage-mutmut-venv ~/.local/bin/uv run mutmut run --max-children 2"
+
+# Frontend
+cd frontend
+pnpm test:mutation:lib
+```
+
+Mutation testing es un análisis periódico, no un gate de CI.
+
 ## Docker
 
 Stack de la aplicación (API + frontend + PostgreSQL + MinIO):

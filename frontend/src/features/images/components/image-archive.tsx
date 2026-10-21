@@ -1,6 +1,7 @@
+import { Fragment } from "react";
 import type { FitsMetadataSchema } from "@/api/generated/model";
-import { BrandLoader } from "@/components/brand-loader";
 import { HelpHint } from "@/components/ui/help-hint";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   archiveGroupRows,
   IMAGE_ARCHIVE_GROUPS,
@@ -13,9 +14,35 @@ type ImageArchiveProps = {
   isPending: boolean;
 };
 
+const SKELETON_GROUPS = [0, 1, 2];
+const SKELETON_ROWS = [0, 1, 2, 3];
+
+function ImageArchiveSkeleton() {
+  return (
+    <output className="block" data-testid="image-archive-skeleton">
+      <span className="sr-only">Cargando metadatos…</span>
+      <div aria-hidden>
+        {SKELETON_GROUPS.map((group) => (
+          <div key={group} className="mb-3">
+            <Skeleton className="mb-2 h-4 w-24" />
+            <div className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1">
+              {SKELETON_ROWS.map((row) => (
+                <Fragment key={row}>
+                  <Skeleton className="h-3.5 w-16" />
+                  <Skeleton className="h-3.5 w-28" />
+                </Fragment>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    </output>
+  );
+}
+
 export function ImageArchive({ info, isPending }: Readonly<ImageArchiveProps>) {
   if (isPending) {
-    return <BrandLoader label="Cargando metadatos…" />;
+    return <ImageArchiveSkeleton />;
   }
   if (!info) {
     return (

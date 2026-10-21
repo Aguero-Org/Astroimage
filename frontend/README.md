@@ -18,3 +18,16 @@ includes WCAG 2.2 AA checks (axe) on home and the image viewer with the inspecto
 open, in light and dark themes, including the open preset list. The FITS canvas /
 OpenSeadragon navigator are excluded. Devtools overlays are hidden during e2e so
 they do not count as product UI.
+
+## Mutation testing
+
+Stryker + Vitest covers `src/lib` and the `catalogs`/`images` features. Reports are
+written to `reports/mutation/` (ignored by Git). See
+[`docs/mutation-testing.md`](../docs/mutation-testing.md) for the TypeScript 7
+workaround, results and survivor triage.
+
+```sh
+pnpm test:mutation:lib
+pnpm test:mutation:catalogs
+pnpm test:mutation:images
+```

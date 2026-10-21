@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import type { SourcePresetResponse } from "@/api/generated/model";
@@ -193,10 +193,17 @@ describe("SourceDetectionForm con preset recomendado", () => {
     expect(request).toHaveBeenCalledTimes(1);
   });
 
-  it("rellena los campos cuando llega la medición", () => {
-    renderWithBestPreset({ data: measured });
+  it("rellena los campos con la medición al pulsar el botón", async () => {
+    const user = userEvent.setup();
+    renderWithBestPreset({
+      request: vi.fn().mockResolvedValue(measured),
+    });
 
-    expect(screen.getByTestId("source-field-fwhm")).toHaveValue("9.5");
+    await user.click(screen.getByTestId("source-best-preset"));
+
+    await waitFor(() => {
+      expect(screen.getByTestId("source-field-fwhm")).toHaveValue("9.5");
+    });
     expect(screen.getByTestId("source-field-min_distance")).toHaveValue("8");
     expect(screen.getByTestId("source-field-ext_smooth_sigma")).toHaveValue(
       "16",
@@ -204,9 +211,17 @@ describe("SourceDetectionForm con preset recomendado", () => {
     expect(screen.getByTestId("source-field-ext_min_area")).toHaveValue("900");
   });
 
-  it("deja intactos los parámetros que la medición no toca", () => {
-    renderWithBestPreset({ data: measured });
+  it("deja intactos los parámetros que la medición no toca", async () => {
+    const user = userEvent.setup();
+    renderWithBestPreset({
+      request: vi.fn().mockResolvedValue(measured),
+    });
 
+    await user.click(screen.getByTestId("source-best-preset"));
+
+    await waitFor(() => {
+      expect(screen.getByTestId("source-field-fwhm")).toHaveValue("9.5");
+    });
     expect(screen.getByTestId("source-field-min_snr")).toHaveValue(
       String(DEFAULT_SOURCE_DETECTION_PARAMS.min_snr),
     );
@@ -217,28 +232,18 @@ describe("SourceDetectionForm con preset recomendado", () => {
 
   it("conserva lo que el usuario había escrito antes de pedirlo", async () => {
     const user = userEvent.setup();
-    const withPreset = (data: SourcePresetResponse | undefined) => (
-      <TooltipProvider delayDuration={0}>
-        <SourceDetectionForm
-          isPending={false}
-          bestPreset={{
-            isPending: false,
-            isError: false,
-            data,
-            request: vi.fn(),
-          }}
-          onSubmit={vi.fn()}
-        />
-      </TooltipProvider>
-    );
-    const { rerender } = render(withPreset(undefined));
+    renderWithBestPreset({
+      request: vi.fn().mockResolvedValue(measured),
+    });
 
     await user.clear(screen.getByTestId("source-field-min_snr"));
     await user.type(screen.getByTestId("source-field-min_snr"), "42");
-    rerender(withPreset(measured));
+    await user.click(screen.getByTestId("source-best-preset"));
 
+    await waitFor(() => {
+      expect(screen.getByTestId("source-field-fwhm")).toHaveValue("9.5");
+    });
     expect(screen.getByTestId("source-field-min_snr")).toHaveValue("42");
-    expect(screen.getByTestId("source-field-fwhm")).toHaveValue("9.5");
   });
 
   it("muestra el FWHM medido y cuántas fuentes se usaron", () => {

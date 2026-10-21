@@ -3,7 +3,6 @@ from __future__ import annotations
 import asyncio
 import math
 import time
-import warnings
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from typing import Literal
@@ -14,12 +13,12 @@ import numpy as np
 import pandas as pd
 import structlog
 from astropy.coordinates import SkyCoord
-from astropy.io import fits
-from astropy.wcs import WCS, FITSFixedWarning
+from astropy.wcs import WCS
 from opentelemetry import trace
 
-from astroimage.fits.reader import FitsMetadata, FitsReader
+from astroimage.fits.reader import FitsReader
 from astroimage.fits.service import FitsService
+from astroimage.fits.wcs import to_sky, world_coordinates
 from astroimage.sources.cache import (
     CachedDetection,
     DetectionCache,
@@ -93,27 +92,7 @@ class _SourceEntry:
     coordinate: SkyCoord | None
 
 
-def _world_coordinates(metadata: FitsMetadata) -> WCS | None:
-    if not metadata.wcs.present:
-        return None
-    header = fits.Header()
-    for key, value in metadata.header.items():
-        header[key] = value
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore", FITSFixedWarning)
-        return WCS(header, naxis=2, relax=True)
-
-
-def _to_sky(wcs: WCS, coordinate_x: float, coordinate_y: float) -> SkyCoord:
-    world = wcs.pixel_to_world(coordinate_x, coordinate_y)
-    return SkyCoord(
-        ra=float(world.ra.deg) * u.deg,
-        dec=float(world.dec.deg) * u.deg,
-        frame="icrs",
-    )
-
-
-def _field_center(detected_coords: list[SkyCoord]) -> SkyCoord:
+def _mean_coordinate(detected_coords: list[SkyCoord]) -> SkyCoord:
     return SkyCoord(
         ra=float(np.mean([coord.ra.deg for coord in detected_coords])) * u.deg,
         dec=float(np.mean([coord.dec.deg for coord in detected_coords])) * u.deg,
@@ -183,7 +162,7 @@ def _block_queries(
     count = min(_GAIA_CONCURRENCY, len(ordered))
     queries: list[tuple[SkyCoord, float]] = []
     for chunk in _partition_coords(ordered, count):
-        center = _field_center(chunk)
+        center = _mean_coordinate(chunk)
         radius = search_radius_arcsec(
             center,
             chunk,
@@ -630,7 +609,7 @@ class GaiaVerificationService:
             # si todos los bloques devuelven vac\u00edo, reintentamos sobre el
             # campo completo para evitar falsos negativos en campos densos.
             _log.info("gaia_fallback_triggered", record_id=str(record_id))
-            fallback_center = _field_center(prepared.entry_coords)
+            fallback_center = _mean_coordinate(prepared.entry_coords)
             fallback_radius = search_radius_arcsec(
                 fallback_center,
                 prepared.entry_coords,
@@ -680,7 +659,7 @@ class GaiaVerificationService:
             error: str | None = None
             queried = False
             if prepared.wcs is not None and prepared.entry_coords:
-                center = _field_center(prepared.entry_coords)
+                center = _mean_coordinate(prepared.entry_coords)
                 radius = search_radius_arcsec(
                     center,
                     prepared.entry_coords,
@@ -715,7 +694,7 @@ class GaiaVerificationService:
             source_name=source_name,
             hdu_index=hdu_index,
         )
-        wcs = _world_coordinates(metadata)
+        wcs = world_coordinates(metadata)
         entries = self._entries(
             detection_result.point_sources,
             detection_result.extended_sources,
@@ -769,6 +748,7 @@ class GaiaVerificationService:
             error=error,
         )
         return GaiaVerificationResponse(
+            status="completed",
             source_name=prepared.source_name,
             match_radius_arcsec=prepared.match_config.match_radius_arcsec,
             probability_power=prepared.match_config.probability_power,
@@ -804,7 +784,7 @@ class GaiaVerificationService:
                 source.source_id,
                 "point",
                 source.rank,
-                _to_sky(wcs, source.xcentroid, source.ycentroid),
+                to_sky(wcs, source.xcentroid, source.ycentroid),
             )
             for source in point_sources
         )
@@ -813,7 +793,7 @@ class GaiaVerificationService:
                 source.source_id,
                 "extended",
                 source.rank,
-                _to_sky(wcs, source.xcentroid, source.ycentroid),
+                to_sky(wcs, source.xcentroid, source.ycentroid),
             )
             for source in extended_sources
         )

@@ -102,7 +102,7 @@ Permite analizar una imagen obtenida, identificar las fuentes presentes y contra
 
 El diagrama de arquitectura se realiza tomando como user story testigo **US5 - Buscar y obtener imágenes**.
 
-![Diagrama de arquitectura US5](./architecture/entrega1-us5.svg)
+![Diagrama de arquitectura US5](./architecture/entrega1-us5.png)
 
 Representa el flujo de búsqueda, selección y descarga de una imagen de Hubble hasta que queda disponible en la aplicación.
 La mitad izquierda es el **frontend** (Vite + React SPA); el centro es el **backend** (FastAPI `astroimage`); la derecha son **datos y terceros**.

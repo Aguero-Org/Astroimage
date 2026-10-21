@@ -5,6 +5,11 @@ import structlog
 
 _OTLP_EXPORTER_LOGGER = "opentelemetry.exporter.otlp.proto.http.trace_exporter"
 
+catalog_jobs_log = structlog.get_logger("astroimage.catalogs.jobs")
+catalog_service_log = structlog.get_logger("astroimage.catalogs.service")
+catalog_vizier_log = structlog.get_logger("astroimage.catalogs.vizier")
+jobs_log = structlog.get_logger("astroimage.shared.jobs")
+
 
 def _quiet_third_party_loggers() -> None:
     logging.getLogger(_OTLP_EXPORTER_LOGGER).setLevel(logging.CRITICAL)

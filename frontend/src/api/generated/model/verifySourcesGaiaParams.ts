@@ -8,9 +8,8 @@
 export type VerifySourcesGaiaParams = {
 /**
  * Optional image HDU index; defaults to the first 2D image HDU
- * @minimum 0
  */
-hdu?: number;
+hdu?: number | null;
 /**
  * @minimum 0.5
  */

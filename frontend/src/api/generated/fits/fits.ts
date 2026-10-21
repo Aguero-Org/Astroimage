@@ -83,11 +83,13 @@ formData.append(`file`, bodyExtractFitsMetadata.file);
 
 
 
+export const getExtractFitsMetadataMutationKey = () => ['extractFitsMetadata'] as const;
+
 export const getExtractFitsMetadataMutationOptions = <TError = HTTPValidationError,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof extractFitsMetadata>>, TError,ExtractFitsMetadataMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof extractFitsMetadata>>, TError,ExtractFitsMetadataMutationVariables, TContext> => {
 
-const mutationKey = ['extractFitsMetadata'];
+const mutationKey = getExtractFitsMetadataMutationKey();
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options

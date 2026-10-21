@@ -1,5 +1,6 @@
 import type {
   ExtendedSourceSchema,
+  GaiaVerificationResponse,
   PointSourceSchema,
   SourceDetectionResponse,
 } from "@/api/generated/model";
@@ -53,6 +54,39 @@ export function mockSourceDetection(
     summary: { point_count: 1, extended_count: 1 },
     point_sources: [MOCK_POINT_SOURCE],
     extended_sources: [MOCK_EXTENDED_SOURCE],
+  };
+}
+
+export function mockGaiaVerification(
+  record: MockImageRecord,
+): GaiaVerificationResponse {
+  return {
+    status: "completed",
+    source_name: record.name,
+    match_radius_arcsec: 1,
+    probability_power: 0.9,
+    wcs_present: true,
+    queried: true,
+    summary: {
+      point: { count: 1, matched: 1 },
+      extended: { count: 1, matched: 0 },
+    },
+    matches: [
+      {
+        source_id: MOCK_POINT_SOURCE.source_id,
+        object_type: "point",
+        rank: MOCK_POINT_SOURCE.rank,
+        gaia_match: true,
+        gaia_separation_arcsec: 0.4,
+        gaia_probability: 0.98,
+      },
+      {
+        source_id: MOCK_EXTENDED_SOURCE.source_id,
+        object_type: "extended",
+        rank: MOCK_EXTENDED_SOURCE.rank,
+        gaia_match: false,
+      },
+    ],
   };
 }
 

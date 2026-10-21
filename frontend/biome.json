@@ -12,6 +12,8 @@
       "!src/routeTree.gen.ts",
       "!src/api/generated",
       "!dist",
+      "!.stryker-tmp",
+      "!reports",
       "!playwright-report",
       "!test-results",
       "!public"
