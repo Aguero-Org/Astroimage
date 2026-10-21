@@ -23,6 +23,7 @@ from tests.unit.sources.helpers import (
 class _FakeFitsService:
     def __init__(self, payload: bytes) -> None:
         self._payload = payload
+        self.metadata_writes = 0
         self._record = FitsRecord(
             id=uuid4(),
             object_key="fits/record-uuid.fits",
@@ -45,6 +46,7 @@ class _FakeFitsService:
         *,
         hdu_index: object = None,
     ) -> FitsRecord:
+        self.metadata_writes += 1
         return self._record
 
 
@@ -170,3 +172,32 @@ async def test_detect_from_missing_record_raises() -> None:
 
     with pytest.raises(LookupError):
         await service.detect_from_record(uuid4())
+
+
+async def test_detect_from_record_writes_metadata_until_analysis_matches() -> None:
+    image, _ = synthetic_point_source_image()
+    payload = fits_bytes_from_image(image)
+    fits = _FakeFitsService(payload)
+    service = SourceDetectionService(fits=fits)  # type: ignore[arg-type]
+    record_id = uuid4()
+
+    await service.detect_from_record(
+        record_id,
+        config=PointDetectionConfigSchema(sigma=6.0),
+    )
+    assert fits.metadata_writes == 1
+
+    fits._record.metadata_payload = {"image": {}, "hdus": {"selected": 0}}
+    await service.detect_from_record(
+        record_id,
+        config=PointDetectionConfigSchema(sigma=7.0),
+    )
+    assert fits.metadata_writes == 1
+
+    with pytest.raises(ValueError, match="HDU 2"):
+        await service.detect_from_record(
+            record_id,
+            hdu_index=2,
+            config=PointDetectionConfigSchema(sigma=8.0),
+        )
+    assert fits.metadata_writes == 2

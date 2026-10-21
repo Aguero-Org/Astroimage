@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import asyncio
-from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from typing import Literal
 from uuid import UUID
@@ -44,10 +43,6 @@ _log = structlog.get_logger("astroimage.sources.gaia")
 _tracer = trace.get_tracer("astroimage.sources.gaia")
 _GAIA_QUERY_TIMEOUT_S = 120.0
 _GAIA_CONCURRENCY = 8
-_gaia_executor = ThreadPoolExecutor(
-    max_workers=_GAIA_CONCURRENCY,
-    thread_name_prefix="gaia",
-)
 
 
 @dataclass(frozen=True)
@@ -155,8 +150,7 @@ async def _search_block(
     center: SkyCoord,
     radius: float,
 ) -> list[GaiaObject]:
-    loop = asyncio.get_running_loop()
-    return await loop.run_in_executor(_gaia_executor, provider.search_cone, center, radius)
+    return await asyncio.to_thread(provider.search_cone, center, radius)
 
 
 class GaiaVerificationService:

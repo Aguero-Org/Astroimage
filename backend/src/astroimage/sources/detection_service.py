@@ -48,6 +48,20 @@ _log = structlog.get_logger("astroimage.sources.detection")
 _tracer = trace.get_tracer("astroimage.sources.detection")
 
 
+def _analysis_matches(metadata_payload: object, hdu_index: int | None) -> bool:
+    if not isinstance(metadata_payload, dict) or "image" not in metadata_payload:
+        return False
+    hdus = metadata_payload.get("hdus")
+    if not isinstance(hdus, dict):
+        return False
+    selected = hdus.get("selected")
+    if not isinstance(selected, int):
+        return False
+    if hdu_index is None:
+        return True
+    return selected == hdu_index
+
+
 def _optional_float(value: float | None) -> float | None:
     if value is None:
         return None
@@ -115,12 +129,13 @@ class SourceDetectionService:
             return cached.result
         record = await self._fits.get_record(record_id)
         payload = await self._fits.get_payload(record)
-        _log.info(
-            "metadata_analysis_start",
-            record_id=str(record_id),
-            payload_bytes=len(payload),
-        )
-        await self._fits.update_record_metadata(record, payload, hdu_index=hdu_index)
+        if not _analysis_matches(record.metadata_payload, hdu_index):
+            _log.info(
+                "metadata_analysis_start",
+                record_id=str(record_id),
+                payload_bytes=len(payload),
+            )
+            await self._fits.update_record_metadata(record, payload, hdu_index=hdu_index)
         _log.debug("detect_running", record_id=str(record_id))
         result = self.detect(
             payload,
