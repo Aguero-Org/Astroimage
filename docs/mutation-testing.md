@@ -113,21 +113,22 @@ wsl.exe -d Ubuntu -- bash -lc \
 | `catalogs/crossmatch.py` | 127 | 9 | 136 |
 | `catalogs/scoring.py` | 60 | 0 | 60 |
 | `fits/wcs.py` | 47 | 2 | 49 |
-| `render/colormap.py` | 4 | 246 | 250 |
+| `render/colormap.py` | 225 | 25 | 250 |
 | `render/normalization.py` | 107 | 4 | 111 |
-| `render/png.py` | 32 | 12 | 44 |
+| `render/png.py` | 39 | 5 | 44 |
 | `render/zscale.py` | 263 | 19 | 282 |
-| **Total** | **640** | **292** | **932** |
+| **Total** | **868** | **64** | **932** |
 
-Mutation score global: **68,7 %** (640/932). No hubo timeouts. La tabla combina la
+Mutation score global: **93,1 %** (868/932). No hubo timeouts. La tabla combina la
 corrida inicial con las corridas dirigidas posteriores de `crossmatch`,
-`normalization` y `zscale`; `colormap`, `png`, `scoring` y `wcs` siguen en su estado
+`normalization`, `zscale`, `colormap` y `png`; `scoring` y `wcs` siguen en su estado
 inicial.
 
 ### Hallazgos iniciales
 
-- `colormap.py` concentra 246 de los 292 supervivientes actuales. Los tests validan
-  forma y extremos de la imagen, pero no los valores intermedios de las LUT.
+- `colormap.py` concentraba 246 de los 292 supervivientes iniciales: los tests
+  validaban forma y extremos, pero no los valores intermedios de las LUT. La corrida
+  dirigida posterior los redujo a 25 equivalentes (ver abajo).
 - `crossmatch.py` quedó cubierto con identificadores visibles/ocultos, coordenadas
   parcialmente nulas, filas inválidas y límites de radio/potencia: 127/136 killed.
   Los 9 restantes son equivalentes (frames por defecto ICRS, `strict` redundante,
@@ -138,9 +139,10 @@ inicial.
 - `zscale.py` quedó en 263/282. Se cubren sampler, sigma, ventana, mediana par,
   crecimiento y límites de referencia; los 19 restantes son en su mayoría
   equivalentes de convergencia, `dtype` o igualdad exacta en el umbral.
-- Varios supervivientes de `_fit_line`, del `frame=None` de WCS y del cambio
-  `format="png"` a `"PNG"` parecen equivalentes; deben revisarse antes de añadir
-  tests o exclusiones.
+- Varios supervivientes de `_fit_line` y del `frame=None` de WCS parecen
+  equivalentes; deben revisarse antes de añadir tests o exclusiones. El cambio
+  `format="png"` a `"PNG"` quedó confirmado como equivalente en la corrida dirigida
+  de `png`.
 
 ### Corrida dirigida render (`normalization` + `zscale`)
 
@@ -155,6 +157,25 @@ inicial.
   umbral; `zscale_bounds` `3,5` son `dtype` de entrada.
 - La verificación de `_fit_line` `34,35,77,79` se hizo con 10.000 arrays aleatorios
   sin diferencias observables; se aceptan como equivalentes de convergencia/borde.
+
+### Corrida dirigida render (`colormap` + `png`)
+
+- 294 mutantes: **264 killed**, **30 survived**, 0 timeouts.
+- Se añadieron tests de referencia de las cinco LUT (`grey`, `inverse`, `heat`,
+  `rainbow`, `cube_helix`) contra sus fórmulas completas, 256 filas, `dtype` y el
+  escalado de `_build_luts`; también el mapeo de todos los índices en
+  `apply_colormap`.
+- `colormap.py`: 25 supervivientes, todos equivalentes.
+  - `_heat_lut` `14,23,27,36`: límites superior de `np.clip` a `None`/`2.0`; con
+    `intensity` en [0,1] el clip superior es redundante.
+  - `_rainbow_lut` `17,21,47-54,70-73,75,82,91,92`: `astype(None)`, `% 7`,
+    condiciones duplicadas/inalcanzables (`==5`, `!=5`, `==6`) y valores del
+    segmento que nunca se alcanza; el array resultante no cambia.
+  - `_cube_helix_lut` `71,72,77`: `np.clip` inferior/superior; los canales
+    generados ya están en [0,1].
+- `png.py`: 5 supervivientes equivalentes. `mode=None` y omitir `mode` dejan que
+  Pillow infiera `L`/`RGB` desde el array ya convertido a `uint8`; `format="png"` es
+  equivalente a `"PNG"` (Pillow normaliza el nombre del formato).
 
 ## Frontend (Stryker + Vitest)
 
