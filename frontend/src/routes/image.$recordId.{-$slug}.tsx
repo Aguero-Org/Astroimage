@@ -39,6 +39,7 @@ import {
 import { rememberLastImageRecord } from "@/features/images/last-record";
 import { useImageWorkspace } from "@/features/images/use-image-workspace";
 import { followOnQueriesEnabled } from "@/features/images/workspace-queries";
+import { useDocumentTitle } from "@/hooks/use-document-title";
 
 const DEFAULT_DOCUMENT_TITLE = "Astroimage 🌌";
 
@@ -125,12 +126,10 @@ function ImageWorkspacePage({
   const catalogName = imageInfo?.display_name?.trim() ?? "";
   const titleWithDescription = joinedTitle(pageTitle, catalogName);
 
-  useEffect(() => {
-    document.title = `${titleWithDescription} - Astroimage`;
-    return () => {
-      document.title = DEFAULT_DOCUMENT_TITLE;
-    };
-  }, [titleWithDescription]);
+  useDocumentTitle(
+    `${titleWithDescription} - Astroimage`,
+    DEFAULT_DOCUMENT_TITLE,
+  );
   const pointSources = detected?.point_sources ?? [];
   const extendedSources = detected?.extended_sources ?? [];
   const selectedPointId = sourceId(selectedSource, "point");
