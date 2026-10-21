@@ -5,9 +5,10 @@ from sqlalchemy import engine_from_config, pool
 
 from astroimage.config import get_settings
 from astroimage.fits.model import FitsRecord
+from astroimage.hub.model import ImageTransfer
 from astroimage.shared.database import Base
 
-_ = FitsRecord
+_ = (FitsRecord, ImageTransfer)
 
 config = context.config
 if config.config_file_name is not None:
