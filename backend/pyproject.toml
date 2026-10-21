@@ -69,6 +69,7 @@ src = ["src", "tests"]
 # qualified name is listed here, which is what lets `except Exception` stand
 # once the call records `exc_info`.
 logger-objects = [
+    "astroimage.shared.logging.jobs_log",
     "astroimage.shared.logging.catalog_jobs_log",
     "astroimage.shared.logging.catalog_service_log",
     "astroimage.shared.logging.catalog_vizier_log",
