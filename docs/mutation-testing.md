@@ -110,31 +110,51 @@ wsl.exe -d Ubuntu -- bash -lc \
 
 | Archivo | Killed | Survived | Total |
 | --- | ---: | ---: | ---: |
-| `catalogs/crossmatch.py` | 98 | 38 | 136 |
+| `catalogs/crossmatch.py` | 127 | 9 | 136 |
 | `catalogs/scoring.py` | 60 | 0 | 60 |
 | `fits/wcs.py` | 47 | 2 | 49 |
 | `render/colormap.py` | 4 | 246 | 250 |
-| `render/normalization.py` | 92 | 19 | 111 |
+| `render/normalization.py` | 107 | 4 | 111 |
 | `render/png.py` | 32 | 12 | 44 |
-| `render/zscale.py` | 202 | 80 | 282 |
-| **Total** | **535** | **397** | **932** |
+| `render/zscale.py` | 263 | 19 | 282 |
+| **Total** | **640** | **292** | **932** |
 
-Mutation score global: **57,4 %** (535/932). No hubo timeouts.
+Mutation score global: **68,7 %** (640/932). No hubo timeouts. La tabla combina la
+corrida inicial con las corridas dirigidas posteriores de `crossmatch`,
+`normalization` y `zscale`; `colormap`, `png`, `scoring` y `wcs` siguen en su estado
+inicial.
 
 ### Hallazgos iniciales
 
-- `colormap.py` concentra 246 de los 397 supervivientes. Los tests validan forma y
-  extremos de la imagen, pero no los valores intermedios de las LUT.
-- `_join_identifiers` en `crossmatch.py` no está realmente ejercitado: los fixtures
-  usan la columna `_2MASS`, por lo que la lista de identificadores queda vacía.
-- Faltan casos límite para coordenadas parcialmente nulas, `continue` frente a
-  `break`, y para el valor por defecto de `probability_power`.
-- `normalization.py` no comprueba el `dtype` del retorno temprano para una imagen
-  completamente NaN ni la fórmula exacta del stretch logarítmico.
-- El test de `limits="zscale"` no distingue esa rama de la rama de percentiles.
+- `colormap.py` concentra 246 de los 292 supervivientes actuales. Los tests validan
+  forma y extremos de la imagen, pero no los valores intermedios de las LUT.
+- `crossmatch.py` quedó cubierto con identificadores visibles/ocultos, coordenadas
+  parcialmente nulas, filas inválidas y límites de radio/potencia: 127/136 killed.
+  Los 9 restantes son equivalentes (frames por defecto ICRS, `strict` redundante,
+  cap inobservable de 2 y `or True` en unmatched).
+- `normalization.py` quedó en 107/111: se cubren fórmulas exactas, `dtype`, gamma,
+  clipping, zscale frente a percentiles y error de stretch. Los 4 supervivientes
+  son cambios de `dtype`/asignación sin efecto observable para arrays numéricos.
+- `zscale.py` quedó en 263/282. Se cubren sampler, sigma, ventana, mediana par,
+  crecimiento y límites de referencia; los 19 restantes son en su mayoría
+  equivalentes de convergencia, `dtype` o igualdad exacta en el umbral.
 - Varios supervivientes de `_fit_line`, del `frame=None` de WCS y del cambio
   `format="png"` a `"PNG"` parecen equivalentes; deben revisarse antes de añadir
   tests o exclusiones.
+
+### Corrida dirigida render (`normalization` + `zscale`)
+
+- 393 mutantes: **370 killed**, **23 survived**, 0 timeouts.
+- `normalization.py`: 4 supervivientes (`x_normalize_to_uint8__mutmut_3,5,27,29`).
+  Son cambios de `dtype` de entrada, `np.all(None)` y asignación de `None` a píxeles
+  no finitos; el resultado observable no cambia para arrays numéricos.
+- `zscale.py`: 19 supervivientes. `_sample_pixels` `50,52` son `dtype`; `_compute_sigma`
+  `3,7,14,16` son ramas inalcanzables tras el early return; `_fit_line`
+  `10-13,18,20,29` son escalas/órdenes equivalentes, `34,35` solo cambian la
+  convergencia del loop y `77,79` solo difieren si un residuo cae exactamente en el
+  umbral; `zscale_bounds` `3,5` son `dtype` de entrada.
+- La verificación de `_fit_line` `34,35,77,79` se hizo con 10.000 arrays aleatorios
+  sin diferencias observables; se aceptan como equivalentes de convergencia/borde.
 
 ## Frontend (Stryker + Vitest)
 

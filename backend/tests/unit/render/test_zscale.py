@@ -119,6 +119,50 @@ def test_compute_sigma_uses_sample_standard_deviation() -> None:
 
     assert sigma == pytest.approx(float(np.std(residuals, ddof=1)))
 
+    pair = np.array([1.0, 3.0])
+    assert _compute_sigma(pair, np.ones(pair.size, dtype=bool)) == pytest.approx(
+        float(np.std(pair, ddof=1))
+    )
+
+
+def test_sample_pixels_uses_square_root_stride() -> None:
+    image = np.arange(52.0).reshape(2, 26)
+
+    samples = _sample_pixels(image, max_pixels=3)
+
+    assert np.array_equal(samples, np.array([0.0, 2.0, 4.0]))
+
+
+def test_zscale_bounds_uses_two_middle_values_for_even_sample_count() -> None:
+    image = np.array(
+        [
+            [-20.113343063411623],
+            [3.8702335159766923],
+            [4.845340839939385],
+            [6.437747362907515],
+            [6.570712723243113],
+            [8.208955370771104],
+            [8.259833406843134],
+            [10.458580282677438],
+        ]
+    )
+
+    low, high = zscale_bounds(image)
+
+    assert low == pytest.approx(-16.94103394071387)
+    assert high == pytest.approx(10.458580282677438)
+
+
+def test_zscale_bounds_uses_single_pixel_growth_for_small_samples() -> None:
+    rng = np.random.default_rng(seed=0)
+    image = rng.normal(scale=3.0, size=(10, 8))
+    image.flat[[5, 23, 61]] += 50.0
+
+    low, high = zscale_bounds(image)
+
+    assert low == pytest.approx(-6.975092323916503)
+    assert high == pytest.approx(41.04537728666037)
+
 
 def test_window_sum_grows_rejected_pixels() -> None:
     bad_pixels = np.array([True, False, False, True, False, False, True])
