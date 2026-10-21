@@ -92,17 +92,11 @@ export function ScientificWorkspace({
   );
 
   useEffect(() => {
-    if (openedFor.current !== recordId) {
-      openedFor.current = null;
-      setOpen(false);
+    if (openedFor.current === recordId) {
+      return;
     }
-  }, [recordId]);
-
-  useEffect(() => {
-    if (enabled && openedFor.current !== recordId) {
-      openedFor.current = recordId;
-      setOpen(true);
-    }
+    openedFor.current = enabled ? recordId : null;
+    setOpen(enabled);
   }, [enabled, recordId]);
 
   return (
