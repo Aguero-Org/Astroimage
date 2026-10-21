@@ -6,7 +6,6 @@ import {
   useGetImageTransfer,
   useResumeImageTransfer,
   useSearchHubbleCandidates,
-  useSelectHubbleCandidate,
 } from "@/api/generated/hub/hub";
 import type {
   SearchHubbleCandidatesOrder,
@@ -52,13 +51,10 @@ export function useCandidateSearch(
       query: {
         enabled: trimmed.length > 0,
         placeholderData: keepPreviousData,
+        select: (response) => (response.status === 200 ? response.data : null),
       },
     },
   );
-}
-
-export function useSelectCandidate() {
-  return useSelectHubbleCandidate();
 }
 
 export function useImageTransfer(transferId: string | null) {
