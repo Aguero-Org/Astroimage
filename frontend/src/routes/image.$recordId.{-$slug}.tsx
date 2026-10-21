@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { type Dispatch, type SetStateAction, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import type {
   DetectSourcesParams,
   RenderFitsImageParams,
@@ -49,38 +49,6 @@ function joinedTitle(pageTitle: string, catalogName: string): string {
   return `${pageTitle} · ${catalogName}`;
 }
 
-function alignHduScope(
-  hduScope: { recordId: string; hdu: number | null },
-  recordId: string,
-  hdu: number | null,
-  selectedSource: ImageWorkspaceUi["selectedSource"],
-  setHduScope: (scope: { recordId: string; hdu: number | null }) => void,
-  setWorkspace: Dispatch<SetStateAction<ImageWorkspaceUi>>,
-): void {
-  if (hduScope.recordId !== recordId) {
-    setHduScope({ recordId, hdu: null });
-    setWorkspace((current) => {
-      if (current.hdu === null && current.selectedSource === null) {
-        return current;
-      }
-      return { ...current, hdu: null, selectedSource: null };
-    });
-    return;
-  }
-  if (hduScope.hdu === hdu || selectedSource === null) {
-    if (hduScope.hdu !== hdu) {
-      setHduScope({ recordId, hdu });
-    }
-    return;
-  }
-  setHduScope({ recordId, hdu });
-  setWorkspace((current) =>
-    current.selectedSource === null
-      ? current
-      : { ...current, selectedSource: null },
-  );
-}
-
 function sourceId(
   source: ImageWorkspaceUi["selectedSource"],
   objectType: "point" | "extended",
@@ -97,7 +65,16 @@ export const Route = createFileRoute("/image/$recordId/{-$slug}")({
 
 function ImageDetailPage() {
   const { recordId, slug } = Route.useParams();
+  return <ImageWorkspacePage key={recordId} recordId={recordId} slug={slug} />;
+}
 
+function ImageWorkspacePage({
+  recordId,
+  slug,
+}: {
+  recordId: string;
+  slug: string | undefined;
+}) {
   useEffect(() => {
     rememberLastImageRecord(recordId, slug);
   }, [recordId, slug]);
@@ -114,15 +91,6 @@ function ImageDetailPage() {
     workspace.hdu,
     imageHdus,
     imageInfo?.hdus.selected ?? null,
-  );
-  const [hduScope, setHduScope] = useState({ recordId, hdu });
-  alignHduScope(
-    hduScope,
-    recordId,
-    hdu,
-    selectedSource,
-    setHduScope,
-    setWorkspace,
   );
   const renderQueryParams: RenderFitsImageParams = {
     ...renderParams,
@@ -246,7 +214,6 @@ function ImageDetailPage() {
                   images={imageHdus}
                   value={hdu}
                   onChange={(nextHdu) => {
-                    setHduScope({ recordId, hdu: nextHdu });
                     setWorkspace((current) => ({
                       ...current,
                       hdu: nextHdu,
