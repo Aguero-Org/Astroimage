@@ -5,13 +5,26 @@ export type LastImageRecord = {
   slug?: string;
 };
 
+const listeners = new Set<() => void>();
+let cachedRaw: string | null = null;
+let cachedRecord: LastImageRecord | null = null;
+
 export function rememberLastImageRecord(recordId: string, slug?: string): void {
   const value: LastImageRecord = slug ? { recordId, slug } : { recordId };
   sessionStorage.setItem(LAST_IMAGE_RECORD_KEY, JSON.stringify(value));
+  for (const listener of listeners) {
+    listener();
+  }
 }
 
-export function readLastImageRecord(): LastImageRecord | null {
-  const raw = sessionStorage.getItem(LAST_IMAGE_RECORD_KEY);
+export function subscribeLastImageRecord(listener: () => void): () => void {
+  listeners.add(listener);
+  return () => {
+    listeners.delete(listener);
+  };
+}
+
+function parseLastImageRecord(raw: string | null): LastImageRecord | null {
   if (!raw) {
     return null;
   }
@@ -27,4 +40,14 @@ export function readLastImageRecord(): LastImageRecord | null {
   } catch {
     return null;
   }
+}
+
+export function readLastImageRecord(): LastImageRecord | null {
+  const raw = sessionStorage.getItem(LAST_IMAGE_RECORD_KEY);
+  if (raw === cachedRaw) {
+    return cachedRecord;
+  }
+  cachedRaw = raw;
+  cachedRecord = parseLastImageRecord(raw);
+  return cachedRecord;
 }
