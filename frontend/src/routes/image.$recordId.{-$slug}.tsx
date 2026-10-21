@@ -71,10 +71,10 @@ function ImageDetailPage() {
 function ImageWorkspacePage({
   recordId,
   slug,
-}: {
+}: Readonly<{
   recordId: string;
   slug: string | undefined;
-}) {
+}>) {
   useEffect(() => {
     rememberLastImageRecord(recordId, slug);
   }, [recordId, slug]);

@@ -1,4 +1,5 @@
 type JobStatus = { job_id: string };
+type PolledJobBody<TStatus, TResult> = TStatus | TResult | undefined;
 
 export type JobQueryView<TBody> = {
   data: TBody | undefined;
@@ -9,8 +10,8 @@ export type JobQueryView<TBody> = {
 };
 
 export function pendingJobId<TStatus extends JobStatus, TResult>(
-  body: TStatus | TResult | undefined,
-  isJob: (value: TStatus | TResult | undefined) => value is TStatus,
+  body: PolledJobBody<TStatus, TResult>,
+  isJob: (value: PolledJobBody<TStatus, TResult>) => value is TStatus,
 ): string | undefined {
   return isJob(body) ? body.job_id : undefined;
 }
@@ -28,24 +29,25 @@ export function polledJobResult<TStatus extends JobStatus, TResult>({
 }: {
   start: JobQueryView<TStatus | TResult>;
   job: JobQueryView<TStatus | TResult>;
-  isJob: (value: TStatus | TResult | undefined) => value is TStatus;
-  isResult: (value: TStatus | TResult | undefined) => value is TResult;
+  isJob: (value: PolledJobBody<TStatus, TResult>) => value is TStatus;
+  isResult: (value: PolledJobBody<TStatus, TResult>) => value is TResult;
 }) {
   const jobId = pendingJobId(start.data, isJob);
-  const result = isResult(job.data)
-    ? job.data
-    : isResult(start.data)
-      ? start.data
-      : undefined;
+  let result: TResult | undefined;
+  if (isResult(job.data)) {
+    result = job.data;
+  } else if (isResult(start.data)) {
+    result = start.data;
+  }
   return {
     result,
     isFetching: start.isFetching || job.isFetching,
     isError: start.isError || job.isError,
     error: start.error ?? job.error,
     refetch: () => {
-      void start.refetch();
+      start.refetch();
       if (jobId !== undefined) {
-        void job.refetch();
+        job.refetch();
       }
     },
   };
