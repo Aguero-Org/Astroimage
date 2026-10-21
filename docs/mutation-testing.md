@@ -119,10 +119,9 @@ wsl.exe -d Ubuntu -- bash -lc \
 | `render/zscale.py` | 263 | 19 | 282 |
 | **Total** | **868** | **64** | **932** |
 
-Mutation score global: **93,1 %** (868/932). No hubo timeouts. La tabla combina la
-corrida inicial con las corridas dirigidas posteriores de `crossmatch`,
-`normalization`, `zscale`, `colormap` y `png`; `scoring` y `wcs` siguen en su estado
-inicial.
+Mutation score global: **93,1 %** (868/932). No hubo timeouts. La corrida completa
+final, con la caché regenerada para los siete módulos, confirmó los mismos totales:
+868 killed y 64 supervivientes equivalentes.
 
 ### Hallazgos iniciales
 
