@@ -15,6 +15,12 @@ htmlcov/
 dist/
 build/
 
+# Mutation testing
+backend/mutants/
+frontend/.stryker-tmp/
+frontend/reports/
+frontend/stryker*.log
+
 # SonarQube / scanner
 .scannerwork/
 .sonar/
