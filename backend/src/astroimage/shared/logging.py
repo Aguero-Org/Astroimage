@@ -8,6 +8,8 @@ _OTLP_EXPORTER_LOGGER = "opentelemetry.exporter.otlp.proto.http.trace_exporter"
 catalog_jobs_log = structlog.get_logger("astroimage.catalogs.jobs")
 catalog_service_log = structlog.get_logger("astroimage.catalogs.service")
 catalog_vizier_log = structlog.get_logger("astroimage.catalogs.vizier")
+simbad_provider_log = structlog.get_logger("astroimage.simbad.provider")
+simbad_service_log = structlog.get_logger("astroimage.simbad.service")
 
 
 def _quiet_third_party_loggers() -> None:

@@ -72,6 +72,8 @@ logger-objects = [
     "astroimage.shared.logging.catalog_jobs_log",
     "astroimage.shared.logging.catalog_service_log",
     "astroimage.shared.logging.catalog_vizier_log",
+    "astroimage.shared.logging.simbad_provider_log",
+    "astroimage.shared.logging.simbad_service_log",
 ]
 
 # Snapshot of the Ruff 0.16.9 default set. `select` replaces that
@@ -620,6 +622,7 @@ forbidden_modules = [
     "astroimage.sources",
     "astroimage.render",
     "astroimage.catalogs",
+    "astroimage.simbad",
 ]
 
 [[tool.importlinter.contracts]]
@@ -633,6 +636,7 @@ source_modules = [
     "astroimage.sources",
     "astroimage.render",
     "astroimage.catalogs",
+    "astroimage.simbad",
 ]
 forbidden_modules = [
     "astroimage.main",
