@@ -3,12 +3,13 @@ from logging.config import fileConfig
 from alembic import context
 from sqlalchemy import engine_from_config, pool
 
+from astroimage.catalogs.download import CatalogDownload
 from astroimage.config import get_settings
 from astroimage.fits.model import FitsRecord
 from astroimage.hub.model import ImageTransfer
 from astroimage.shared.database import Base
 
-_ = (FitsRecord, ImageTransfer)
+_ = (CatalogDownload, FitsRecord, ImageTransfer)
 
 config = context.config
 if config.config_file_name is not None:

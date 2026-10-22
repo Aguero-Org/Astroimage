@@ -23,6 +23,7 @@ class Settings(BaseSettings):
     minio_bucket: str = "astroimage"
     minio_secure: bool = False
     candidate_token_secret: str = "astroimage-dev-candidate-token"
+    catalog_download_ttl_s: float = 86_400.0
 
     @computed_field  # type: ignore[prop-decorator]
     @property

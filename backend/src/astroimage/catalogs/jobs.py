@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from astroimage.catalogs.cache import CatalogRecommendationCache
 from astroimage.catalogs.readme import ReadmeFetcher
+from astroimage.catalogs.repository import CatalogDownloadRepository
 from astroimage.catalogs.schema import (
     CatalogRecommendationConfigSchema,
     CatalogRecommendationResponse,
@@ -32,6 +33,7 @@ class CatalogBackgroundRecommend:
         cache: CatalogRecommendationCache,
         detection_cache: DetectionCache,
         query_timeout_s: float = 180.0,
+        download_ttl_s: float = 86_400.0,
     ) -> None:
         self._session_factory = session_factory
         self._fit_factory = fit_factory
@@ -40,6 +42,7 @@ class CatalogBackgroundRecommend:
         self._cache = cache
         self._detection_cache = detection_cache
         self._query_timeout_s = query_timeout_s
+        self._download_ttl_s = download_ttl_s
 
     async def __call__(
         self,
@@ -59,6 +62,7 @@ class CatalogBackgroundRecommend:
                 readme_fetcher=self._readme_fetcher,
                 cache=self._cache,
                 query_timeout_s=self._query_timeout_s,
+                downloads=CatalogDownloadRepository(session, ttl_s=self._download_ttl_s),
             )
             try:
                 result = await service.recommend_from_record(

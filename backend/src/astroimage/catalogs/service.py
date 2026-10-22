@@ -9,6 +9,7 @@ from astropy.wcs import WCS
 
 from astroimage.catalogs.cache import CatalogRecommendationCache, recommendation_cache_key
 from astroimage.catalogs.crossmatch import crossmatch_catalog
+from astroimage.catalogs.download import CatalogDownloadStore
 from astroimage.catalogs.evaluation import rank_evaluations
 from astroimage.catalogs.lookup import CatalogLookup
 from astroimage.catalogs.model import (
@@ -58,6 +59,7 @@ class CatalogRecommendationService:
         cache: CatalogRecommendationCache,
         reader: FitsReader | None = None,
         query_timeout_s: float = _DEFAULT_QUERY_TIMEOUT_S,
+        downloads: CatalogDownloadStore | None = None,
     ) -> None:
         self._fits = fits
         self._detection = detection
@@ -67,6 +69,7 @@ class CatalogRecommendationService:
             provider=provider,
             readme_fetcher=readme_fetcher,
             query_timeout_s=query_timeout_s,
+            downloads=downloads,
         )
 
     async def ensure_record(self, record_id: UUID) -> None:

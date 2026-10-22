@@ -7,11 +7,17 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from astroimage.catalogs.cache import CatalogRecommendationCache
 from astroimage.catalogs.jobs import CatalogBackgroundRecommend, CatalogJobRegistry
 from astroimage.catalogs.readme import CdsReadmeFetcher, ReadmeFetcher
+from astroimage.catalogs.repository import CatalogDownloadRepository
 from astroimage.catalogs.service import CatalogRecommendationService
 from astroimage.catalogs.vizier import AstroqueryVizierProvider, VizierCatalogProvider
+from astroimage.config import Settings
 from astroimage.fits.deps import fits_service_dependency, fits_service_from_resources
 from astroimage.fits.service import FitsService
-from astroimage.shared.deps import object_storage_dependency
+from astroimage.shared.deps import (
+    db_session_dependency,
+    object_storage_dependency,
+    settings_dependency,
+)
 from astroimage.shared.object_storage import ObjectStorage
 from astroimage.sources.cache import DetectionCache
 from astroimage.sources.deps import source_service_dependency
@@ -30,11 +36,21 @@ def readme_fetcher_dependency() -> ReadmeFetcher:
     return CdsReadmeFetcher()
 
 
+def catalog_download_repository_dependency(
+    session: Annotated[AsyncSession, Depends(db_session_dependency)],
+    settings: Annotated[Settings, Depends(settings_dependency)],
+) -> CatalogDownloadRepository:
+    return CatalogDownloadRepository(session, ttl_s=settings.catalog_download_ttl_s)
+
+
 def catalog_recommendation_service_dependency(
     fits: Annotated[FitsService, Depends(fits_service_dependency)],
     detection: Annotated[SourceDetectionService, Depends(source_service_dependency)],
     provider: Annotated[VizierCatalogProvider, Depends(vizier_provider_dependency)],
     readme: Annotated[ReadmeFetcher, Depends(readme_fetcher_dependency)],
+    downloads: Annotated[
+        CatalogDownloadRepository, Depends(catalog_download_repository_dependency)
+    ],
 ) -> CatalogRecommendationService:
     return CatalogRecommendationService(
         fits=fits,
@@ -42,6 +58,7 @@ def catalog_recommendation_service_dependency(
         provider=provider,
         readme_fetcher=readme,
         cache=_recommendation_cache,
+        downloads=downloads,
     )
 
 
@@ -63,6 +80,7 @@ def catalog_background_dependency(
         readme_fetcher=readme,
         cache=_recommendation_cache,
         detection_cache=_detection_cache,
+        download_ttl_s=settings.catalog_download_ttl_s,
     )
 
 

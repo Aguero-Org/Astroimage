@@ -6,9 +6,11 @@ from concurrent.futures import ThreadPoolExecutor
 
 from astropy.coordinates import SkyCoord
 
+from astroimage.catalogs.download import VIZIER_SOURCE, CatalogDownloadStore
 from astroimage.catalogs.evaluation import best_object_row, score_catalogue, select_object_rows
 from astroimage.catalogs.model import CatalogEvaluation, CatalogMetadata, CatalogTable
 from astroimage.catalogs.readme import ReadmeFetcher
+from astroimage.catalogs.region import region_key
 from astroimage.catalogs.schema import CatalogRecommendationConfigSchema
 from astroimage.catalogs.vizier import VizierCatalogProvider
 from astroimage.shared.logging import catalog_service_log as _log
@@ -34,16 +36,33 @@ class CatalogLookup:
         provider: VizierCatalogProvider,
         readme_fetcher: ReadmeFetcher,
         query_timeout_s: float,
+        downloads: CatalogDownloadStore | None = None,
     ) -> None:
         self._provider = provider
         self._readme_fetcher = readme_fetcher
         self._query_timeout_s = query_timeout_s
+        self._downloads = downloads
 
     async def query_region(
         self,
         center: SkyCoord,
         config: CatalogRecommendationConfigSchema,
     ) -> tuple[list[CatalogTable], str | None]:
+        key = region_key(
+            ra_deg=float(center.ra.deg),
+            dec_deg=float(center.dec.deg),
+            radius_arcsec=config.search_radius_arcsec,
+            row_limit=config.row_limit,
+        )
+        if self._downloads is not None:
+            stored = await self._downloads.find_fresh(
+                source=VIZIER_SOURCE,
+                region_key=key,
+                row_limit=config.row_limit,
+            )
+            if stored is not None:
+                _log.info("catalog_download_hit", region_key=key, catalogues=len(stored))
+                return stored, None
         try:
             tables = await asyncio.wait_for(
                 asyncio.to_thread(
@@ -60,7 +79,18 @@ class CatalogLookup:
         except Exception as exc:
             _log.warning("vizier_query_failed", detail=str(exc), exc_info=exc)
             return [], f"VizieR query failed: {exc}"
-        return list(tables), None
+        resolved = list(tables)
+        if self._downloads is not None:
+            await self._downloads.replace(
+                source=VIZIER_SOURCE,
+                region_key=key,
+                ra_deg=float(center.ra.deg),
+                dec_deg=float(center.dec.deg),
+                radius_arcsec=config.search_radius_arcsec,
+                row_limit=config.row_limit,
+                tables=resolved,
+            )
+        return resolved, None
 
     def evaluate_table(
         self,
