@@ -19,6 +19,7 @@ import {
   filterPublications,
   isCatalogJobStatus,
   isCatalogRecommendation,
+  publicationHeading,
   publicationLabel,
   regionDescription,
   shortenText,
@@ -249,6 +250,21 @@ describe("catalog-recommendations", () => {
     expect(publications.filter((p) => p.doi === "10.26131/IRSA1")).toHaveLength(
       1,
     );
+  });
+
+  it("attaches the paper title and abstract by bibcode", () => {
+    const publications = collectPublications(
+      mockCatalogRecommendation().recommendations ?? [],
+      mockCatalogRecommendation().papers ?? [],
+    );
+    const paper = publications.find((item) => item.kind === "catalogue-paper");
+
+    if (!paper) {
+      throw new Error("missing catalogue paper");
+    }
+    expect(paper.title).toBe("Gaia Early Data Release 3");
+    expect(paper.abstract).toMatch(/Astrometría/);
+    expect(publicationHeading(paper)).toBe("Gaia Early Data Release 3");
   });
 
   it("filters catalogues by query and match type", () => {

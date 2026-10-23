@@ -55,27 +55,53 @@ class AstroqueryVizierProvider:
         return _tables_to_catalogs(tables)
 
     def catalog_metadata(self, catalogue_id: str) -> CatalogMetadata:
-        try:
-            metadata = Vizier.get_catalog_metadata(catalog=catalogue_id)
-        except Exception as exc:
-            _log.warning(
-                "vizier_metadata_failed",
-                catalogue_id=catalogue_id,
-                detail=str(exc),
-                exc_info=exc,
-            )
-            return CatalogMetadata(catalogue_id=catalogue_id)
-        if metadata is None or len(metadata) == 0:
-            return CatalogMetadata(catalogue_id=catalogue_id)
-        row = metadata[0]
-        return CatalogMetadata(
-            catalogue_id=catalogue_id,
-            title=_optional(row, "title"),
-            authors=_optional(row, "authors"),
-            doi=_optional(row, "doi"),
-            webpage=_optional(row, "webpage"),
-            origin_article=_optional(row, "origin_article"),
-        )
+        untitled: CatalogMetadata | None = None
+        for candidate in metadata_catalog_candidates(catalogue_id):
+            try:
+                metadata = Vizier.get_catalog_metadata(catalog=candidate)
+            except Exception as exc:
+                _log.warning(
+                    "vizier_metadata_failed",
+                    catalogue_id=catalogue_id,
+                    candidate=candidate,
+                    detail=str(exc),
+                    exc_info=exc,
+                )
+                continue
+            parsed = _metadata_from_table(catalogue_id, metadata)
+            if parsed is None:
+                continue
+            if parsed.title:
+                return parsed
+            untitled = untitled or parsed
+        if untitled is not None:
+            return untitled
+        return CatalogMetadata(catalogue_id=catalogue_id)
+
+
+def metadata_catalog_candidates(catalogue_id: str) -> tuple[str, ...]:
+    cleaned = catalogue_id.strip().strip("/")
+    if not cleaned:
+        return ()
+    parts = cleaned.split("/")
+    candidates = [cleaned]
+    if len(parts) >= 3:
+        candidates.append("/".join(parts[:-1]))
+    return tuple(dict.fromkeys(candidates))
+
+
+def _metadata_from_table(catalogue_id: str, metadata: Any) -> CatalogMetadata | None:
+    if metadata is None or len(metadata) == 0:
+        return None
+    row = metadata[0]
+    return CatalogMetadata(
+        catalogue_id=catalogue_id,
+        title=_optional(row, "title"),
+        authors=_optional(row, "authors"),
+        doi=_optional(row, "doi"),
+        webpage=_optional(row, "webpage"),
+        origin_article=_optional(row, "origin_article"),
+    )
 
 
 def _tables_to_catalogs(tables: Any) -> list[CatalogTable]:

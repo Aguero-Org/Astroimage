@@ -113,6 +113,16 @@ describe("ScientificWorkspace", () => {
     expect(
       screen.getAllByTestId("catalogue-card-description").at(0),
     ).toHaveTextContent(/Astrometría/);
+    expect(screen.getByTestId("catalogue-card-keywords")).toHaveTextContent(
+      /Astrometry/,
+    );
+    expect(screen.getByTestId("catalogue-card-object")).toHaveTextContent(
+      /Este objeto está en el catálogo/,
+    );
+    expect(
+      screen.queryByText(/Catálogo de la región/i),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText(/cubre esta región/i)).not.toBeInTheDocument();
   });
 
   it("shows the consulted region and preview when provided", async () => {
@@ -154,6 +164,13 @@ describe("ScientificWorkspace", () => {
     expect(screen.getAllByTestId("publication-card")).toHaveLength(3);
     const firstLink = screen.getAllByTestId("publication-link").at(0);
     expect(firstLink).toHaveAttribute("target", "_blank");
+    expect(screen.getAllByTestId("publication-label").at(0)).toHaveTextContent(
+      "Gaia Early Data Release 3",
+    );
+    expect(screen.getByTestId("publication-abstract")).toHaveTextContent(
+      /Astrometría y fotometría/,
+    );
+    expect(screen.queryByText(/Abrir el paper/i)).not.toBeInTheDocument();
   });
 
   it("explains catalogues and publications for the active tab", async () => {

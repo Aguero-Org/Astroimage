@@ -117,7 +117,7 @@ def score_catalogue(
     description = readme_data.description or readme_data.abstract
     return CatalogEvaluation(
         catalogue_id=catalogue_id,
-        metadata=metadata,
+        metadata=_titled_metadata(metadata, readme_data),
         match_type=classify_match(match.identifier_match, paper_bibcode or None),
         catalogue_description=description or None,
         catalogue_keywords=readme_data.keywords or None,
@@ -143,6 +143,22 @@ def score_catalogue(
         readme_url=readme_data.url,
         readme_bibcodes=readme_data.bibcodes,
         readme_dois=readme_data.dois,
+    )
+
+
+def _titled_metadata(metadata: CatalogMetadata, readme: ReadmeData) -> CatalogMetadata:
+    if metadata.title:
+        return metadata
+    title = readme.title.strip()
+    if not title:
+        return metadata
+    return CatalogMetadata(
+        catalogue_id=metadata.catalogue_id,
+        title=title,
+        authors=metadata.authors,
+        doi=metadata.doi,
+        webpage=metadata.webpage,
+        origin_article=metadata.origin_article,
     )
 
 

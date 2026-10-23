@@ -1,14 +1,17 @@
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Sequence
 from typing import Protocol
 from uuid import UUID
 
 from astropy.coordinates import SkyCoord
 from astropy.wcs import WCS
+from sqlalchemy.exc import SQLAlchemyError
 
 from astroimage.catalogs.cache import CatalogRecommendationCache, recommendation_cache_key
 from astroimage.catalogs.crossmatch import crossmatch_catalog
+from astroimage.catalogs.download import CatalogDownloadStore
 from astroimage.catalogs.evaluation import rank_evaluations
 from astroimage.catalogs.lookup import CatalogLookup
 from astroimage.catalogs.model import (
@@ -17,9 +20,17 @@ from astroimage.catalogs.model import (
     CatalogTable,
     DetectionCoordinate,
 )
+from astroimage.catalogs.papers import (
+    PaperIdentifier,
+    PaperLookup,
+    PaperMetadataStore,
+    PaperRecord,
+    identifiers_from_pairs,
+)
 from astroimage.catalogs.readme import ReadmeFetcher
 from astroimage.catalogs.schema import (
     CatalogCrossmatchSchema,
+    CatalogPaperSchema,
     CatalogRecommendationConfigSchema,
     CatalogRecommendationItemSchema,
     CatalogRecommendationResponse,
@@ -58,15 +69,21 @@ class CatalogRecommendationService:
         cache: CatalogRecommendationCache,
         reader: FitsReader | None = None,
         query_timeout_s: float = _DEFAULT_QUERY_TIMEOUT_S,
+        downloads: CatalogDownloadStore | None = None,
+        paper_lookup: PaperLookup | None = None,
+        paper_store: PaperMetadataStore | None = None,
     ) -> None:
         self._fits = fits
         self._detection = detection
         self._cache = cache
         self._reader = reader or FitsReader()
+        self._paper_lookup = paper_lookup
+        self._paper_store = paper_store
         self._lookup = CatalogLookup(
             provider=provider,
             readme_fetcher=readme_fetcher,
             query_timeout_s=query_timeout_s,
+            downloads=downloads,
         )
 
     async def ensure_record(self, record_id: UUID) -> None:
@@ -160,7 +177,8 @@ class CatalogRecommendationService:
         )
         crossmatches = self._crossmatches(ranked, tables_by_id, resolved, detections)
         recommendations = self._to_schema(ranked, crossmatches)
-        return self._response(metadata.source_name, center, resolved, recommendations)
+        papers = await self._papers(recommendations) if resolved.include_papers else []
+        return self._response(metadata.source_name, center, resolved, recommendations, papers)
 
     async def _detections(
         self,
@@ -306,6 +324,7 @@ class CatalogRecommendationService:
         center: SkyCoord,
         config: CatalogRecommendationConfigSchema,
         recommendations: list[CatalogRecommendationItemSchema],
+        papers: list[CatalogPaperSchema] | None = None,
     ) -> CatalogRecommendationResponse:
         return CatalogRecommendationResponse(
             status="completed",
@@ -324,4 +343,79 @@ class CatalogRecommendationService:
                 queried_catalogue_count=len(recommendations),
             ),
             recommendations=recommendations,
+            papers=papers or [],
         )
+
+    async def _papers(
+        self,
+        items: list[CatalogRecommendationItemSchema],
+    ) -> list[CatalogPaperSchema]:
+        if self._paper_lookup is None:
+            return []
+        identifiers = identifiers_from_pairs(_paper_pairs(items))
+        keys = [identifier.lookup_key for identifier in identifiers if identifier.lookup_key]
+        if not keys:
+            return []
+        by_key = await self._load_papers(identifiers, keys)
+        return _paper_schemas(keys, by_key)
+
+    async def _load_papers(
+        self,
+        identifiers: list[PaperIdentifier],
+        keys: list[str],
+    ) -> dict[str, PaperRecord]:
+        cached = await self._paper_store.find_fresh(keys) if self._paper_store is not None else {}
+        missing = [
+            identifier
+            for identifier in identifiers
+            if identifier.lookup_key is not None and identifier.lookup_key not in cached
+        ]
+        fetched = await self._fetch_papers(missing)
+        by_key = {record.lookup_key: record for record in fetched}
+        by_key.update(cached)
+        return by_key
+
+    async def _fetch_papers(self, missing: list[PaperIdentifier]) -> list[PaperRecord]:
+        if not missing or self._paper_lookup is None:
+            return []
+        fetched = await asyncio.to_thread(self._paper_lookup.fetch, missing)
+        if fetched and self._paper_store is not None:
+            try:
+                await self._paper_store.save(fetched)
+            except SQLAlchemyError as exc:
+                _log.warning("paper_metadata_save_failed", detail=str(exc))
+        return fetched
+
+
+def _paper_pairs(
+    items: list[CatalogRecommendationItemSchema],
+) -> list[tuple[str | None, str | None]]:
+    pairs: list[tuple[str | None, str | None]] = []
+    for item in items:
+        if item.paper_bibcode or item.paper_doi:
+            pairs.append((item.paper_bibcode, item.paper_doi))
+        pairs.extend((bibcode, None) for bibcode in item.readme_bibcodes)
+        pairs.extend((None, doi) for doi in item.readme_dois)
+    return pairs
+
+
+def _paper_schemas(
+    keys: list[str],
+    by_key: dict[str, PaperRecord],
+) -> list[CatalogPaperSchema]:
+    schemas: list[CatalogPaperSchema] = []
+    for key in keys:
+        record = by_key.get(key)
+        if record is None or not (record.title or record.abstract):
+            continue
+        schemas.append(_paper_schema(record))
+    return schemas
+
+
+def _paper_schema(record: PaperRecord) -> CatalogPaperSchema:
+    return CatalogPaperSchema(
+        bibcode=record.bibcode,
+        doi=record.doi,
+        title=record.title,
+        abstract=record.abstract,
+    )

@@ -1976,6 +1976,57 @@
         ],
         "title": "CatalogJobStatusSchema"
       },
+      "CatalogPaperSchema": {
+        "properties": {
+          "bibcode": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Bibcode"
+          },
+          "doi": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Doi"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          },
+          "abstract": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Abstract"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "CatalogPaperSchema"
+      },
       "CatalogRecommendationItemSchema": {
         "properties": {
           "rank": {
@@ -2324,6 +2375,13 @@
             },
             "type": "array",
             "title": "Recommendations"
+          },
+          "papers": {
+            "items": {
+              "$ref": "#/components/schemas/CatalogPaperSchema"
+            },
+            "type": "array",
+            "title": "Papers"
           }
         },
         "additionalProperties": false,

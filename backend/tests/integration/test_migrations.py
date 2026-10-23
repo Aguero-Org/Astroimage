@@ -10,12 +10,14 @@ from alembic.config import Config
 from alembic.migration import MigrationContext
 from sqlalchemy import create_engine, text
 
+from astroimage.catalogs.download import CatalogDownload
+from astroimage.catalogs.papers import PaperMetadata
 from astroimage.config import get_settings
 from astroimage.fits.model import FitsRecord
 from astroimage.hub.model import ImageTransfer
 from astroimage.shared.database import Base
 
-_MODELS = (FitsRecord, ImageTransfer)
+_MODELS = (CatalogDownload, FitsRecord, ImageTransfer, PaperMetadata)
 _BACKEND_ROOT = Path(__file__).resolve().parents[2]
 _DATABASE_NAME = "astroimage_migrations"
 

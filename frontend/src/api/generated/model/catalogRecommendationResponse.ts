@@ -4,6 +4,7 @@
  * astroimage
  * OpenAPI spec version: 0.1.0
  */
+import type { CatalogPaperSchema } from './catalogPaperSchema';
 import type { CatalogRecommendationItemSchema } from './catalogRecommendationItemSchema';
 import type { CatalogRecommendationSummarySchema } from './catalogRecommendationSummarySchema';
 
@@ -19,4 +20,5 @@ export interface CatalogRecommendationResponse {
   error?: string | null;
   summary?: CatalogRecommendationSummarySchema;
   recommendations?: CatalogRecommendationItemSchema[];
+  papers?: CatalogPaperSchema[];
 }
