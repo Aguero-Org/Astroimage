@@ -21,6 +21,7 @@ from astroimage.catalogs.schema import (
 )
 from astroimage.catalogs.service import CatalogRecommendationService
 from astroimage.shared.errors import InternalServerError, NotFoundError
+from astroimage.shared.query import HduIndex
 
 router = APIRouter(prefix="/image", tags=["catalogs"])
 _DEFAULTS = CatalogRecommendationConfigSchema()
@@ -29,10 +30,6 @@ _log = structlog.get_logger("astroimage.catalogs.controller")
 RecordId = Annotated[
     UUID,
     Path(description="Stored FITS record id"),
-]
-HduIndex = Annotated[
-    int,
-    Query(ge=0, description="Optional image HDU index; defaults to the first 2D image HDU"),
 ]
 SearchRadiusParam = Annotated[float, Query(ge=0.0, description="VizieR cone radius in arcsec")]
 MaxCataloguesParam = Annotated[int, Query(ge=1, description="Cap on catalogues evaluated")]
@@ -86,7 +83,7 @@ async def recommend_catalogs(
     background: Annotated[CatalogBackgroundRecommend, Depends(catalog_background_dependency)],
     jobs: Annotated[CatalogJobRegistry, Depends(catalog_job_registry_dependency)],
     client_id: Annotated[str, Header(alias="X-Client-Id")] = "anonymous",
-    hdu: HduIndex = None,  # type: ignore[assignment]  # nullable default, non-nullable query
+    hdu: HduIndex = None,
     identifiers: Annotated[list[str] | None, Query(description="Known object identifiers")] = None,
     search_radius_arcsec: SearchRadiusParam = _DEFAULTS.search_radius_arcsec,
     max_catalogues: MaxCataloguesParam = _DEFAULTS.max_catalogues,
@@ -163,7 +160,7 @@ async def get_catalogs_job(
     if completed is not None:
         return completed
     if jobs.is_running(job_id):
-        return CatalogJobStatusSchema(job_id=job_id, record_id=record_id)
+        return CatalogJobStatusSchema(status="pending", job_id=job_id, record_id=record_id)
     failure = jobs.get_failure(job_id)
     if failure is not None:
         raise failure

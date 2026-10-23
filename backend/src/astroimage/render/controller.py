@@ -10,6 +10,7 @@ from fastapi import APIRouter, Depends, Path, Query, Response
 from astroimage.render.deps import render_service_dependency
 from astroimage.render.schema import HistogramResponse, RenderConfigSchema
 from astroimage.render.service import RenderService
+from astroimage.shared.query import HduIndex
 
 router = APIRouter(prefix="/image", tags=["render"])
 _DEFAULTS = RenderConfigSchema()
@@ -18,10 +19,6 @@ _log = structlog.get_logger("astroimage.render.controller")
 RecordId = Annotated[
     UUID,
     Path(description="Stored FITS record id"),
-]
-HduIndex = Annotated[
-    int,
-    Query(ge=0, description="Optional image HDU index; defaults to the first 2D image HDU"),
 ]
 
 StretchParam = Annotated[str, Query(pattern="^(linear|sqrt|log|asinh)$")]
@@ -59,7 +56,7 @@ def _config(
 async def render_fits_image(
     record_id: RecordId,
     service: Annotated[RenderService, Depends(render_service_dependency)],
-    hdu: HduIndex = None,  # type: ignore[assignment]  # nullable default, non-nullable query
+    hdu: HduIndex = None,
     stretch: StretchParam = _DEFAULTS.stretch,
     limits: LimitsParam = _DEFAULTS.limits,
     colormap: ColormapParam = _DEFAULTS.colormap,
@@ -92,7 +89,7 @@ async def render_fits_image(
 async def render_fits_histogram(
     record_id: RecordId,
     service: Annotated[RenderService, Depends(render_service_dependency)],
-    hdu: HduIndex = None,  # type: ignore[assignment]  # nullable default, non-nullable query
+    hdu: HduIndex = None,
     bins: BinsParam = 256,
 ) -> HistogramResponse:
     _log.info("histogram_start", record_id=str(record_id), bins=bins)

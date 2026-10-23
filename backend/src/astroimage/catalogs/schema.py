@@ -88,9 +88,19 @@ class CatalogRecommendationSummarySchema(BaseModel):
     queried_catalogue_count: int = 0
 
 
+class CatalogPaperSchema(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    bibcode: str | None = None
+    doi: str | None = None
+    title: str | None = None
+    abstract: str | None = None
+
+
 class CatalogRecommendationResponse(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
+    status: Literal["completed"]
     source_name: str | None = None
     ra_deg: float | None = None
     dec_deg: float | None = None
@@ -103,11 +113,12 @@ class CatalogRecommendationResponse(BaseModel):
         default_factory=CatalogRecommendationSummarySchema
     )
     recommendations: list[CatalogRecommendationItemSchema] = Field(default_factory=list)
+    papers: list[CatalogPaperSchema] = Field(default_factory=list)
 
 
 class CatalogJobStatusSchema(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    status: Literal["pending"] = "pending"
+    status: Literal["pending"]
     job_id: str
     record_id: UUID

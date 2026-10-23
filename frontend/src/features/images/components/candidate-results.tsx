@@ -8,6 +8,7 @@ import {
   Weight,
 } from "lucide-react";
 import { useState } from "react";
+import { useSelectHubbleCandidate } from "@/api/generated/hub/hub";
 import type { CandidateSchema } from "@/api/generated/model";
 import { Button } from "@/components/ui/button";
 import { FilePager } from "@/components/ui/file-pager";
@@ -18,12 +19,9 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import {
-  type CandidateSortField,
-  useCandidateSearch,
-  useSelectCandidate,
-} from "../candidate-api";
+import { type CandidateSortField, useCandidateSearch } from "../candidate-api";
 import { MastSourceLink } from "../mast-source-link";
+import { resultsView } from "../results-view";
 import { usePagedSort } from "../use-paged-sort";
 import { CatalogFacts, catalogLabels } from "./catalog-facts";
 import { ImportNameDialog } from "./import-name-dialog";
@@ -48,29 +46,23 @@ export function CandidateResults({ query }: Readonly<CandidateResultsProps>) {
   const { page, setPage, sort, order, toggleSort } =
     usePagedSort<CandidateSortField>("product_filename", "asc");
   const [transferIds, setTransferIds] = useState<string[]>([]);
-  const [pending, setPending] = useState<CandidateSchema | null>(null);
+  const [importing, setImporting] = useState<CandidateSchema | null>(null);
   const search = useCandidateSearch(query, page, sort, order);
-  const select = useSelectCandidate();
+  const select = useSelectHubbleCandidate();
 
   if (query.trim().length === 0) {
     return null;
   }
 
-  const received = search.data?.status === 200 ? search.data.data : null;
-  const pageData =
-    received !== null &&
-    received.sort === sort &&
-    received.order === order &&
-    received.page === page
-      ? received
-      : null;
-  const waiting = pageData === null && (search.isPending || search.isFetching);
+  const view = resultsView(search, {
+    isEmpty: (page) => page.items.length === 0,
+  });
 
   return (
     <section className="flex w-full flex-col gap-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h2 className="text-sm font-medium">Archivos de Hubble</h2>
-        {pageData && pageData.items.length > 0 && (
+        {view.status === "ready" && (
           <SortControls
             fields={SORT_FIELDS}
             sort={sort}
@@ -79,7 +71,7 @@ export function CandidateResults({ query }: Readonly<CandidateResultsProps>) {
           />
         )}
       </div>
-      {!!waiting && (
+      {view.status === "loading" && (
         <output className="block">
           <span className="sr-only">Buscando en MAST…</span>
           <ul
@@ -93,13 +85,13 @@ export function CandidateResults({ query }: Readonly<CandidateResultsProps>) {
           </ul>
         </output>
       )}
-      {!!search.isError && (
+      {view.status === "error" && (
         <p className="text-sm text-destructive">
           No se pudo buscar candidatos para{" "}
           <strong className="font-semibold">{query.trim()}</strong>.
         </p>
       )}
-      {pageData && pageData.items.length === 0 && (
+      {view.status === "empty" && (
         <p className="text-sm text-muted-foreground">
           MAST no devolvió archivos de ciencia para{" "}
           <strong className="font-semibold text-foreground">
@@ -108,9 +100,9 @@ export function CandidateResults({ query }: Readonly<CandidateResultsProps>) {
           {"."}
         </p>
       )}
-      {pageData && pageData.items.length > 0 && (
+      {view.status === "ready" && (
         <ul className="flex w-full flex-col gap-3">
-          {pageData.items.map((item) => (
+          {view.page.items.map((item) => (
             <SummaryCard
               key={item.data_uri}
               title={item.product_filename}
@@ -136,7 +128,7 @@ export function CandidateResults({ query }: Readonly<CandidateResultsProps>) {
                         data-testid="import-candidate"
                         aria-label={`Importar ${item.product_filename}`}
                         disabled={select.isPending}
-                        onClick={() => setPending(item)}
+                        onClick={() => setImporting(item)}
                       >
                         <HardDriveDownload className="size-4" />
                       </Button>
@@ -151,26 +143,26 @@ export function CandidateResults({ query }: Readonly<CandidateResultsProps>) {
           ))}
         </ul>
       )}
-      {pageData !== null && (
+      {(view.status === "ready" || view.status === "empty") && (
         <FilePager
           page={page}
-          hasMore={pageData.has_more === true}
+          hasMore={view.page.has_more === true}
           onPage={setPage}
         />
       )}
       <ImportNameDialog
-        key={pending?.data_uri ?? "none"}
-        filename={pending?.product_filename ?? null}
-        pending={select.isPending}
-        onCancel={() => setPending(null)}
+        key={importing?.data_uri ?? "none"}
+        filename={importing?.product_filename ?? null}
+        submitting={select.isPending}
+        onCancel={() => setImporting(null)}
         onConfirm={(displayName) => {
-          if (pending === null) {
+          if (importing === null) {
             return;
           }
           void select
             .mutateAsync({
               data: {
-                candidate_token: pending.token,
+                candidate_token: importing.token,
                 display_name: displayName,
               },
             })
@@ -184,7 +176,7 @@ export function CandidateResults({ query }: Readonly<CandidateResultsProps>) {
                   ? current
                   : [...current, transferId],
               );
-              setPending(null);
+              setImporting(null);
             });
         }}
       />

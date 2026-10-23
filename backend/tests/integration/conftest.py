@@ -9,6 +9,8 @@ from astropy.io import fits
 from sqlalchemy import create_engine, text
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession
 
+from astroimage.catalogs import download as catalog_download
+from astroimage.catalogs.papers import PaperMetadata
 from astroimage.config import Settings, get_settings
 from astroimage.fits.reader import FitsReader
 from astroimage.fits.repository import FitsRepository
@@ -76,6 +78,7 @@ async def db_engine(
     ensure_test_database: None,
     settings: Settings,
 ) -> AsyncIterator[AsyncEngine]:
+    _ = (catalog_download.CatalogDownload, PaperMetadata)
     engine = create_engine_from_settings(settings)
     async with engine.begin() as connection:
         await connection.run_sync(Base.metadata.create_all)
@@ -95,7 +98,10 @@ async def db_session(db_engine: AsyncEngine) -> AsyncIterator[AsyncSession]:
             raise
     async with db_engine.begin() as connection:
         await connection.execute(
-            text("TRUNCATE TABLE fits_records, image_transfers RESTART IDENTITY CASCADE")
+            text(
+                "TRUNCATE TABLE catalog_downloads, fits_records, image_transfers "
+                "RESTART IDENTITY CASCADE"
+            )
         )
 
 

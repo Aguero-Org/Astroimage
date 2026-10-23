@@ -41,7 +41,7 @@ class ImageTransfer(Base):
     __tablename__ = "image_transfers"
 
     id: Mapped[UUID] = mapped_column(Uuid(as_uuid=True), primary_key=True, default=uuid4)
-    status: Mapped[str] = mapped_column(String(32), nullable=False)
+    status: Mapped[str] = mapped_column(String(32), nullable=False, index=True)
     source: Mapped[str] = mapped_column(String(32), nullable=False, default="mast")
     destination: Mapped[str] = mapped_column(String(32), nullable=False, default="astroimage")
     target_name: Mapped[str] = mapped_column(String(256), nullable=False)

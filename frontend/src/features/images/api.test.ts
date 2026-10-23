@@ -11,11 +11,7 @@ describe("useImageRecords", () => {
       expect(result.current.isSuccess).toBe(true);
     });
 
-    expect(result.current.data?.status).toBe(200);
-    const records =
-      result.current.data?.status === 200
-        ? result.current.data.data.records
-        : [];
+    const records = result.current.data?.records ?? [];
     expect(records).toHaveLength(1);
     expect(records[0]?.record_id).toBe("m42");
   });
@@ -27,11 +23,7 @@ describe("useImageRecords", () => {
       expect(result.current.isSuccess).toBe(true);
     });
 
-    expect(result.current.data?.status).toBe(200);
-    const records =
-      result.current.data?.status === 200
-        ? result.current.data.data.records
-        : [];
+    const records = result.current.data?.records ?? [];
     expect(records).toHaveLength(4);
   });
 
@@ -44,11 +36,7 @@ describe("useImageRecords", () => {
       expect(result.current.isSuccess).toBe(true);
     });
 
-    expect(result.current.data?.status).toBe(200);
-    const records =
-      result.current.data?.status === 200
-        ? result.current.data.data.records
-        : [];
+    const records = result.current.data?.records ?? [];
     expect(records).toEqual([]);
   });
 });

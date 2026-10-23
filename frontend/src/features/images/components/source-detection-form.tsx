@@ -1,5 +1,5 @@
 import type { SyntheticEvent } from "react";
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { HelpHint } from "@/components/ui/help-hint";
 import {
@@ -11,7 +11,6 @@ import {
 import {
   DEFAULT_EXTENDED_DETECTION_PARAMS,
   DEFAULT_POINT_DETECTION_PARAMS,
-  DEFAULT_SOURCE_DETECTION_PARAMS,
   extendedDetectionParams,
   POINT_DETECTION_PRESETS,
   pointDetectionParams,
@@ -50,30 +49,20 @@ export function SourceDetectionForm({
   const [extendedDraft, setExtendedDraft] = useState(() =>
     extendedToDraft(DEFAULT_EXTENDED_DETECTION_PARAMS),
   );
-  const measured = bestPreset?.data;
-  const [appliedMeasurement, setAppliedMeasurement] =
-    useState<typeof measured>(undefined);
-  const currentValues = useRef<SourceDetectionParams>(
-    DEFAULT_SOURCE_DETECTION_PARAMS,
-  );
-  currentValues.current = {
-    ...(parseDraft() ?? DEFAULT_POINT_DETECTION_PARAMS),
-    ...(parseExtendedDraft(extendedDraft) ?? DEFAULT_EXTENDED_DETECTION_PARAMS),
-  };
-  if (measured !== undefined && measured !== appliedMeasurement) {
-    setAppliedMeasurement(measured);
-    applyParams(
-      bestPresetPointParams(
-        measured,
-        pointDetectionParams(currentValues.current),
-      ),
-    );
+  async function handleBestPreset() {
+    const measured = await bestPreset?.request();
+    if (measured === undefined) {
+      return;
+    }
+    const current = {
+      ...(parseDraft() ?? DEFAULT_POINT_DETECTION_PARAMS),
+      ...(parseExtendedDraft(extendedDraft) ??
+        DEFAULT_EXTENDED_DETECTION_PARAMS),
+    };
+    applyParams(bestPresetPointParams(measured, pointDetectionParams(current)));
     setExtendedDraft(
       extendedToDraft(
-        bestPresetExtendedParams(
-          measured,
-          extendedDetectionParams(currentValues.current),
-        ),
+        bestPresetExtendedParams(measured, extendedDetectionParams(current)),
       ),
     );
   }
@@ -130,7 +119,9 @@ export function SourceDetectionForm({
               variant="outline"
               data-testid="source-best-preset"
               disabled={isPending || bestPreset.isPending}
-              onClick={bestPreset.request}
+              onClick={() => {
+                void handleBestPreset();
+              }}
             >
               {bestPreset.isPending ? "Midiendo…" : "Usar el recomendado"}
             </Button>

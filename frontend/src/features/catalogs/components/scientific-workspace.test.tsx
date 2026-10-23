@@ -11,17 +11,23 @@ const CATALOGS_URL = "http://localhost:8000/image/m31/catalogs/recommendations";
 
 function renderWorkspace(enabled: boolean, preview?: string) {
   const queryClient = createTestQueryClient();
-  return render(
+  const workspace = (nextEnabled: boolean) => (
     <QueryClientProvider client={queryClient}>
       <ScientificWorkspace
         recordId="m31"
-        enabled={enabled}
+        enabled={nextEnabled}
         params={undefined}
         preview={preview}
         image={<div data-testid="image-canvas" />}
       />
-    </QueryClientProvider>,
+    </QueryClientProvider>
   );
+  const result = render(workspace(enabled));
+  return {
+    result,
+    rerenderEnabled: (nextEnabled: boolean) =>
+      result.rerender(workspace(nextEnabled)),
+  };
 }
 
 describe("ScientificWorkspace", () => {
@@ -31,7 +37,54 @@ describe("ScientificWorkspace", () => {
     expect(screen.getByTestId("catalogs-info")).toHaveTextContent(/Gaia/);
     expect(screen.queryByTestId("catalog-list")).not.toBeInTheDocument();
     expect(screen.getByTestId("image-canvas")).toBeInTheDocument();
-    expect(screen.getByTestId("scientific-toggle")).toBeInTheDocument();
+    expect(screen.getByTestId("scientific-toggle")).toHaveAttribute(
+      "aria-expanded",
+      "false",
+    );
+  });
+
+  it("opens when Gaia finishes after the workspace mounted", async () => {
+    const { rerenderEnabled } = renderWorkspace(false);
+
+    rerenderEnabled(true);
+
+    await screen.findByTestId("catalog-list");
+    expect(screen.getByTestId("scientific-toggle")).toHaveAttribute(
+      "aria-expanded",
+      "true",
+    );
+  });
+
+  it("opens once enabled and closes from the close button", async () => {
+    const user = userEvent.setup();
+    renderWorkspace(true);
+
+    await screen.findByTestId("catalog-list");
+    expect(screen.getByTestId("scientific-toggle")).toHaveAttribute(
+      "aria-expanded",
+      "true",
+    );
+
+    await user.click(screen.getByTestId("scientific-close"));
+    expect(screen.getByTestId("scientific-toggle")).toHaveAttribute(
+      "aria-expanded",
+      "false",
+    );
+  });
+
+  it("does not reopen after the user closes it for that record", async () => {
+    const user = userEvent.setup();
+    const { rerenderEnabled } = renderWorkspace(true);
+
+    await screen.findByTestId("catalog-list");
+    await user.click(screen.getByTestId("scientific-close"));
+    rerenderEnabled(false);
+    rerenderEnabled(true);
+
+    expect(screen.getByTestId("scientific-toggle")).toHaveAttribute(
+      "aria-expanded",
+      "false",
+    );
   });
 
   it("loads catalogues and publications once enabled", async () => {
@@ -60,6 +113,16 @@ describe("ScientificWorkspace", () => {
     expect(
       screen.getAllByTestId("catalogue-card-description").at(0),
     ).toHaveTextContent(/Astrometría/);
+    expect(screen.getByTestId("catalogue-card-keywords")).toHaveTextContent(
+      /Astrometry/,
+    );
+    expect(screen.getByTestId("catalogue-card-object")).toHaveTextContent(
+      /Este objeto está en el catálogo/,
+    );
+    expect(
+      screen.queryByText(/Catálogo de la región/i),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText(/cubre esta región/i)).not.toBeInTheDocument();
   });
 
   it("shows the consulted region and preview when provided", async () => {
@@ -101,6 +164,13 @@ describe("ScientificWorkspace", () => {
     expect(screen.getAllByTestId("publication-card")).toHaveLength(3);
     const firstLink = screen.getAllByTestId("publication-link").at(0);
     expect(firstLink).toHaveAttribute("target", "_blank");
+    expect(screen.getAllByTestId("publication-label").at(0)).toHaveTextContent(
+      "Gaia Early Data Release 3",
+    );
+    expect(screen.getByTestId("publication-abstract")).toHaveTextContent(
+      /Astrometría y fotometría/,
+    );
+    expect(screen.queryByText(/Abrir el paper/i)).not.toBeInTheDocument();
   });
 
   it("explains catalogues and publications for the active tab", async () => {

@@ -14,7 +14,9 @@ async def test_registry_runs_and_caches_a_job() -> None:
     registry = CatalogJobRegistry()
 
     async def factory() -> CatalogRecommendationResponse:
-        return CatalogRecommendationResponse(source_name="survey.fits", queried=True)
+        return CatalogRecommendationResponse(
+            status="completed", source_name="survey.fits", queried=True
+        )
 
     registry.start("job", factory)
     assert registry.is_running("job") is True
@@ -48,7 +50,7 @@ async def test_registry_does_not_restart_completed_jobs() -> None:
     async def factory() -> CatalogRecommendationResponse:
         nonlocal calls
         calls += 1
-        return CatalogRecommendationResponse()
+        return CatalogRecommendationResponse(status="completed")
 
     registry.start("job", factory)
     await registry.wait("job")

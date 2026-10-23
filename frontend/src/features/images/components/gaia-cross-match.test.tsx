@@ -54,10 +54,12 @@ describe("GaiaCrossMatch", () => {
     job.mockReturnValue(idle);
     render(<GaiaHarness enabled={false} />);
 
-    expect(verify).toHaveBeenCalledWith(
+    expect(verify).toHaveBeenLastCalledWith(
       "m31",
       {},
-      { query: { enabled: false } },
+      expect.objectContaining({
+        query: expect.objectContaining({ enabled: false }),
+      }),
     );
     expect(screen.queryByTestId("gaia-summary")).not.toBeInTheDocument();
   });
@@ -66,23 +68,21 @@ describe("GaiaCrossMatch", () => {
 function verifyResponse() {
   return {
     data: {
-      status: 200,
-      data: {
-        match_radius_arcsec: 1,
-        probability_power: 1,
-        summary: {
-          point: { count: 4, matched: 2 },
-          extended: { count: 1, matched: 0 },
-        },
-        matches: [
-          {
-            source_id: 1,
-            object_type: "point",
-            rank: 1,
-            gaia_match: true,
-          },
-        ],
+      status: "completed",
+      match_radius_arcsec: 1,
+      probability_power: 1,
+      summary: {
+        point: { count: 4, matched: 2 },
+        extended: { count: 1, matched: 0 },
       },
+      matches: [
+        {
+          source_id: 1,
+          object_type: "point",
+          rank: 1,
+          gaia_match: true,
+        },
+      ],
     },
     isFetching: false,
     isError: false,

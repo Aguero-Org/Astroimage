@@ -1,3 +1,8 @@
 allowBuilds:
   esbuild: true
   msw: true
+
+packageExtensions:
+  "@stryker-mutator/core@10.0.0":
+    dependencies:
+      typescript: "npm:@typescript/typescript6@^6.0.2"

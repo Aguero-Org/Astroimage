@@ -34,7 +34,7 @@ export const CATALOGOS_ENTRIES: GlossaryEntry[] = [
     group: "catalogos",
     what: "Identificador de una publicación científica: bibcode (ADS) o DOI.",
     inApp:
-      "Encabeza cada tarjeta de publicación; los enlaces abren el artículo en ADS o por su DOI.",
+      "La tarjeta se titula con el título del artículo cuando ADS lo devuelve, y muestra un extracto del abstract. Al pasar el cursor se abre en ADS o por su DOI.",
     where: "Imagen → Exploración científica → Publicaciones",
   },
   {
@@ -43,7 +43,7 @@ export const CATALOGOS_ENTRIES: GlossaryEntry[] = [
     group: "catalogos",
     what: "Explicación de por qué el catálogo se propone para esta imagen.",
     inApp:
-      "Distingue si el objeto buscado aparece en el catálogo o si el catálogo solo cubre la región consultada.",
+      "Solo aparece si el objeto buscado está en el catálogo, con el identificador encontrado. La lista ya son catálogos de esta región, así que eso no se repite.",
     where: "Imagen → Exploración científica → Catálogos",
   },
   {
@@ -61,7 +61,7 @@ export const CATALOGOS_ENTRIES: GlossaryEntry[] = [
     group: "catalogos",
     what: "Artículo científico que describe o acompaña a un catálogo, identificado por su Bibcode o DOI.",
     inApp:
-      "La solapa Publicaciones los lista con enlaces a ADS o al DOI para abrirlos en otra pestaña.",
+      "La solapa Publicaciones los lista como tarjetas. Pasar el cursor abre el artículo en ADS o por su DOI.",
     where: "Imagen → Exploración científica → Publicaciones",
   },
 ];
