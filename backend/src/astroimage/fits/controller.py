@@ -22,7 +22,7 @@ FitsUpload = Annotated[UploadFile, File(description="FITS file to inspect")]
 async def extract_fits_metadata(
     file: FitsUpload,
     service: Annotated[FitsService, Depends(fits_service_dependency)],
-    hdu: HduIndex = None,
+    hdu: HduIndex = None,  # type: ignore[assignment]
 ) -> FitsMetadataSchema:
     payload = await file.read()
     source_name = file.filename or "upload.fits"

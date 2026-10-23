@@ -2,12 +2,18 @@ import { useCoordinates, useViewerEvent } from "@cellbytes/react-openseadragon";
 import { useState } from "react";
 import type { PointSourceSchema } from "@/api/generated/model";
 import { FITS_RENDER_IMAGE_KEY } from "../fits-render-image-key";
+import {
+  type SourceFocusPulse,
+  sourceFocusPulseKey,
+} from "../source-focus-pulse";
 import { SourceMarker } from "./source-marker";
 
 type SourceMarkersProps = {
   sources: PointSourceSchema[];
   selectedId?: number | null;
   gaiaMatchedIds?: ReadonlySet<number>;
+  simbadMatchedIds?: ReadonlySet<number>;
+  focusPulse?: SourceFocusPulse | null;
   onSelect?: (source: PointSourceSchema) => void;
 };
 
@@ -15,6 +21,8 @@ export function SourceMarkers({
   sources,
   selectedId = null,
   gaiaMatchedIds,
+  simbadMatchedIds,
+  focusPulse,
   onSelect,
 }: Readonly<SourceMarkersProps>) {
   const coords = useCoordinates(FITS_RENDER_IMAGE_KEY);
@@ -57,6 +65,12 @@ export function SourceMarkers({
               source={source}
               selected={source.source_id === selectedId}
               gaiaMatch={gaiaMatchedIds?.has(source.source_id) ?? false}
+              simbadMatch={simbadMatchedIds?.has(source.source_id) ?? false}
+              pulseKey={sourceFocusPulseKey(
+                focusPulse,
+                source.source_id,
+                "point",
+              )}
               onSelect={onSelect}
             />
           </li>

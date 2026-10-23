@@ -15,9 +15,6 @@ _GAIA_COLUMNS = ("source_id", "ra", "dec", "phot_g_mean_mag")
 _MIN_CONES_RADIUS_ARCSEC = 60.0
 _ROW_LIMIT = 50_000
 
-# The Gaia archive answers the synchronous TAP endpoint in ~15s, but the async
-# job queue stays in PENDING for minutes: polling `async/<jobid>/phase` costs
-# ~13s per round trip, so `cone_search_async` never fits the request budget.
 Gaia.ROW_LIMIT = _ROW_LIMIT
 
 

@@ -1674,6 +1674,180 @@
         }
       }
     },
+    "/image/{record_id}/simbad-references": {
+      "get": {
+        "tags": [
+          "simbad"
+        ],
+        "summary": "List SIMBAD objects, identifiers, and bibliography for this image",
+        "operationId": "getSimbadReferences",
+        "parameters": [
+          {
+            "name": "record_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Stored FITS record id",
+              "title": "Record Id"
+            },
+            "description": "Stored FITS record id"
+          },
+          {
+            "name": "hdu",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Optional image HDU index; defaults to the first 2D image HDU",
+              "title": "Hdu"
+            },
+            "description": "Optional image HDU index; defaults to the first 2D image HDU"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 200,
+              "minimum": 1,
+              "description": "Maximum SIMBAD objects returned",
+              "default": 25,
+              "title": "Limit"
+            },
+            "description": "Maximum SIMBAD objects returned"
+          },
+          {
+            "name": "object_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "pattern": "^[A-Za-z0-9_+.\\-]{1,32}$"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "SIMBAD object type code, for example SNR or G",
+              "title": "Object Type"
+            },
+            "description": "SIMBAD object type code, for example SNR or G"
+          },
+          {
+            "name": "include_aliases",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": true,
+              "title": "Include Aliases"
+            }
+          },
+          {
+            "name": "include_bibliography",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": true,
+              "title": "Include Bibliography"
+            }
+          },
+          {
+            "name": "max_references",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 0,
+              "description": "Maximum references attached to each object",
+              "default": 10,
+              "title": "Max References"
+            },
+            "description": "Maximum references attached to each object"
+          },
+          {
+            "name": "crossmatch_radius_arcsec",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number",
+              "maximum": 3600.0,
+              "minimum": 0.0,
+              "description": "Image source crossmatch radius in arcsec",
+              "default": 3.0,
+              "title": "Crossmatch Radius Arcsec"
+            },
+            "description": "Image source crossmatch radius in arcsec"
+          },
+          {
+            "name": "probability_power",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number",
+              "minimum": 0.1,
+              "description": "Crossmatch probability exponent",
+              "default": 2.0,
+              "title": "Probability Power"
+            },
+            "description": "Crossmatch probability exponent"
+          },
+          {
+            "name": "refresh",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false,
+              "title": "Refresh"
+            }
+          },
+          {
+            "name": "X-Client-Id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "anonymous",
+              "title": "X-Client-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SimbadReferencesResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "FITS record not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/image/{record_id}/histogram": {
       "get": {
         "tags": [
@@ -3875,6 +4049,447 @@
           "display_name"
         ],
         "title": "SelectCandidateRequestSchema"
+      },
+      "SimbadImageMatchSchema": {
+        "properties": {
+          "source_id": {
+            "type": "integer",
+            "title": "Source Id"
+          },
+          "object_type": {
+            "type": "string",
+            "title": "Object Type"
+          },
+          "separation_arcsec": {
+            "type": "number",
+            "title": "Separation Arcsec"
+          },
+          "probability": {
+            "type": "number",
+            "title": "Probability",
+            "default": 0.0
+          },
+          "matched": {
+            "type": "boolean",
+            "title": "Matched",
+            "default": false
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "source_id",
+          "object_type",
+          "separation_arcsec"
+        ],
+        "title": "SimbadImageMatchSchema"
+      },
+      "SimbadObjectSchema": {
+        "properties": {
+          "main_id": {
+            "type": "string",
+            "title": "Main Id"
+          },
+          "otype": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Otype"
+          },
+          "otype_text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Otype Text"
+          },
+          "ra_deg": {
+            "type": "number",
+            "title": "Ra Deg"
+          },
+          "dec_deg": {
+            "type": "number",
+            "title": "Dec Deg"
+          },
+          "separation_arcsec": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Separation Arcsec"
+          },
+          "spectral_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Spectral Type"
+          },
+          "parallax_mas": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parallax Mas"
+          },
+          "parallax_error_mas": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parallax Error Mas"
+          },
+          "major_axis_arcmin": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Major Axis Arcmin"
+          },
+          "minor_axis_arcmin": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Minor Axis Arcmin"
+          },
+          "position_angle_deg": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Position Angle Deg"
+          },
+          "radial_velocity_km_s": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Radial Velocity Km S"
+          },
+          "redshift": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Redshift"
+          },
+          "total_reference_count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total Reference Count"
+          },
+          "gaia_source_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Gaia Source Id"
+          },
+          "aliases": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Aliases"
+          },
+          "references": {
+            "items": {
+              "$ref": "#/components/schemas/SimbadReferenceSchema"
+            },
+            "type": "array",
+            "title": "References"
+          },
+          "image_match": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SimbadImageMatchSchema"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "main_id",
+          "ra_deg",
+          "dec_deg"
+        ],
+        "title": "SimbadObjectSchema"
+      },
+      "SimbadReferenceSchema": {
+        "properties": {
+          "bibcode": {
+            "type": "string",
+            "title": "Bibcode"
+          },
+          "year": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Year"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          },
+          "doi": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Doi"
+          },
+          "journal": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Journal"
+          },
+          "object_count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Object Count"
+          },
+          "ads_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ads Url"
+          },
+          "doi_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Doi Url"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "bibcode"
+        ],
+        "title": "SimbadReferenceSchema"
+      },
+      "SimbadReferencesResponse": {
+        "properties": {
+          "source_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Name"
+          },
+          "ra_deg": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ra Deg"
+          },
+          "dec_deg": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dec Deg"
+          },
+          "radius_arcsec": {
+            "type": "number",
+            "title": "Radius Arcsec",
+            "default": 0.0
+          },
+          "limit": {
+            "type": "integer",
+            "title": "Limit",
+            "default": 25
+          },
+          "include_aliases": {
+            "type": "boolean",
+            "title": "Include Aliases",
+            "default": true
+          },
+          "include_bibliography": {
+            "type": "boolean",
+            "title": "Include Bibliography",
+            "default": true
+          },
+          "wcs_present": {
+            "type": "boolean",
+            "title": "Wcs Present",
+            "default": false
+          },
+          "queried": {
+            "type": "boolean",
+            "title": "Queried",
+            "default": false
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          },
+          "warnings": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Warnings"
+          },
+          "summary": {
+            "$ref": "#/components/schemas/SimbadReferencesSummarySchema"
+          },
+          "objects": {
+            "items": {
+              "$ref": "#/components/schemas/SimbadObjectSchema"
+            },
+            "type": "array",
+            "title": "Objects"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "SimbadReferencesResponse"
+      },
+      "SimbadReferencesSummarySchema": {
+        "properties": {
+          "object_count": {
+            "type": "integer",
+            "title": "Object Count",
+            "default": 0
+          },
+          "matched_source_count": {
+            "type": "integer",
+            "title": "Matched Source Count",
+            "default": 0
+          },
+          "detection_count": {
+            "type": "integer",
+            "title": "Detection Count",
+            "default": 0
+          },
+          "reference_count": {
+            "type": "integer",
+            "title": "Reference Count",
+            "default": 0
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "SimbadReferencesSummarySchema"
       },
       "SourceDetectionResponse": {
         "properties": {

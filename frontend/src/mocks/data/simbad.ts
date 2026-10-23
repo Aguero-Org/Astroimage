@@ -1,0 +1,67 @@
+import type { SimbadObjectSchema } from "@/api/generated/model";
+
+export const MOCK_SIMBAD_OBJECT: SimbadObjectSchema = {
+  main_id: "M  31",
+  otype: "G",
+  otype_text: "Galaxy",
+  ra_deg: 10.684708,
+  dec_deg: 41.26875,
+  separation_arcsec: 0.12,
+  spectral_type: null,
+  parallax_mas: null,
+  parallax_error_mas: null,
+  total_reference_count: 2450,
+  gaia_source_id: null,
+  aliases: ["Andromeda Galaxy", "NGC 224"],
+  references: [],
+  image_match: {
+    source_id: 1,
+    object_type: "point",
+    separation_arcsec: 0.15,
+    probability: 0.98,
+    matched: true,
+  },
+};
+
+export const simbadReferencesResponse = {
+  source_name: "M31",
+  ra_deg: 10.684708,
+  dec_deg: 41.26875,
+  radius_arcsec: 300,
+  limit: 50,
+  include_aliases: true,
+  include_bibliography: true,
+  wcs_present: true,
+  queried: true,
+  objects: [
+    MOCK_SIMBAD_OBJECT,
+    {
+      main_id: "*  alf And",
+      otype: "Be*",
+      otype_text: "Be star",
+      ra_deg: 2.097,
+      dec_deg: 29.09,
+      separation_arcsec: 12.4,
+      spectral_type: "B8IVpMnHg",
+      parallax_mas: 33.6,
+      parallax_error_mas: 0.35,
+      total_reference_count: 420,
+      gaia_source_id: "123456",
+      aliases: ["Alpheratz"],
+      references: [],
+      image_match: {
+        source_id: 1,
+        object_type: "extended",
+        separation_arcsec: 1.2,
+        probability: 0.9,
+        matched: true,
+      },
+    },
+  ],
+  summary: {
+    total_objects: 2,
+    objects_with_aliases: 2,
+    objects_with_bibliography: 0,
+    total_references: 0,
+  },
+};

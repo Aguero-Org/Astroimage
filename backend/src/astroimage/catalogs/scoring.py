@@ -3,11 +3,6 @@ from __future__ import annotations
 import re
 from collections.abc import Iterable, Mapping
 
-# Scoring constants ported from the reference notebook
-# `notebooks/busqueda-papers.ipynb` (TPI-Prueba). Keep them in parity: the
-# ranking is dominated by identifier (50) and spatial (<=50) evidence, with the
-# paper/DOI signals acting as tie-breakers.
-
 IDENTIFIER_SCORE = 50.0
 PAPER_SCORE = 25.0
 DOI_SCORE = 15.0
