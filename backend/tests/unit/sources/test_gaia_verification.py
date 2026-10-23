@@ -343,12 +343,8 @@ async def test_gaia_block_queries_run_concurrently_across_thread_pool() -> None:
     elapsed = time.perf_counter() - started
 
     assert result.queried is True
-    assert (
-        len(provider.searches) == 6
-    )  # 5 fuentes (3 point + 2 extended) + fallback single-query (paridad TPI gaia.py:183-204)
-    assert (
-        provider.max_concurrent == 5
-    )  # 5 bloques: 3 point + 2 extended (paridad TPI gaia.py:183-204)
+    assert len(provider.searches) == 6
+    assert provider.max_concurrent == 5
     assert elapsed < 3.0
 
 
@@ -397,9 +393,7 @@ async def test_gaia_splits_many_sources_into_eight_blocks() -> None:
 
     assert result.queried is True
     assert result.summary.point.count >= 8
-    assert (
-        len(provider.searches) == 9
-    )  # 8 bloques + fallback single-query (paridad TPI gaia.py:183-204)
+    assert len(provider.searches) == 9
     assert provider.max_concurrent == 8
     assert all(radius >= 60.0 for _, _, radius in provider.searches)
     assert elapsed < 3.0
@@ -427,8 +421,6 @@ async def test_verify_from_record_times_out_gracefully() -> None:
     assert result.wcs_present is True
     assert result.matches
     assert all(row.gaia_match is False for row in result.matches)
-    assert result.summary.point.count + result.summary.extended.count == len(
-        result.matches
-    )  # point + extended (paridad detector: 5 = 3 bloques + 2 extendidos)
+    assert result.summary.point.count + result.summary.extended.count == len(result.matches)
 
     await asyncio.sleep(1.2)

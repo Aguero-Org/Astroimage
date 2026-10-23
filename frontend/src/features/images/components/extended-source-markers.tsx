@@ -3,11 +3,18 @@ import { useState } from "react";
 import type { ExtendedSourceSchema } from "@/api/generated/model";
 import { cn } from "@/lib/utils";
 import { FITS_RENDER_IMAGE_KEY } from "../fits-render-image-key";
+import {
+  type SourceFocusPulse,
+  sourceFocusPulseKey,
+} from "../source-focus-pulse";
+import { SimbadMatchBadge } from "./simbad-match-badge";
 
 type ExtendedSourceMarkersProps = {
   sources: ExtendedSourceSchema[];
   selectedId?: number | null;
   gaiaMatchedIds?: ReadonlySet<number>;
+  simbadMatchedIds?: ReadonlySet<number>;
+  focusPulse?: SourceFocusPulse | null;
   onSelect?: (source: ExtendedSourceSchema) => void;
 };
 
@@ -15,6 +22,8 @@ export function ExtendedSourceMarkers({
   sources,
   selectedId = null,
   gaiaMatchedIds,
+  simbadMatchedIds,
+  focusPulse,
   onSelect,
 }: Readonly<ExtendedSourceMarkersProps>) {
   const coords = useCoordinates(FITS_RENDER_IMAGE_KEY);
@@ -57,7 +66,8 @@ export function ExtendedSourceMarkers({
         const height = bottomRight.y - topLeft.y;
         const selected = source.source_id === selectedId;
         const gaiaMatch = gaiaMatchedIds?.has(source.source_id) ?? false;
-        const label = `Fuente extendida ${source.rank}, área ${source.area_pixels} px`;
+        const simbadMatch = simbadMatchedIds?.has(source.source_id) ?? false;
+        const label = `Fuente extendida ${source.rank}, área ${source.area_pixels} px${simbadMatch ? ", SIMBAD" : ""}`;
 
         return (
           <li
@@ -66,23 +76,46 @@ export function ExtendedSourceMarkers({
             style={{ left: topLeft.x, top: topLeft.y, width, height }}
           >
             <button
+              key={sourceFocusPulseKey(
+                focusPulse,
+                source.source_id,
+                "extended",
+              )}
               type="button"
               data-testid="extended-source-marker"
               aria-label={label}
               aria-pressed={selected}
               data-gaia-match={gaiaMatch ? "true" : "false"}
+              data-simbad-match={simbadMatch ? "true" : "false"}
               title={label}
               className={cn(
-                "pointer-events-auto size-full cursor-pointer rounded-sm border-2 shadow-sm",
-                gaiaMatch
-                  ? "border-gaia bg-gaia/30"
-                  : "border-primary bg-primary/15",
-                selected && "ring-2 ring-accent",
+                "pointer-events-auto absolute left-1/2 top-1/2 h-full w-full -translate-x-1/2 -translate-y-1/2 cursor-pointer rounded-sm border-2 shadow-sm ring-2",
+                simbadMatch
+                  ? "border-simbad bg-simbad/20"
+                  : gaiaMatch
+                    ? "border-gaia bg-gaia/20"
+                    : "border-amber-300 bg-amber-300/20",
+                selected
+                  ? "ring-accent"
+                  : simbadMatch
+                    ? "ring-simbad"
+                    : gaiaMatch
+                      ? "ring-gaia"
+                      : "ring-background",
+                sourceFocusPulseKey(
+                  focusPulse,
+                  source.source_id,
+                  "extended",
+                ) !== undefined && "source-focus-pulse",
               )}
               onClick={() => {
                 onSelect?.(source);
               }}
-            />
+            >
+              {simbadMatch ? (
+                <SimbadMatchBadge className="-top-2 -left-2" />
+              ) : null}
+            </button>
           </li>
         );
       })}

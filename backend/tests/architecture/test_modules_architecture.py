@@ -56,6 +56,8 @@ ALLOWED_FEATURE_DEPENDENCIES: frozenset[tuple[str, str]] = frozenset(
         ("hub", "fits"),
         ("catalogs", "fits"),
         ("catalogs", "sources"),
+        ("simbad", "fits"),
+        ("simbad", "sources"),
     }
 )
 

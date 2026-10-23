@@ -21,6 +21,7 @@ from astroimage.shared.metrics import setup_metrics
 from astroimage.shared.middleware import RequestContextMiddleware
 from astroimage.shared.minio_storage import create_object_storage_client, ensure_bucket
 from astroimage.shared.telemetry import setup_tracing
+from astroimage.simbad.controller import router as simbad_router
 from astroimage.sources.controller import router as sources_router
 
 _log = structlog.get_logger("astroimage.main")
@@ -33,6 +34,7 @@ def build_api_router() -> APIRouter:
     api_router.include_router(hub_router)
     api_router.include_router(sources_router)
     api_router.include_router(catalogs_router)
+    api_router.include_router(simbad_router)
     api_router.include_router(render_router)
     return api_router
 

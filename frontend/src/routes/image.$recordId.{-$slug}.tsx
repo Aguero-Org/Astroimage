@@ -1,11 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import type {
   DetectSourcesParams,
   RenderFitsImageParams,
 } from "@/api/generated/model";
+import { useGetSimbadReferences } from "@/api/generated/simbad/simbad";
 import { HelpHint } from "@/components/ui/help-hint";
 import { ScientificWorkspace } from "@/features/catalogs/components/scientific-workspace";
+import { simbadObjectsInView } from "@/features/catalogs/simbad-references";
 import {
   useBestPreset,
   useImageHistogram,
@@ -37,6 +39,7 @@ import {
   resolveWorkspaceHdu,
 } from "@/features/images/image-workspace";
 import { rememberLastImageRecord } from "@/features/images/last-record";
+import type { SourceFocusPulse } from "@/features/images/source-focus-pulse";
 import { useImageWorkspace } from "@/features/images/use-image-workspace";
 import { followOnQueriesEnabled } from "@/features/images/workspace-queries";
 import { useDocumentTitle } from "@/hooks/use-document-title";
@@ -81,6 +84,7 @@ function ImageWorkspacePage({
   }, [recordId, slug]);
 
   const [workspace, dispatch] = useImageWorkspace();
+  const [focusPulse, setFocusPulse] = useState<SourceFocusPulse | null>(null);
   const { inspectorOpen, selectedSource, renderParams, detectionParams } =
     workspace;
   const infoQuery = useImageInfo(recordId);
@@ -111,8 +115,6 @@ function ImageWorkspacePage({
     { bins: 64, hdu: hdu ?? undefined },
     followOnsEnabled,
   );
-  // Measuring the PSF is expensive, so this only runs when the inspector asks
-  // for it instead of on every visit to the image.
   const bestPresetQuery = useBestPreset(recordId, hdu);
   const detected = sourcesQuery.data;
   const detectionSummary = detected?.summary;
@@ -121,6 +123,25 @@ function ImageWorkspacePage({
     sourcesQueryParams,
     detectionSummary !== undefined,
   );
+  const simbadParams = hdu === null ? undefined : { hdu };
+  const simbadQuery = useGetSimbadReferences(recordId, simbadParams, {
+    query: { enabled: gaia.summary !== undefined, staleTime: 5 * 60 * 1000 },
+  });
+  const simbadData =
+    simbadQuery.data?.status === 200 ? simbadQuery.data.data : undefined;
+  const simbadPointIds = new Set<number>();
+  const simbadExtendedIds = new Set<number>();
+  for (const obj of simbadData?.objects ?? []) {
+    const match = obj.image_match;
+    if (!match?.matched) {
+      continue;
+    }
+    if (String(match.object_type) === "point") {
+      simbadPointIds.add(match.source_id);
+    } else if (String(match.object_type) === "extended") {
+      simbadExtendedIds.add(match.source_id);
+    }
+  }
   const sourceName = imageInfo?.source_name;
   const pageTitle = imageDisplayTitle(sourceName, slug);
   const catalogName = imageInfo?.display_name?.trim() ?? "";
@@ -132,6 +153,11 @@ function ImageWorkspacePage({
   );
   const pointSources = detected?.point_sources ?? [];
   const extendedSources = detected?.extended_sources ?? [];
+  const visibleSimbadObjects = simbadObjectsInView(
+    simbadData?.objects ?? [],
+    new Set(pointSources.map((source) => source.source_id)),
+    new Set(extendedSources.map((source) => source.source_id)),
+  );
   const selectedPointId = sourceId(selectedSource, "point");
   const selectedExtendedId = sourceId(selectedSource, "extended");
   const rendered = renderQuery.data;
@@ -146,6 +172,46 @@ function ImageWorkspacePage({
         enabled={gaia.summary !== undefined}
         params={scientificParams}
         preview={preview}
+        hdu={hdu}
+        selectedSource={
+          selectedSource
+            ? {
+                source_id: selectedSource.source_id,
+                object_type: selectedSource.object_type as "point" | "extended",
+              }
+            : null
+        }
+        simbadObjects={visibleSimbadObjects}
+        simbadResult={simbadData}
+        simbadIsError={simbadQuery.isError}
+        simbadErrorMessage={
+          simbadQuery.error instanceof Error
+            ? simbadQuery.error.message
+            : "error desconocido"
+        }
+        simbadIsLoading={
+          gaia.summary !== undefined &&
+          simbadData === undefined &&
+          !simbadQuery.isError
+        }
+        simbadIsFetching={simbadQuery.isFetching}
+        onSimbadRetry={() => {
+          void simbadQuery.refetch();
+        }}
+        onFocusSource={(sourceId, objectType) => {
+          setFocusPulse((current) => ({
+            sourceId,
+            objectType,
+            nonce: (current?.nonce ?? 0) + 1,
+          }));
+          const source =
+            objectType === "point"
+              ? pointSources.find((item) => item.source_id === sourceId)
+              : extendedSources.find((item) => item.source_id === sourceId);
+          if (source) {
+            dispatch({ type: "select-source", source });
+          }
+        }}
         image={
           <>
             <RenderedFitsSection
@@ -155,11 +221,14 @@ function ImageWorkspacePage({
               rendered={rendered}
               imageUrl={preview}
               label={titleWithDescription}
+              focusPulse={focusPulse}
               sources={{
                 pointSources,
                 extendedSources,
                 gaiaPointIds: gaiaMatchedIds(gaia.matches, "point"),
                 gaiaExtendedIds: gaiaMatchedIds(gaia.matches, "extended"),
+                simbadPointIds,
+                simbadExtendedIds,
                 selectedPointId,
                 selectedExtendedId,
                 onSelect: (source) =>

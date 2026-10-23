@@ -20,8 +20,6 @@ from astroimage.sources.schema import (
 
 FWHM_PER_SIGMA = 2.3548200450309493
 
-# First pass only needs to find the core; the stamp then grows to cover the
-# measured width, otherwise the truncated tails bias the width downwards.
 ROUGH_STAMP_RADIUS_PIXELS = 6
 FWHM_RADIUS_SIGMAS = 4.5
 MIN_STAMP_RADIUS_PIXELS = 6

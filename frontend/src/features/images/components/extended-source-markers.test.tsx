@@ -25,6 +25,8 @@ describe("ExtendedSourceMarkers", () => {
       "aria-label",
       "Fuente extendida 1, área 640 px",
     );
+    expect(marker).toHaveAttribute("data-simbad-match", "false");
+    expect(screen.queryByTestId("simbad-match-badge")).not.toBeInTheDocument();
 
     const box = screen.getByTestId("extended-source-overlay")
       .firstChild as HTMLElement;
@@ -48,6 +50,23 @@ describe("ExtendedSourceMarkers", () => {
     expect(screen.getByTestId("extended-source-marker")).toHaveClass(
       "border-gaia",
     );
+  });
+
+  it("marks a SIMBAD counterpart with a badge", () => {
+    render(
+      <ExtendedSourceMarkers
+        sources={[MOCK_EXTENDED_SOURCE]}
+        simbadMatchedIds={new Set([MOCK_EXTENDED_SOURCE.source_id])}
+      />,
+    );
+
+    const marker = screen.getByTestId("extended-source-marker");
+    expect(marker).toHaveAttribute("data-simbad-match", "true");
+    expect(marker).toHaveAttribute(
+      "aria-label",
+      "Fuente extendida 1, área 640 px, SIMBAD",
+    );
+    expect(screen.getByTestId("simbad-match-badge")).toHaveClass("bg-simbad");
   });
 
   it("returns null when there are no sources", () => {

@@ -9,6 +9,8 @@ catalog_jobs_log = structlog.get_logger("astroimage.catalogs.jobs")
 catalog_service_log = structlog.get_logger("astroimage.catalogs.service")
 catalog_vizier_log = structlog.get_logger("astroimage.catalogs.vizier")
 jobs_log = structlog.get_logger("astroimage.shared.jobs")
+simbad_provider_log = structlog.get_logger("astroimage.simbad.provider")
+simbad_service_log = structlog.get_logger("astroimage.simbad.service")
 
 
 def _quiet_third_party_loggers() -> None:

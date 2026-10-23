@@ -7,7 +7,13 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ExtendedSourceMarkers } from "@/features/images/components/extended-source-markers";
 import { FitsImageViewer } from "@/features/images/components/fits-image-viewer";
 import { SourceMarkers } from "@/features/images/components/source-markers";
+import {
+  type ImageFocusRequest,
+  ViewportFocusController,
+} from "@/features/images/components/viewport-focus-controller";
+import { ViewportSourceVisibility } from "@/features/images/components/viewport-source-visibility";
 import { formatQueryError } from "@/features/images/format-query-error";
+import type { SourceFocusPulse } from "@/features/images/source-focus-pulse";
 
 const SKELETON_TOOLS = [0, 1, 2, 3];
 
@@ -16,6 +22,8 @@ export type SourceOverlays = {
   extendedSources: ExtendedSourceSchema[];
   gaiaPointIds: ReadonlySet<number>;
   gaiaExtendedIds: ReadonlySet<number>;
+  simbadPointIds: ReadonlySet<number>;
+  simbadExtendedIds: ReadonlySet<number>;
   selectedPointId?: number;
   selectedExtendedId?: number;
   onSelect?: (source: PointSourceSchema | ExtendedSourceSchema) => void;
@@ -57,6 +65,9 @@ export function RenderedFitsSection({
   imageUrl,
   label,
   sources,
+  focusRequest,
+  focusPulse,
+  onVisibleSourceKeysChange,
 }: Readonly<{
   isPending: boolean;
   isError: boolean;
@@ -65,6 +76,9 @@ export function RenderedFitsSection({
   imageUrl: string | undefined;
   label: string;
   sources: SourceOverlays;
+  focusRequest?: ImageFocusRequest | null;
+  focusPulse?: SourceFocusPulse | null;
+  onVisibleSourceKeysChange?: (keys: ReadonlySet<string>) => void;
 }>) {
   if (isPending) {
     return <RenderSkeleton />;
@@ -89,16 +103,26 @@ export function RenderedFitsSection({
         label={label}
         className="h-full rounded-none border-0"
       >
+        <ViewportSourceVisibility
+          pointSources={sources.pointSources}
+          extendedSources={sources.extendedSources}
+          onVisibleSourceKeysChange={onVisibleSourceKeysChange}
+        />
+        <ViewportFocusController request={focusRequest} />
         <ExtendedSourceMarkers
           sources={sources.extendedSources}
           selectedId={sources.selectedExtendedId}
           gaiaMatchedIds={sources.gaiaExtendedIds}
+          simbadMatchedIds={sources.simbadExtendedIds}
+          focusPulse={focusPulse}
           onSelect={sources.onSelect}
         />
         <SourceMarkers
           sources={sources.pointSources}
           selectedId={sources.selectedPointId}
           gaiaMatchedIds={sources.gaiaPointIds}
+          simbadMatchedIds={sources.simbadPointIds}
+          focusPulse={focusPulse}
           onSelect={sources.onSelect}
         />
       </FitsImageViewer>
@@ -112,7 +136,6 @@ export function RenderedFitsSection({
 }
 
 function isBlob(value: unknown): value is Blob {
-  // Node's fetch Blob and jsdom's Blob fail `instanceof` across each other.
   return Object.prototype.toString.call(value) === "[object Blob]";
 }
 
