@@ -75,8 +75,6 @@ def error_app() -> FastAPI:
 
 @pytest.fixture
 async def error_client(error_app: FastAPI) -> AsyncIterator[AsyncClient]:
-    # raise_app_exceptions=False: ServerErrorMiddleware re-raises after responding,
-    # so the generic 500 can only be observed through the transport.
     transport = ASGITransport(app=error_app, raise_app_exceptions=False)
     async with AsyncClient(transport=transport, base_url="http://test") as client:
         yield client

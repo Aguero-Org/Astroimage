@@ -40,11 +40,21 @@ vi.mock("@/features/images/components/extended-source-markers", () => ({
   ),
 }));
 
+vi.mock("@/features/images/components/viewport-source-visibility", () => ({
+  ViewportSourceVisibility: () => null,
+}));
+
+vi.mock("@/features/images/components/viewport-focus-controller", () => ({
+  ViewportFocusController: () => null,
+}));
+
 const SOURCES: SourceOverlays = {
   pointSources: [],
   extendedSources: [],
   gaiaPointIds: new Set(),
   gaiaExtendedIds: new Set(),
+  simbadPointIds: new Set(),
+  simbadExtendedIds: new Set(),
 };
 
 function renderSection(

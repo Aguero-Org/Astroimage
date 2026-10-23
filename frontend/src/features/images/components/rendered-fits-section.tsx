@@ -22,6 +22,8 @@ export type SourceOverlays = {
   extendedSources: ExtendedSourceSchema[];
   gaiaPointIds: ReadonlySet<number>;
   gaiaExtendedIds: ReadonlySet<number>;
+  simbadPointIds: ReadonlySet<number>;
+  simbadExtendedIds: ReadonlySet<number>;
   selectedPointId?: number;
   selectedExtendedId?: number;
   onSelect?: (source: PointSourceSchema | ExtendedSourceSchema) => void;
@@ -63,17 +65,8 @@ export function RenderedFitsSection({
   imageUrl,
   label,
   sources,
-  pointSources,
-  extendedSources,
-  gaiaPointIds,
-  gaiaExtendedIds,
-  simbadPointIds,
-  simbadExtendedIds,
-  selectedId,
-  selectedExtendedId,
   focusRequest,
   focusPulse,
-  onSelectSource,
   onVisibleSourceKeysChange,
 }: Readonly<{
   isPending: boolean;
@@ -83,17 +76,8 @@ export function RenderedFitsSection({
   imageUrl: string | undefined;
   label: string;
   sources: SourceOverlays;
-  pointSources: PointSourceSchema[];
-  extendedSources: ExtendedSourceSchema[];
-  gaiaPointIds: ReadonlySet<number>;
-  gaiaExtendedIds: ReadonlySet<number>;
-  simbadPointIds: ReadonlySet<number>;
-  simbadExtendedIds: ReadonlySet<number>;
-  selectedId?: number;
-  selectedExtendedId?: number;
   focusRequest?: ImageFocusRequest | null;
   focusPulse?: SourceFocusPulse | null;
-  onSelectSource?: (source: PointSourceSchema | ExtendedSourceSchema) => void;
   onVisibleSourceKeysChange?: (keys: ReadonlySet<string>) => void;
 }>) {
   if (isPending) {
@@ -120,8 +104,8 @@ export function RenderedFitsSection({
         className="h-full rounded-none border-0"
       >
         <ViewportSourceVisibility
-          pointSources={pointSources}
-          extendedSources={extendedSources}
+          pointSources={sources.pointSources}
+          extendedSources={sources.extendedSources}
           onVisibleSourceKeysChange={onVisibleSourceKeysChange}
         />
         <ViewportFocusController request={focusRequest} />
@@ -129,27 +113,17 @@ export function RenderedFitsSection({
           sources={sources.extendedSources}
           selectedId={sources.selectedExtendedId}
           gaiaMatchedIds={sources.gaiaExtendedIds}
+          simbadMatchedIds={sources.simbadExtendedIds}
+          focusPulse={focusPulse}
           onSelect={sources.onSelect}
         />
         <SourceMarkers
           sources={sources.pointSources}
           selectedId={sources.selectedPointId}
           gaiaMatchedIds={sources.gaiaPointIds}
+          simbadMatchedIds={sources.simbadPointIds}
+          focusPulse={focusPulse}
           onSelect={sources.onSelect}
-          sources={extendedSources}
-          selectedId={selectedExtendedId}
-          gaiaMatchedIds={gaiaExtendedIds}
-          simbadMatchedIds={simbadExtendedIds}
-          focusPulse={focusPulse}
-          onSelect={onSelectSource}
-        />
-        <SourceMarkers
-          sources={pointSources}
-          selectedId={selectedId}
-          gaiaMatchedIds={gaiaPointIds}
-          simbadMatchedIds={simbadPointIds}
-          focusPulse={focusPulse}
-          onSelect={onSelectSource}
         />
       </FitsImageViewer>
     );

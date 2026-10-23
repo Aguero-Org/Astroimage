@@ -56,7 +56,7 @@ def _config(
 async def render_fits_image(
     record_id: RecordId,
     service: Annotated[RenderService, Depends(render_service_dependency)],
-    hdu: HduIndex = None,  # type: ignore[assignment]
+    hdu: HduIndex = None,
     stretch: StretchParam = _DEFAULTS.stretch,
     limits: LimitsParam = _DEFAULTS.limits,
     colormap: ColormapParam = _DEFAULTS.colormap,
@@ -89,7 +89,7 @@ async def render_fits_image(
 async def render_fits_histogram(
     record_id: RecordId,
     service: Annotated[RenderService, Depends(render_service_dependency)],
-    hdu: HduIndex = None,  # type: ignore[assignment]
+    hdu: HduIndex = None,
     bins: BinsParam = 256,
 ) -> HistogramResponse:
     _log.info("histogram_start", record_id=str(record_id), bins=bins)

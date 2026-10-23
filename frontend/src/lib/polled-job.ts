@@ -16,11 +16,6 @@ export function pendingJobId<TStatus extends JobStatus, TResult>(
   return isJob(body) ? body.job_id : undefined;
 }
 
-/**
- * Some endpoints answer with a job id first and the result once the job
- * settles. Each feature still owns its generated query hooks; this only
- * combines the "start" and "job" queries into a single view.
- */
 export function polledJobResult<TStatus extends JobStatus, TResult>({
   start,
   job,

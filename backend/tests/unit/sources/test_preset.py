@@ -19,7 +19,6 @@ from astroimage.sources.schema import (
     PointDetectionConfigSchema,
 )
 
-# Spaced far beyond the stamp radius so each measurement sees only its own source.
 GRID = [
     (30.0, 30.0),
     (100.0, 30.0),
