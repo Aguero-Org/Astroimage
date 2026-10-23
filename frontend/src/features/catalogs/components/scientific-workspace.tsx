@@ -9,7 +9,6 @@ import {
   useState,
 } from "react";
 import type {
-  CatalogRecommendationItemSchema,
   RecommendCatalogsParams,
   SimbadObjectSchema,
 } from "@/api/generated/model";
@@ -32,15 +31,13 @@ import {
 } from "../catalog-recommendations";
 import { simbadObjectsForSource } from "../simbad-references";
 import { useCatalogRecommendations } from "../use-catalog-recommendations";
-import { RecommendationContent } from "./scientific-recommendation-content";
 import { useSimbadReferences } from "../use-simbad-references";
-import { CatalogueCard } from "./catalogue-card";
-import { PublicationCard } from "./publication-card";
 import {
   RecommendationError,
   RecommendationInfo,
   RecommendationLoading,
 } from "./recommendation-states";
+import { RecommendationContent } from "./scientific-recommendation-content";
 import { SimbadObjectCard } from "./simbad-object-card";
 
 type ScientificWorkspaceProps = {
@@ -486,91 +483,29 @@ function ScientificSidebar({
         ) : null}
 
         <SidebarContent className="pb-24">
-          <RecommendationContent
-            enabled={enabled}
-            isError={isError}
-            isLoading={isLoading}
-            result={result}
-            tab={tab}
-            items={items}
-            matches={catalogues}
-            publications={publications}
-            papers={papers}
-            errorMessage={errorMessage}
-            onRetry={refetch}
-          />
+          {tab === "simbad" ? (
+            renderSimbad()
+          ) : (
+            <RecommendationContent
+              enabled={enabled}
+              isError={isError}
+              isLoading={isLoading}
+              result={result}
+              tab={tab}
+              items={items}
+              matches={catalogues}
+              publications={publications}
+              papers={papers}
+              errorMessage={errorMessage}
+              onRetry={refetch}
+            />
+          )}
         </SidebarContent>
       </div>
     </Sidebar>
   );
 
-  function renderContent() {
-    if (!enabled) {
-      return (
-        <RecommendationInfo testId="catalogs-info">
-          Las recomendaciones aparecerán cuando termine el análisis de Gaia.
-        </RecommendationInfo>
-      );
-    }
-    if (isError) {
-      return <RecommendationError message={errorMessage} onRetry={refetch} />;
-    }
-    if (isLoading) {
-      return <RecommendationLoading />;
-    }
-    if (!result) {
-      return (
-        <RecommendationInfo testId="catalogs-info">
-          Todavía no hay recomendaciones para esta imagen.
-        </RecommendationInfo>
-      );
-    }
-    if (result.error) {
-      return <RecommendationError message={result.error} onRetry={refetch} />;
-    }
-    if (result.wcs_present === false) {
-      return (
-        <RecommendationInfo testId="catalogs-info">
-          Esta imagen no tiene información de posición (WCS), así que no se
-          puede ubicar su región en el cielo para buscar catálogos.
-        </RecommendationInfo>
-      );
-    }
-    if (result.queried === false) {
-      return (
-        <RecommendationInfo testId="catalogs-info">
-          No se pudo consultar VizieR para esta región del cielo.
-        </RecommendationInfo>
-      );
-    }
-    if (tab === "catalogs") {
-      return (
-        <CatalogList
-          items={items}
-          matches={catalogues}
-          radiusArcsec={result.radius_arcsec}
-        />
-      );
-    }
-    if (tab === "papers") {
-      if (publications.length === 0) {
-        return (
-          <RecommendationInfo testId="papers-empty">
-            {result.include_papers === false
-              ? "Las publicaciones no se incluyeron en esta consulta."
-              : "No se encontraron publicaciones asociadas a estos catálogos."}
-          </RecommendationInfo>
-        );
-      }
-      if (papers.length === 0) {
-        return (
-          <RecommendationInfo testId="catalogs-info">
-            Ninguna publicación coincide con la búsqueda.
-          </RecommendationInfo>
-        );
-      }
-      return <PublicationList items={papers} />;
-    }
+  function renderSimbad() {
     if (simbad.isError) {
       return (
         <RecommendationError
@@ -679,61 +614,6 @@ function ScientificSidebar({
       </div>
     );
   }
-}
-
-type CatalogListProps = {
-  items: CatalogRecommendationItemSchema[];
-  matches: CatalogRecommendationItemSchema[];
-  radiusArcsec?: number;
-};
-
-function CatalogList({
-  items,
-  matches,
-  radiusArcsec,
-}: Readonly<CatalogListProps>) {
-  if (items.length === 0) {
-    return (
-      <RecommendationInfo testId="catalogs-empty">
-        No se encontraron catálogos para esta región del cielo.
-      </RecommendationInfo>
-    );
-  }
-  if (matches.length === 0) {
-    return (
-      <RecommendationInfo testId="catalogs-info">
-        Ningún catálogo coincide con la búsqueda.
-      </RecommendationInfo>
-    );
-  }
-  return (
-    <div data-testid="catalog-list" className="flex flex-col gap-2 px-2 py-2">
-      {matches.map((item) => (
-        <CatalogueCard
-          key={item.catalogue_id}
-          item={item}
-          radiusArcsec={radiusArcsec}
-        />
-      ))}
-    </div>
-  );
-}
-
-type PublicationListProps = {
-  items: CatalogPublication[];
-};
-
-function PublicationList({ items }: Readonly<PublicationListProps>) {
-  return (
-    <div
-      data-testid="publication-list"
-      className="flex flex-col gap-2 px-2 py-2"
-    >
-      {items.map((publication) => (
-        <PublicationCard key={publication.id} publication={publication} />
-      ))}
-    </div>
-  );
 }
 
 const MATCH_OPTIONS: { value: CatalogueMatchFilter; label: string }[] = [

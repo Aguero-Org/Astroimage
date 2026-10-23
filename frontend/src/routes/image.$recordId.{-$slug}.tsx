@@ -1,20 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import type {
   DetectSourcesParams,
   RenderFitsImageParams,
 } from "@/api/generated/model";
-import { type Dispatch, type SetStateAction, useEffect, useState } from "react";
-import { useGetImageInfo } from "@/api/generated/hub/hub";
-import {
-  useRenderFitsHistogram,
-  useRenderFitsImage,
-} from "@/api/generated/render/render";
 import { useGetSimbadReferences } from "@/api/generated/simbad/simbad";
-import {
-  useDetectSources,
-  useGetBestPreset,
-} from "@/api/generated/sources/sources";
 import { HelpHint } from "@/components/ui/help-hint";
 import { ScientificWorkspace } from "@/features/catalogs/components/scientific-workspace";
 import { simbadObjectsInView } from "@/features/catalogs/simbad-references";
@@ -49,8 +39,8 @@ import {
   resolveWorkspaceHdu,
 } from "@/features/images/image-workspace";
 import { rememberLastImageRecord } from "@/features/images/last-record";
-import { useImageWorkspace } from "@/features/images/use-image-workspace";
 import type { SourceFocusPulse } from "@/features/images/source-focus-pulse";
+import { useImageWorkspace } from "@/features/images/use-image-workspace";
 import { followOnQueriesEnabled } from "@/features/images/workspace-queries";
 import { useDocumentTitle } from "@/hooks/use-document-title";
 
@@ -94,9 +84,6 @@ function ImageWorkspacePage({
   }, [recordId, slug]);
 
   const [workspace, dispatch] = useImageWorkspace();
-  const [workspace, setWorkspace] = useState<ImageWorkspaceUi>(
-    DEFAULT_IMAGE_WORKSPACE,
-  );
   const [focusPulse, setFocusPulse] = useState<SourceFocusPulse | null>(null);
   const { inspectorOpen, selectedSource, renderParams, detectionParams } =
     workspace;
@@ -124,26 +111,10 @@ function ImageWorkspacePage({
     followOnsEnabled,
   );
   const histogramQuery = useImageHistogram(
-  const renderQueryParams = withHdu(hdu, renderParams);
-  const renderQuery = useRenderFitsImage(recordId, renderQueryParams, {
-    query: { placeholderData: keepPreviousData },
-  });
-  const sourcesQueryParams = withHdu(hdu, detectionParams);
-  const followOnsEnabled = followOnQueriesEnabled(renderQuery);
-  const sourcesQuery = useDetectSources(recordId, sourcesQueryParams, {
-    query: { enabled: followOnsEnabled },
-  });
-  const histogramParams = withHdu(hdu, { bins: 64 });
-  const histogramQuery = useRenderFitsHistogram(recordId, histogramParams, {
-    query: { enabled: followOnsEnabled },
-  });
-  const bestPresetQuery = useGetBestPreset(
     recordId,
     { bins: 64, hdu: hdu ?? undefined },
     followOnsEnabled,
   );
-  // Measuring the PSF is expensive, so this only runs when the inspector asks
-  // for it instead of on every visit to the image.
   const bestPresetQuery = useBestPreset(recordId, hdu);
   const detected = sourcesQuery.data;
   const detectionSummary = detected?.summary;
@@ -228,23 +199,18 @@ function ImageWorkspacePage({
           void simbadQuery.refetch();
         }}
         onFocusSource={(sourceId, objectType) => {
-          setFocusPulse((current: SourceFocusPulse | null) => ({
+          setFocusPulse((current) => ({
             sourceId,
             objectType,
             nonce: (current?.nonce ?? 0) + 1,
           }));
-          setWorkspace((current) => {
-            if (objectType === "point") {
-              const src = pointSources.find((s) => s.source_id === sourceId);
-              return src
-                ? { ...current, selectedSource: src, inspectorOpen: true }
-                : current;
-            }
-            const src = extendedSources.find((s) => s.source_id === sourceId);
-            return src
-              ? { ...current, selectedSource: src, inspectorOpen: true }
-              : current;
-          });
+          const source =
+            objectType === "point"
+              ? pointSources.find((item) => item.source_id === sourceId)
+              : extendedSources.find((item) => item.source_id === sourceId);
+          if (source) {
+            dispatch({ type: "select-source", source });
+          }
         }}
         image={
           <>
@@ -255,30 +221,18 @@ function ImageWorkspacePage({
               rendered={rendered}
               imageUrl={preview}
               label={titleWithDescription}
+              focusPulse={focusPulse}
               sources={{
                 pointSources,
                 extendedSources,
                 gaiaPointIds: gaiaMatchedIds(gaia.matches, "point"),
                 gaiaExtendedIds: gaiaMatchedIds(gaia.matches, "extended"),
+                simbadPointIds,
+                simbadExtendedIds,
                 selectedPointId,
                 selectedExtendedId,
                 onSelect: (source) =>
                   dispatch({ type: "select-source", source }),
-              pointSources={pointSources}
-              extendedSources={extendedSources}
-              gaiaPointIds={gaiaMatchedIds(gaia.matches, "point")}
-              gaiaExtendedIds={gaiaMatchedIds(gaia.matches, "extended")}
-              simbadPointIds={simbadPointIds}
-              simbadExtendedIds={simbadExtendedIds}
-              selectedId={selectedPointId}
-              selectedExtendedId={selectedExtendedId}
-              focusPulse={focusPulse}
-              onSelectSource={(source) => {
-                setWorkspace((current) => ({
-                  ...current,
-                  selectedSource: source,
-                  inspectorOpen: true,
-                }));
               }}
             />
 

@@ -257,7 +257,6 @@ async def test_sources_preset_measures_the_psf_and_rescales(
     assert response.status_code == 200
     body = response.json()
 
-    # The stored image was built with a 5 px PSF.
     assert body["evidence"]["measured_fwhm"] == pytest.approx(5.0, rel=0.2)
     assert body["evidence"]["fwhm_samples"] >= 3
     assert body["evidence"]["point_count"] >= 3
@@ -296,7 +295,6 @@ async def test_sources_preset_reuses_the_detection_of_the_same_client(
     assert response.status_code == 200
     body = response.json()
 
-    # The baseline is what this client already asked for, not the defaults.
     assert body["evidence"]["from_cache"] is True
     assert body["baseline_point_config"]["fwhm"] == 9.0
     assert body["baseline_point_config"]["sigma"] == 8.0
@@ -394,17 +392,13 @@ async def test_verify_sources_gaia_matches_stored_wcs_sources(
     assert body["match_radius_arcsec"] == 60.0
     assert body["summary"]["point"]["matched"] >= 1
     assert any(row["gaia_match"] for row in body["matches"])
-    assert (
-        len(provider.searches) == 5
-    )  # 5 bloques: 3 point + 2 extended (paridad TPI gaia.py:183-204)
+    assert len(provider.searches) == 5
     expected_centers = {
         (9.9325, 20.0575),
         (10.0225, 20.0875),
         (10.0625, 19.9475),
     }
     got_centers = {(center_ra, center_dec) for center_ra, center_dec, _ in provider.searches}
-    # Cada fuente puntual debe quedar cubierta por un bloque; los bloques
-    # adicionales cubren las fuentes extendidas (paridad TPI gaia.py:183-204).
     assert all(
         any(
             center_ra == pytest.approx(expected_ra, abs=0.02)
@@ -439,9 +433,7 @@ async def test_verify_sources_gaia_endpoint_conserves_detection_params(
 
     assert body["summary"]["point"]["count"] >= 3
     assert body["summary"]["point"]["matched"] == 0
-    assert (
-        len(provider.searches) == 6
-    )  # 5 fuentes (3 point + 2 extended) + fallback single-query (paridad TPI gaia.py:183-204)
+    assert len(provider.searches) == 6
     assert not any(row["gaia_match"] for row in body["matches"])
 
 
@@ -531,9 +523,7 @@ async def test_verify_sources_gaia_serves_cached_result_on_resubmit(
 
     assert second["queried"] is True
     assert second == first
-    assert (
-        len(provider.searches) == 6
-    )  # 5 fuentes (3 point + 2 extended) + fallback single-query (paridad TPI gaia.py:183-204)
+    assert len(provider.searches) == 6
 
 
 @pytest.mark.asyncio
