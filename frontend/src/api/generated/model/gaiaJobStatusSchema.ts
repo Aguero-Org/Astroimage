@@ -6,7 +6,7 @@
  */
 
 export interface GaiaJobStatusSchema {
-  status?: 'pending';
+  status: 'pending';
   job_id: string;
   record_id: string;
 }

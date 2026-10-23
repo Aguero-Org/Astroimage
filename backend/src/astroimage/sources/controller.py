@@ -9,6 +9,7 @@ import structlog
 from fastapi import APIRouter, Depends, Header, Path, Query
 
 from astroimage.shared.errors import InternalServerError, NotFoundError
+from astroimage.shared.query import HduIndex
 from astroimage.sources.deps import (
     gaia_background_dependency,
     gaia_job_registry_dependency,
@@ -36,10 +37,6 @@ _log = structlog.get_logger("astroimage.sources.controller")
 RecordId = Annotated[
     UUID,
     Path(description="Stored FITS record id"),
-]
-HduIndex = Annotated[
-    int,
-    Query(ge=0, description="Optional image HDU index; defaults to the first 2D image HDU"),
 ]
 
 FwhmParam = Annotated[float, Query(ge=0.5)]
@@ -116,68 +113,7 @@ def _extended_config(
     )
 
 
-def _gaia_url(
-    record_id: UUID,
-    *,
-    hdu: int | None,
-    fwhm: float,
-    sigma: float,
-    min_snr: float,
-    min_score: float,
-    min_distance: float,
-    visual_weight: float,
-    visual_area_radius: float,
-    visual_area_sigma: float,
-    max_sources: int,
-    ext_sigma: float,
-    ext_smooth_sigma: float,
-    ext_min_area: int,
-    ext_max_area: int,
-    ext_bin_factor: int,
-    ext_closing_iterations: int,
-    ext_opening_iterations: int,
-    ext_min_score: float,
-    ext_max_sources: int,
-    match_radius_arcsec: float,
-    probability_power: float,
-) -> str:
-    query = {
-        "hdu": hdu,
-        "fwhm": fwhm,
-        "sigma": sigma,
-        "min_snr": min_snr,
-        "min_score": min_score,
-        "min_distance": min_distance,
-        "visual_weight": visual_weight,
-        "visual_area_radius": visual_area_radius,
-        "visual_area_sigma": visual_area_sigma,
-        "max_sources": max_sources,
-        "ext_sigma": ext_sigma,
-        "ext_smooth_sigma": ext_smooth_sigma,
-        "ext_min_area": ext_min_area,
-        "ext_max_area": ext_max_area,
-        "ext_bin_factor": ext_bin_factor,
-        "ext_closing_iterations": ext_closing_iterations,
-        "ext_opening_iterations": ext_opening_iterations,
-        "ext_min_score": ext_min_score,
-        "ext_max_sources": ext_max_sources,
-        "match_radius_arcsec": match_radius_arcsec,
-        "probability_power": probability_power,
-    }
-    query_string = urlencode({key: value for key, value in query.items() if value is not None})
-    return f"/image/{record_id}/sources/gaia?{query_string}"
-
-
-@router.get(
-    "/{record_id}/sources",
-    response_model=SourceDetectionResponse,
-    operation_id="detectSources",
-)
-async def detect_sources(
-    record_id: RecordId,
-    service: Annotated[SourceDetectionService, Depends(source_service_dependency)],
-    client_id: Annotated[str, Header(alias="X-Client-Id")] = "anonymous",
-    hdu: HduIndex = None,  # type: ignore[assignment]  # nullable default, non-nullable query
+def point_detection_query(
     fwhm: FwhmParam = _DEFAULTS.fwhm,
     sigma: SigmaParam = _DEFAULTS.sigma,
     min_snr: MinSnrParam = _DEFAULTS.min_snr,
@@ -187,6 +123,21 @@ async def detect_sources(
     visual_area_radius: VisualAreaRadiusParam = _DEFAULTS.visual_area_radius,
     visual_area_sigma: VisualAreaSigmaParam = _DEFAULTS.visual_area_sigma,
     max_sources: MaxSourcesParam = _DEFAULTS.max_sources,
+) -> PointDetectionConfigSchema:
+    return _config(
+        fwhm,
+        sigma,
+        min_snr,
+        min_score,
+        min_distance,
+        visual_weight,
+        visual_area_radius,
+        visual_area_sigma,
+        max_sources,
+    )
+
+
+def extended_detection_query(
     ext_sigma: ExtendedSigmaParam = _EXTENDED_DEFAULTS.sigma,
     ext_smooth_sigma: ExtendedSmoothSigmaParam = _EXTENDED_DEFAULTS.smooth_sigma,
     ext_min_area: ExtendedMinAreaParam = _EXTENDED_DEFAULTS.min_area,
@@ -200,41 +151,95 @@ async def detect_sources(
     ),
     ext_min_score: ExtendedMinScoreParam = _EXTENDED_DEFAULTS.min_score,
     ext_max_sources: ExtendedMaxSourcesParam = _EXTENDED_DEFAULTS.max_sources,
+) -> ExtendedDetectionConfigSchema:
+    return _extended_config(
+        ext_sigma,
+        ext_smooth_sigma,
+        ext_min_area,
+        ext_max_area,
+        ext_bin_factor,
+        ext_closing_iterations,
+        ext_opening_iterations,
+        ext_min_score,
+        ext_max_sources,
+    )
+
+
+def gaia_match_query(
+    match_radius_arcsec: GaiaMatchRadiusParam = _GAIA_DEFAULTS.match_radius_arcsec,
+    probability_power: GaiaProbabilityPowerParam = _GAIA_DEFAULTS.probability_power,
+) -> GaiaMatchConfigSchema:
+    return GaiaMatchConfigSchema(
+        match_radius_arcsec=match_radius_arcsec,
+        probability_power=probability_power,
+    )
+
+
+def _gaia_url(
+    record_id: UUID,
+    *,
+    hdu: int | None,
+    config: PointDetectionConfigSchema,
+    extended_config: ExtendedDetectionConfigSchema,
+    gaia_config: GaiaMatchConfigSchema,
+) -> str:
+    query = {
+        "hdu": hdu,
+        "fwhm": config.fwhm,
+        "sigma": config.sigma,
+        "min_snr": config.min_snr,
+        "min_score": config.min_score,
+        "min_distance": config.min_distance,
+        "visual_weight": config.visual_weight,
+        "visual_area_radius": config.visual_area_radius,
+        "visual_area_sigma": config.visual_area_sigma,
+        "max_sources": config.max_sources,
+        "ext_sigma": extended_config.sigma,
+        "ext_smooth_sigma": extended_config.smooth_sigma,
+        "ext_min_area": extended_config.min_area,
+        "ext_max_area": extended_config.max_area,
+        "ext_bin_factor": extended_config.bin_factor,
+        "ext_closing_iterations": extended_config.closing_iterations,
+        "ext_opening_iterations": extended_config.opening_iterations,
+        "ext_min_score": extended_config.min_score,
+        "ext_max_sources": extended_config.max_sources,
+        "match_radius_arcsec": gaia_config.match_radius_arcsec,
+        "probability_power": gaia_config.probability_power,
+    }
+    query_string = urlencode({key: value for key, value in query.items() if value is not None})
+    return f"/image/{record_id}/sources/gaia?{query_string}"
+
+
+@router.get(
+    "/{record_id}/sources",
+    response_model=SourceDetectionResponse,
+    operation_id="detectSources",
+)
+async def detect_sources(
+    record_id: RecordId,
+    service: Annotated[SourceDetectionService, Depends(source_service_dependency)],
+    config: Annotated[PointDetectionConfigSchema, Depends(point_detection_query)],
+    extended_config: Annotated[
+        ExtendedDetectionConfigSchema,
+        Depends(extended_detection_query),
+    ],
+    client_id: Annotated[str, Header(alias="X-Client-Id")] = "anonymous",
+    hdu: HduIndex = None,
 ) -> SourceDetectionResponse:
     _log.info(
         "detect_start",
         record_id=str(record_id),
-        fwhm=fwhm,
-        sigma=sigma,
-        min_snr=min_snr,
+        fwhm=config.fwhm,
+        sigma=config.sigma,
+        min_snr=config.min_snr,
     )
     start = time.perf_counter()
     result = await service.detect_from_record(
         record_id,
         client_id=client_id,
         hdu_index=hdu,
-        config=_config(
-            fwhm,
-            sigma,
-            min_snr,
-            min_score,
-            min_distance,
-            visual_weight,
-            visual_area_radius,
-            visual_area_sigma,
-            max_sources,
-        ),
-        extended_config=_extended_config(
-            ext_sigma,
-            ext_smooth_sigma,
-            ext_min_area,
-            ext_max_area,
-            ext_bin_factor,
-            ext_closing_iterations,
-            ext_opening_iterations,
-            ext_min_score,
-            ext_max_sources,
-        ),
+        config=config,
+        extended_config=extended_config,
     )
     elapsed_ms = round((time.perf_counter() - start) * 1000, 2)
     _log.info(
@@ -249,26 +254,9 @@ async def detect_sources(
         gaia_url=_gaia_url(
             record_id,
             hdu=hdu,
-            fwhm=fwhm,
-            sigma=sigma,
-            min_snr=min_snr,
-            min_score=min_score,
-            min_distance=min_distance,
-            visual_weight=visual_weight,
-            visual_area_radius=visual_area_radius,
-            visual_area_sigma=visual_area_sigma,
-            max_sources=max_sources,
-            ext_sigma=ext_sigma,
-            ext_smooth_sigma=ext_smooth_sigma,
-            ext_min_area=ext_min_area,
-            ext_max_area=ext_max_area,
-            ext_bin_factor=ext_bin_factor,
-            ext_closing_iterations=ext_closing_iterations,
-            ext_opening_iterations=ext_opening_iterations,
-            ext_min_score=ext_min_score,
-            ext_max_sources=ext_max_sources,
-            match_radius_arcsec=_GAIA_DEFAULTS.match_radius_arcsec,
-            probability_power=_GAIA_DEFAULTS.probability_power,
+            config=config,
+            extended_config=extended_config,
+            gaia_config=_GAIA_DEFAULTS,
         ),
     )
 
@@ -283,7 +271,7 @@ async def get_best_preset(
     record_id: RecordId,
     service: Annotated[SourceDetectionService, Depends(source_service_dependency)],
     client_id: Annotated[str, Header(alias="X-Client-Id")] = "anonymous",
-    hdu: HduIndex = None,  # type: ignore[assignment]  # nullable default, non-nullable query
+    hdu: HduIndex = None,
 ) -> SourcePresetResponse:
     _log.info("best_preset_start", record_id=str(record_id), client_id=client_id)
     return await service.recommend_preset(
@@ -303,71 +291,27 @@ async def verify_sources_gaia(
     service: Annotated[GaiaVerificationService, Depends(gaia_service_dependency)],
     background: Annotated[GaiaBackgroundVerify, Depends(gaia_background_dependency)],
     jobs: Annotated[GaiaJobRegistry, Depends(gaia_job_registry_dependency)],
+    config: Annotated[PointDetectionConfigSchema, Depends(point_detection_query)],
+    extended_config: Annotated[
+        ExtendedDetectionConfigSchema,
+        Depends(extended_detection_query),
+    ],
+    gaia_config: Annotated[GaiaMatchConfigSchema, Depends(gaia_match_query)],
     client_id: Annotated[str, Header(alias="X-Client-Id")] = "anonymous",
-    hdu: HduIndex = None,  # type: ignore[assignment]  # nullable default, non-nullable query
-    fwhm: FwhmParam = _DEFAULTS.fwhm,
-    sigma: SigmaParam = _DEFAULTS.sigma,
-    min_snr: MinSnrParam = _DEFAULTS.min_snr,
-    min_score: MinScoreParam = _DEFAULTS.min_score,
-    min_distance: MinDistanceParam = _DEFAULTS.min_distance,
-    visual_weight: VisualWeightParam = _DEFAULTS.visual_weight,
-    visual_area_radius: VisualAreaRadiusParam = _DEFAULTS.visual_area_radius,
-    visual_area_sigma: VisualAreaSigmaParam = _DEFAULTS.visual_area_sigma,
-    max_sources: MaxSourcesParam = _DEFAULTS.max_sources,
-    ext_sigma: ExtendedSigmaParam = _EXTENDED_DEFAULTS.sigma,
-    ext_smooth_sigma: ExtendedSmoothSigmaParam = _EXTENDED_DEFAULTS.smooth_sigma,
-    ext_min_area: ExtendedMinAreaParam = _EXTENDED_DEFAULTS.min_area,
-    ext_max_area: ExtendedMaxAreaParam = _EXTENDED_DEFAULTS.max_area,
-    ext_bin_factor: ExtendedBinFactorParam = _EXTENDED_DEFAULTS.bin_factor,
-    ext_closing_iterations: ExtendedClosingIterationsParam = (
-        _EXTENDED_DEFAULTS.closing_iterations
-    ),
-    ext_opening_iterations: ExtendedOpeningIterationsParam = (
-        _EXTENDED_DEFAULTS.opening_iterations
-    ),
-    ext_min_score: ExtendedMinScoreParam = _EXTENDED_DEFAULTS.min_score,
-    ext_max_sources: ExtendedMaxSourcesParam = _EXTENDED_DEFAULTS.max_sources,
-    match_radius_arcsec: GaiaMatchRadiusParam = _GAIA_DEFAULTS.match_radius_arcsec,
-    probability_power: GaiaProbabilityPowerParam = _GAIA_DEFAULTS.probability_power,
+    hdu: HduIndex = None,
 ) -> GaiaVerificationResponse | GaiaJobStatusSchema:
-    detection_config = _config(
-        fwhm,
-        sigma,
-        min_snr,
-        min_score,
-        min_distance,
-        visual_weight,
-        visual_area_radius,
-        visual_area_sigma,
-        max_sources,
-    )
-    extended_detection_config = _extended_config(
-        ext_sigma,
-        ext_smooth_sigma,
-        ext_min_area,
-        ext_max_area,
-        ext_bin_factor,
-        ext_closing_iterations,
-        ext_opening_iterations,
-        ext_min_score,
-        ext_max_sources,
-    )
-    gaia_config = GaiaMatchConfigSchema(
-        match_radius_arcsec=match_radius_arcsec,
-        probability_power=probability_power,
-    )
     _log.info(
         "gaia_verify_start",
         record_id=str(record_id),
-        match_radius_arcsec=match_radius_arcsec,
-        probability_power=probability_power,
+        match_radius_arcsec=gaia_config.match_radius_arcsec,
+        probability_power=gaia_config.probability_power,
     )
     key = gaia_job_key(
         record_id=record_id,
         client_id=client_id,
         hdu_index=hdu,
-        config=detection_config,
-        extended_config=extended_detection_config,
+        config=config,
+        extended_config=extended_config,
         gaia_config=gaia_config,
     )
     completed = jobs.get(key)
@@ -381,8 +325,8 @@ async def verify_sources_gaia(
             record_id,
             client_id=client_id,
             hdu_index=hdu,
-            config=detection_config,
-            extended_config=extended_detection_config,
+            config=config,
+            extended_config=extended_config,
             gaia_config=gaia_config,
         ),
     )
@@ -410,7 +354,7 @@ async def get_sources_gaia_job(
     if completed is not None:
         return completed
     if jobs.is_running(job_id):
-        return GaiaJobStatusSchema(job_id=job_id, record_id=record_id)
+        return GaiaJobStatusSchema(status="pending", job_id=job_id, record_id=record_id)
     failure = jobs.get_failure(job_id)
     if failure is not None:
         raise failure

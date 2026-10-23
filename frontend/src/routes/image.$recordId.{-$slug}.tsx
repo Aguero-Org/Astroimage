@@ -1,17 +1,18 @@
-import { keepPreviousData } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
-import { type Dispatch, type SetStateAction, useEffect, useState } from "react";
-import { useGetImageInfo } from "@/api/generated/hub/hub";
-import {
-  useRenderFitsHistogram,
-  useRenderFitsImage,
-} from "@/api/generated/render/render";
-import {
-  useDetectSources,
-  useGetBestPreset,
-} from "@/api/generated/sources/sources";
+import { useEffect } from "react";
+import type {
+  DetectSourcesParams,
+  RenderFitsImageParams,
+} from "@/api/generated/model";
 import { HelpHint } from "@/components/ui/help-hint";
 import { ScientificWorkspace } from "@/features/catalogs/components/scientific-workspace";
+import {
+  useBestPreset,
+  useImageHistogram,
+  useImageInfo,
+  useImageRender,
+  useSourceDetection,
+} from "@/features/images/api";
 import {
   GaiaCrossMatch,
   gaiaMatchedIds,
@@ -32,71 +33,21 @@ import { SourceSelection } from "@/features/images/components/source-selection";
 import { formatQueryError } from "@/features/images/format-query-error";
 import { imageDisplayTitle } from "@/features/images/image-title";
 import {
-  DEFAULT_IMAGE_WORKSPACE,
   type ImageWorkspaceUi,
   resolveWorkspaceHdu,
 } from "@/features/images/image-workspace";
 import { rememberLastImageRecord } from "@/features/images/last-record";
+import { useImageWorkspace } from "@/features/images/use-image-workspace";
 import { followOnQueriesEnabled } from "@/features/images/workspace-queries";
+import { useDocumentTitle } from "@/hooks/use-document-title";
 
 const DEFAULT_DOCUMENT_TITLE = "Astroimage 🌌";
-
-function responseData<R extends { status: number; data: unknown }>(
-  data: R | undefined,
-): Extract<R, { status: 200 }>["data"] | undefined {
-  if (data?.status !== 200) {
-    return undefined;
-  }
-  return data.data as Extract<R, { status: 200 }>["data"];
-}
-
-function withHdu<T extends object>(
-  hdu: number | null,
-  params: T,
-): T | (T & { hdu: number }) {
-  if (hdu === null) {
-    return params;
-  }
-  return { ...params, hdu };
-}
 
 function joinedTitle(pageTitle: string, catalogName: string): string {
   if (catalogName.length === 0 || catalogName === pageTitle) {
     return pageTitle;
   }
   return `${pageTitle} · ${catalogName}`;
-}
-
-function alignHduScope(
-  hduScope: { recordId: string; hdu: number | null },
-  recordId: string,
-  hdu: number | null,
-  selectedSource: ImageWorkspaceUi["selectedSource"],
-  setHduScope: (scope: { recordId: string; hdu: number | null }) => void,
-  setWorkspace: Dispatch<SetStateAction<ImageWorkspaceUi>>,
-): void {
-  if (hduScope.recordId !== recordId) {
-    setHduScope({ recordId, hdu: null });
-    setWorkspace((current) => {
-      if (current.hdu === null && current.selectedSource === null) {
-        return current;
-      }
-      return { ...current, hdu: null, selectedSource: null };
-    });
-    return;
-  }
-  if (hduScope.hdu === hdu || selectedSource === null) {
-    if (hduScope.hdu !== hdu) {
-      setHduScope({ recordId, hdu });
-    }
-    return;
-  }
-  setHduScope({ recordId, hdu });
-  setWorkspace((current) =>
-    current.selectedSource === null
-      ? current
-      : { ...current, selectedSource: null },
-  );
 }
 
 function sourceId(
@@ -115,54 +66,55 @@ export const Route = createFileRoute("/image/$recordId/{-$slug}")({
 
 function ImageDetailPage() {
   const { recordId, slug } = Route.useParams();
+  return <ImageWorkspacePage key={recordId} recordId={recordId} slug={slug} />;
+}
 
+function ImageWorkspacePage({
+  recordId,
+  slug,
+}: Readonly<{
+  recordId: string;
+  slug: string | undefined;
+}>) {
   useEffect(() => {
     rememberLastImageRecord(recordId, slug);
   }, [recordId, slug]);
 
-  const [workspace, setWorkspace] = useState<ImageWorkspaceUi>(
-    DEFAULT_IMAGE_WORKSPACE,
-  );
+  const [workspace, dispatch] = useImageWorkspace();
   const { inspectorOpen, selectedSource, renderParams, detectionParams } =
     workspace;
-  const infoQuery = useGetImageInfo(recordId);
-  const imageInfo = responseData(infoQuery.data);
+  const infoQuery = useImageInfo(recordId);
+  const imageInfo = infoQuery.data;
   const imageHdus = imageInfo?.hdus.images ?? [];
   const hdu = resolveWorkspaceHdu(
     workspace.hdu,
     imageHdus,
     imageInfo?.hdus.selected ?? null,
   );
-  const [hduScope, setHduScope] = useState({ recordId, hdu });
-  alignHduScope(
-    hduScope,
-    recordId,
-    hdu,
-    selectedSource,
-    setHduScope,
-    setWorkspace,
-  );
-  const renderQueryParams = withHdu(hdu, renderParams);
-  const renderQuery = useRenderFitsImage(recordId, renderQueryParams, {
-    query: { placeholderData: keepPreviousData },
-  });
-  const sourcesQueryParams = withHdu(hdu, detectionParams);
+  const renderQueryParams: RenderFitsImageParams = {
+    ...renderParams,
+    hdu: hdu ?? undefined,
+  };
+  const renderQuery = useImageRender(recordId, renderQueryParams);
+  const sourcesQueryParams: DetectSourcesParams = {
+    ...detectionParams,
+    hdu: hdu ?? undefined,
+  };
   const followOnsEnabled = followOnQueriesEnabled(renderQuery);
-  const sourcesQuery = useDetectSources(recordId, sourcesQueryParams, {
-    query: { enabled: followOnsEnabled },
-  });
-  const histogramParams = withHdu(hdu, { bins: 64 });
-  const histogramQuery = useRenderFitsHistogram(recordId, histogramParams, {
-    query: { enabled: followOnsEnabled },
-  });
+  const sourcesQuery = useSourceDetection(
+    recordId,
+    sourcesQueryParams,
+    followOnsEnabled,
+  );
+  const histogramQuery = useImageHistogram(
+    recordId,
+    { bins: 64, hdu: hdu ?? undefined },
+    followOnsEnabled,
+  );
   // Measuring the PSF is expensive, so this only runs when the inspector asks
   // for it instead of on every visit to the image.
-  const bestPresetQuery = useGetBestPreset(
-    recordId,
-    hdu === null ? undefined : { hdu },
-    { query: { enabled: false } },
-  );
-  const detected = responseData(sourcesQuery.data);
+  const bestPresetQuery = useBestPreset(recordId, hdu);
+  const detected = sourcesQuery.data;
   const detectionSummary = detected?.summary;
   const gaia = useGaiaCrossMatch(
     recordId,
@@ -174,17 +126,15 @@ function ImageDetailPage() {
   const catalogName = imageInfo?.display_name?.trim() ?? "";
   const titleWithDescription = joinedTitle(pageTitle, catalogName);
 
-  useEffect(() => {
-    document.title = `${titleWithDescription} - Astroimage`;
-    return () => {
-      document.title = DEFAULT_DOCUMENT_TITLE;
-    };
-  }, [titleWithDescription]);
+  useDocumentTitle(
+    `${titleWithDescription} - Astroimage`,
+    DEFAULT_DOCUMENT_TITLE,
+  );
   const pointSources = detected?.point_sources ?? [];
   const extendedSources = detected?.extended_sources ?? [];
   const selectedPointId = sourceId(selectedSource, "point");
   const selectedExtendedId = sourceId(selectedSource, "extended");
-  const rendered = responseData(renderQuery.data);
+  const rendered = renderQuery.data;
   const preview = useRenderedObjectUrl(rendered);
 
   const scientificParams = hdu === null ? undefined : { hdu };
@@ -203,19 +153,17 @@ function ImageDetailPage() {
               isError={renderQuery.isError}
               error={renderQuery.error}
               rendered={rendered}
+              imageUrl={preview}
               label={titleWithDescription}
-              pointSources={pointSources}
-              extendedSources={extendedSources}
-              gaiaPointIds={gaiaMatchedIds(gaia.matches, "point")}
-              gaiaExtendedIds={gaiaMatchedIds(gaia.matches, "extended")}
-              selectedId={selectedPointId}
-              selectedExtendedId={selectedExtendedId}
-              onSelectSource={(source) => {
-                setWorkspace((current) => ({
-                  ...current,
-                  selectedSource: source,
-                  inspectorOpen: true,
-                }));
+              sources={{
+                pointSources,
+                extendedSources,
+                gaiaPointIds: gaiaMatchedIds(gaia.matches, "point"),
+                gaiaExtendedIds: gaiaMatchedIds(gaia.matches, "extended"),
+                selectedPointId,
+                selectedExtendedId,
+                onSelect: (source) =>
+                  dispatch({ type: "select-source", source }),
               }}
             />
 
@@ -235,12 +183,9 @@ function ImageDetailPage() {
                 </h1>
               }
               open={inspectorOpen}
-              onOpenChange={(open) => {
-                setWorkspace((current) => ({
-                  ...current,
-                  inspectorOpen: open,
-                }));
-              }}
+              onOpenChange={(open) =>
+                dispatch({ type: "set-inspector-open", open })
+              }
               selectionOpen={selectedSource !== null}
               selection={
                 <SourceSelection
@@ -260,20 +205,15 @@ function ImageDetailPage() {
                 <HduSelector
                   images={imageHdus}
                   value={hdu}
-                  onChange={(nextHdu) => {
-                    setHduScope({ recordId, hdu: nextHdu });
-                    setWorkspace((current) => ({
-                      ...current,
-                      hdu: nextHdu,
-                      selectedSource: null,
-                    }));
-                  }}
+                  onChange={(nextHdu) =>
+                    dispatch({ type: "set-hdu", hdu: nextHdu })
+                  }
                 />
               }
               view={
                 <>
                   <PixelHistogram
-                    histogram={responseData(histogramQuery.data)}
+                    histogram={histogramQuery.data}
                     isPending={histogramQuery.isPending}
                     isError={histogramQuery.isError}
                     pmin={renderParams.pmin}
@@ -282,12 +222,9 @@ function ImageDetailPage() {
                   />
                   <RenderViewForm
                     isPending={renderQuery.isFetching}
-                    onSubmit={(params) => {
-                      setWorkspace((current) => ({
-                        ...current,
-                        renderParams: params,
-                      }));
-                    }}
+                    onSubmit={(params) =>
+                      dispatch({ type: "set-render-params", params })
+                    }
                   />
                 </>
               }
@@ -302,18 +239,13 @@ function ImageDetailPage() {
                     bestPreset={{
                       isPending: bestPresetQuery.isFetching,
                       isError: bestPresetQuery.isError,
-                      data: responseData(bestPresetQuery.data),
-                      request: () => {
-                        void bestPresetQuery.refetch();
-                      },
+                      data: bestPresetQuery.data,
+                      request: () =>
+                        bestPresetQuery.refetch().then((result) => result.data),
                     }}
-                    onSubmit={(params) => {
-                      setWorkspace((current) => ({
-                        ...current,
-                        detectionParams: params,
-                        selectedSource: null,
-                      }));
-                    }}
+                    onSubmit={(params) =>
+                      dispatch({ type: "set-detection-params", params })
+                    }
                   />
                   {sourcesQuery.isError ? (
                     <p

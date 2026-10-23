@@ -20,6 +20,7 @@ import { SummaryCard, SummaryCardSkeleton } from "@/components/ui/summary-card";
 import { glossaryPath } from "@/features/glossary/entries";
 import { type RecordSortField, useDeleteImage, useImageRecords } from "../api";
 import { MastSourceLink } from "../mast-source-link";
+import { resultsView } from "../results-view";
 import { usePagedSort } from "../use-paged-sort";
 import { CatalogFacts, catalogLabels } from "./catalog-facts";
 import { DeleteImageDialog } from "./delete-image-dialog";
@@ -81,14 +82,13 @@ export function ImageList({ query }: Readonly<ImageListProps>) {
     id: string;
     name: string;
   } | null>(null);
-  const {
-    data: response,
-    isPending,
-    isError,
-  } = useImageRecords(query, page, sort, order);
+  const { data, isPlaceholderData, isPending, isFetching, isError } =
+    useImageRecords(query, page, sort, order);
   const remove = useDeleteImage();
-  const pageData = response?.status === 200 ? response.data : null;
-  const records = pageData?.records ?? [];
+  const view = resultsView(
+    { data, isPlaceholderData, isPending, isFetching, isError },
+    { keepPlaceholder: true, isEmpty: (page) => page.records.length === 0 },
+  );
 
   return (
     <section className="flex w-full flex-col gap-2">
@@ -106,7 +106,7 @@ export function ImageList({ query }: Readonly<ImageListProps>) {
             abre el visor.
           </HelpHint>
         </h2>
-        {!isPending && !isError && records.length > 0 && (
+        {view.status === "ready" && (
           <SortControls
             fields={SORT_FIELDS}
             sort={sort}
@@ -115,7 +115,7 @@ export function ImageList({ query }: Readonly<ImageListProps>) {
           />
         )}
       </div>
-      {!!isPending && (
+      {view.status === "loading" && (
         <output className="block">
           <span className="sr-only">Cargando imágenes…</span>
           <ul
@@ -129,10 +129,10 @@ export function ImageList({ query }: Readonly<ImageListProps>) {
           </ul>
         </output>
       )}
-      {!!isError && <p className="text-sm text-destructive">Algo salió mal.</p>}
-      {!isPending &&
-        !isError &&
-        records.length === 0 &&
+      {view.status === "error" && (
+        <p className="text-sm text-destructive">Algo salió mal.</p>
+      )}
+      {(view.status === "empty" || view.status === "idle") &&
         (query.trim().length === 0 ? (
           <p className="text-sm text-muted-foreground">
             No hay imágenes cargadas en el servidor.
@@ -146,9 +146,9 @@ export function ImageList({ query }: Readonly<ImageListProps>) {
             {"."}
           </p>
         ))}
-      {!isPending && !isError && records.length > 0 && (
+      {view.status === "ready" && (
         <ul data-testid="image-list" className="flex w-full flex-col gap-3">
-          {records.map((record) => (
+          {view.page.records.map((record) => (
             <SummaryCard
               key={record.record_id}
               testId="image-list-item"
@@ -201,10 +201,10 @@ export function ImageList({ query }: Readonly<ImageListProps>) {
           ))}
         </ul>
       )}
-      {pageData !== null && (
+      {(view.status === "ready" || view.status === "empty") && (
         <FilePager
           page={page}
-          hasMore={pageData.has_more === true}
+          hasMore={view.page.has_more === true}
           onPage={setPage}
         />
       )}

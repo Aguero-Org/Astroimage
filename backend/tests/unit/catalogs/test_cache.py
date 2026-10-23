@@ -11,7 +11,9 @@ from astroimage.catalogs.schema import (
 
 def test_cache_stores_and_returns_results() -> None:
     cache = CatalogRecommendationCache()
-    response = CatalogRecommendationResponse(source_name="survey.fits", queried=True)
+    response = CatalogRecommendationResponse(
+        status="completed", source_name="survey.fits", queried=True
+    )
     cache.set("key", response)
     assert cache.get("key") is response
     assert cache.get("missing") is None
@@ -21,9 +23,9 @@ def test_cache_stores_and_returns_results() -> None:
 
 def test_cache_evicts_oldest_beyond_capacity() -> None:
     cache = CatalogRecommendationCache(max_entries=2)
-    cache.set("a", CatalogRecommendationResponse(source_name="a"))
-    cache.set("b", CatalogRecommendationResponse(source_name="b"))
-    cache.set("c", CatalogRecommendationResponse(source_name="c"))
+    cache.set("a", CatalogRecommendationResponse(status="completed", source_name="a"))
+    cache.set("b", CatalogRecommendationResponse(status="completed", source_name="b"))
+    cache.set("c", CatalogRecommendationResponse(status="completed", source_name="c"))
     assert cache.get("a") is None
     assert cache.get("b") is not None
     assert cache.get("c") is not None

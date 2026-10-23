@@ -7,12 +7,28 @@ import { defineConfig } from "vitest/config";
 
 const dirname = path.dirname(fileURLToPath(import.meta.url));
 
+const inDocker = process.env.DOCKER === "1";
+
 export default defineConfig({
   server: {
-    host: process.env.DOCKER === "1" ? "0.0.0.0" : "127.0.0.1",
+    host: inDocker ? "0.0.0.0" : "127.0.0.1",
     port: 5173,
     strictPort: true,
-    watch: process.env.DOCKER === "1" ? { usePolling: true } : undefined,
+    watch: inDocker
+      ? {
+          usePolling: true,
+          interval: 1000,
+          ignored: [
+            "**/.pnpm-store/**",
+            "**/node_modules/**",
+            "**/coverage/**",
+            "**/dist/**",
+            "**/test-results/**",
+            "**/.git/**",
+            "**/.tanstack/**",
+          ],
+        }
+      : undefined,
   },
   plugins: [
     tanstackRouter({

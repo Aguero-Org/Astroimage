@@ -43,6 +43,29 @@ describe("useScrollSpy", () => {
     expect(result.current).toBe("fwhm");
   });
 
+  it("keeps the last active id while the nodes are temporarily missing", () => {
+    document.body.innerHTML = `
+      <article id="fits"></article>
+      <article id="fwhm"></article>
+    `;
+    const fits = document.getElementById("fits");
+    vi.spyOn(fits as HTMLElement, "getBoundingClientRect").mockReturnValue({
+      top: 20,
+      bottom: 140,
+    } as DOMRect);
+
+    const { result } = renderHook(() =>
+      useScrollSpy(["fits", "fwhm"], { offsetPx: 96 }),
+    );
+    expect(result.current).toBe("fits");
+
+    document.body.innerHTML = "";
+    act(() => {
+      window.dispatchEvent(new Event("scroll"));
+    });
+    expect(result.current).toBe("fits");
+  });
+
   it("keeps the article whose end is still visible under the offset", () => {
     document.body.innerHTML = `
       <article id="fits"></article>

@@ -16,20 +16,20 @@ from astropy.wcs import WCS
 
 from astroimage.fits.model import FitsRecord
 from astroimage.fits.service import FitsService
+from astroimage.sources.detection_service import SourceDetectionService
 from astroimage.sources.gaia import (
     GaiaObject,
     GaiaQueryError,
     match_sources_to_gaia,
     search_radius_arcsec,
 )
+from astroimage.sources.gaia_verification import (
+    GaiaVerificationService,
+    _merge_gaia_objects,
+)
 from astroimage.sources.schema import (
     GaiaMatchConfigSchema,
     PointDetectionConfigSchema,
-)
-from astroimage.sources.service import (
-    GaiaVerificationService,
-    SourceDetectionService,
-    _merge_gaia_objects,
 )
 from tests.unit.sources.helpers import (
     fits_bytes_from_image,

@@ -1,11 +1,28 @@
 import { HttpResponse, http } from "msw";
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { server } from "@/test/server";
 import { ApiError, customFetch } from "./api-client";
 
 const baseUrl = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000";
 
+afterEach(() => {
+  vi.unstubAllEnvs();
+});
+
 describe("customFetch — JSON", () => {
+  it("uses the local API when the base URL is unset", async () => {
+    vi.stubEnv("VITE_API_BASE_URL", undefined);
+    server.use(
+      http.get("http://localhost:8000/health", () => {
+        return HttpResponse.json({ status: "ok" });
+      }),
+    );
+
+    const result = await customFetch<{ data: { status: string } }>("/health");
+
+    expect(result.data).toEqual({ status: "ok" });
+  });
+
   it("parses a JSON response", async () => {
     server.use(
       http.get(`${baseUrl}/health`, () => {
@@ -79,6 +96,55 @@ describe("customFetch — text", () => {
   });
 });
 
+describe("customFetch — content type", () => {
+  it("sets application/json for regular bodies", async () => {
+    let receivedContentType: string | null = null;
+    server.use(
+      http.post(`${baseUrl}/items`, async ({ request }) => {
+        receivedContentType = request.headers.get("content-type");
+        return HttpResponse.json({ ok: true });
+      }),
+    );
+
+    await customFetch("/items", {
+      method: "POST",
+      body: JSON.stringify({ name: "M31" }),
+    });
+
+    expect(receivedContentType).toBe("application/json");
+  });
+
+  it("keeps an explicitly provided content type", async () => {
+    let receivedContentType: string | null = null;
+    server.use(
+      http.post(`${baseUrl}/items`, async ({ request }) => {
+        receivedContentType = request.headers.get("content-type");
+        return HttpResponse.json({ ok: true });
+      }),
+    );
+
+    await customFetch("/items", {
+      method: "POST",
+      body: JSON.stringify({ name: "M31" }),
+      headers: { "Content-Type": "application/vnd.api+json" },
+    });
+
+    expect(receivedContentType).toBe("application/vnd.api+json");
+  });
+
+  it("falls back to a Blob when the response has no content type", async () => {
+    server.use(
+      http.get(`${baseUrl}/raw`, () => {
+        return new HttpResponse(new Uint8Array([1, 2]));
+      }),
+    );
+
+    const result = await customFetch<{ data: Blob; status: number }>("/raw");
+
+    expect(result.data.size).toBe(2);
+  });
+});
+
 describe("customFetch — FormData", () => {
   it("does not force Content-Type application/json on FormData bodies", async () => {
     let receivedContentType: string | null = null;
@@ -117,5 +183,82 @@ describe("customFetch — errors", () => {
         );
       },
     );
+  });
+
+  it("describes the failure on the ApiError instance", async () => {
+    server.use(
+      http.get(`${baseUrl}/items/500`, () => {
+        return HttpResponse.json({ detail: "boom" }, { status: 500 });
+      }),
+    );
+
+    const error = await customFetch("/items/500").catch((reason: unknown) => {
+      return reason;
+    });
+
+    expect(error).toBeInstanceOf(ApiError);
+    expect(error).toMatchObject({
+      name: "ApiError",
+      status: 500,
+      body: { detail: "boom" },
+    });
+    expect((error as Error).message).toContain("500");
+  });
+});
+
+describe("customFetch — client id", () => {
+  it("generates the client id once and reuses it", async () => {
+    localStorage.clear();
+    const received: string[] = [];
+    server.use(
+      http.get(`${baseUrl}/health`, ({ request }) => {
+        received.push(request.headers.get("x-client-id") ?? "");
+        return HttpResponse.json({ status: "ok" });
+      }),
+    );
+
+    await customFetch("/health");
+    await customFetch("/health");
+
+    expect(received[0]).not.toBe("");
+    expect(received[1]).toBe(received[0]);
+    expect(localStorage.getItem("astroimage.client-id")).toBe(received[0]);
+  });
+});
+
+describe("customFetch — other bodies", () => {
+  it("keeps the URLSearchParams content type", async () => {
+    let receivedContentType: string | null = null;
+    server.use(
+      http.post(`${baseUrl}/token`, async ({ request }) => {
+        receivedContentType = request.headers.get("content-type");
+        return HttpResponse.json({ ok: true });
+      }),
+    );
+
+    await customFetch("/token", {
+      method: "POST",
+      body: new URLSearchParams({ grant: "code" }),
+    });
+
+    expect(receivedContentType).toContain("application/x-www-form-urlencoded");
+  });
+
+  it("returns a Blob for unknown content types", async () => {
+    server.use(
+      http.get(`${baseUrl}/download`, () => {
+        return new HttpResponse(new Uint8Array([1, 2, 3]), {
+          status: 200,
+          headers: { "content-type": "application/octet-stream" },
+        });
+      }),
+    );
+
+    const result = await customFetch<{ data: Blob; status: number }>(
+      "/download",
+    );
+
+    expect(result.data.size).toBe(3);
+    expect(await result.data.text()).toHaveLength(3);
   });
 });
