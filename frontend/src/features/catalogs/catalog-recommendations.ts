@@ -1,5 +1,6 @@
 import type {
   CatalogJobStatusSchema,
+  CatalogPaperSchema,
   CatalogRecommendationItemSchema,
   CatalogRecommendationResponse,
 } from "@/api/generated/model";
@@ -29,6 +30,8 @@ export type CatalogPublication = {
   kind: "catalogue-paper" | "readme-reference";
   catalogueIds: string[];
   catalogueNames: string[];
+  title?: string;
+  abstract?: string;
 };
 
 export function isCatalogJobStatus(
@@ -125,6 +128,7 @@ export function catalogueCrossmatchNote(
 
 export function collectPublications(
   items: readonly CatalogRecommendationItemSchema[],
+  papers: readonly CatalogPaperSchema[] = [],
 ): CatalogPublication[] {
   const publications = new Map<string, CatalogPublication>();
   for (const item of items) {
@@ -133,7 +137,9 @@ export function collectPublications(
     addReadmeBibcodes(publications, item, name);
     addReadmeDois(publications, item, name);
   }
-  return [...publications.values()];
+  return [...publications.values()].map((publication) =>
+    withPaperDetails(publication, papers),
+  );
 }
 
 function addPublication(
@@ -235,6 +241,20 @@ export function publicationLabel(publication: CatalogPublication): string {
   return publication.bibcode ?? publication.doi ?? "Publicación";
 }
 
+export function publicationHeading(publication: CatalogPublication): string {
+  const title = publication.title?.trim();
+  if (title) {
+    return title;
+  }
+  const names = publication.catalogueNames.filter((name) => name.trim());
+  if (names.length === 0) {
+    return publicationLabel(publication);
+  }
+  const relation =
+    publication.kind === "catalogue-paper" ? "Artículo de" : "Citada por";
+  return `${relation} ${names.join(", ")}`;
+}
+
 export function filterCatalogues(
   items: readonly CatalogRecommendationItemSchema[],
   options: { query: string; match: CatalogueMatchFilter },
@@ -276,6 +296,8 @@ export function filterPublications(
       return true;
     }
     const haystack = [
+      publication.title ?? "",
+      publication.abstract ?? "",
       publication.bibcode ?? "",
       publication.doi ?? "",
       ...publication.catalogueNames,
@@ -306,6 +328,33 @@ export function shortenText(
 
 export function adsUrlForBibcode(bibcode: string): string {
   return `https://ui.adsabs.harvard.edu/abs/${encodeURIComponent(bibcode.trim())}/abstract`;
+}
+
+function withPaperDetails(
+  publication: CatalogPublication,
+  papers: readonly CatalogPaperSchema[],
+): CatalogPublication {
+  const match = papers.find((paper) => paperMatches(publication, paper));
+  if (!match) {
+    return publication;
+  }
+  return {
+    ...publication,
+    title: trimmedOrUndefined(match.title),
+    abstract: trimmedOrUndefined(match.abstract),
+  };
+}
+
+function paperMatches(
+  publication: CatalogPublication,
+  paper: CatalogPaperSchema,
+): boolean {
+  const bibcode = trimmedOrUndefined(paper.bibcode);
+  const doi = trimmedOrUndefined(paper.doi);
+  if (publication.bibcode && bibcode && publication.bibcode === bibcode) {
+    return true;
+  }
+  return Boolean(publication.doi && doi && publication.doi === doi);
 }
 
 function publicationKey(

@@ -17,6 +17,7 @@ services:
       MINIO_SECRET_KEY: minioadmin
       MINIO_BUCKET: astroimage
       MINIO_SECURE: "false"
+      ADS_API_TOKEN: ${ADS_API_TOKEN:-}
     volumes:
       - ./backend:/app
       - api_venv:/app/.venv

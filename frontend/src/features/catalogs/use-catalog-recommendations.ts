@@ -62,7 +62,10 @@ export function useCatalogRecommendations({
 
   return {
     result,
-    publications: collectPublications(result?.recommendations ?? []),
+    publications: collectPublications(
+      result?.recommendations ?? [],
+      result?.papers ?? [],
+    ),
     isLoading: enabled && result === undefined && !isError,
     isFetching,
     isError,

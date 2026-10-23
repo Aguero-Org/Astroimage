@@ -6,14 +6,15 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from astroimage.catalogs.cache import CatalogRecommendationCache
 from astroimage.catalogs.jobs import CatalogBackgroundRecommend, CatalogJobRegistry
+from astroimage.catalogs.papers import AdsPaperLookup, PaperLookup
 from astroimage.catalogs.readme import CdsReadmeFetcher, ReadmeFetcher
-from astroimage.catalogs.repository import CatalogDownloadRepository
+from astroimage.catalogs.repository import CatalogDownloadRepository, PaperMetadataRepository
 from astroimage.catalogs.service import CatalogRecommendationService
 from astroimage.catalogs.vizier import AstroqueryVizierProvider, VizierCatalogProvider
-from astroimage.config import Settings
 from astroimage.fits.deps import fits_service_dependency, fits_service_from_resources
 from astroimage.fits.service import FitsService
 from astroimage.shared.deps import (
+    Settings,
     db_session_dependency,
     object_storage_dependency,
     settings_dependency,
@@ -43,6 +44,19 @@ def catalog_download_repository_dependency(
     return CatalogDownloadRepository(session, ttl_s=settings.catalog_download_ttl_s)
 
 
+def paper_lookup_dependency(
+    settings: Annotated[Settings, Depends(settings_dependency)],
+) -> PaperLookup:
+    return AdsPaperLookup(token=settings.ads_api_token)
+
+
+def paper_store_dependency(
+    session: Annotated[AsyncSession, Depends(db_session_dependency)],
+    settings: Annotated[Settings, Depends(settings_dependency)],
+) -> PaperMetadataRepository:
+    return PaperMetadataRepository(session, ttl_s=settings.paper_metadata_ttl_s)
+
+
 def catalog_recommendation_service_dependency(
     fits: Annotated[FitsService, Depends(fits_service_dependency)],
     detection: Annotated[SourceDetectionService, Depends(source_service_dependency)],
@@ -51,6 +65,8 @@ def catalog_recommendation_service_dependency(
     downloads: Annotated[
         CatalogDownloadRepository, Depends(catalog_download_repository_dependency)
     ],
+    paper_lookup: Annotated[PaperLookup, Depends(paper_lookup_dependency)],
+    paper_store: Annotated[PaperMetadataRepository, Depends(paper_store_dependency)],
 ) -> CatalogRecommendationService:
     return CatalogRecommendationService(
         fits=fits,
@@ -59,6 +75,8 @@ def catalog_recommendation_service_dependency(
         readme_fetcher=readme,
         cache=_recommendation_cache,
         downloads=downloads,
+        paper_lookup=paper_lookup,
+        paper_store=paper_store,
     )
 
 
@@ -81,6 +99,8 @@ def catalog_background_dependency(
         cache=_recommendation_cache,
         detection_cache=_detection_cache,
         download_ttl_s=settings.catalog_download_ttl_s,
+        ads_api_token=settings.ads_api_token,
+        paper_ttl_s=settings.paper_metadata_ttl_s,
     )
 
 

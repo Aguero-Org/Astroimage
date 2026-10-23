@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import Sequence
 from datetime import UTC, datetime, timedelta
 from uuid import uuid4
 
@@ -13,6 +14,7 @@ from astroimage.catalogs.download import (
     table_payload,
 )
 from astroimage.catalogs.model import CatalogTable
+from astroimage.catalogs.papers import PaperMetadata, PaperRecord
 
 
 class CatalogDownloadRepository:
@@ -86,3 +88,47 @@ class CatalogDownloadRepository:
 
 def _empty_table() -> CatalogTable:
     return CatalogTable(catalogue_id=EMPTY_CATALOGUE_ID)
+
+
+class PaperMetadataRepository:
+    def __init__(self, session: AsyncSession, *, ttl_s: float) -> None:
+        self._session = session
+        self._ttl_s = ttl_s
+
+    async def find_fresh(self, keys: Sequence[str]) -> dict[str, PaperRecord]:
+        if not keys:
+            return {}
+        statement = select(PaperMetadata).where(PaperMetadata.lookup_key.in_(tuple(keys)))
+        result = await self._session.execute(statement)
+        cutoff = datetime.now(UTC) - timedelta(seconds=self._ttl_s)
+        fresh: dict[str, PaperRecord] = {}
+        for row in result.scalars().all():
+            if row.fetched_at < cutoff:
+                continue
+            fresh[row.lookup_key] = PaperRecord(
+                lookup_key=row.lookup_key,
+                bibcode=row.bibcode,
+                doi=row.doi,
+                title=row.title,
+                abstract=row.abstract,
+            )
+        return fresh
+
+    async def save(self, records: Sequence[PaperRecord]) -> None:
+        if not records:
+            return
+        keys = [record.lookup_key for record in records]
+        await self._session.execute(delete(PaperMetadata).where(PaperMetadata.lookup_key.in_(keys)))
+        fetched_at = datetime.now(UTC)
+        for record in records:
+            self._session.add(
+                PaperMetadata(
+                    lookup_key=record.lookup_key,
+                    bibcode=record.bibcode,
+                    doi=record.doi,
+                    title=record.title,
+                    abstract=record.abstract,
+                    fetched_at=fetched_at,
+                )
+            )
+        await self._session.flush()

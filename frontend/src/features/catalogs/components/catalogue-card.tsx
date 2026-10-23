@@ -10,7 +10,6 @@ import { HelpHint } from "@/components/ui/help-hint";
 import {
   adsUrlForBibcode,
   catalogueCrossmatchNote,
-  catalogueMatchLabel,
   catalogueName,
   catalogueReason,
   catalogueSeparation,
@@ -30,10 +29,13 @@ export function CatalogueCard({
 }: Readonly<CatalogueCardProps>) {
   const title = catalogueName(item);
   const authors = trimmedOrUndefined(item.catalogue_authors);
+  const keywords = trimmedOrUndefined(item.catalogue_keywords);
   const description = shortenText(item.catalogue_description, 220);
   const reason = catalogueReason(item);
   const crossmatch = catalogueCrossmatchNote(item);
   const separation = catalogueSeparation(item);
+  const identified = item.identifier_match;
+  const why = identified ? reason.detail : undefined;
   const links = buildLinks(item);
   const rows = buildRows(item, radiusArcsec, separation);
 
@@ -65,28 +67,15 @@ export function CatalogueCard({
                   {authors}
                 </span>
               ) : null}
-              <span className="mt-1 flex flex-wrap items-center gap-2">
+              {keywords ? (
                 <span
-                  data-testid="catalogue-card-match"
-                  className="rounded-full border border-sidebar-border px-1.5 py-0.5 text-[10px] font-medium tracking-wide text-muted-foreground uppercase"
+                  data-testid="catalogue-card-keywords"
+                  className="mt-1 block text-xs text-muted-foreground"
                 >
-                  {catalogueMatchLabel(item)}
+                  {keywords}
                 </span>
-                {separation ? (
-                  <span
-                    data-testid="catalogue-card-separation"
-                    className="text-xs text-muted-foreground"
-                  >
-                    Separación {separation}
-                  </span>
-                ) : null}
-              </span>
-              <span
-                data-testid="catalogue-card-reason"
-                className="mt-1 block text-xs text-muted-foreground"
-              >
-                {reason.headline}
-              </span>
+              ) : null}
+              <MatchNote identified={identified} separation={separation} />
               {description ? (
                 <span
                   data-testid="catalogue-card-description"
@@ -100,16 +89,14 @@ export function CatalogueCard({
         </CollapsibleTrigger>
         <CollapsibleContent data-testid="catalogue-card-detail">
           <div className="flex flex-col gap-3 border-t border-sidebar-border p-2">
-            {reason.detail || crossmatch ? (
+            {why || crossmatch ? (
               <DetailSection
                 title="Por qué se recomienda"
                 glossaryId="recomendacion-catalogo"
-                hint="Explica si el objeto aparece en el catálogo o si el catálogo solo cubre la región."
+                hint="Dice qué identificador del objeto aparece en este catálogo."
               >
-                {reason.detail ? (
-                  <p className="text-xs text-muted-foreground">
-                    {reason.detail}
-                  </p>
+                {why ? (
+                  <p className="text-xs text-muted-foreground">{why}</p>
                 ) : null}
                 {crossmatch ? (
                   <p
@@ -161,6 +148,32 @@ export function CatalogueCard({
         </CollapsibleContent>
       </article>
     </Collapsible>
+  );
+}
+
+function MatchNote({
+  identified,
+  separation,
+}: Readonly<{ identified: boolean; separation: string | undefined }>) {
+  if (identified) {
+    const distance = separation ? ` · a ${separation} del centro` : "";
+    return (
+      <span data-testid="catalogue-card-object" className="mt-1 block text-xs">
+        Este objeto está en el catálogo
+        {distance}
+      </span>
+    );
+  }
+  if (!separation) {
+    return null;
+  }
+  return (
+    <span
+      data-testid="catalogue-card-separation"
+      className="mt-1 block text-xs text-muted-foreground"
+    >
+      A {separation} del centro
+    </span>
   );
 }
 

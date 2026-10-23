@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import Sequence
 from io import BytesIO
 from typing import cast
 
@@ -11,6 +12,7 @@ from astropy.wcs import WCS
 
 from astroimage.catalogs.cache import CatalogRecommendationCache
 from astroimage.catalogs.model import CatalogMetadata, CatalogRow, CatalogTable
+from astroimage.catalogs.papers import PaperIdentifier, PaperRecord
 from astroimage.catalogs.readme import ReadmeData
 from astroimage.catalogs.schema import CatalogRecommendationConfigSchema
 from astroimage.catalogs.service import CatalogRecommendationService
@@ -176,3 +178,104 @@ async def test_recommend_surfaces_query_errors() -> None:
     assert result.queried is False
     assert result.error is not None
     assert "tap down" in result.error
+
+
+class _FakePaperLookup:
+    def __init__(self, records: list[PaperRecord]) -> None:
+        self.records = records
+        self.calls: list[list[str]] = []
+
+    def fetch(self, identifiers: Sequence[PaperIdentifier]) -> list[PaperRecord]:
+        self.calls.append([identifier.lookup_key or "" for identifier in identifiers])
+        return self.records
+
+
+class _FakePaperStore:
+    def __init__(self, fresh: dict[str, PaperRecord] | None = None) -> None:
+        self.fresh = fresh or {}
+        self.saved: list[PaperRecord] = []
+
+    async def find_fresh(self, keys: Sequence[str]) -> dict[str, PaperRecord]:
+        return {key: self.fresh[key] for key in keys if key in self.fresh}
+
+    async def save(self, records: Sequence[PaperRecord]) -> None:
+        self.saved.extend(records)
+
+
+@pytest.mark.asyncio
+async def test_recommend_attaches_paper_title_from_lookup() -> None:
+    provider = _FakeProvider(
+        tables=[CatalogTable(catalogue_id="J/A+A/595/A1")],
+        metadata={
+            "J/A+A/595/A1": CatalogMetadata(
+                catalogue_id="J/A+A/595/A1",
+                origin_article=_BIBCODE,
+                doi=_DOI,
+            )
+        },
+    )
+    lookup = _FakePaperLookup(
+        [
+            PaperRecord(
+                lookup_key=_BIBCODE,
+                bibcode=_BIBCODE,
+                doi=_DOI,
+                title="Gaia Data Release 1",
+                abstract="Positions and photometry.",
+            )
+        ]
+    )
+    store = _FakePaperStore()
+    service = CatalogRecommendationService(
+        fits=cast(FitsService, None),
+        provider=cast(VizierCatalogProvider, provider),
+        readme_fetcher=_FakeReadmeFetcher(),
+        cache=CatalogRecommendationCache(),
+        paper_lookup=lookup,
+        paper_store=store,
+    )
+
+    result = await service.recommend(_wcs_payload())
+
+    assert result.papers[0].title == "Gaia Data Release 1"
+    assert result.papers[0].abstract == "Positions and photometry."
+    assert lookup.calls == [[_BIBCODE]]
+    assert store.saved[0].lookup_key == _BIBCODE
+
+
+@pytest.mark.asyncio
+async def test_recommend_uses_a_cached_paper_without_lookup() -> None:
+    provider = _FakeProvider(
+        tables=[CatalogTable(catalogue_id="J/A+A/595/A1")],
+        metadata={
+            "J/A+A/595/A1": CatalogMetadata(
+                catalogue_id="J/A+A/595/A1",
+                origin_article=_BIBCODE,
+            )
+        },
+    )
+    lookup = _FakePaperLookup([])
+    store = _FakePaperStore(
+        {
+            _BIBCODE: PaperRecord(
+                lookup_key=_BIBCODE,
+                bibcode=_BIBCODE,
+                title="Cached title",
+                abstract="Cached abstract",
+            )
+        }
+    )
+    service = CatalogRecommendationService(
+        fits=cast(FitsService, None),
+        provider=cast(VizierCatalogProvider, provider),
+        readme_fetcher=_FakeReadmeFetcher(),
+        cache=CatalogRecommendationCache(),
+        paper_lookup=lookup,
+        paper_store=store,
+    )
+
+    result = await service.recommend(_wcs_payload())
+
+    assert result.papers[0].title == "Cached title"
+    assert lookup.calls == []
+    assert store.saved == []
