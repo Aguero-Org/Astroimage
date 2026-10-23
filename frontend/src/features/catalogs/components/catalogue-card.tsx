@@ -34,7 +34,7 @@ export function CatalogueCard({
   const reason = catalogueReason(item);
   const crossmatch = catalogueCrossmatchNote(item);
   const separation = catalogueSeparation(item);
-  const identified = item.identifier_match;
+  const identified = item.identifier_match === true;
   const why = identified ? reason.detail : undefined;
   const links = buildLinks(item);
   const rows = buildRows(item, radiusArcsec, separation);
