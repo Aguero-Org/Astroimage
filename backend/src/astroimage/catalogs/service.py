@@ -1,85 +1,50 @@
 from __future__ import annotations
 
 import asyncio
-import functools
-import warnings
 from collections.abc import Sequence
-from concurrent.futures import ThreadPoolExecutor
-from dataclasses import dataclass
 from typing import Protocol
 from uuid import UUID
 
-import astropy.units as u
-import numpy as np
 from astropy.coordinates import SkyCoord
-from astropy.io import fits
-from astropy.wcs import WCS, FITSFixedWarning
+from astropy.wcs import WCS
+from sqlalchemy.exc import SQLAlchemyError
 
 from astroimage.catalogs.cache import CatalogRecommendationCache, recommendation_cache_key
 from astroimage.catalogs.crossmatch import crossmatch_catalog
+from astroimage.catalogs.download import CatalogDownloadStore
+from astroimage.catalogs.evaluation import rank_evaluations
+from astroimage.catalogs.lookup import CatalogLookup
 from astroimage.catalogs.model import (
     CatalogCrossmatch,
     CatalogEvaluation,
-    CatalogMetadata,
-    CatalogRow,
     CatalogTable,
     DetectionCoordinate,
 )
-from astroimage.catalogs.readme import (
-    ReadmeData,
-    ReadmeFetcher,
-    ads_url,
-    clean_bibcode,
-    clean_doi,
-    determine_catalogue_bibcode,
-    determine_paper_bibcode,
-    determine_paper_doi,
-    doi_url,
+from astroimage.catalogs.papers import (
+    PaperIdentifier,
+    PaperLookup,
+    PaperMetadataStore,
+    PaperRecord,
+    identifiers_from_pairs,
 )
+from astroimage.catalogs.readme import ReadmeFetcher
 from astroimage.catalogs.schema import (
     CatalogCrossmatchSchema,
+    CatalogPaperSchema,
     CatalogRecommendationConfigSchema,
     CatalogRecommendationItemSchema,
     CatalogRecommendationResponse,
     CatalogRecommendationSummarySchema,
     CrossmatchRowSchema,
 )
-from astroimage.catalogs.scoring import (
-    classify_match,
-    doi_score,
-    find_identifiers_in_row,
-    identifier_score,
-    paper_score,
-    separation_score,
-    total_score,
-)
 from astroimage.catalogs.vizier import VizierCatalogProvider
-from astroimage.fits.reader import FitsMetadata, FitsReader
+from astroimage.fits.reader import FitsReader
 from astroimage.fits.service import FitsService
+from astroimage.fits.wcs import field_center, to_sky, world_coordinates
 from astroimage.shared.logging import catalog_service_log as _log
 from astroimage.sources.service import SourceDetectionService
 
-_VIZIER_EXECUTOR = ThreadPoolExecutor(max_workers=4, thread_name_prefix="vizier")
-_README_EXECUTOR = ThreadPoolExecutor(max_workers=8, thread_name_prefix="catalog-readme")
 _DEFAULT_QUERY_TIMEOUT_S = 180.0
-
-
-@dataclass(frozen=True)
-class _ObjectRow:
-    row: CatalogRow
-    identifiers: tuple[str, ...]
-    columns: tuple[str, ...]
-    spatial_match: bool
-    identifier_match: bool
-
-
-@dataclass(frozen=True)
-class _BestMatch:
-    separation_arcsec: float | None
-    object_identifier: str | None
-    identifier_columns: str | None
-    spatial_match: bool
-    identifier_match: bool
 
 
 class _DetectedSource(Protocol):
@@ -93,27 +58,6 @@ class _DetectedSource(Protocol):
     def ycentroid(self) -> float: ...
 
 
-def _world_coordinates(metadata: FitsMetadata) -> WCS | None:
-    if not metadata.wcs.present:
-        return None
-    header = fits.Header()
-    for key, value in metadata.header.items():
-        header[key] = value
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore", FITSFixedWarning)
-        return WCS(header, naxis=2, relax=True)
-
-
-def _field_center(wcs: WCS) -> SkyCoord:
-    crval = wcs.wcs.crval
-    return SkyCoord(ra=float(crval[0]) * u.deg, dec=float(crval[1]) * u.deg, frame="icrs")
-
-
-def _to_sky(wcs: WCS, x: float, y: float) -> SkyCoord:
-    world = wcs.pixel_to_world(x, y)
-    return SkyCoord(ra=float(world.ra.deg) * u.deg, dec=float(world.dec.deg) * u.deg, frame="icrs")
-
-
 class CatalogRecommendationService:
     def __init__(
         self,
@@ -125,14 +69,22 @@ class CatalogRecommendationService:
         cache: CatalogRecommendationCache,
         reader: FitsReader | None = None,
         query_timeout_s: float = _DEFAULT_QUERY_TIMEOUT_S,
+        downloads: CatalogDownloadStore | None = None,
+        paper_lookup: PaperLookup | None = None,
+        paper_store: PaperMetadataStore | None = None,
     ) -> None:
         self._fits = fits
         self._detection = detection
-        self._provider = provider
-        self._readme_fetcher = readme_fetcher
         self._cache = cache
         self._reader = reader or FitsReader()
-        self._query_timeout_s = query_timeout_s
+        self._paper_lookup = paper_lookup
+        self._paper_store = paper_store
+        self._lookup = CatalogLookup(
+            provider=provider,
+            readme_fetcher=readme_fetcher,
+            query_timeout_s=query_timeout_s,
+            downloads=downloads,
+        )
 
     async def ensure_record(self, record_id: UUID) -> None:
         await self._fits.get_record(record_id)
@@ -185,22 +137,24 @@ class CatalogRecommendationService:
             source_name=source_name,
             hdu_index=hdu_index,
         )
-        wcs = _world_coordinates(metadata)
+        wcs = world_coordinates(metadata)
         if wcs is None:
             _log.info(
                 "catalog_recommend_skipped", reason="no wcs", source_name=metadata.source_name
             )
             return CatalogRecommendationResponse(
+                status="completed",
                 source_name=metadata.source_name,
                 radius_arcsec=resolved.search_radius_arcsec,
                 include_papers=resolved.include_papers,
                 wcs_present=False,
                 queried=False,
             )
-        center = _field_center(wcs)
-        tables, error = await self._query_vizier(center, resolved)
+        center = field_center(wcs)
+        tables, error = await self._lookup.query_region(center, resolved)
         if error is not None:
             return CatalogRecommendationResponse(
+                status="completed",
                 source_name=metadata.source_name,
                 ra_deg=float(center.ra.deg),
                 dec_deg=float(center.dec.deg),
@@ -211,8 +165,8 @@ class CatalogRecommendationService:
                 error=error,
             )
 
-        pairs = await self._evaluate_tables(tables, resolved)
-        ranked = self._rank(pairs)
+        pairs = await self._lookup.evaluate_tables(tables, resolved)
+        ranked = rank_evaluations(pairs)
         tables_by_id = {table.catalogue_id: table for _, table in pairs}
         detections = await self._detections(
             record_id,
@@ -223,210 +177,8 @@ class CatalogRecommendationService:
         )
         crossmatches = self._crossmatches(ranked, tables_by_id, resolved, detections)
         recommendations = self._to_schema(ranked, crossmatches)
-        return self._response(metadata.source_name, center, resolved, recommendations)
-
-    async def _query_vizier(
-        self,
-        center: SkyCoord,
-        config: CatalogRecommendationConfigSchema,
-    ) -> tuple[list[CatalogTable], str | None]:
-        loop = asyncio.get_running_loop()
-        future = loop.run_in_executor(
-            _VIZIER_EXECUTOR,
-            functools.partial(
-                self._provider.query_region,
-                center,
-                config.search_radius_arcsec,
-                row_limit=config.row_limit,
-            ),
-        )
-        try:
-            tables = await asyncio.wait_for(future, timeout=self._query_timeout_s)
-        except TimeoutError:
-            _log.warning("vizier_query_timed_out", timeout_s=self._query_timeout_s)
-            return [], f"VizieR query timed out after {self._query_timeout_s} seconds"
-        except Exception as exc:
-            _log.warning("vizier_query_failed", detail=str(exc), exc_info=exc)
-            return [], f"VizieR query failed: {exc}"
-        return list(tables), None
-
-    async def _evaluate_tables(
-        self,
-        tables: list[CatalogTable],
-        config: CatalogRecommendationConfigSchema,
-    ) -> list[tuple[CatalogEvaluation, CatalogTable]]:
-        selected = tables[: config.max_catalogues]
-        loop = asyncio.get_running_loop()
-        futures = [
-            loop.run_in_executor(
-                _README_EXECUTOR,
-                functools.partial(
-                    self._evaluate_table,
-                    table,
-                    known_identifiers=config.identifiers,
-                    include_papers=config.include_papers,
-                    search_radius_arcsec=config.search_radius_arcsec,
-                ),
-            )
-            for table in selected
-        ]
-        results = await asyncio.gather(*futures, return_exceptions=True)
-        pairs: list[tuple[CatalogEvaluation, CatalogTable]] = []
-        for table, result in zip(selected, results, strict=True):
-            if isinstance(result, BaseException):
-                _log.warning(
-                    "vizier_catalogue_failed",
-                    catalogue_id=table.catalogue_id,
-                    detail=str(result),
-                )
-                pairs.append(
-                    (self._fallback_evaluation(table, config), table),
-                )
-            else:
-                pairs.append((result, table))
-        return pairs
-
-    def _evaluate_table(
-        self,
-        table: CatalogTable,
-        *,
-        known_identifiers: list[str],
-        include_papers: bool,
-        search_radius_arcsec: float,
-    ) -> CatalogEvaluation:
-        object_rows = self._object_rows(table, known_identifiers, search_radius_arcsec)
-        best = self._best_object_row(object_rows)
-        metadata = (
-            self._provider.catalog_metadata(table.catalogue_id)
-            if include_papers
-            else CatalogMetadata(catalogue_id=table.catalogue_id)
-        )
-        readme = self._readme_fetcher.fetch(table.catalogue_id) if include_papers else None
-        return self._score(table.catalogue_id, metadata, readme, best)
-
-    def _fallback_evaluation(
-        self,
-        table: CatalogTable,
-        config: CatalogRecommendationConfigSchema,
-    ) -> CatalogEvaluation:
-        return self._evaluate_table(
-            table,
-            known_identifiers=config.identifiers,
-            include_papers=False,
-            search_radius_arcsec=config.search_radius_arcsec,
-        )
-
-    @staticmethod
-    def _object_rows(
-        table: CatalogTable,
-        known_identifiers: list[str],
-        search_radius_arcsec: float,
-    ) -> list[_ObjectRow]:
-        rows: list[_ObjectRow] = []
-        for row in table.rows:
-            identifiers, columns = find_identifiers_in_row(row.values, known_identifiers)
-            spatial_match = (
-                row.separation_arcsec is not None and row.separation_arcsec <= search_radius_arcsec
-            )
-            identifier_match = len(identifiers) > 0
-            if spatial_match or identifier_match:
-                rows.append(
-                    _ObjectRow(
-                        row=row,
-                        identifiers=identifiers,
-                        columns=columns,
-                        spatial_match=spatial_match,
-                        identifier_match=identifier_match,
-                    )
-                )
-        return rows
-
-    @staticmethod
-    def _best_object_row(object_rows: list[_ObjectRow]) -> _ObjectRow | None:
-        if not object_rows:
-            return None
-        return min(
-            object_rows,
-            key=lambda entry: (
-                0 if entry.identifier_match else 1,
-                entry.row.separation_arcsec if entry.row.separation_arcsec is not None else np.inf,
-            ),
-        )
-
-    @staticmethod
-    def _best_match(best: _ObjectRow | None) -> _BestMatch:
-        if best is None:
-            return _BestMatch(None, None, None, False, False)
-        return _BestMatch(
-            separation_arcsec=best.row.separation_arcsec,
-            object_identifier="; ".join(best.identifiers) if best.identifiers else None,
-            identifier_columns="; ".join(best.columns) if best.columns else None,
-            spatial_match=bool(best.spatial_match),
-            identifier_match=bool(best.identifier_match),
-        )
-
-    def _score(
-        self,
-        catalogue_id: str,
-        metadata: CatalogMetadata,
-        readme: ReadmeData | None,
-        best: _ObjectRow | None,
-    ) -> CatalogEvaluation:
-        readme_data = readme or ReadmeData()
-        catalogue_bibcode = determine_catalogue_bibcode(metadata.origin_article, readme_data)
-        paper_bibcode = determine_paper_bibcode(metadata.origin_article, readme_data)
-        paper_doi = determine_paper_doi(paper_bibcode, readme_data, metadata.doi)
-        catalogue_doi = clean_doi(metadata.doi)
-        match = self._best_match(best)
-        spatial = separation_score(match.separation_arcsec)
-        identifier = identifier_score(match.identifier_match)
-        paper = paper_score(paper_bibcode)
-        doi = doi_score(paper_doi)
-        description = readme_data.description or readme_data.abstract
-        return CatalogEvaluation(
-            catalogue_id=catalogue_id,
-            metadata=metadata,
-            match_type=classify_match(match.identifier_match, paper_bibcode or None),
-            catalogue_description=description or None,
-            catalogue_keywords=readme_data.keywords or None,
-            separation_arcsec=match.separation_arcsec,
-            object_found_in_table=match.identifier_match,
-            object_identifier=match.object_identifier,
-            identifier_columns=match.identifier_columns,
-            spatial_match=match.spatial_match,
-            identifier_match=match.identifier_match,
-            spatial_score=spatial,
-            identifier_score=identifier,
-            paper_score=paper,
-            doi_score=doi,
-            total_score=total_score(spatial=spatial, identifier=identifier, paper=paper, doi=doi),
-            catalogue_bibcode=clean_bibcode(catalogue_bibcode) or None,
-            catalogue_doi=catalogue_doi or None,
-            catalogue_doi_url=doi_url(catalogue_doi),
-            paper_bibcode=clean_bibcode(paper_bibcode) or None,
-            paper_doi=paper_doi or None,
-            paper_doi_url=doi_url(paper_doi),
-            paper_ads_url=ads_url(paper_bibcode),
-            vizier_url=metadata.webpage,
-            readme_url=readme_data.url,
-            readme_bibcodes=readme_data.bibcodes,
-            readme_dois=readme_data.dois,
-        )
-
-    @staticmethod
-    def _rank(
-        pairs: list[tuple[CatalogEvaluation, CatalogTable]],
-    ) -> list[CatalogEvaluation]:
-        ordered = sorted(
-            pairs,
-            key=lambda pair: (
-                -pair[0].total_score,
-                not pair[0].object_found_in_table,
-                not pair[0].identifier_match,
-                pair[0].separation_arcsec if pair[0].separation_arcsec is not None else np.inf,
-            ),
-        )
-        return [evaluation for evaluation, _ in ordered]
+        papers = await self._papers(recommendations) if resolved.include_papers else []
+        return self._response(metadata.source_name, center, resolved, recommendations, papers)
 
     async def _detections(
         self,
@@ -454,7 +206,7 @@ class CatalogRecommendationService:
     ) -> list[DetectionCoordinate]:
         detections: list[DetectionCoordinate] = []
         for point in point_sources:
-            coord = _to_sky(wcs, point.xcentroid, point.ycentroid)
+            coord = to_sky(wcs, point.xcentroid, point.ycentroid)
             detections.append(
                 DetectionCoordinate(
                     source_id=point.source_id,
@@ -464,7 +216,7 @@ class CatalogRecommendationService:
                 )
             )
         for extended in extended_sources:
-            coord = _to_sky(wcs, extended.xcentroid, extended.ycentroid)
+            coord = to_sky(wcs, extended.xcentroid, extended.ycentroid)
             detections.append(
                 DetectionCoordinate(
                     source_id=extended.source_id,
@@ -572,8 +324,10 @@ class CatalogRecommendationService:
         center: SkyCoord,
         config: CatalogRecommendationConfigSchema,
         recommendations: list[CatalogRecommendationItemSchema],
+        papers: list[CatalogPaperSchema] | None = None,
     ) -> CatalogRecommendationResponse:
         return CatalogRecommendationResponse(
+            status="completed",
             source_name=source_name,
             ra_deg=float(center.ra.deg),
             dec_deg=float(center.dec.deg),
@@ -589,4 +343,79 @@ class CatalogRecommendationService:
                 queried_catalogue_count=len(recommendations),
             ),
             recommendations=recommendations,
+            papers=papers or [],
         )
+
+    async def _papers(
+        self,
+        items: list[CatalogRecommendationItemSchema],
+    ) -> list[CatalogPaperSchema]:
+        if self._paper_lookup is None:
+            return []
+        identifiers = identifiers_from_pairs(_paper_pairs(items))
+        keys = [identifier.lookup_key for identifier in identifiers if identifier.lookup_key]
+        if not keys:
+            return []
+        by_key = await self._load_papers(identifiers, keys)
+        return _paper_schemas(keys, by_key)
+
+    async def _load_papers(
+        self,
+        identifiers: list[PaperIdentifier],
+        keys: list[str],
+    ) -> dict[str, PaperRecord]:
+        cached = await self._paper_store.find_fresh(keys) if self._paper_store is not None else {}
+        missing = [
+            identifier
+            for identifier in identifiers
+            if identifier.lookup_key is not None and identifier.lookup_key not in cached
+        ]
+        fetched = await self._fetch_papers(missing)
+        by_key = {record.lookup_key: record for record in fetched}
+        by_key.update(cached)
+        return by_key
+
+    async def _fetch_papers(self, missing: list[PaperIdentifier]) -> list[PaperRecord]:
+        if not missing or self._paper_lookup is None:
+            return []
+        fetched = await asyncio.to_thread(self._paper_lookup.fetch, missing)
+        if fetched and self._paper_store is not None:
+            try:
+                await self._paper_store.save(fetched)
+            except SQLAlchemyError as exc:
+                _log.warning("paper_metadata_save_failed", detail=str(exc))
+        return fetched
+
+
+def _paper_pairs(
+    items: list[CatalogRecommendationItemSchema],
+) -> list[tuple[str | None, str | None]]:
+    pairs: list[tuple[str | None, str | None]] = []
+    for item in items:
+        if item.paper_bibcode or item.paper_doi:
+            pairs.append((item.paper_bibcode, item.paper_doi))
+        pairs.extend((bibcode, None) for bibcode in item.readme_bibcodes)
+        pairs.extend((None, doi) for doi in item.readme_dois)
+    return pairs
+
+
+def _paper_schemas(
+    keys: list[str],
+    by_key: dict[str, PaperRecord],
+) -> list[CatalogPaperSchema]:
+    schemas: list[CatalogPaperSchema] = []
+    for key in keys:
+        record = by_key.get(key)
+        if record is None or not (record.title or record.abstract):
+            continue
+        schemas.append(_paper_schema(record))
+    return schemas
+
+
+def _paper_schema(record: PaperRecord) -> CatalogPaperSchema:
+    return CatalogPaperSchema(
+        bibcode=record.bibcode,
+        doi=record.doi,
+        title=record.title,
+        abstract=record.abstract,
+    )

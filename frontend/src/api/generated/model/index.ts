@@ -12,6 +12,7 @@ export * from './candidatePageSchemaSort';
 export * from './candidateSchema';
 export * from './catalogCrossmatchSchema';
 export * from './catalogJobStatusSchema';
+export * from './catalogPaperSchema';
 export * from './catalogRecommendationItemSchema';
 export * from './catalogRecommendationItemSchemaMatchType';
 export * from './catalogRecommendationResponse';

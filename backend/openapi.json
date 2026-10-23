@@ -39,12 +39,19 @@
             "in": "query",
             "required": false,
             "schema": {
-              "type": "integer",
-              "minimum": 0,
-              "description": "Optional image HDU index; defaults to the primary 2D image HDU",
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional image HDU index; defaults to the first 2D image HDU",
               "title": "Hdu"
             },
-            "description": "Optional image HDU index; defaults to the primary 2D image HDU"
+            "description": "Optional image HDU index; defaults to the first 2D image HDU"
           }
         ],
         "requestBody": {
@@ -543,8 +550,15 @@
             "in": "query",
             "required": false,
             "schema": {
-              "type": "integer",
-              "minimum": 0,
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                {
+                  "type": "null"
+                }
+              ],
               "description": "Optional image HDU index; defaults to the first 2D image HDU",
               "title": "Hdu"
             },
@@ -713,8 +727,15 @@
             "in": "query",
             "required": false,
             "schema": {
-              "type": "integer",
-              "minimum": 0,
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                {
+                  "type": "null"
+                }
+              ],
               "description": "Optional image HDU index; defaults to the first 2D image HDU",
               "title": "Hdu"
             },
@@ -981,8 +1002,15 @@
             "in": "query",
             "required": false,
             "schema": {
-              "type": "integer",
-              "minimum": 0,
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                {
+                  "type": "null"
+                }
+              ],
               "description": "Optional image HDU index; defaults to the first 2D image HDU",
               "title": "Hdu"
             },
@@ -1048,8 +1076,15 @@
             "in": "query",
             "required": false,
             "schema": {
-              "type": "integer",
-              "minimum": 0,
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                {
+                  "type": "null"
+                }
+              ],
               "description": "Optional image HDU index; defaults to the first 2D image HDU",
               "title": "Hdu"
             },
@@ -1411,8 +1446,15 @@
             "in": "query",
             "required": false,
             "schema": {
-              "type": "integer",
-              "minimum": 0,
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                {
+                  "type": "null"
+                }
+              ],
               "description": "Optional image HDU index; defaults to the first 2D image HDU",
               "title": "Hdu"
             },
@@ -1831,8 +1873,15 @@
             "in": "query",
             "required": false,
             "schema": {
-              "type": "integer",
-              "minimum": 0,
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                {
+                  "type": "null"
+                }
+              ],
               "description": "Optional image HDU index; defaults to the first 2D image HDU",
               "title": "Hdu"
             },
@@ -2080,8 +2129,7 @@
           "status": {
             "type": "string",
             "const": "pending",
-            "title": "Status",
-            "default": "pending"
+            "title": "Status"
           },
           "job_id": {
             "type": "string",
@@ -2096,10 +2144,62 @@
         "additionalProperties": false,
         "type": "object",
         "required": [
+          "status",
           "job_id",
           "record_id"
         ],
         "title": "CatalogJobStatusSchema"
+      },
+      "CatalogPaperSchema": {
+        "properties": {
+          "bibcode": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Bibcode"
+          },
+          "doi": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Doi"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          },
+          "abstract": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Abstract"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "CatalogPaperSchema"
       },
       "CatalogRecommendationItemSchema": {
         "properties": {
@@ -2371,6 +2471,11 @@
       },
       "CatalogRecommendationResponse": {
         "properties": {
+          "status": {
+            "type": "string",
+            "const": "completed",
+            "title": "Status"
+          },
           "source_name": {
             "anyOf": [
               {
@@ -2444,10 +2549,20 @@
             },
             "type": "array",
             "title": "Recommendations"
+          },
+          "papers": {
+            "items": {
+              "$ref": "#/components/schemas/CatalogPaperSchema"
+            },
+            "type": "array",
+            "title": "Papers"
           }
         },
         "additionalProperties": false,
         "type": "object",
+        "required": [
+          "status"
+        ],
         "title": "CatalogRecommendationResponse"
       },
       "CatalogRecommendationSummarySchema": {
@@ -3315,8 +3430,7 @@
           "status": {
             "type": "string",
             "const": "pending",
-            "title": "Status",
-            "default": "pending"
+            "title": "Status"
           },
           "job_id": {
             "type": "string",
@@ -3331,6 +3445,7 @@
         "additionalProperties": false,
         "type": "object",
         "required": [
+          "status",
           "job_id",
           "record_id"
         ],
@@ -3486,6 +3601,11 @@
       },
       "GaiaVerificationResponse": {
         "properties": {
+          "status": {
+            "type": "string",
+            "const": "completed",
+            "title": "Status"
+          },
           "source_name": {
             "anyOf": [
               {
@@ -3540,6 +3660,7 @@
         "additionalProperties": false,
         "type": "object",
         "required": [
+          "status",
           "match_radius_arcsec",
           "probability_power"
         ],

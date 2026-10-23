@@ -59,5 +59,25 @@ def test_non_2d_frame_raises() -> None:
 
 
 def test_rgb_frame_without_three_channels_raises() -> None:
-    with pytest.raises(ValueError, match="3"):
+    with pytest.raises(ValueError) as excinfo:
         encode_rgb_png(np.zeros((2, 2, 2), dtype=np.uint8))
+
+    assert str(excinfo.value) == "The image must be (height, width, 3)"
+
+
+def test_greyscale_converts_float_frame_to_uint8() -> None:
+    frame = np.array([[0.0, 127.9, 255.0]])
+
+    png = encode_greyscale_png(frame)
+
+    decoded = np.asarray(Image.open(BytesIO(png)).convert("L"), dtype=np.uint8)
+    assert np.array_equal(decoded, np.array([[0, 127, 255]], dtype=np.uint8))
+
+
+def test_rgb_converts_float_frame_to_uint8() -> None:
+    frame = np.array([[[0.0, 127.9, 255.0]]])
+
+    png = encode_rgb_png(frame)
+
+    decoded = np.asarray(Image.open(BytesIO(png)).convert("RGB"), dtype=np.uint8)
+    assert np.array_equal(decoded, np.array([[[0, 127, 255]]], dtype=np.uint8))

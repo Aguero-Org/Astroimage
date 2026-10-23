@@ -10,6 +10,8 @@ import {
 } from "@/api/generated/sources/sources";
 import { HelpHint } from "@/components/ui/help-hint";
 import { Skeleton } from "@/components/ui/skeleton";
+import { okData } from "@/lib/api-response";
+import { pendingJobId, polledJobResult } from "@/lib/polled-job";
 
 type GaiaCrossMatchProps = {
   isFetching: boolean;
@@ -22,30 +24,34 @@ export function useGaiaCrossMatch(
   params: VerifySourcesGaiaParams,
   enabled: boolean,
 ) {
-  const verifyQuery = useVerifySourcesGaia(recordId, params, {
-    query: { enabled },
-  });
-  const verifyBody =
-    verifyQuery.data?.status === 200 ? verifyQuery.data.data : undefined;
-  const pendingJobId = isGaiaJob(verifyBody) ? verifyBody.job_id : undefined;
-  const jobQuery = useGetSourcesGaiaJob(recordId, pendingJobId ?? "", {
+  const start = useVerifySourcesGaia(recordId, params, {
     query: {
-      enabled: pendingJobId !== undefined,
-      refetchInterval: (query) => {
-        const body =
-          query.state.data?.status === 200 ? query.state.data.data : undefined;
-        return isGaiaJob(body) ? 2000 : false;
-      },
+      enabled,
+      select: (response) =>
+        response.status === 200 ? response.data : undefined,
     },
   });
-  const jobBody =
-    jobQuery.data?.status === 200 ? jobQuery.data.data : undefined;
-  const result = gaiaVerificationResult(jobBody, verifyBody);
+  const jobId = pendingJobId(start.data, isGaiaJob);
+  const job = useGetSourcesGaiaJob(recordId, jobId ?? "", {
+    query: {
+      enabled: jobId !== undefined,
+      select: (response) =>
+        response.status === 200 ? response.data : undefined,
+      refetchInterval: (query) =>
+        isGaiaJob(okData(query.state.data)) ? 2000 : false,
+    },
+  });
+  const { result, isFetching, isError } = polledJobResult({
+    start,
+    job,
+    isJob: isGaiaJob,
+    isResult: isGaiaVerification,
+  });
   return {
     matches: result?.matches ?? [],
     summary: result?.summary,
-    isFetching: verifyQuery.isFetching || jobQuery.isFetching,
-    isError: verifyQuery.isError || jobQuery.isError,
+    isFetching,
+    isError,
   };
 }
 
@@ -111,29 +117,12 @@ export function gaiaMatchFor(
 
 type GaiaBody = GaiaVerificationResponse | GaiaJobStatusSchema | undefined;
 
-function gaiaVerificationResult(
-  jobBody: GaiaBody,
-  verifyBody: GaiaBody,
-): GaiaVerificationResponse | undefined {
-  if (isGaiaVerification(jobBody)) {
-    return jobBody;
-  }
-  if (isGaiaVerification(verifyBody)) {
-    return verifyBody;
-  }
-  return undefined;
-}
-
 function isGaiaJob(value: GaiaBody): value is GaiaJobStatusSchema {
-  return (
-    value !== undefined &&
-    "job_id" in value &&
-    !("match_radius_arcsec" in value)
-  );
+  return value?.status === "pending";
 }
 
 function isGaiaVerification(
   value: GaiaBody,
 ): value is GaiaVerificationResponse {
-  return value !== undefined && "match_radius_arcsec" in value;
+  return value?.status === "completed";
 }

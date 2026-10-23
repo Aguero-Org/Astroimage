@@ -6,19 +6,23 @@ import {
   useGetImageTransfer,
   useResumeImageTransfer,
   useSearchHubbleCandidates,
-  useSelectHubbleCandidate,
 } from "@/api/generated/hub/hub";
 import type {
   SearchHubbleCandidatesOrder,
   SearchHubbleCandidatesSort,
   TransferStatusSchema,
 } from "@/api/generated/model";
+import { okData } from "@/lib/api-response";
 
 export type CandidateSortField = SearchHubbleCandidatesSort;
 export type CandidateSortOrder = SearchHubbleCandidatesOrder;
 export type ImageTransfer = TransferStatusSchema;
 
 const ACTIVE = new Set(["queued", "transferring", "annotating", "storing"]);
+
+export function isActiveTransfer(status: string | undefined): boolean {
+  return status !== undefined && ACTIVE.has(status);
+}
 
 export function formatBytes(value: number | null): string {
   if (value === null) {
@@ -52,13 +56,10 @@ export function useCandidateSearch(
       query: {
         enabled: trimmed.length > 0,
         placeholderData: keepPreviousData,
+        select: (response) => (response.status === 200 ? response.data : null),
       },
     },
   );
-}
-
-export function useSelectCandidate() {
-  return useSelectHubbleCandidate();
 }
 
 export function useImageTransfer(transferId: string | null) {
@@ -66,15 +67,16 @@ export function useImageTransfer(transferId: string | null) {
   return useGetImageTransfer(transferId ?? "", {
     query: {
       enabled: transferId !== null,
+      select: (response) =>
+        response.status === 200 ? response.data : undefined,
       refetchInterval: (query) => {
-        const body = query.state.data;
-        const status = body?.status === 200 ? body.data.status : undefined;
+        const status = okData<TransferStatusSchema>(query.state.data)?.status;
         if (status === "completed") {
           void queryClient.invalidateQueries({
             queryKey: getListHubbleImagesQueryKey(),
           });
         }
-        return status !== undefined && ACTIVE.has(status) ? 1000 : false;
+        return isActiveTransfer(status) ? 1000 : false;
       },
     },
   });

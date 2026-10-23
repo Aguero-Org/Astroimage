@@ -2,6 +2,7 @@ import type { CatalogRecommendationResponse } from "@/api/generated/model";
 
 export function mockCatalogRecommendation(): CatalogRecommendationResponse {
   return {
+    status: "completed",
     source_name: "M31",
     ra_deg: 10.6847,
     dec_deg: 41.2691,
@@ -15,6 +16,14 @@ export function mockCatalogRecommendation(): CatalogRecommendationResponse {
       object_in_table_count: 1,
       queried_catalogue_count: 4,
     },
+    papers: [
+      {
+        bibcode: "2021A&A...649A...1G",
+        title: "Gaia Early Data Release 3",
+        abstract:
+          "Astrometría y fotometría de más de mil millones de fuentes, con paralajes y movimientos propios.",
+      },
+    ],
     recommendations: [
       {
         rank: 1,

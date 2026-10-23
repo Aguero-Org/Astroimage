@@ -68,20 +68,23 @@ export function useScrollSpy(
       return "";
     }
     const measured = measureActiveId(ids, offsetPx);
-    if (
-      measured === null &&
-      lastGoodId.current.length > 0 &&
-      ids.includes(lastGoodId.current)
-    ) {
+    if (measured !== null) {
+      return measured;
+    }
+    if (lastGoodId.current.length > 0 && ids.includes(lastGoodId.current)) {
       return lastGoodId.current;
     }
-    const next = measured ?? preferredId(ids, fallbackId);
-    lastGoodId.current = next;
-    return next;
+    return preferredId(ids, fallbackId);
   };
   const activeId = useSyncExternalStore(subscribe, getSnapshot, () =>
     preferredId(ids, fallbackId),
   );
+
+  useLayoutEffect(() => {
+    if (activeId.length > 0) {
+      lastGoodId.current = activeId;
+    }
+  }, [activeId]);
 
   useLayoutEffect(() => {
     window.dispatchEvent(

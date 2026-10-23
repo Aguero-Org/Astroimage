@@ -12,14 +12,14 @@ import { Input } from "@/components/ui/input";
 
 type ImportNameDialogProps = {
   filename: string | null;
-  pending: boolean;
+  submitting: boolean;
   onCancel: () => void;
   onConfirm: (displayName: string) => void;
 };
 
 export function ImportNameDialog({
   filename,
-  pending,
+  submitting,
   onCancel,
   onConfirm,
 }: Readonly<ImportNameDialogProps>) {
@@ -65,7 +65,7 @@ export function ImportNameDialog({
           <Button
             type="button"
             data-testid="confirm-import-name"
-            disabled={trimmed.length === 0 || pending}
+            disabled={trimmed.length === 0 || submitting}
             onClick={() => onConfirm(trimmed)}
           >
             Importar

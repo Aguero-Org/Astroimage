@@ -8,6 +8,7 @@ import type { GaiaMatchSchema } from './gaiaMatchSchema';
 import type { GaiaVerificationSummarySchema } from './gaiaVerificationSummarySchema';
 
 export interface GaiaVerificationResponse {
+  status: 'completed';
   source_name?: string | null;
   match_radius_arcsec: number;
   probability_power: number;

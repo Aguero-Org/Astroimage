@@ -1,6 +1,6 @@
 import { useLocation } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { readLastImageRecord } from "@/features/images/last-record";
+import { useLastImageRecord } from "@/features/images/use-last-image-record";
 import { useScrollSpy, useStickyStackHeight } from "@/hooks/use-scroll-spy";
 import {
   filterGlossaryEntries,
@@ -20,7 +20,7 @@ const DEFAULT_DOCUMENT_TITLE = "Glosario - Astroimage";
 export function GlossaryPage() {
   const [query, setQuery] = useState("");
   const location = useLocation();
-  const lastImage = readLastImageRecord();
+  const lastImage = useLastImageRecord();
   const hashId = location.hash.replace("#", "");
   const stickyOffset = useStickyStackHeight(STICKY_STACK_IDS);
   const filtered = useMemo(

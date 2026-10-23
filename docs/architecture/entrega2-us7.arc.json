@@ -1,0 +1,103 @@
+{
+  "layout": { "width": 1400, "height": 760 },
+  "layoutHints": { "algorithm": "grid" },
+  "_meta": { "themeId": "command", "colorMode": "light" },
+  "nodes": {
+    "user": { "x": 60, "y": 60, "size": "l" },
+    "workspace": { "x": 60, "y": 230, "size": "l" },
+    "cards": { "x": 60, "y": 400, "size": "l" },
+    "controller": { "x": 420, "y": 60, "size": "l" },
+    "errors": { "x": 740, "y": 60, "size": "l" },
+    "service": { "x": 420, "y": 230, "size": "l" },
+    "lookup": { "x": 740, "y": 230, "size": "l" },
+    "ads_lookup": { "x": 740, "y": 400, "size": "l" },
+    "vizier": { "x": 1100, "y": 230, "size": "l" },
+    "postgres": { "x": 1100, "y": 400, "size": "l" },
+    "ads": { "x": 1100, "y": 570, "size": "l" }
+  },
+  "nodeData": {
+    "user": { "kind": "user", "name": "Usuario", "subtitle": "Navegador" },
+    "workspace": {
+      "kind": "frontend",
+      "name": "Exploracion cientifica",
+      "subtitle": "scientific-workspace.tsx",
+      "description": "Pide recomendaciones tras Gaia"
+    },
+    "cards": {
+      "kind": "frontend",
+      "name": "Cards de recomendacion",
+      "subtitle": "catalogue-card · publication-card",
+      "description": "Titulo, de que trata y enlace"
+    },
+    "controller": {
+      "kind": "backend",
+      "name": "catalogs/controller.py",
+      "subtitle": "GET .../recommendations",
+      "description": "HTTP solo delega al servicio"
+    },
+    "service": {
+      "kind": "backend",
+      "name": "CatalogService",
+      "subtitle": "catalogs/service.py",
+      "description": "Rankea catalogos y adjunta papers"
+    },
+    "lookup": {
+      "kind": "backend",
+      "name": "CatalogLookup",
+      "subtitle": "catalogs/lookup.py",
+      "description": "Cono VizieR o descarga guardada"
+    },
+    "ads_lookup": {
+      "kind": "backend",
+      "name": "AdsPaperLookup",
+      "subtitle": "catalogs/papers.py",
+      "description": "Titulo y abstract por bibcode"
+    },
+    "errors": {
+      "kind": "security",
+      "name": "shared/errors.py",
+      "subtitle": "AppError -> {detail}",
+      "description": "Traduce errores en un unico punto"
+    },
+    "vizier": {
+      "kind": "external",
+      "name": "VizieR",
+      "subtitle": "astroquery cone search",
+      "description": "Catalogos de la region (terceros)"
+    },
+    "postgres": {
+      "kind": "database",
+      "name": "PostgreSQL 16",
+      "subtitle": "catalog_downloads · paper_metadata",
+      "description": "Descarga del cono y ficha del paper"
+    },
+    "ads": {
+      "kind": "external",
+      "name": "ADS",
+      "subtitle": "api.adsabs search/query",
+      "description": "Titulo y abstract (terceros)"
+    }
+  },
+  "connectors": [
+    { "from": "user", "to": "workspace", "fromAnchor": "bottom", "toAnchor": "top", "style": "https", "label": "abre la exploracion" },
+    { "from": "workspace", "to": "cards", "fromAnchor": "bottom", "toAnchor": "top", "style": "internal", "label": "muestra el resultado" },
+    { "from": "workspace", "to": "controller", "fromAnchor": "right", "toAnchor": "left", "style": "https", "label": "GET recommendations" },
+    { "from": "controller", "to": "errors", "fromAnchor": "right", "toAnchor": "left", "style": "internal", "label": "AppError" },
+    { "from": "controller", "to": "service", "fromAnchor": "bottom", "toAnchor": "top", "style": "internal" },
+    { "from": "service", "to": "lookup", "fromAnchor": "right", "toAnchor": "left", "style": "internal", "label": "cono o cache" },
+    { "from": "service", "to": "ads_lookup", "fromAnchor": "bottom", "toAnchor": "top", "style": "internal", "label": "papers" },
+    { "from": "lookup", "to": "vizier", "fromAnchor": "right", "toAnchor": "left", "style": "https", "label": "cone search" },
+    { "from": "ads_lookup", "to": "postgres", "fromAnchor": "right", "toAnchor": "left", "style": "sql", "label": "paper_metadata" },
+    { "from": "ads_lookup", "to": "ads", "fromAnchor": "bottom", "toAnchor": "top", "style": "https", "label": "bibcode batch" }
+  ],
+  "connectorStyles": {
+    "https": { "color": "blue", "strokeWidth": 2, "label": "HTTPS" },
+    "internal": { "color": "zinc", "strokeWidth": 2 },
+    "sql": { "color": "emerald", "strokeWidth": 2, "label": "SQL" }
+  },
+  "groups": [
+    { "id": "frontend", "x": 30, "y": 30, "width": 310, "height": 500, "type": "rect", "color": "zinc", "label": "Frontend · Vite + React SPA" },
+    { "id": "backend", "x": 390, "y": 30, "width": 600, "height": 500, "type": "rect", "color": "zinc", "label": "Backend · FastAPI astroimage" },
+    { "id": "data", "x": 1070, "y": 30, "width": 280, "height": 680, "type": "rect", "color": "zinc", "label": "Datos + terceros" }
+  ]
+}

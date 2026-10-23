@@ -24,7 +24,6 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import {
-  type CatalogPublication,
   type CatalogueMatchFilter,
   filterCatalogues,
   filterPublications,
@@ -33,6 +32,7 @@ import {
 } from "../catalog-recommendations";
 import { simbadObjectsForSource } from "../simbad-references";
 import { useCatalogRecommendations } from "../use-catalog-recommendations";
+import { RecommendationContent } from "./scientific-recommendation-content";
 import { useSimbadReferences } from "../use-simbad-references";
 import { CatalogueCard } from "./catalogue-card";
 import { PublicationCard } from "./publication-card";
@@ -119,17 +119,11 @@ export function ScientificWorkspace({
   );
 
   useEffect(() => {
-    if (openedFor.current !== recordId) {
-      openedFor.current = null;
-      setOpen(false);
+    if (openedFor.current === recordId) {
+      return;
     }
-  }, [recordId]);
-
-  useEffect(() => {
-    if (enabled && openedFor.current !== recordId) {
-      openedFor.current = recordId;
-      setOpen(true);
-    }
+    openedFor.current = enabled ? recordId : null;
+    setOpen(enabled);
   }, [enabled, recordId]);
 
   return (
@@ -323,8 +317,6 @@ function ScientificSidebar({
   const updating = isFetching && result !== undefined;
   const region = regionDescription(result);
 
-  const body = renderContent();
-
   return (
     <Sidebar
       side="right"
@@ -493,7 +485,21 @@ function ScientificSidebar({
           </div>
         ) : null}
 
-        <SidebarContent className="pb-24">{body}</SidebarContent>
+        <SidebarContent className="pb-24">
+          <RecommendationContent
+            enabled={enabled}
+            isError={isError}
+            isLoading={isLoading}
+            result={result}
+            tab={tab}
+            items={items}
+            matches={catalogues}
+            publications={publications}
+            papers={papers}
+            errorMessage={errorMessage}
+            onRetry={refetch}
+          />
+        </SidebarContent>
       </div>
     </Sidebar>
   );

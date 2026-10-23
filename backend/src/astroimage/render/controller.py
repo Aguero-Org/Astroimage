@@ -10,6 +10,7 @@ from fastapi import APIRouter, Depends, Path, Query, Response
 from astroimage.render.deps import render_service_dependency
 from astroimage.render.schema import HistogramResponse, RenderConfigSchema
 from astroimage.render.service import RenderService
+from astroimage.shared.query import HduIndex
 
 router = APIRouter(prefix="/image", tags=["render"])
 _DEFAULTS = RenderConfigSchema()
@@ -18,10 +19,6 @@ _log = structlog.get_logger("astroimage.render.controller")
 RecordId = Annotated[
     UUID,
     Path(description="Stored FITS record id"),
-]
-HduIndex = Annotated[
-    int,
-    Query(ge=0, description="Optional image HDU index; defaults to the first 2D image HDU"),
 ]
 
 StretchParam = Annotated[str, Query(pattern="^(linear|sqrt|log|asinh)$")]

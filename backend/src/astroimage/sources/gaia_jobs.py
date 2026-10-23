@@ -1,18 +1,13 @@
 from __future__ import annotations
 
-import asyncio
 import json
-from collections import OrderedDict
-from collections.abc import Awaitable, Callable
+from collections.abc import Callable
 from uuid import UUID
 
-import structlog
-from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from astroimage.fits.service import FitsService
-from astroimage.shared.errors import AppError, as_app_error
-from astroimage.shared.object_storage import ObjectStorageError
+from astroimage.shared.jobs import JobRegistry
 from astroimage.sources.cache import DetectionCache, detection_cache_key
 from astroimage.sources.gaia import GaiaCatalogProvider
 from astroimage.sources.schema import (
@@ -22,23 +17,6 @@ from astroimage.sources.schema import (
     PointDetectionConfigSchema,
 )
 from astroimage.sources.service import GaiaVerificationService, SourceDetectionService
-
-_log = structlog.get_logger("astroimage.sources.gaia_jobs")
-
-_STORED_JOB_ERRORS = (
-    AppError,
-    LookupError,
-    OSError,
-    ObjectStorageError,
-    RuntimeError,
-    SQLAlchemyError,
-    ValueError,
-)
-
-_LOGS: dict[str, Callable[..., None]] = {
-    "warning": _log.warning,
-    "error": _log.error,
-}
 
 
 def gaia_job_key(
@@ -116,80 +94,10 @@ class GaiaBackgroundVerify:
                 raise
 
 
-class GaiaJobRegistry:
+class GaiaJobRegistry(JobRegistry[GaiaVerificationResponse]):
     def __init__(self, *, max_failures: int = 128, max_jobs: int = 256) -> None:
-        self._max_jobs = max_jobs
-        self._max_failures = max_failures
-        self._done: OrderedDict[str, GaiaVerificationResponse] = OrderedDict()
-        self._failed: OrderedDict[str, AppError] = OrderedDict()
-        self._running: dict[str, asyncio.Task[None]] = {}
-
-    def get(self, key: str) -> GaiaVerificationResponse | None:
-        result = self._done.get(key)
-        if result is not None:
-            self._done.move_to_end(key)
-        return result
-
-    def get_failure(self, key: str) -> AppError | None:
-        return self._failed.get(key)
-
-    def is_running(self, key: str) -> bool:
-        return key in self._running
-
-    async def wait(self, key: str) -> None:
-        task = self._running.get(key)
-        if task is None or task.done():
-            return
-        await asyncio.shield(task)
-
-    def start(
-        self,
-        key: str,
-        factory: Callable[[], Awaitable[GaiaVerificationResponse]],
-    ) -> None:
-        if key in self._done or key in self._running:
-            return
-        self._failed.pop(key, None)
-        task = asyncio.create_task(self._execute(key, factory))
-        self._running[key] = task
-
-    async def _execute(
-        self,
-        key: str,
-        factory: Callable[[], Awaitable[GaiaVerificationResponse]],
-    ) -> None:
-        try:
-            result = await factory()
-        except _STORED_JOB_ERRORS as exc:
-            error = as_app_error(exc)
-            log = _LOGS[error.log_level]
-            log(
-                "gaia_job_failed",
-                job_id=key,
-                error_type=type(error).__name__,
-                detail=error.message,
-            )
-            self._store_failure(key, error)
-            return
-        finally:
-            self._running.pop(key, None)
-        _log.info("gaia_job_completed", job_id=key)
-        self._store_done(key, result)
-
-    def _store_done(self, key: str, result: GaiaVerificationResponse) -> None:
-        self._done[key] = result
-        self._done.move_to_end(key)
-        self._failed.pop(key, None)
-        while len(self._done) > self._max_jobs:
-            self._done.popitem(last=False)
-
-    def _store_failure(self, key: str, error: AppError) -> None:
-        self._failed[key] = error
-        self._failed.move_to_end(key)
-        while len(self._failed) > self._max_failures:
-            self._failed.popitem(last=False)
-
-    def clear(self) -> None:
-        self._done.clear()
-        self._failed.clear()
-        self._running.clear()
+        super().__init__(
+            job_kind="gaia",
+            max_failures=max_failures,
+            max_jobs=max_jobs,
+        )

@@ -217,6 +217,15 @@ Every change must pass:
 1. Backend: `ruff format`, `ruff check`, `mypy`, `lint-imports`, `pytest` (unit + integration + architecture; writes `coverage.xml`)
 2. Frontend: `biome check`, `tsc`, `vitest` / `pnpm test:coverage`, Playwright for critical flows
 3. SonarQube (when `SONAR_ENABLED=true`): scan via `sonar-project.properties` + Quality Gate
+4. Mutation testing (local completion gate, not CI yet): before marking branch work as
+   done, run the mutation suite for the affected stack.
+   - Backend: `wsl.exe -d Ubuntu -- bash -lc "cd /mnt/d/repos/tip/Astroimage/backend && UV_PROJECT_ENVIRONMENT=/tmp/astroimage-mutmut-venv ~/.local/bin/uv run mutmut run --max-children 2"`.
+   - Frontend: `pnpm test:mutation:lib` for `src/lib`; the matching
+     `test:mutation:catalogs` / `test:mutation:images` script for feature changes.
+   - Review every new survivor: kill it with a real behavior test or record why it is
+     equivalent. Do not close the branch with unexplained survivors. Reports stay
+     ignored (`backend/mutants/`, `frontend/reports/`); commands and triage live in
+     `docs/mutation-testing.md`.
 
 Do not commit `.scannerwork/` or coverage artifacts. Keep generated paths excluded from Sonar
 (`frontend/src/api/generated/**`, `routeTree.gen.ts`, `backend/alembic/**`).

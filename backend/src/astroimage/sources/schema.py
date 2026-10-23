@@ -125,6 +125,7 @@ class GaiaVerificationSummarySchema(BaseModel):
 class GaiaVerificationResponse(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
+    status: Literal["completed"]
     source_name: str | None = None
     match_radius_arcsec: float
     probability_power: float
@@ -138,7 +139,7 @@ class GaiaVerificationResponse(BaseModel):
 class GaiaJobStatusSchema(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    status: Literal["pending"] = "pending"
+    status: Literal["pending"]
     job_id: str
     record_id: UUID
 

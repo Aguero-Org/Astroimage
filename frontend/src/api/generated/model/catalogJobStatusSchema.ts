@@ -6,7 +6,7 @@
  */
 
 export interface CatalogJobStatusSchema {
-  status?: 'pending';
+  status: 'pending';
   job_id: string;
   record_id: string;
 }
