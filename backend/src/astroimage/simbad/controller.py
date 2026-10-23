@@ -56,7 +56,7 @@ async def get_simbad_references(
     record_id: RecordId,
     service: Annotated[SimbadReferenceService, Depends(simbad_reference_service_dependency)],
     client_id: Annotated[str, Header(alias="X-Client-Id")] = "anonymous",
-    hdu: HduIndex = None,  # type: ignore[assignment]  # nullable default, non-nullable query
+    hdu: HduIndex = None,  # type: ignore[assignment]
     limit: LimitParam = _DEFAULTS.limit,
     object_type: ObjectTypeParam = _DEFAULTS.object_type,
     include_aliases: bool = _DEFAULTS.include_aliases,

@@ -7,8 +7,6 @@ type ScrollSpyOptions = {
 
 function subscribe(onStoreChange: () => void) {
   window.addEventListener("scroll", onStoreChange, { passive: true });
-  // Scroll events do not bubble, but the capture phase reaches a nested
-  // scroll container (drawers, panels), so listen there too.
   document.addEventListener("scroll", onStoreChange, {
     capture: true,
     passive: true,
@@ -54,9 +52,6 @@ function measureActiveId(
   if (measured.length === 0) {
     return null;
   }
-  // Active = first article still visible below the sticky chrome. Falling
-  // back to "last heading that crossed the line" left the highlight lagging:
-  // the previous article was already hidden but stayed selected.
   return measured.find((item) => item.bottom > offsetPx)?.id ?? null;
 }
 

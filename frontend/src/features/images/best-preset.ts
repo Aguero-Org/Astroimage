@@ -13,11 +13,6 @@ import {
   DEFAULT_POINT_DETECTION_PARAMS,
 } from "./source-detection";
 
-/**
- * The preset endpoint answers with the values the user already had plus the
- * ones rescaled from the measured PSF. A missing field means "keep what you
- * have", so a partial answer never wipes what the user typed.
- */
 export type BestPreset = {
   isPending: boolean;
   isError: boolean;
@@ -70,7 +65,6 @@ export function bestPresetExtendedParams(
   };
 }
 
-/** One line saying what the measurement was based on, or why there is none. */
 export function bestPresetSummary(evidence?: PresetEvidenceSchema): string {
   const measured = evidence?.measured_fwhm;
   const samples = evidence?.fwhm_samples ?? 0;

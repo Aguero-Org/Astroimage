@@ -177,7 +177,7 @@ async def detect_sources(
     record_id: RecordId,
     service: Annotated[SourceDetectionService, Depends(source_service_dependency)],
     client_id: Annotated[str, Header(alias="X-Client-Id")] = "anonymous",
-    hdu: HduIndex = None,  # type: ignore[assignment]  # nullable default, non-nullable query
+    hdu: HduIndex = None,  # type: ignore[assignment]
     fwhm: FwhmParam = _DEFAULTS.fwhm,
     sigma: SigmaParam = _DEFAULTS.sigma,
     min_snr: MinSnrParam = _DEFAULTS.min_snr,
@@ -283,7 +283,7 @@ async def get_best_preset(
     record_id: RecordId,
     service: Annotated[SourceDetectionService, Depends(source_service_dependency)],
     client_id: Annotated[str, Header(alias="X-Client-Id")] = "anonymous",
-    hdu: HduIndex = None,  # type: ignore[assignment]  # nullable default, non-nullable query
+    hdu: HduIndex = None,  # type: ignore[assignment]
 ) -> SourcePresetResponse:
     _log.info("best_preset_start", record_id=str(record_id), client_id=client_id)
     return await service.recommend_preset(
@@ -304,7 +304,7 @@ async def verify_sources_gaia(
     background: Annotated[GaiaBackgroundVerify, Depends(gaia_background_dependency)],
     jobs: Annotated[GaiaJobRegistry, Depends(gaia_job_registry_dependency)],
     client_id: Annotated[str, Header(alias="X-Client-Id")] = "anonymous",
-    hdu: HduIndex = None,  # type: ignore[assignment]  # nullable default, non-nullable query
+    hdu: HduIndex = None,  # type: ignore[assignment]
     fwhm: FwhmParam = _DEFAULTS.fwhm,
     sigma: SigmaParam = _DEFAULTS.sigma,
     min_snr: MinSnrParam = _DEFAULTS.min_snr,

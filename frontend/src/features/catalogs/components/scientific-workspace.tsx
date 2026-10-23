@@ -11,6 +11,7 @@ import {
 import type {
   CatalogRecommendationItemSchema,
   RecommendCatalogsParams,
+  SimbadObjectSchema,
 } from "@/api/generated/model";
 import { Button } from "@/components/ui/button";
 import { HelpHint } from "@/components/ui/help-hint";
@@ -30,7 +31,9 @@ import {
   type PublicationKindFilter,
   regionDescription,
 } from "../catalog-recommendations";
+import { simbadObjectsForSource } from "../simbad-references";
 import { useCatalogRecommendations } from "../use-catalog-recommendations";
+import { useSimbadReferences } from "../use-simbad-references";
 import { CatalogueCard } from "./catalogue-card";
 import { PublicationCard } from "./publication-card";
 import {
@@ -38,6 +41,7 @@ import {
   RecommendationInfo,
   RecommendationLoading,
 } from "./recommendation-states";
+import { SimbadObjectCard } from "./simbad-object-card";
 
 type ScientificWorkspaceProps = {
   recordId: string;
@@ -45,6 +49,19 @@ type ScientificWorkspaceProps = {
   params: RecommendCatalogsParams | undefined;
   image: ReactNode;
   preview?: string;
+  hdu?: number | null;
+  selectedSource?: {
+    source_id: number;
+    object_type: "point" | "extended";
+  } | null;
+  onFocusSource?: (sourceId: number, objectType: "point" | "extended") => void;
+  simbadObjects?: SimbadObjectSchema[];
+  simbadResult?: unknown;
+  simbadIsError?: boolean;
+  simbadErrorMessage?: string;
+  simbadIsLoading?: boolean;
+  simbadIsFetching?: boolean;
+  onSimbadRetry?: () => void;
 };
 
 const DEFAULT_WIDTH_PX = 360;
@@ -57,6 +74,16 @@ export function ScientificWorkspace({
   params,
   preview,
   image,
+  hdu = null,
+  selectedSource,
+  onFocusSource,
+  simbadObjects,
+  simbadResult,
+  simbadIsError,
+  simbadErrorMessage,
+  simbadIsLoading,
+  simbadIsFetching,
+  onSimbadRetry,
 }: Readonly<ScientificWorkspaceProps>) {
   const [open, setOpen] = useState(false);
   const [width, setWidth] = useState(DEFAULT_WIDTH_PX);
@@ -122,7 +149,17 @@ export function ScientificWorkspace({
         enabled={enabled}
         params={params}
         preview={preview}
+        hdu={hdu}
+        selectedSource={selectedSource}
+        onFocusSource={onFocusSource}
         onResizeStart={startResize}
+        simbadObjects={simbadObjects}
+        simbadResult={simbadResult}
+        simbadIsError={simbadIsError}
+        simbadErrorMessage={simbadErrorMessage}
+        simbadIsLoading={simbadIsLoading}
+        simbadIsFetching={simbadIsFetching}
+        onSimbadRetry={onSimbadRetry}
       />
     </SidebarProvider>
   );
@@ -162,7 +199,20 @@ type ScientificSidebarProps = {
   enabled: boolean;
   params: RecommendCatalogsParams | undefined;
   preview: string | undefined;
+  hdu: number | null;
+  selectedSource?: {
+    source_id: number;
+    object_type: "point" | "extended";
+  } | null;
+  onFocusSource?: (sourceId: number, objectType: "point" | "extended") => void;
   onResizeStart: (event: ReactPointerEvent<HTMLButtonElement>) => void;
+  simbadObjects?: SimbadObjectSchema[];
+  simbadResult?: unknown;
+  simbadIsError?: boolean;
+  simbadErrorMessage?: string;
+  simbadIsLoading?: boolean;
+  simbadIsFetching?: boolean;
+  onSimbadRetry?: () => void;
 };
 
 function ScientificSidebar({
@@ -170,7 +220,17 @@ function ScientificSidebar({
   enabled,
   params,
   preview,
+  hdu,
+  selectedSource,
+  onFocusSource,
   onResizeStart,
+  simbadObjects,
+  simbadResult,
+  simbadIsError,
+  simbadErrorMessage,
+  simbadIsLoading: simbadIsLoadingProp,
+  simbadIsFetching: simbadIsFetchingProp,
+  onSimbadRetry,
 }: Readonly<ScientificSidebarProps>) {
   const { setOpen } = useSidebar();
   const {
@@ -182,7 +242,70 @@ function ScientificSidebar({
     errorMessage,
     refetch,
   } = useCatalogRecommendations({ recordId, enabled, params });
-  const [tab, setTab] = useState<"catalogs" | "papers">("catalogs");
+  const simbadHook = useSimbadReferences({
+    recordId,
+    hdu: hdu ?? null,
+    enabled: enabled && simbadObjects === undefined,
+  });
+  const simbad = {
+    objects: simbadObjects ?? simbadHook.objects,
+    result: (simbadResult ?? simbadHook.result) as
+      | typeof simbadHook.result
+      | undefined,
+    isError: simbadIsError ?? simbadHook.isError,
+    isLoading: simbadIsLoadingProp ?? simbadHook.isLoading,
+    isFetching: simbadIsFetchingProp ?? simbadHook.isFetching,
+    errorMessage: simbadErrorMessage ?? simbadHook.errorMessage,
+    refetch: onSimbadRetry ?? simbadHook.refetch,
+  };
+  const [tab, setTab] = useState<"catalogs" | "papers" | "simbad">("catalogs");
+  const simbadListRef = useRef<HTMLDivElement>(null);
+  const [showNoMatchToast, setShowNoMatchToast] = useState(false);
+  const lastFocusedRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (enabled && selectedSource) {
+      setTab("simbad");
+    }
+  }, [enabled, selectedSource]);
+
+  useEffect(() => {
+    if (!enabled || !selectedSource || tab !== "simbad") {
+      return undefined;
+    }
+    const matches = simbadObjectsForSource(
+      simbad.objects,
+      selectedSource.source_id,
+      selectedSource.object_type,
+    );
+    const key = `${selectedSource.object_type}:${selectedSource.source_id}`;
+    if (matches.length === 0) {
+      if (lastFocusedRef.current === key) {
+        return undefined;
+      }
+      lastFocusedRef.current = key;
+      setShowNoMatchToast(true);
+      const timer = window.setTimeout(() => setShowNoMatchToast(false), 2000);
+      return () => window.clearTimeout(timer);
+    }
+    lastFocusedRef.current = key;
+    setShowNoMatchToast(false);
+    const target = matches[0];
+    if (!target) {
+      return undefined;
+    }
+    const id = `simbad-card-${target.main_id}`;
+    window.setTimeout(() => {
+      const element = document.getElementById(id);
+      if (element) {
+        element.scrollIntoView({ behavior: "smooth", block: "center" });
+      } else if (simbadListRef.current) {
+        simbadListRef.current.scrollTo({ top: 0, behavior: "smooth" });
+      }
+    }, 50);
+    return undefined;
+  }, [enabled, selectedSource, tab, simbad.objects]);
+
   const [query, setQuery] = useState("");
   const [match, setMatch] = useState<CatalogueMatchFilter>("all");
   const [kind, setKind] = useState<PublicationKindFilter>("all");
@@ -190,8 +313,13 @@ function ScientificSidebar({
   const items = result?.recommendations ?? [];
   const catalogues = filterCatalogues(items, { query, match });
   const papers = filterPublications(publications, query, kind);
-  const activeCount = tab === "catalogs" ? items.length : publications.length;
-  const showControls = activeCount >= 2;
+  const activeCount =
+    tab === "catalogs"
+      ? items.length
+      : tab === "papers"
+        ? publications.length
+        : simbad.objects.length;
+  const showControls = tab !== "simbad" && activeCount >= 2;
   const updating = isFetching && result !== undefined;
   const region = regionDescription(result);
 
@@ -297,6 +425,12 @@ function ScientificSidebar({
             active={tab === "papers"}
             onSelect={() => setTab("papers")}
           />
+          <TabButton
+            id="simbad"
+            label={`SIMBAD (${simbad.objects.length})`}
+            active={tab === "simbad"}
+            onSelect={() => setTab("simbad")}
+          />
         </div>
 
         <p
@@ -305,7 +439,9 @@ function ScientificSidebar({
         >
           {tab === "catalogs"
             ? "Un catálogo es una tabla de fuentes del cielo (estrellas, galaxias, etc.) con sus posiciones y propiedades. Se listan los que cubren esta imagen."
-            : "Una publicación es un trabajo científico sobre los datos. Se listan los artículos de cada catálogo y las referencias de su documentación."}
+            : tab === "papers"
+              ? "Una publicación es un trabajo científico sobre los datos. Se listan los artículos de cada catálogo y las referencias de su documentación."
+              : "SIMBAD reúne objetos astronómicos identificados, sus alias, propiedades y bibliografía. Se muestran los objetos que coinciden con las fuentes detectadas en esta imagen."}
         </p>
 
         {showControls ? (
@@ -410,23 +546,132 @@ function ScientificSidebar({
         />
       );
     }
-    if (publications.length === 0) {
+    if (tab === "papers") {
+      if (publications.length === 0) {
+        return (
+          <RecommendationInfo testId="papers-empty">
+            {result.include_papers === false
+              ? "Las publicaciones no se incluyeron en esta consulta."
+              : "No se encontraron publicaciones asociadas a estos catálogos."}
+          </RecommendationInfo>
+        );
+      }
+      if (papers.length === 0) {
+        return (
+          <RecommendationInfo testId="catalogs-info">
+            Ninguna publicación coincide con la búsqueda.
+          </RecommendationInfo>
+        );
+      }
+      return <PublicationList items={papers} />;
+    }
+    if (simbad.isError) {
       return (
-        <RecommendationInfo testId="papers-empty">
-          {result.include_papers === false
-            ? "Las publicaciones no se incluyeron en esta consulta."
-            : "No se encontraron publicaciones asociadas a estos catálogos."}
+        <RecommendationError
+          message={simbad.errorMessage}
+          onRetry={simbad.refetch}
+        />
+      );
+    }
+    if (simbad.isLoading) {
+      return <RecommendationLoading />;
+    }
+    if (simbad.result?.wcs_present === false) {
+      return (
+        <RecommendationInfo testId="simbad-info">
+          Esta imagen no tiene información de posición (WCS), así que no se
+          puede ubicar su región en el cielo para buscar objetos SIMBAD.
         </RecommendationInfo>
       );
     }
-    if (papers.length === 0) {
+    if (simbad.result?.queried === false) {
       return (
-        <RecommendationInfo testId="catalogs-info">
-          Ninguna publicación coincide con la búsqueda.
+        <RecommendationInfo testId="simbad-info">
+          No se pudo consultar SIMBAD para esta región del cielo.
         </RecommendationInfo>
       );
     }
-    return <PublicationList items={papers} />;
+    if (simbad.result?.error) {
+      return (
+        <RecommendationError
+          message={simbad.result.error}
+          onRetry={simbad.refetch}
+        />
+      );
+    }
+    if (simbad.objects.length === 0) {
+      return (
+        <RecommendationInfo testId="simbad-empty">
+          {selectedSource
+            ? "No hay objetos SIMBAD asociados a la fuente seleccionada."
+            : "Ningún objeto SIMBAD coincide con las fuentes detectadas en esta imagen."}
+        </RecommendationInfo>
+      );
+    }
+    const matchedIds = selectedSource
+      ? new Set(
+          simbadObjectsForSource(
+            simbad.objects,
+            selectedSource.source_id,
+            selectedSource.object_type,
+          ).map((obj) => obj.main_id),
+        )
+      : new Set<string>();
+    return (
+      <div className="relative flex flex-col gap-2 px-2 py-2">
+        {showNoMatchToast ? (
+          <div className="absolute left-2 right-2 top-1 z-10 rounded-md bg-destructive/90 px-2 py-1 text-center text-xs text-destructive-foreground shadow-sm">
+            No se encontró ningún objeto SIMBAD asociado a esta fuente
+          </div>
+        ) : null}
+        {selectedSource ? (
+          <div className="flex items-center justify-between gap-2 rounded-md bg-sidebar-accent/50 px-2 py-1">
+            <span
+              data-testid="simbad-selected-source"
+              className="text-xs text-sidebar-accent-foreground"
+            >
+              Fuente seleccionada:{" "}
+              {selectedSource.object_type === "point" ? "puntual" : "extendida"}{" "}
+              #{selectedSource.source_id}
+            </span>
+            <Button
+              type="button"
+              size="sm"
+              variant="ghost"
+              className="h-6 px-2 text-xs"
+              onClick={() => {
+                setTab("simbad");
+                setShowNoMatchToast(false);
+              }}
+            >
+              Ver todas
+            </Button>
+          </div>
+        ) : null}
+        <div ref={simbadListRef} className="flex flex-col gap-2">
+          {simbad.objects.map((object) => {
+            const isMatched =
+              matchedIds.size > 0 && matchedIds.has(object.main_id);
+            return (
+              <div
+                key={object.main_id}
+                id={`simbad-card-${object.main_id}`}
+                className={
+                  isMatched
+                    ? "rounded-lg ring-2 ring-primary ring-offset-1 ring-offset-sidebar"
+                    : undefined
+                }
+              >
+                <SimbadObjectCard
+                  object={object}
+                  onFocusSource={onFocusSource}
+                />
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
   }
 }
 

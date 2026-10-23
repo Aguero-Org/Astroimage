@@ -86,7 +86,7 @@ async def recommend_catalogs(
     background: Annotated[CatalogBackgroundRecommend, Depends(catalog_background_dependency)],
     jobs: Annotated[CatalogJobRegistry, Depends(catalog_job_registry_dependency)],
     client_id: Annotated[str, Header(alias="X-Client-Id")] = "anonymous",
-    hdu: HduIndex = None,  # type: ignore[assignment]  # nullable default, non-nullable query
+    hdu: HduIndex = None,  # type: ignore[assignment]
     identifiers: Annotated[list[str] | None, Query(description="Known object identifiers")] = None,
     search_radius_arcsec: SearchRadiusParam = _DEFAULTS.search_radius_arcsec,
     max_catalogues: MaxCataloguesParam = _DEFAULTS.max_catalogues,

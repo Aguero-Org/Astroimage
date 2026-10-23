@@ -13,8 +13,6 @@ import { GlossaryToc } from "./glossary-toc";
 
 const STICKY_STACK_IDS = ["navbar", "glossary-header"] as const;
 
-// Switch to the next entry before the current one is fully hidden, so the
-// highlight leads the reader instead of trailing the sticky chrome.
 const ACTIVE_SWITCH_MARGIN_PX = 120;
 
 const DEFAULT_DOCUMENT_TITLE = "Glosario - Astroimage";

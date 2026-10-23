@@ -626,9 +626,6 @@ class GaiaVerificationService:
             )
         objects = _merge_gaia_objects([result for result in results if isinstance(result, list)])
         if not objects:
-            # Fallback single-query (paridad con TPI-Prueba, gaia.py:183-204):
-            # si todos los bloques devuelven vac\u00edo, reintentamos sobre el
-            # campo completo para evitar falsos negativos en campos densos.
             _log.info("gaia_fallback_triggered", record_id=str(record_id))
             fallback_center = _field_center(prepared.entry_coords)
             fallback_radius = search_radius_arcsec(

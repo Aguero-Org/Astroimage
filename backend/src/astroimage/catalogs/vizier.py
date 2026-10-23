@@ -10,8 +10,6 @@ from astroquery.vizier import Vizier
 from astroimage.catalogs.model import CatalogMetadata, CatalogRow, CatalogTable
 from astroimage.shared.logging import catalog_vizier_log as _log
 
-# `+_r` is the angular distance of each row from the query centre; it is the
-# same column the reference notebook relies on for the spatial score.
 _VIZIER_COLUMNS = ("*", "+_r")
 _RA_COLUMNS = ("_RAJ2000", "RAJ2000", "ra", "RA_ICRS")
 _DEC_COLUMNS = ("_DEJ2000", "DEJ2000", "dec", "DE_ICRS")
