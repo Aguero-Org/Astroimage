@@ -118,7 +118,8 @@ class CatalogRecommendationService:
             config=resolved,
             record_id=record_id,
         )
-        self._cache.set(key, result)
+        if result.error is None:
+            self._cache.set(key, result)
         return result
 
     async def recommend(

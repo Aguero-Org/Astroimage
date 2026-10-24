@@ -117,8 +117,9 @@ async def recommend_catalogs(
         radius_arcsec=config.search_radius_arcsec,
     )
     completed = jobs.get(key)
-    if completed is not None:
+    if completed is not None and completed.error is None:
         return completed
+    jobs.discard(key)
     await service.ensure_record(record_id)
     start = time.perf_counter()
     jobs.start(
@@ -133,6 +134,8 @@ async def recommend_catalogs(
     await jobs.wait(key)
     completed = jobs.get(key)
     if completed is not None:
+        if completed.error is not None:
+            jobs.discard(key)
         _log.info(
             "catalog_recommend_complete",
             record_id=str(record_id),
