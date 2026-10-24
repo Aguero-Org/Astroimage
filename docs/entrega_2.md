@@ -25,7 +25,7 @@ La consulta de catálogos reutiliza una descarga ya guardada de esa región. El 
 
 # User Stories
 
-## US7 - Recomendar catálogos y publicaciones
+## US7 - Recomendar catálogos, publicaciones y cruzar con SIMBAD
 
 ### Actor/es
 
@@ -33,13 +33,15 @@ Usuario.
 
 ### Funcionalidad
 
-Como usuario, quiero ver qué catálogos y artículos corresponden a la región de mi imagen.
+Como usuario, quiero ver qué catálogos, artículos y objetos de SIMBAD corresponden a la región de mi imagen.
 
 Cuando termina el análisis de Gaia, puedo abrir la exploración científica. Veo catálogos de esa zona y publicaciones asociadas. El nombre del catálogo se entiende sin conocer el identificador técnico. Si el objeto buscado está en el catálogo, eso se indica. La publicación muestra el título del paper y un extracto cuando existen, y puedo abrir el artículo.
 
+En la misma exploración consulto SIMBAD por la zona de la imagen y obtengo el identificador principal, el tipo de objeto y la posición. Si no hay coincidencia, no es un error: simplemente no hay objeto.
+
 ### Valor aportado
 
-Permite saber qué datos externos sirven para esa imagen sin buscar a mano en VizieR o en ADS.
+Permite saber qué datos externos sirven para esa imagen y nombrar el objeto con el identificador que usa la comunidad, sin buscar a mano en VizieR, ADS o SIMBAD.
 
 ### Criterios de aceptación
 
@@ -49,52 +51,7 @@ Permite saber qué datos externos sirven para esa imagen sin buscar a mano en Vi
 - Si hay ficha bibliográfica, veo el título del paper y un extracto.
 - Puedo abrir el artículo desde la publicación.
 - Si no hay ficha, la publicación se muestra igual, asociada al catálogo.
-
----
-
-## US8 - Consultar la imagen sin perder el visor
-
-### Actor/es
-
-Usuario.
-
-### Funcionalidad
-
-Como usuario, quiero revisar la información de la imagen y encontrar las que ya tengo, sin salir del visor ni perder el listado.
-
-En la vista de la imagen, la información acompaña al visor en un panel lateral. En la página principal, el listado de imágenes se lee con estados claros de carga, vacío y error.
-
-### Valor aportado
-
-Permite orientarse en las imágenes ya obtenidas y leer sus datos sin tapar el análisis.
-
-### Criterios de aceptación
-
-- Puedo ver información de la imagen al lado del visor.
-- El visor sigue usable con ese panel abierto.
-- En el inicio distingo si está cargando, si no hay imágenes o si hubo un error.
-
----
-
-## US9 - Cruzar la imagen con SIMBAD
-
-### Actor/es
-
-Usuario.
-
-### Funcionalidad
-
-Como usuario, quiero saber qué objeto de SIMBAD corresponde a la posición de mi imagen.
-
-Puedo consultar por la zona de la imagen y obtener el identificador principal, el tipo de objeto y la posición. Si no hay coincidencia, no es un error: simplemente no hay objeto.
-
-### Valor aportado
-
-Permite nombrar el objeto de la imagen con el identificador que usa la comunidad, no solo con catálogos de medidas.
-
-### Criterios de aceptación
-
-- Puedo pedir un cruce por coordenadas y radio.
+- Puedo pedir un cruce con SIMBAD por coordenadas y radio.
 - Si hay coincidencia, veo identificador, tipo y posición.
 - Si no hay coincidencia, el resultado viene vacío.
 - Si SIMBAD no responde, hay un error entendible.
@@ -103,7 +60,7 @@ Permite nombrar el objeto de la imagen con el identificador que usa la comunidad
 
 # Diagrama de arquitectura
 
-El diagrama de arquitectura se realiza tomando como user story testigo **US7 - Recomendar catálogos y publicaciones**.
+El diagrama de arquitectura se realiza tomando como user story testigo **US7 - Recomendar catálogos, publicaciones y cruzar con SIMBAD**.
 
 ![Diagrama de arquitectura US7](./architecture/entrega2-us7.png)
 
