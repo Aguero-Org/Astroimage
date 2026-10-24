@@ -30,6 +30,10 @@ class JobRegistry[ResultT]:
         self._failed: OrderedDict[str, AppError] = OrderedDict()
         self._running: dict[str, asyncio.Task[None]] = {}
 
+    def discard(self, key: str) -> None:
+        self._done.pop(key, None)
+        self._failed.pop(key, None)
+
     def get(self, key: str) -> ResultT | None:
         result = self._done.get(key)
         if result is not None:

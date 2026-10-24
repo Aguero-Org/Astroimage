@@ -10,7 +10,9 @@ from astroquery.vizier import Vizier
 from astroimage.catalogs.model import CatalogMetadata, CatalogRow, CatalogTable
 from astroimage.shared.logging import catalog_vizier_log as _log
 
-_VIZIER_COLUMNS = ("*", "+_r")
+_VIZIER_COLUMNS = ("+_r",)
+_VIZIER_SERVERS = ("vizier.cds.unistra.fr", "vizier.cfa.harvard.edu")
+_SERVER_TIMEOUT_S = 60
 _RA_COLUMNS = ("_RAJ2000", "RAJ2000", "ra", "RA_ICRS")
 _DEC_COLUMNS = ("_DEJ2000", "DEJ2000", "dec", "DE_ICRS")
 
@@ -40,17 +42,47 @@ class AstroqueryVizierProvider:
         *,
         row_limit: int,
     ) -> list[CatalogTable]:
-        _log.info(
-            "vizier_query",
-            center_ra=float(center.ra.deg),
-            center_dec=float(center.dec.deg),
-            radius_arcsec=radius_arcsec,
+        last_error: Exception | None = None
+        for server in _VIZIER_SERVERS:
+            _log.info(
+                "vizier_query",
+                server=server,
+                center_ra=float(center.ra.deg),
+                center_dec=float(center.dec.deg),
+                radius_arcsec=radius_arcsec,
+                row_limit=row_limit,
+            )
+            try:
+                tables = self._query_server(server, center, radius_arcsec, row_limit)
+            except Exception as exc:
+                _log.warning("vizier_server_failed", server=server, detail=str(exc), exc_info=exc)
+                last_error = exc
+                continue
+            catalogs = _tables_to_catalogs(tables)
+            _log.info("vizier_query_ok", server=server, catalogues=len(catalogs))
+            return catalogs
+        if last_error is not None:
+            raise last_error
+        return []
+
+    def _query_server(
+        self,
+        server: str,
+        center: SkyCoord,
+        radius_arcsec: float,
+        row_limit: int,
+    ) -> Any:
+        vizier = Vizier(
+            columns=list(_VIZIER_COLUMNS),
             row_limit=row_limit,
+            vizier_server=server,
         )
-        vizier = Vizier(columns=list(_VIZIER_COLUMNS), row_limit=row_limit)
-        vizier.TIMEOUT = int(self._timeout_s)
-        tables = vizier.query_region(center, radius=Angle(radius_arcsec * u.arcsec))
-        return _tables_to_catalogs(tables)
+        vizier.TIMEOUT = min(int(self._timeout_s), _SERVER_TIMEOUT_S)
+        return vizier.query_region(
+            center,
+            radius=Angle(radius_arcsec * u.arcsec),
+            cache=False,
+        )
 
     def catalog_metadata(self, catalogue_id: str) -> CatalogMetadata:
         untitled: CatalogMetadata | None = None

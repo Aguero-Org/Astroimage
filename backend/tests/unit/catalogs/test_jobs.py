@@ -57,3 +57,21 @@ async def test_registry_does_not_restart_completed_jobs() -> None:
     registry.start("job", factory)
     await asyncio.sleep(0)
     assert calls == 1
+
+
+@pytest.mark.asyncio
+async def test_registry_discard_allows_a_retry() -> None:
+    registry = CatalogJobRegistry()
+    calls = 0
+
+    async def factory() -> CatalogRecommendationResponse:
+        nonlocal calls
+        calls += 1
+        return CatalogRecommendationResponse(status="completed", error="timed out")
+
+    registry.start("job", factory)
+    await registry.wait("job")
+    registry.discard("job")
+    registry.start("job", factory)
+    await registry.wait("job")
+    assert calls == 2
