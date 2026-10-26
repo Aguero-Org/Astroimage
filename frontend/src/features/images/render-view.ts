@@ -1,3 +1,4 @@
+import { z } from "zod";
 import type { RenderFitsImageParams } from "@/api/generated/model";
 import type { NamedPreset } from "./named-preset";
 
@@ -22,24 +23,33 @@ export function paramsToDraft(params: RenderViewParams): RenderDraft {
   };
 }
 
+const numericDraftField = z
+  .string()
+  .refine((value) => Number.isFinite(Number(value)));
+
+export const renderDraftSchema: z.ZodType<RenderDraft, RenderDraft> = z
+  .object({
+    stretch: z.enum(["linear", "sqrt", "log", "asinh"]),
+    limits: z.enum(["percentiles", "zscale"]),
+    colormap: z.enum(["grey", "inverse", "heat", "rainbow", "cube_helix"]),
+    pmin: numericDraftField,
+    pmax: numericDraftField,
+    gamma: numericDraftField,
+  })
+  .refine((draft) => Number(draft.pmin) < Number(draft.pmax));
+
 export function parseRenderDraft(draft: RenderDraft): RenderViewParams | null {
-  const pmin = Number(draft.pmin);
-  const pmax = Number(draft.pmax);
-  const gamma = Number(draft.gamma);
-  if (
-    !Number.isFinite(pmin) ||
-    !Number.isFinite(pmax) ||
-    !Number.isFinite(gamma)
-  ) {
+  const parsed = renderDraftSchema.safeParse(draft);
+  if (!parsed.success) {
     return null;
   }
   return {
-    stretch: draft.stretch,
-    limits: draft.limits,
-    colormap: draft.colormap,
-    pmin,
-    pmax,
-    gamma,
+    stretch: parsed.data.stretch,
+    limits: parsed.data.limits,
+    colormap: parsed.data.colormap,
+    pmin: Number(parsed.data.pmin),
+    pmax: Number(parsed.data.pmax),
+    gamma: Number(parsed.data.gamma),
   };
 }
 

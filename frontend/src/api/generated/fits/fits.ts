@@ -22,30 +22,12 @@ import type {
 } from '../model';
 
 import { customFetch } from '../../../lib/api-client';
+import type { ErrorType } from '../../../lib/api-client';
 
 
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
 
-
-export type extractFitsMetadataResponse200 = {
-  data: FitsMetadataSchema
-  status: 200
-}
-
-export type extractFitsMetadataResponse422 = {
-  data: HTTPValidationError
-  status: 422
-}
-
-export type extractFitsMetadataResponseSuccess = (extractFitsMetadataResponse200) & {
-  headers: Headers;
-};
-export type extractFitsMetadataResponseError = (extractFitsMetadataResponse422) & {
-  headers: Headers;
-};
-
-export type extractFitsMetadataResponse = (extractFitsMetadataResponseSuccess | extractFitsMetadataResponseError)
 
 export const getExtractFitsMetadataUrl = (params?: ExtractFitsMetadataParams,) => {
   const normalizedParams = new URLSearchParams();
@@ -66,11 +48,11 @@ export const getExtractFitsMetadataUrl = (params?: ExtractFitsMetadataParams,) =
  * @summary Extract Fits Metadata
  */
 export const extractFitsMetadata = async (bodyExtractFitsMetadata: BodyExtractFitsMetadata,
-    params?: ExtractFitsMetadataParams, options?: Parameters<typeof customFetch>[1]): Promise<extractFitsMetadataResponse> => {
+    params?: ExtractFitsMetadataParams, options?: Parameters<typeof customFetch>[1]): Promise<FitsMetadataSchema> => {
     const formData = new FormData();
 formData.append(`file`, bodyExtractFitsMetadata.file);
 
-  return customFetch<extractFitsMetadataResponse>(getExtractFitsMetadataUrl(params),
+  return customFetch<FitsMetadataSchema>(getExtractFitsMetadataUrl(params),
   {
     ...options,
     method: 'POST'
@@ -85,7 +67,7 @@ formData.append(`file`, bodyExtractFitsMetadata.file);
 
 export const getExtractFitsMetadataMutationKey = () => ['extractFitsMetadata'] as const;
 
-export const getExtractFitsMetadataMutationOptions = <TError = HTTPValidationError,
+export const getExtractFitsMetadataMutationOptions = <TError = ErrorType<HTTPValidationError>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof extractFitsMetadata>>, TError,ExtractFitsMetadataMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof extractFitsMetadata>>, TError,ExtractFitsMetadataMutationVariables, TContext> => {
 
@@ -114,13 +96,13 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type ExtractFitsMetadataMutationResult = NonNullable<Awaited<ReturnType<typeof extractFitsMetadata>>>
     export type ExtractFitsMetadataMutationBody = BodyExtractFitsMetadata
-    export type ExtractFitsMetadataMutationError = HTTPValidationError
+    export type ExtractFitsMetadataMutationError = ErrorType<HTTPValidationError>
     export type ExtractFitsMetadataMutationVariables = {data: BodyExtractFitsMetadata;params?: ExtractFitsMetadataParams}
 
     /**
  * @summary Extract Fits Metadata
  */
-export const useExtractFitsMetadata = <TError = HTTPValidationError,
+export const useExtractFitsMetadata = <TError = ErrorType<HTTPValidationError>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof extractFitsMetadata>>, TError,ExtractFitsMetadataMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof extractFitsMetadata>>,

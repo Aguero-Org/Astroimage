@@ -1,4 +1,6 @@
 import { Link } from "@tanstack/react-router";
+import { X } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
   formatBytes,
@@ -8,6 +10,8 @@ import {
   useImageTransfer,
   useResumeTransfer,
 } from "../candidate-api";
+import { formatQueryError } from "../format-query-error";
+import { useTransfersStore } from "../transfers-store";
 
 const STATUS_LABEL: Record<string, string> = {
   queued: "En cola",
@@ -60,15 +64,29 @@ export function TransferFeedback({
   return (
     <div
       data-testid="transfer-feedback"
-      className="flex flex-col gap-2 rounded-md border border-border p-3"
+      className="pointer-events-auto flex flex-col gap-2 rounded-md border border-border bg-background p-3 shadow-sm"
     >
-      <p className="text-sm">
-        <strong className="font-semibold">{transfer.display_name}</strong>
-        <span className="text-muted-foreground">
-          {" "}
-          · {transfer.product_filename}
-        </span>
-      </p>
+      <div className="flex items-start justify-between gap-2">
+        <p className="text-sm">
+          <strong className="font-semibold">{transfer.display_name}</strong>
+          <span className="text-muted-foreground">
+            {" "}
+            · {transfer.product_filename}
+          </span>
+        </p>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          className="size-7 shrink-0"
+          aria-label="Cerrar seguimiento"
+          onClick={() => {
+            useTransfersStore.getState().remove(transfer.transfer_id);
+          }}
+        >
+          <X className="size-4" />
+        </Button>
+      </div>
       <p className="text-sm">
         {STATUS_LABEL[transfer.status] ?? transfer.status}
         {percent !== null ? ` · ${percent}%` : ""}
@@ -97,7 +115,10 @@ export function TransferFeedback({
             variant="outline"
             size="sm"
             onClick={() => {
-              void cancel.mutateAsync({ transferId: transfer.transfer_id });
+              cancel.mutate(
+                { transferId: transfer.transfer_id },
+                { onError: (error) => toast.error(formatQueryError(error)) },
+              );
             }}
           >
             Cancelar
@@ -108,7 +129,10 @@ export function TransferFeedback({
             type="button"
             size="sm"
             onClick={() => {
-              void resume.mutateAsync({ transferId: transfer.transfer_id });
+              resume.mutate(
+                { transferId: transfer.transfer_id },
+                { onError: (error) => toast.error(formatQueryError(error)) },
+              );
             }}
           >
             Reanudar

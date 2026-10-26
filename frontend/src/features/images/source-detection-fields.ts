@@ -1,3 +1,4 @@
+import { z } from "zod";
 import type {
   ExtendedDetectionParams,
   PointDetectionParams,
@@ -144,6 +145,40 @@ export const EXTENDED_FIELDS: DetectionField<keyof ExtendedDetectionParams>[] =
     },
   ];
 
+const numericDraftField = z
+  .string()
+  .refine((value) => readNumber(value) !== null);
+
+export const pointDraftSchema = z.object({
+  fwhm: numericDraftField,
+  sigma: numericDraftField,
+  min_snr: numericDraftField,
+  min_score: numericDraftField,
+  min_distance: numericDraftField,
+  visual_weight: numericDraftField,
+  visual_area_radius: numericDraftField,
+  visual_area_sigma: numericDraftField,
+  max_sources: numericDraftField,
+});
+
+export const extendedDraftSchema = z.object({
+  ext_sigma: numericDraftField,
+  ext_smooth_sigma: numericDraftField,
+  ext_min_area: numericDraftField,
+  ext_max_area: numericDraftField,
+  ext_bin_factor: numericDraftField,
+  ext_closing_iterations: numericDraftField,
+  ext_opening_iterations: numericDraftField,
+  ext_min_score: numericDraftField,
+  ext_max_sources: numericDraftField,
+});
+
+export const sourceDetectionDraftSchema = pointDraftSchema.extend(
+  extendedDraftSchema.shape,
+);
+
+export type SourceDetectionDraft = z.infer<typeof sourceDetectionDraftSchema>;
+
 export function pointToDraft(
   params: PointDetectionParams,
 ): Record<keyof PointDetectionParams, string> {
@@ -179,76 +214,44 @@ export function extendedToDraft(
 export function parsePointDraft(
   draft: Record<keyof PointDetectionParams, string>,
 ): PointDetectionParams | null {
-  const fwhm = readNumber(draft.fwhm);
-  const sigma = readNumber(draft.sigma);
-  const minSnr = readNumber(draft.min_snr);
-  const minScore = readNumber(draft.min_score);
-  const minDistance = readNumber(draft.min_distance);
-  const visualWeight = readNumber(draft.visual_weight);
-  const visualAreaRadius = readNumber(draft.visual_area_radius);
-  const visualAreaSigma = readNumber(draft.visual_area_sigma);
-  const maxSources = readNumber(draft.max_sources);
-  if (
-    fwhm === null ||
-    sigma === null ||
-    minSnr === null ||
-    minScore === null ||
-    minDistance === null ||
-    visualWeight === null ||
-    visualAreaRadius === null ||
-    visualAreaSigma === null ||
-    maxSources === null
-  ) {
+  const parsed = pointDraftSchema.safeParse(draft);
+  if (!parsed.success) {
     return null;
   }
   return {
-    fwhm,
-    sigma,
-    min_snr: minSnr,
-    min_score: minScore,
-    min_distance: minDistance,
-    visual_weight: visualWeight,
-    visual_area_radius: visualAreaRadius,
-    visual_area_sigma: visualAreaSigma,
-    max_sources: Math.round(maxSources),
+    fwhm: Number(parsed.data.fwhm),
+    sigma: Number(parsed.data.sigma),
+    min_snr: Number(parsed.data.min_snr),
+    min_score: Number(parsed.data.min_score),
+    min_distance: Number(parsed.data.min_distance),
+    visual_weight: Number(parsed.data.visual_weight),
+    visual_area_radius: Number(parsed.data.visual_area_radius),
+    visual_area_sigma: Number(parsed.data.visual_area_sigma),
+    max_sources: Math.round(Number(parsed.data.max_sources)),
   };
 }
 
 export function parseExtendedDraft(
   draft: Record<keyof ExtendedDetectionParams, string>,
 ): ExtendedDetectionParams | null {
-  const extSigma = readNumber(draft.ext_sigma);
-  const extSmoothSigma = readNumber(draft.ext_smooth_sigma);
-  const extMinArea = readNumber(draft.ext_min_area);
-  const extMaxArea = readNumber(draft.ext_max_area);
-  const extBinFactor = readNumber(draft.ext_bin_factor);
-  const extClosing = readNumber(draft.ext_closing_iterations);
-  const extOpening = readNumber(draft.ext_opening_iterations);
-  const extMinScore = readNumber(draft.ext_min_score);
-  const extMaxSources = readNumber(draft.ext_max_sources);
-  if (
-    extSigma === null ||
-    extSmoothSigma === null ||
-    extMinArea === null ||
-    extMaxArea === null ||
-    extBinFactor === null ||
-    extClosing === null ||
-    extOpening === null ||
-    extMinScore === null ||
-    extMaxSources === null
-  ) {
+  const parsed = extendedDraftSchema.safeParse(draft);
+  if (!parsed.success) {
     return null;
   }
   return {
-    ext_sigma: extSigma,
-    ext_smooth_sigma: extSmoothSigma,
-    ext_min_area: Math.round(extMinArea),
-    ext_max_area: Math.round(extMaxArea),
-    ext_bin_factor: Math.round(extBinFactor),
-    ext_closing_iterations: Math.round(extClosing),
-    ext_opening_iterations: Math.round(extOpening),
-    ext_min_score: extMinScore,
-    ext_max_sources: Math.round(extMaxSources),
+    ext_sigma: Number(parsed.data.ext_sigma),
+    ext_smooth_sigma: Number(parsed.data.ext_smooth_sigma),
+    ext_min_area: Math.round(Number(parsed.data.ext_min_area)),
+    ext_max_area: Math.round(Number(parsed.data.ext_max_area)),
+    ext_bin_factor: Math.round(Number(parsed.data.ext_bin_factor)),
+    ext_closing_iterations: Math.round(
+      Number(parsed.data.ext_closing_iterations),
+    ),
+    ext_opening_iterations: Math.round(
+      Number(parsed.data.ext_opening_iterations),
+    ),
+    ext_min_score: Number(parsed.data.ext_min_score),
+    ext_max_sources: Math.round(Number(parsed.data.ext_max_sources)),
   };
 }
 

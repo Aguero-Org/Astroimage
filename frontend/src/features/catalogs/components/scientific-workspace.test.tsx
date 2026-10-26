@@ -2,22 +2,50 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { HttpResponse, http } from "msw";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
+import { MOCK_SIMBAD_OBJECT } from "@/mocks/data/simbad";
 import { createTestQueryClient } from "@/test/render";
 import { server } from "@/test/server";
+import type { SimbadReferencesView } from "../use-simbad-references";
 import { ScientificWorkspace } from "./scientific-workspace";
 
 const CATALOGS_URL = "http://localhost:8000/image/m31/catalogs/recommendations";
 
-function renderWorkspace(enabled: boolean, preview?: string) {
+function simbadView(
+  overrides: Partial<SimbadReferencesView> = {},
+): SimbadReferencesView {
+  return {
+    objects: [],
+    result: undefined,
+    isError: false,
+    isLoading: false,
+    isFetching: false,
+    errorMessage: "error desconocido",
+    refetch: vi.fn(),
+    summary: undefined,
+    ...overrides,
+  };
+}
+
+function renderWorkspace(
+  enabled: boolean,
+  preview?: string,
+  simbad: SimbadReferencesView = simbadView(),
+  selectedSource: {
+    source_id: number;
+    object_type: "point" | "extended";
+  } | null = null,
+) {
   const queryClient = createTestQueryClient();
-  const workspace = (nextEnabled: boolean) => (
+  const workspace = (nextEnabled: boolean, nextSource = selectedSource) => (
     <QueryClientProvider client={queryClient}>
       <ScientificWorkspace
         recordId="m31"
         enabled={nextEnabled}
         params={undefined}
         preview={preview}
+        simbad={simbad}
+        selectedSource={nextSource ? { ...nextSource } : null}
         image={<div data-testid="image-canvas" />}
       />
     </QueryClientProvider>
@@ -27,6 +55,10 @@ function renderWorkspace(enabled: boolean, preview?: string) {
     result,
     rerenderEnabled: (nextEnabled: boolean) =>
       result.rerender(workspace(nextEnabled)),
+    rerenderWorkspace: (
+      nextEnabled: boolean,
+      nextSource: typeof selectedSource,
+    ) => result.rerender(workspace(nextEnabled, nextSource)),
   };
 }
 
@@ -84,6 +116,56 @@ describe("ScientificWorkspace", () => {
     expect(screen.getByTestId("scientific-toggle")).toHaveAttribute(
       "aria-expanded",
       "false",
+    );
+  });
+
+  it("opens SIMBAD when a source is selected", async () => {
+    renderWorkspace(true, undefined, simbadView(), {
+      source_id: 1,
+      object_type: "point",
+    });
+
+    expect(await screen.findByTestId("simbad-empty")).toBeInTheDocument();
+    expect(screen.getByTestId("scientific-tab-simbad")).toHaveAttribute(
+      "data-state",
+      "active",
+    );
+  });
+
+  it("opens SIMBAD when a source becomes selected", async () => {
+    const user = userEvent.setup();
+    const { rerenderWorkspace } = renderWorkspace(true);
+
+    await screen.findByTestId("catalog-list");
+    await user.click(screen.getByTestId("scientific-tab-papers"));
+    rerenderWorkspace(true, { source_id: 2, object_type: "point" });
+
+    expect(await screen.findByTestId("simbad-empty")).toBeInTheDocument();
+    expect(screen.getByTestId("scientific-tab-simbad")).toHaveAttribute(
+      "data-state",
+      "active",
+    );
+  });
+
+  it("keeps the chosen tab when the workspace rerenders with the same source", async () => {
+    const user = userEvent.setup();
+    const { rerenderEnabled } = renderWorkspace(true, undefined, simbadView(), {
+      source_id: 1,
+      object_type: "point",
+    });
+
+    await screen.findByTestId("simbad-empty");
+    await user.click(screen.getByTestId("scientific-tab-papers"));
+    expect(screen.getByTestId("scientific-tab-papers")).toHaveAttribute(
+      "data-state",
+      "active",
+    );
+
+    rerenderEnabled(true);
+
+    expect(screen.getByTestId("scientific-tab-papers")).toHaveAttribute(
+      "data-state",
+      "active",
     );
   });
 
@@ -233,5 +315,34 @@ describe("ScientificWorkspace", () => {
     await screen.findByTestId("recommendations-error");
     await user.click(screen.getByTestId("recommendations-retry"));
     expect(await screen.findByTestId("catalog-list")).toBeInTheDocument();
+  });
+
+  it("renders the SIMBAD view provided by the route", async () => {
+    const user = userEvent.setup();
+    renderWorkspace(
+      true,
+      undefined,
+      simbadView({ objects: [MOCK_SIMBAD_OBJECT] }),
+    );
+
+    await screen.findByTestId("catalog-list");
+    await user.click(screen.getByTestId("scientific-tab-simbad"));
+
+    expect(screen.getByTestId("scientific-tab-simbad")).toHaveTextContent(
+      "SIMBAD (1)",
+    );
+    expect(screen.getByTestId("simbad-object-card")).toBeInTheDocument();
+  });
+
+  it("retries SIMBAD through the view provided by the route", async () => {
+    const user = userEvent.setup();
+    const refetch = vi.fn();
+    renderWorkspace(true, undefined, simbadView({ isError: true, refetch }));
+
+    await screen.findByTestId("catalog-list");
+    await user.click(screen.getByTestId("scientific-tab-simbad"));
+    await user.click(screen.getByTestId("recommendations-retry"));
+
+    expect(refetch).toHaveBeenCalledTimes(1);
   });
 });

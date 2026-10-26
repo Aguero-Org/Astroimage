@@ -40,20 +40,13 @@ export function useImageRecords(
     {
       query: {
         placeholderData: keepPreviousData,
-        select: (response) =>
-          response.status === 200 ? response.data : undefined,
       },
     },
   );
 }
 
 export function useImageInfo(recordId: string) {
-  return useGetImageInfo(recordId, {
-    query: {
-      select: (response) =>
-        response.status === 200 ? response.data : undefined,
-    },
-  });
+  return useGetImageInfo(recordId);
 }
 
 export function useImageRender(
@@ -62,9 +55,9 @@ export function useImageRender(
 ) {
   return useRenderFitsImage(recordId, params, {
     query: {
-      placeholderData: keepPreviousData,
-      select: (response) =>
-        response.status === 200 ? response.data : undefined,
+      retry: false,
+      structuralSharing: false,
+      gcTime: 60_000,
     },
   });
 }
@@ -77,8 +70,7 @@ export function useImageHistogram(
   return useRenderFitsHistogram(recordId, params, {
     query: {
       enabled,
-      select: (response) =>
-        response.status === 200 ? response.data : undefined,
+      retry: false,
     },
   });
 }
@@ -91,8 +83,7 @@ export function useSourceDetection(
   return useDetectSources(recordId, params, {
     query: {
       enabled,
-      select: (response) =>
-        response.status === 200 ? response.data : undefined,
+      retry: false,
     },
   });
 }
@@ -101,8 +92,7 @@ export function useBestPreset(recordId: string, hdu: number | null) {
   return useGetBestPreset(recordId, hdu === null ? undefined : { hdu }, {
     query: {
       enabled: false,
-      select: (response) =>
-        response.status === 200 ? response.data : undefined,
+      retry: false,
     },
   });
 }

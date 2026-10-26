@@ -1,4 +1,6 @@
-import { useState } from "react";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -9,6 +11,13 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+
+const importNameSchema = z.object({
+  displayName: z.string().trim().min(1),
+});
+
+type ImportNameValues = z.infer<typeof importNameSchema>;
 
 type ImportNameDialogProps = {
   filename: string | null;
@@ -23,16 +32,24 @@ export function ImportNameDialog({
   onCancel,
   onConfirm,
 }: Readonly<ImportNameDialogProps>) {
-  const [displayName, setDisplayName] = useState("");
+  const { register, handleSubmit, reset, formState } =
+    useForm<ImportNameValues>({
+      resolver: zodResolver(importNameSchema),
+      defaultValues: { displayName: "" },
+      mode: "onChange",
+    });
   const open = filename !== null;
-  const trimmed = displayName.trim();
+
+  const submitName = handleSubmit((values) => {
+    onConfirm(values.displayName);
+  });
 
   return (
     <Dialog
       open={open}
       onOpenChange={(next) => {
         if (!next) {
-          setDisplayName("");
+          reset();
           onCancel();
         }
       }}
@@ -48,16 +65,18 @@ export function ImportNameDialog({
             {"."}
           </DialogDescription>
         </DialogHeader>
-        <label className="flex flex-col gap-1 text-sm" htmlFor="display-name">
+        <Label
+          className="flex-col items-stretch gap-1 font-normal leading-normal"
+          htmlFor="display-name"
+        >
           Nombre descriptivo
           <Input
             id="display-name"
-            value={displayName}
             autoFocus
             placeholder="Por ejemplo, núcleo de Andrómeda"
-            onChange={(event) => setDisplayName(event.target.value)}
+            {...register("displayName")}
           />
-        </label>
+        </Label>
         <DialogFooter>
           <Button type="button" variant="outline" onClick={onCancel}>
             Cancelar
@@ -65,8 +84,8 @@ export function ImportNameDialog({
           <Button
             type="button"
             data-testid="confirm-import-name"
-            disabled={trimmed.length === 0 || submitting}
-            onClick={() => onConfirm(trimmed)}
+            disabled={!formState.isValid || submitting}
+            onClick={submitName}
           >
             Importar
           </Button>

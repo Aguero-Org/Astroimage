@@ -36,6 +36,8 @@ async function parseResponseBody(response: Response): Promise<unknown> {
   return response.blob();
 }
 
+export type ErrorType<T = unknown> = Error & { status?: number; info?: T };
+
 export class ApiError extends Error {
   status: number;
   statusText: string;
@@ -76,5 +78,5 @@ export async function customFetch<T>(
     throw new ApiError(response.status, response.statusText, data);
   }
 
-  return { data, status: response.status, headers: response.headers } as T;
+  return data as T;
 }

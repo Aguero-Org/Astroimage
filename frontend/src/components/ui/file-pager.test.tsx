@@ -17,10 +17,10 @@ describe("FilePager", () => {
     render(<FilePager page={2} hasMore onPage={onPage} />);
 
     await user.click(
-      screen.getByRole("link", { name: "Ir a la página siguiente" }),
+      screen.getByRole("button", { name: "Ir a la página siguiente" }),
     );
     await user.click(
-      screen.getByRole("link", { name: "Ir a la página anterior" }),
+      screen.getByRole("button", { name: "Ir a la página anterior" }),
     );
 
     expect(onPage).toHaveBeenNthCalledWith(1, 3);
@@ -35,7 +35,7 @@ describe("FilePager", () => {
 
     render(<FilePager page={1} hasMore onPage={onPage} />);
     await user.click(
-      screen.getByRole("link", { name: "Ir a la página anterior" }),
+      screen.getByRole("button", { name: "Ir a la página anterior" }),
     );
     expect(onPage).not.toHaveBeenCalled();
   });

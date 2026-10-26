@@ -1,5 +1,7 @@
-import type { SyntheticEvent } from "react";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { HelpHint } from "@/components/ui/help-hint";
 import {
@@ -8,6 +10,8 @@ import {
   bestPresetPointParams,
   bestPresetSummary,
 } from "../best-preset";
+import { formatQueryError } from "../format-query-error";
+import { CUSTOM_PRESET_ID, matchNamedPreset } from "../named-preset";
 import {
   DEFAULT_EXTENDED_DETECTION_PARAMS,
   DEFAULT_POINT_DETECTION_PARAMS,
@@ -23,8 +27,9 @@ import {
   parseExtendedDraft,
   parsePointDraft,
   pointToDraft,
+  type SourceDetectionDraft,
+  sourceDetectionDraftSchema,
 } from "../source-detection-fields";
-import { useNamedPresetDraft } from "../use-named-preset-draft";
 import { DetectionFieldInput } from "./detection-field-input";
 import { NamedPresetField } from "./named-preset-field";
 
@@ -34,54 +39,104 @@ type SourceDetectionFormProps = {
   onSubmit: (params: SourceDetectionParams) => void;
 };
 
+function defaultDraft(): SourceDetectionDraft {
+  return {
+    ...pointToDraft(DEFAULT_POINT_DETECTION_PARAMS),
+    ...extendedToDraft(DEFAULT_EXTENDED_DETECTION_PARAMS),
+  };
+}
+
+function initialNamedPresetId() {
+  const matched = matchNamedPreset(
+    POINT_DETECTION_PRESETS,
+    DEFAULT_POINT_DETECTION_PARAMS,
+  );
+  return matched === CUSTOM_PRESET_ID
+    ? (POINT_DETECTION_PRESETS[0]?.id ?? CUSTOM_PRESET_ID)
+    : matched;
+}
+
 export function SourceDetectionForm({
   isPending,
   bestPreset,
   onSubmit,
 }: Readonly<SourceDetectionFormProps>) {
-  const { draft, presetId, lastNamedId, applyParams, applyDraft, parseDraft } =
-    useNamedPresetDraft({
-      presets: POINT_DETECTION_PRESETS,
-      defaults: DEFAULT_POINT_DETECTION_PARAMS,
-      toDraft: pointToDraft,
-      parseDraft: parsePointDraft,
+  const { watch, getValues, setValues, handleSubmit, reset } =
+    useForm<SourceDetectionDraft>({
+      resolver: zodResolver(sourceDetectionDraftSchema),
+      defaultValues: defaultDraft(),
+      mode: "onChange",
     });
-  const [extendedDraft, setExtendedDraft] = useState(() =>
-    extendedToDraft(DEFAULT_EXTENDED_DETECTION_PARAMS),
-  );
+  const draft = watch();
+  const pointParams = parsePointDraft(draft);
+  const presetId =
+    pointParams === null
+      ? CUSTOM_PRESET_ID
+      : matchNamedPreset(POINT_DETECTION_PRESETS, pointParams);
+  const [lastNamedId, setLastNamedId] = useState(initialNamedPresetId);
+
+  function updateDraftValue<K extends keyof SourceDetectionDraft>(
+    key: K,
+    value: SourceDetectionDraft[K],
+  ) {
+    const next = { ...getValues(), [key]: value };
+    setValues((current) => ({ ...current, [key]: value }), {
+      shouldValidate: true,
+      shouldDirty: true,
+    });
+    const nextPoint = parsePointDraft(next);
+    if (nextPoint !== null) {
+      const matched = matchNamedPreset(POINT_DETECTION_PRESETS, nextPoint);
+      if (matched !== CUSTOM_PRESET_ID) {
+        setLastNamedId(matched);
+      }
+    }
+  }
+
   async function handleBestPreset() {
     const measured = await bestPreset?.request();
     if (measured === undefined) {
       return;
     }
+    const currentDraft = getValues();
     const current = {
-      ...(parseDraft() ?? DEFAULT_POINT_DETECTION_PARAMS),
-      ...(parseExtendedDraft(extendedDraft) ??
+      ...(parsePointDraft(currentDraft) ?? DEFAULT_POINT_DETECTION_PARAMS),
+      ...(parseExtendedDraft(currentDraft) ??
         DEFAULT_EXTENDED_DETECTION_PARAMS),
     };
-    applyParams(bestPresetPointParams(measured, pointDetectionParams(current)));
-    setExtendedDraft(
-      extendedToDraft(
-        bestPresetExtendedParams(measured, extendedDetectionParams(current)),
-      ),
+    const nextPoint = bestPresetPointParams(
+      measured,
+      pointDetectionParams(current),
     );
+    const nextExtended = bestPresetExtendedParams(
+      measured,
+      extendedDetectionParams(current),
+    );
+    reset({
+      ...currentDraft,
+      ...pointToDraft(nextPoint),
+      ...extendedToDraft(nextExtended),
+    });
+    const matched = matchNamedPreset(POINT_DETECTION_PRESETS, nextPoint);
+    if (matched !== CUSTOM_PRESET_ID) {
+      setLastNamedId(matched);
+    }
   }
 
-  function handleSubmit(event: SyntheticEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const point = parseDraft();
-    const extended = parseExtendedDraft(extendedDraft);
+  const submitForm = handleSubmit((values) => {
+    const point = parsePointDraft(values);
+    const extended = parseExtendedDraft(values);
     if (point === null || extended === null) {
       return;
     }
     onSubmit({ ...point, ...extended });
-  }
+  });
 
   return (
     <form
       data-testid="source-detection-form"
       className="flex flex-col gap-4"
-      onSubmit={handleSubmit}
+      onSubmit={submitForm}
     >
       <section
         data-testid="source-group-point"
@@ -109,7 +164,11 @@ export function SourceDetectionForm({
           lastNamedId={lastNamedId}
           disabled={isPending}
           onSelect={(preset) => {
-            applyParams(preset.values);
+            setLastNamedId(preset.id);
+            reset({
+              ...getValues(),
+              ...pointToDraft(preset.values),
+            });
           }}
         />
         {bestPreset !== undefined ? (
@@ -120,7 +179,9 @@ export function SourceDetectionForm({
               data-testid="source-best-preset"
               disabled={isPending || bestPreset.isPending}
               onClick={() => {
-                void handleBestPreset();
+                void handleBestPreset().catch((error) =>
+                  toast.error(formatQueryError(error)),
+                );
               }}
             >
               {bestPreset.isPending ? "Midiendo…" : "Usar el recomendado"}
@@ -154,10 +215,7 @@ export function SourceDetectionForm({
               value={draft[field.key]}
               isPending={isPending}
               onValueChange={(nextValue) => {
-                applyDraft({
-                  ...draft,
-                  [field.key]: nextValue,
-                });
+                updateDraftValue(field.key, nextValue);
               }}
             />
           ))}
@@ -184,13 +242,10 @@ export function SourceDetectionForm({
             <DetectionFieldInput
               key={field.key}
               field={field}
-              value={extendedDraft[field.key]}
+              value={draft[field.key]}
               isPending={isPending}
               onValueChange={(nextValue) => {
-                setExtendedDraft((current) => ({
-                  ...current,
-                  [field.key]: nextValue,
-                }));
+                updateDraftValue(field.key, nextValue);
               }}
             />
           ))}
@@ -210,10 +265,8 @@ export function SourceDetectionForm({
           data-testid="source-detect-reset"
           disabled={isPending}
           onClick={() => {
-            applyParams(DEFAULT_POINT_DETECTION_PARAMS);
-            setExtendedDraft(
-              extendedToDraft(DEFAULT_EXTENDED_DETECTION_PARAMS),
-            );
+            reset(defaultDraft());
+            setLastNamedId(initialNamedPresetId());
           }}
         >
           Restablecer

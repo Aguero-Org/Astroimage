@@ -1,13 +1,15 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { createFileRoute, notFound } from "@tanstack/react-router";
+import { useEffect, useMemo, useState } from "react";
+import { getGetImageInfoQueryOptions } from "@/api/generated/hub/hub";
 import type {
   DetectSourcesParams,
   RenderFitsImageParams,
 } from "@/api/generated/model";
-import { useGetSimbadReferences } from "@/api/generated/simbad/simbad";
+import { Button } from "@/components/ui/button";
 import { HelpHint } from "@/components/ui/help-hint";
 import { ScientificWorkspace } from "@/features/catalogs/components/scientific-workspace";
 import { simbadObjectsInView } from "@/features/catalogs/simbad-references";
+import { useSimbadReferences } from "@/features/catalogs/use-simbad-references";
 import {
   useBestPreset,
   useImageHistogram,
@@ -43,6 +45,7 @@ import type { SourceFocusPulse } from "@/features/images/source-focus-pulse";
 import { useImageWorkspace } from "@/features/images/use-image-workspace";
 import { followOnQueriesEnabled } from "@/features/images/workspace-queries";
 import { useDocumentTitle } from "@/hooks/use-document-title";
+import { ApiError } from "@/lib/api-client";
 
 const DEFAULT_DOCUMENT_TITLE = "Astroimage 🌌";
 
@@ -64,8 +67,61 @@ function sourceId(
 }
 
 export const Route = createFileRoute("/image/$recordId/{-$slug}")({
+  loader: async ({ context, params }) => {
+    try {
+      return await context.queryClient.ensureQueryData(
+        getGetImageInfoQueryOptions(params.recordId),
+      );
+    } catch (error) {
+      if (error instanceof ApiError && error.status === 404) {
+        throw notFound();
+      }
+      throw error;
+    }
+  },
   component: ImageDetailPage,
+  pendingComponent: ImageDetailPending,
+  errorComponent: ImageDetailError,
+  notFoundComponent: ImageDetailNotFound,
 });
+
+function ImageDetailPending() {
+  return (
+    <main className="flex min-h-svh items-center justify-center bg-background p-6">
+      <p className="text-sm text-muted-foreground">Cargando imagen...</p>
+    </main>
+  );
+}
+
+function ImageDetailError({
+  reset,
+}: Readonly<{ error: unknown; reset: () => void }>) {
+  return (
+    <main className="flex min-h-svh flex-col items-center justify-center gap-4 bg-background p-6 text-center">
+      <h1 className="text-xl font-semibold">No se pudo cargar la imagen.</h1>
+      <p className="max-w-md text-sm text-muted-foreground">
+        Ocurrió un problema al recuperar los datos del visor.
+      </p>
+      <Button type="button" onClick={reset}>
+        Reintentar
+      </Button>
+    </main>
+  );
+}
+
+function ImageDetailNotFound() {
+  return (
+    <main className="flex min-h-svh flex-col items-center justify-center gap-4 bg-background p-6 text-center">
+      <h1 className="text-xl font-semibold">Imagen no encontrada</h1>
+      <p className="max-w-md text-sm text-muted-foreground">
+        El registro solicitado no existe o fue eliminado.
+      </p>
+      <a href="/" className="text-sm text-primary underline">
+        Volver al inicio
+      </a>
+    </main>
+  );
+}
 
 function ImageDetailPage() {
   const { recordId, slug } = Route.useParams();
@@ -123,15 +179,14 @@ function ImageWorkspacePage({
     sourcesQueryParams,
     detectionSummary !== undefined,
   );
-  const simbadParams = hdu === null ? undefined : { hdu };
-  const simbadQuery = useGetSimbadReferences(recordId, simbadParams, {
-    query: { enabled: gaia.summary !== undefined, staleTime: 5 * 60 * 1000 },
+  const simbad = useSimbadReferences({
+    recordId,
+    hdu,
+    enabled: gaia.summary !== undefined,
   });
-  const simbadData =
-    simbadQuery.data?.status === 200 ? simbadQuery.data.data : undefined;
   const simbadPointIds = new Set<number>();
   const simbadExtendedIds = new Set<number>();
-  for (const obj of simbadData?.objects ?? []) {
+  for (const obj of simbad.objects) {
     const match = obj.image_match;
     if (!match?.matched) {
       continue;
@@ -153,11 +208,16 @@ function ImageWorkspacePage({
   );
   const pointSources = detected?.point_sources ?? [];
   const extendedSources = detected?.extended_sources ?? [];
-  const visibleSimbadObjects = simbadObjectsInView(
-    simbadData?.objects ?? [],
-    new Set(pointSources.map((source) => source.source_id)),
-    new Set(extendedSources.map((source) => source.source_id)),
+  const visibleSimbadObjects = useMemo(
+    () =>
+      simbadObjectsInView(
+        simbad.objects,
+        new Set(pointSources.map((source) => source.source_id)),
+        new Set(extendedSources.map((source) => source.source_id)),
+      ),
+    [simbad.objects, pointSources, extendedSources],
   );
+  const visibleSimbad = { ...simbad, objects: visibleSimbadObjects };
   const selectedPointId = sourceId(selectedSource, "point");
   const selectedExtendedId = sourceId(selectedSource, "extended");
   const rendered = renderQuery.data;
@@ -172,7 +232,6 @@ function ImageWorkspacePage({
         enabled={gaia.summary !== undefined}
         params={scientificParams}
         preview={preview}
-        hdu={hdu}
         selectedSource={
           selectedSource
             ? {
@@ -181,23 +240,7 @@ function ImageWorkspacePage({
               }
             : null
         }
-        simbadObjects={visibleSimbadObjects}
-        simbadResult={simbadData}
-        simbadIsError={simbadQuery.isError}
-        simbadErrorMessage={
-          simbadQuery.error instanceof Error
-            ? simbadQuery.error.message
-            : "error desconocido"
-        }
-        simbadIsLoading={
-          gaia.summary !== undefined &&
-          simbadData === undefined &&
-          !simbadQuery.isError
-        }
-        simbadIsFetching={simbadQuery.isFetching}
-        onSimbadRetry={() => {
-          void simbadQuery.refetch();
-        }}
+        simbad={visibleSimbad}
         onFocusSource={(sourceId, objectType) => {
           setFocusPulse((current) => ({
             sourceId,

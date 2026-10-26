@@ -1,10 +1,9 @@
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import {
   Pagination,
   PaginationContent,
   PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
 } from "@/components/ui/pagination";
 
 type FilePagerProps = {
@@ -21,39 +20,41 @@ export function FilePager({ page, hasMore, onPage }: Readonly<FilePagerProps>) {
     <Pagination>
       <PaginationContent>
         <PaginationItem>
-          <PaginationPrevious
-            href="#"
-            aria-disabled={page <= 1}
-            className={page <= 1 ? "pointer-events-none opacity-50" : undefined}
-            onClick={(event) => {
-              event.preventDefault();
-              if (page > 1) {
-                onPage(page - 1);
-              }
-            }}
-          />
+          <Button
+            type="button"
+            variant="ghost"
+            aria-label="Ir a la página anterior"
+            className="gap-1 pl-2.5"
+            disabled={page <= 1}
+            onClick={() => onPage(page - 1)}
+          >
+            <ChevronLeft className="h-4 w-4" />
+            <span>Anterior</span>
+          </Button>
         </PaginationItem>
         <PaginationItem>
-          <PaginationLink
-            href="#"
-            isActive
-            onClick={(event) => event.preventDefault()}
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            aria-current="page"
+            disabled
           >
             {page}
-          </PaginationLink>
+          </Button>
         </PaginationItem>
         <PaginationItem>
-          <PaginationNext
-            href="#"
-            aria-disabled={!hasMore}
-            className={hasMore ? undefined : "pointer-events-none opacity-50"}
-            onClick={(event) => {
-              event.preventDefault();
-              if (hasMore) {
-                onPage(page + 1);
-              }
-            }}
-          />
+          <Button
+            type="button"
+            variant="ghost"
+            aria-label="Ir a la página siguiente"
+            className="gap-1 pr-2.5"
+            disabled={!hasMore}
+            onClick={() => onPage(page + 1)}
+          >
+            <span>Siguiente</span>
+            <ChevronRight className="h-4 w-4" />
+          </Button>
         </PaginationItem>
       </PaginationContent>
     </Pagination>

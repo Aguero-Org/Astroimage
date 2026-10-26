@@ -18,9 +18,9 @@ describe("customFetch — JSON", () => {
       }),
     );
 
-    const result = await customFetch<{ data: { status: string } }>("/health");
+    const result = await customFetch<{ status: string }>("/health");
 
-    expect(result.data).toEqual({ status: "ok" });
+    expect(result).toEqual({ status: "ok" });
   });
 
   it("parses a JSON response", async () => {
@@ -30,13 +30,9 @@ describe("customFetch — JSON", () => {
       }),
     );
 
-    const result = await customFetch<{
-      data: { status: string };
-      status: number;
-    }>("/health");
+    const result = await customFetch<{ status: string }>("/health");
 
-    expect(result.status).toBe(200);
-    expect(result.data).toEqual({ status: "ok" });
+    expect(result).toEqual({ status: "ok" });
   });
 
   it("returns undefined data for 204 No Content", async () => {
@@ -46,13 +42,11 @@ describe("customFetch — JSON", () => {
       }),
     );
 
-    const result = await customFetch<{ data: undefined; status: number }>(
-      "/items/1",
-      { method: "DELETE" },
-    );
+    const result = await customFetch<undefined>("/items/1", {
+      method: "DELETE",
+    });
 
-    expect(result.status).toBe(204);
-    expect(result.data).toBeUndefined();
+    expect(result).toBeUndefined();
   });
 });
 
@@ -68,14 +62,10 @@ describe("customFetch — binary", () => {
       }),
     );
 
-    const result = await customFetch<{
-      data: ArrayBuffer;
-      status: number;
-    }>("/image/abc");
+    const result = await customFetch<ArrayBuffer>("/image/abc");
 
-    expect(result.status).toBe(200);
-    expect(result.data).toBeInstanceOf(ArrayBuffer);
-    expect(result.data.byteLength).toBe(payload.length);
+    expect(result).toBeInstanceOf(ArrayBuffer);
+    expect(result.byteLength).toBe(payload.length);
   });
 });
 
@@ -90,9 +80,9 @@ describe("customFetch — text", () => {
       }),
     );
 
-    const result = await customFetch<{ data: string; status: number }>("/logs");
+    const result = await customFetch<string>("/logs");
 
-    expect(result.data).toBe("hello");
+    expect(result).toBe("hello");
   });
 });
 
@@ -139,9 +129,9 @@ describe("customFetch — content type", () => {
       }),
     );
 
-    const result = await customFetch<{ data: Blob; status: number }>("/raw");
+    const result = await customFetch<Blob>("/raw");
 
-    expect(result.data.size).toBe(2);
+    expect(result.size).toBe(2);
   });
 });
 
@@ -254,11 +244,9 @@ describe("customFetch — other bodies", () => {
       }),
     );
 
-    const result = await customFetch<{ data: Blob; status: number }>(
-      "/download",
-    );
+    const result = await customFetch<Blob>("/download");
 
-    expect(result.data.size).toBe(3);
-    expect(await result.data.text()).toHaveLength(3);
+    expect(result.size).toBe(3);
+    expect(await result.text()).toHaveLength(3);
   });
 });

@@ -27,6 +27,7 @@ import type {
 } from '../model';
 
 import { customFetch } from '../../../lib/api-client';
+import type { ErrorType } from '../../../lib/api-client';
 
 
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
@@ -47,25 +48,6 @@ const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKe
   }
   return result;
 };
-
-export type recommendCatalogsResponse200 = {
-  data: CatalogRecommendationResponse | CatalogJobStatusSchema
-  status: 200
-}
-
-export type recommendCatalogsResponse422 = {
-  data: HTTPValidationError
-  status: 422
-}
-
-export type recommendCatalogsResponseSuccess = (recommendCatalogsResponse200) & {
-  headers: Headers;
-};
-export type recommendCatalogsResponseError = (recommendCatalogsResponse422) & {
-  headers: Headers;
-};
-
-export type recommendCatalogsResponse = (recommendCatalogsResponseSuccess | recommendCatalogsResponseError)
 
 export const getRecommendCatalogsUrl = (recordId: string,
     params?: RecommendCatalogsParams,) => {
@@ -95,9 +77,9 @@ export const getRecommendCatalogsUrl = (recordId: string,
  * @summary Rank VizieR catalogues and papers relevant to this image
  */
 export const recommendCatalogs = async (recordId: string,
-    params?: RecommendCatalogsParams, options?: Parameters<typeof customFetch>[1]): Promise<recommendCatalogsResponse> => {
+    params?: RecommendCatalogsParams, options?: Parameters<typeof customFetch>[1]): Promise<CatalogRecommendationResponse | CatalogJobStatusSchema> => {
 
-  return customFetch<recommendCatalogsResponse>(getRecommendCatalogsUrl(recordId,params),
+  return customFetch<CatalogRecommendationResponse | CatalogJobStatusSchema>(getRecommendCatalogsUrl(recordId,params),
   {
     ...options,
     method: 'GET'
@@ -118,7 +100,7 @@ export const getRecommendCatalogsQueryKey = (recordId: string,
     }
 
 
-export const getRecommendCatalogsQueryOptions = <TData = Awaited<ReturnType<typeof recommendCatalogs>>, TError = HTTPValidationError>(recordId: string,
+export const getRecommendCatalogsQueryOptions = <TData = Awaited<ReturnType<typeof recommendCatalogs>>, TError = ErrorType<HTTPValidationError>>(recordId: string,
     params?: RecommendCatalogsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof recommendCatalogs>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
 ) => {
 
@@ -138,10 +120,10 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 }
 
 export type RecommendCatalogsQueryResult = NonNullable<Awaited<ReturnType<typeof recommendCatalogs>>>
-export type RecommendCatalogsQueryError = HTTPValidationError
+export type RecommendCatalogsQueryError = ErrorType<HTTPValidationError>
 
 
-export function useRecommendCatalogs<TData = Awaited<ReturnType<typeof recommendCatalogs>>, TError = HTTPValidationError>(
+export function useRecommendCatalogs<TData = Awaited<ReturnType<typeof recommendCatalogs>>, TError = ErrorType<HTTPValidationError>>(
  recordId: string,
     params: undefined |  RecommendCatalogsParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof recommendCatalogs>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
@@ -152,7 +134,7 @@ export function useRecommendCatalogs<TData = Awaited<ReturnType<typeof recommend
       >, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useRecommendCatalogs<TData = Awaited<ReturnType<typeof recommendCatalogs>>, TError = HTTPValidationError>(
+export function useRecommendCatalogs<TData = Awaited<ReturnType<typeof recommendCatalogs>>, TError = ErrorType<HTTPValidationError>>(
  recordId: string,
     params?: RecommendCatalogsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof recommendCatalogs>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
@@ -163,7 +145,7 @@ export function useRecommendCatalogs<TData = Awaited<ReturnType<typeof recommend
       >, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useRecommendCatalogs<TData = Awaited<ReturnType<typeof recommendCatalogs>>, TError = HTTPValidationError>(
+export function useRecommendCatalogs<TData = Awaited<ReturnType<typeof recommendCatalogs>>, TError = ErrorType<HTTPValidationError>>(
  recordId: string,
     params?: RecommendCatalogsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof recommendCatalogs>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
@@ -172,7 +154,7 @@ export function useRecommendCatalogs<TData = Awaited<ReturnType<typeof recommend
  * @summary Rank VizieR catalogues and papers relevant to this image
  */
 
-export function useRecommendCatalogs<TData = Awaited<ReturnType<typeof recommendCatalogs>>, TError = HTTPValidationError>(
+export function useRecommendCatalogs<TData = Awaited<ReturnType<typeof recommendCatalogs>>, TError = ErrorType<HTTPValidationError>>(
  recordId: string,
     params?: RecommendCatalogsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof recommendCatalogs>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
@@ -190,25 +172,6 @@ export function useRecommendCatalogs<TData = Awaited<ReturnType<typeof recommend
 
 
 
-export type getCatalogsJobResponse200 = {
-  data: CatalogRecommendationResponse | CatalogJobStatusSchema
-  status: 200
-}
-
-export type getCatalogsJobResponse422 = {
-  data: HTTPValidationError
-  status: 422
-}
-
-export type getCatalogsJobResponseSuccess = (getCatalogsJobResponse200) & {
-  headers: Headers;
-};
-export type getCatalogsJobResponseError = (getCatalogsJobResponse422) & {
-  headers: Headers;
-};
-
-export type getCatalogsJobResponse = (getCatalogsJobResponseSuccess | getCatalogsJobResponseError)
-
 export const getGetCatalogsJobUrl = (recordId: string,
     jobId: string,) => {
 
@@ -222,9 +185,9 @@ export const getGetCatalogsJobUrl = (recordId: string,
  * @summary Get Catalogs Job
  */
 export const getCatalogsJob = async (recordId: string,
-    jobId: string, options?: Parameters<typeof customFetch>[1]): Promise<getCatalogsJobResponse> => {
+    jobId: string, options?: Parameters<typeof customFetch>[1]): Promise<CatalogRecommendationResponse | CatalogJobStatusSchema> => {
 
-  return customFetch<getCatalogsJobResponse>(getGetCatalogsJobUrl(recordId,jobId),
+  return customFetch<CatalogRecommendationResponse | CatalogJobStatusSchema>(getGetCatalogsJobUrl(recordId,jobId),
   {
     ...options,
     method: 'GET'
@@ -245,7 +208,7 @@ export const getGetCatalogsJobQueryKey = (recordId: string,
     }
 
 
-export const getGetCatalogsJobQueryOptions = <TData = Awaited<ReturnType<typeof getCatalogsJob>>, TError = HTTPValidationError>(recordId: string,
+export const getGetCatalogsJobQueryOptions = <TData = Awaited<ReturnType<typeof getCatalogsJob>>, TError = ErrorType<HTTPValidationError>>(recordId: string,
     jobId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCatalogsJob>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
 ) => {
 
@@ -265,10 +228,10 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 }
 
 export type GetCatalogsJobQueryResult = NonNullable<Awaited<ReturnType<typeof getCatalogsJob>>>
-export type GetCatalogsJobQueryError = HTTPValidationError
+export type GetCatalogsJobQueryError = ErrorType<HTTPValidationError>
 
 
-export function useGetCatalogsJob<TData = Awaited<ReturnType<typeof getCatalogsJob>>, TError = HTTPValidationError>(
+export function useGetCatalogsJob<TData = Awaited<ReturnType<typeof getCatalogsJob>>, TError = ErrorType<HTTPValidationError>>(
  recordId: string,
     jobId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCatalogsJob>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
@@ -279,7 +242,7 @@ export function useGetCatalogsJob<TData = Awaited<ReturnType<typeof getCatalogsJ
       >, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetCatalogsJob<TData = Awaited<ReturnType<typeof getCatalogsJob>>, TError = HTTPValidationError>(
+export function useGetCatalogsJob<TData = Awaited<ReturnType<typeof getCatalogsJob>>, TError = ErrorType<HTTPValidationError>>(
  recordId: string,
     jobId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCatalogsJob>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
@@ -290,7 +253,7 @@ export function useGetCatalogsJob<TData = Awaited<ReturnType<typeof getCatalogsJ
       >, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetCatalogsJob<TData = Awaited<ReturnType<typeof getCatalogsJob>>, TError = HTTPValidationError>(
+export function useGetCatalogsJob<TData = Awaited<ReturnType<typeof getCatalogsJob>>, TError = ErrorType<HTTPValidationError>>(
  recordId: string,
     jobId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCatalogsJob>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
@@ -299,7 +262,7 @@ export function useGetCatalogsJob<TData = Awaited<ReturnType<typeof getCatalogsJ
  * @summary Get Catalogs Job
  */
 
-export function useGetCatalogsJob<TData = Awaited<ReturnType<typeof getCatalogsJob>>, TError = HTTPValidationError>(
+export function useGetCatalogsJob<TData = Awaited<ReturnType<typeof getCatalogsJob>>, TError = ErrorType<HTTPValidationError>>(
  recordId: string,
     jobId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCatalogsJob>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient

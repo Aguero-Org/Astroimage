@@ -26,6 +26,7 @@ import type {
 } from '../model';
 
 import { customFetch } from '../../../lib/api-client';
+import type { ErrorType } from '../../../lib/api-client';
 
 
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
@@ -47,30 +48,6 @@ const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKe
   return result;
 };
 
-export type getSimbadReferencesResponse200 = {
-  data: SimbadReferencesResponse
-  status: 200
-}
-
-export type getSimbadReferencesResponse404 = {
-  data: void
-  status: 404
-}
-
-export type getSimbadReferencesResponse422 = {
-  data: HTTPValidationError
-  status: 422
-}
-
-export type getSimbadReferencesResponseSuccess = (getSimbadReferencesResponse200) & {
-  headers: Headers;
-};
-export type getSimbadReferencesResponseError = (getSimbadReferencesResponse404 | getSimbadReferencesResponse422) & {
-  headers: Headers;
-};
-
-export type getSimbadReferencesResponse = (getSimbadReferencesResponseSuccess | getSimbadReferencesResponseError)
-
 export const getGetSimbadReferencesUrl = (recordId: string,
     params?: GetSimbadReferencesParams,) => {
   const normalizedParams = new URLSearchParams();
@@ -91,9 +68,9 @@ export const getGetSimbadReferencesUrl = (recordId: string,
  * @summary List SIMBAD objects, identifiers, and bibliography for this image
  */
 export const getSimbadReferences = async (recordId: string,
-    params?: GetSimbadReferencesParams, options?: Parameters<typeof customFetch>[1]): Promise<getSimbadReferencesResponse> => {
+    params?: GetSimbadReferencesParams, options?: Parameters<typeof customFetch>[1]): Promise<SimbadReferencesResponse> => {
 
-  return customFetch<getSimbadReferencesResponse>(getGetSimbadReferencesUrl(recordId,params),
+  return customFetch<SimbadReferencesResponse>(getGetSimbadReferencesUrl(recordId,params),
   {
     ...options,
     method: 'GET'
@@ -114,7 +91,7 @@ export const getGetSimbadReferencesQueryKey = (recordId: string,
     }
 
 
-export const getGetSimbadReferencesQueryOptions = <TData = Awaited<ReturnType<typeof getSimbadReferences>>, TError = void | HTTPValidationError>(recordId: string,
+export const getGetSimbadReferencesQueryOptions = <TData = Awaited<ReturnType<typeof getSimbadReferences>>, TError = ErrorType<void | HTTPValidationError>>(recordId: string,
     params?: GetSimbadReferencesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSimbadReferences>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
 ) => {
 
@@ -134,10 +111,10 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 }
 
 export type GetSimbadReferencesQueryResult = NonNullable<Awaited<ReturnType<typeof getSimbadReferences>>>
-export type GetSimbadReferencesQueryError = void | HTTPValidationError
+export type GetSimbadReferencesQueryError = ErrorType<void | HTTPValidationError>
 
 
-export function useGetSimbadReferences<TData = Awaited<ReturnType<typeof getSimbadReferences>>, TError = void | HTTPValidationError>(
+export function useGetSimbadReferences<TData = Awaited<ReturnType<typeof getSimbadReferences>>, TError = ErrorType<void | HTTPValidationError>>(
  recordId: string,
     params: undefined |  GetSimbadReferencesParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSimbadReferences>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
@@ -148,7 +125,7 @@ export function useGetSimbadReferences<TData = Awaited<ReturnType<typeof getSimb
       >, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetSimbadReferences<TData = Awaited<ReturnType<typeof getSimbadReferences>>, TError = void | HTTPValidationError>(
+export function useGetSimbadReferences<TData = Awaited<ReturnType<typeof getSimbadReferences>>, TError = ErrorType<void | HTTPValidationError>>(
  recordId: string,
     params?: GetSimbadReferencesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSimbadReferences>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
@@ -159,7 +136,7 @@ export function useGetSimbadReferences<TData = Awaited<ReturnType<typeof getSimb
       >, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetSimbadReferences<TData = Awaited<ReturnType<typeof getSimbadReferences>>, TError = void | HTTPValidationError>(
+export function useGetSimbadReferences<TData = Awaited<ReturnType<typeof getSimbadReferences>>, TError = ErrorType<void | HTTPValidationError>>(
  recordId: string,
     params?: GetSimbadReferencesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSimbadReferences>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
@@ -168,7 +145,7 @@ export function useGetSimbadReferences<TData = Awaited<ReturnType<typeof getSimb
  * @summary List SIMBAD objects, identifiers, and bibliography for this image
  */
 
-export function useGetSimbadReferences<TData = Awaited<ReturnType<typeof getSimbadReferences>>, TError = void | HTTPValidationError>(
+export function useGetSimbadReferences<TData = Awaited<ReturnType<typeof getSimbadReferences>>, TError = ErrorType<void | HTTPValidationError>>(
  recordId: string,
     params?: GetSimbadReferencesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSimbadReferences>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient

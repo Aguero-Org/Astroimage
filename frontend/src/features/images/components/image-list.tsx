@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import type { ReactNode } from "react";
 import { useState } from "react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { FilePager } from "@/components/ui/file-pager";
 import { HelpHint } from "@/components/ui/help-hint";
@@ -19,6 +20,7 @@ import { SortControls, type SortField } from "@/components/ui/sort-controls";
 import { SummaryCard, SummaryCardSkeleton } from "@/components/ui/summary-card";
 import { glossaryPath } from "@/features/glossary/entries";
 import { type RecordSortField, useDeleteImage, useImageRecords } from "../api";
+import { formatQueryError } from "../format-query-error";
 import { MastSourceLink } from "../mast-source-link";
 import { resultsView } from "../results-view";
 import { usePagedSort } from "../use-paged-sort";
@@ -77,7 +79,11 @@ const SORT_FIELDS: SortField<RecordSortField>[] = [
 
 export function ImageList({ query }: Readonly<ImageListProps>) {
   const { page, setPage, sort, order, toggleSort } =
-    usePagedSort<RecordSortField>("created_at", "desc");
+    usePagedSort<RecordSortField>(
+      { page: "page", sort: "sort", order: "order" },
+      "created_at",
+      "desc",
+    );
   const [pendingDelete, setPendingDelete] = useState<{
     id: string;
     name: string;
@@ -213,9 +219,13 @@ export function ImageList({ query }: Readonly<ImageListProps>) {
         isPending={remove.isPending}
         onCancel={() => setPendingDelete(null)}
         onConfirm={(id) => {
-          void remove.mutateAsync({ recordId: id }).then(() => {
-            setPendingDelete(null);
-          });
+          remove.mutate(
+            { recordId: id },
+            {
+              onSuccess: () => setPendingDelete(null),
+              onError: (error) => toast.error(formatQueryError(error)),
+            },
+          );
         }}
       />
     </section>

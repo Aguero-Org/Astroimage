@@ -6,11 +6,10 @@ import { GlossaryLink } from "@/features/glossary/glossary-link";
 import { CandidateResults } from "@/features/images/components/candidate-results";
 import { ImageList } from "@/features/images/components/image-list";
 import { ImageSearch } from "@/features/images/components/image-search";
+import { homeSearchSchema } from "@/features/images/home-search";
 
 export const Route = createFileRoute("/")({
-  validateSearch: (search: Record<string, unknown>) => ({
-    query: typeof search.query === "string" ? search.query : "",
-  }),
+  validateSearch: (search) => homeSearchSchema.parse(search),
   component: HomePage,
 });
 
@@ -34,13 +33,21 @@ function HomePage() {
         variant="hero"
         value={query}
         onSearch={(nextQuery) => {
-          navigate({ to: "/", search: { query: nextQuery } });
+          void navigate({
+            to: "/",
+            search: (prev) => ({
+              ...prev,
+              query: nextQuery,
+              page: 1,
+              cpage: 1,
+            }),
+          });
         }}
       />
       <div className="mx-auto flex w-full max-w-4xl flex-col gap-6">
-        <CandidateResults key={`candidates-${query}`} query={query} />
+        <CandidateResults query={query} />
         {query.trim().length > 0 && <Separator />}
-        <ImageList key={`stored-${query}`} query={query} />
+        <ImageList query={query} />
       </div>
     </main>
   );

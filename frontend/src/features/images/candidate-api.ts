@@ -1,4 +1,5 @@
 import { keepPreviousData, useQueryClient } from "@tanstack/react-query";
+import { useEffect } from "react";
 import {
   getGetImageTransferQueryKey,
   getListHubbleImagesQueryKey,
@@ -12,7 +13,6 @@ import type {
   SearchHubbleCandidatesSort,
   TransferStatusSchema,
 } from "@/api/generated/model";
-import { okData } from "@/lib/api-response";
 
 export type CandidateSortField = SearchHubbleCandidatesSort;
 export type CandidateSortOrder = SearchHubbleCandidatesOrder;
@@ -56,7 +56,6 @@ export function useCandidateSearch(
       query: {
         enabled: trimmed.length > 0,
         placeholderData: keepPreviousData,
-        select: (response) => (response.status === 200 ? response.data : null),
       },
     },
   );
@@ -64,22 +63,25 @@ export function useCandidateSearch(
 
 export function useImageTransfer(transferId: string | null) {
   const queryClient = useQueryClient();
-  return useGetImageTransfer(transferId ?? "", {
+  const query = useGetImageTransfer(transferId ?? "", {
     query: {
       enabled: transferId !== null,
-      select: (response) =>
-        response.status === 200 ? response.data : undefined,
-      refetchInterval: (query) => {
-        const status = okData<TransferStatusSchema>(query.state.data)?.status;
-        if (status === "completed") {
-          void queryClient.invalidateQueries({
-            queryKey: getListHubbleImagesQueryKey(),
-          });
-        }
-        return isActiveTransfer(status) ? 1000 : false;
-      },
+      refetchInterval: (query) =>
+        isActiveTransfer(query.state.data?.status) ? 1000 : false,
     },
   });
+
+  const status = query.data?.status;
+
+  useEffect(() => {
+    if (status === "completed") {
+      void queryClient.invalidateQueries({
+        queryKey: getListHubbleImagesQueryKey(),
+      });
+    }
+  }, [queryClient, status]);
+
+  return query;
 }
 
 export function useCancelTransfer() {
@@ -87,11 +89,8 @@ export function useCancelTransfer() {
   return useCancelImageTransfer({
     mutation: {
       onSuccess: (result) => {
-        if (result.status !== 200) {
-          return;
-        }
         queryClient.setQueryData(
-          getGetImageTransferQueryKey(result.data.transfer_id),
+          getGetImageTransferQueryKey(result.transfer_id),
           result,
         );
       },
@@ -104,11 +103,8 @@ export function useResumeTransfer() {
   return useResumeImageTransfer({
     mutation: {
       onSuccess: (result) => {
-        if (result.status !== 200) {
-          return;
-        }
         queryClient.setQueryData(
-          getGetImageTransferQueryKey(result.data.transfer_id),
+          getGetImageTransferQueryKey(result.transfer_id),
           result,
         );
       },

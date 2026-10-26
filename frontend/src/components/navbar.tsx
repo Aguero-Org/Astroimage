@@ -5,7 +5,7 @@ import { GlossaryLink } from "@/features/glossary/glossary-link";
 import { ImageSearch } from "@/features/images/components/image-search";
 
 export function Navbar() {
-  const navigate = useNavigate();
+  const navigate = useNavigate({ from: "/" });
   const search = useSearch({ strict: false });
   const urlQuery = typeof search.query === "string" ? search.query : "";
 
@@ -20,7 +20,12 @@ export function Navbar() {
           data-testid="navbar-logo"
           aria-label="Ir al inicio"
           className="flex shrink-0 cursor-pointer items-center gap-2"
-          onClick={() => navigate({ to: "/", search: { query: "" } })}
+          onClick={() =>
+            void navigate({
+              to: "/",
+              search: (prev) => ({ ...prev, query: "", page: 1, cpage: 1 }),
+            })
+          }
         >
           <BrandLogo className="h-8 w-8" />
           <span className="text-lg font-semibold">Astroimage</span>
@@ -29,7 +34,12 @@ export function Navbar() {
           <ImageSearch
             variant="navbar"
             value={urlQuery}
-            onSearch={(query) => navigate({ to: "/", search: { query } })}
+            onSearch={(query) =>
+              void navigate({
+                to: "/",
+                search: (prev) => ({ ...prev, query, page: 1, cpage: 1 }),
+              })
+            }
           />
           <GlossaryLink testId="navbar-glossary" />
           <ThemeToggle />
