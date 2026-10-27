@@ -5,13 +5,22 @@
  * OpenAPI spec version: 0.1.0
  */
 import {
-  useMutation
+  useMutation,
+  useQuery
 } from '@tanstack/react-query';
 import type {
+  DataTag,
+  DefinedInitialDataOptions,
+  DefinedUseQueryResult,
   MutationFunction,
   QueryClient,
+  QueryFunction,
+  QueryKey,
+  UndefinedInitialDataOptions,
   UseMutationOptions,
-  UseMutationResult
+  UseMutationResult,
+  UseQueryOptions,
+  UseQueryResult
 } from '@tanstack/react-query';
 
 import type {
@@ -31,6 +40,21 @@ import type { ErrorType } from '../../../lib/api-client';
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
 
+
+const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKey: K } => {
+  const result = { queryKey } as T & { queryKey: K };
+  for (const key of Object.keys(query)) {
+    // The explicit queryKey always wins, matching the previous
+    // `{ ...query, queryKey }` spread where it was set last.
+    if (key === 'queryKey') continue;
+    Object.defineProperty(result, key, {
+      enumerable: true,
+      configurable: true,
+      get: () => (query as Record<string, unknown>)[key],
+    });
+  }
+  return result;
+};
 
 export const getExtractFitsMetadataUrl = (params?: ExtractFitsMetadataParams,) => {
   const normalizedParams = new URLSearchParams();
@@ -129,6 +153,12 @@ export const useExtractFitsMetadata = <TError = ErrorType<HTTPValidationError>,
 export const importFitsFiles = async (bodyImportFitsFiles: BodyImportFitsFiles, options?: Parameters<typeof customFetch>[1]): Promise<FitsImportSchema[]> => {
     const formData = new FormData();
 bodyImportFitsFiles.files.forEach(value => formData.append(`files`, value));
+if(bodyImportFitsFiles.description !== undefined && bodyImportFitsFiles.description !== null) {
+ formData.append(`description`, bodyImportFitsFiles.description);
+ }
+if(bodyImportFitsFiles.display_name !== undefined && bodyImportFitsFiles.display_name !== null) {
+ formData.append(`display_name`, bodyImportFitsFiles.display_name);
+ }
 
   return customFetch<FitsImportSchema[]>(getImportFitsFilesUrl(),
   {
@@ -277,3 +307,103 @@ export const useImportFitsFromUrl = <TError = ErrorType<HTTPValidationError>,
       > => {
       return useMutation(getImportFitsFromUrlMutationOptions(options), queryClient);
     }
+    export const getDownloadFitsFileUrl = (recordId: string,) => {
+
+
+
+
+  return `/fits/${recordId}/file`
+}
+
+/**
+ * @summary Download Fits File
+ */
+export const downloadFitsFile = async (recordId: string, options?: Parameters<typeof customFetch>[1]): Promise<unknown> => {
+
+  return customFetch<unknown>(getDownloadFitsFileUrl(recordId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getDownloadFitsFileQueryKey = (recordId: string,) => {
+    return [
+    `/fits/${recordId}/file`
+    ] as const;
+    }
+
+
+export const getDownloadFitsFileQueryOptions = <TData = Awaited<ReturnType<typeof downloadFitsFile>>, TError = ErrorType<HTTPValidationError>>(recordId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof downloadFitsFile>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getDownloadFitsFileQueryKey(recordId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof downloadFitsFile>>> = ({ signal }) => downloadFitsFile(recordId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: recordId !== null && recordId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof downloadFitsFile>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type DownloadFitsFileQueryResult = NonNullable<Awaited<ReturnType<typeof downloadFitsFile>>>
+export type DownloadFitsFileQueryError = ErrorType<HTTPValidationError>
+
+
+export function useDownloadFitsFile<TData = Awaited<ReturnType<typeof downloadFitsFile>>, TError = ErrorType<HTTPValidationError>>(
+ recordId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof downloadFitsFile>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof downloadFitsFile>>,
+          TError,
+          Awaited<ReturnType<typeof downloadFitsFile>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useDownloadFitsFile<TData = Awaited<ReturnType<typeof downloadFitsFile>>, TError = ErrorType<HTTPValidationError>>(
+ recordId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof downloadFitsFile>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof downloadFitsFile>>,
+          TError,
+          Awaited<ReturnType<typeof downloadFitsFile>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useDownloadFitsFile<TData = Awaited<ReturnType<typeof downloadFitsFile>>, TError = ErrorType<HTTPValidationError>>(
+ recordId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof downloadFitsFile>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Download Fits File
+ */
+
+export function useDownloadFitsFile<TData = Awaited<ReturnType<typeof downloadFitsFile>>, TError = ErrorType<HTTPValidationError>>(
+ recordId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof downloadFitsFile>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getDownloadFitsFileQueryOptions(recordId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+

@@ -23,9 +23,11 @@ import { type RecordSortField, useDeleteImage, useImageRecords } from "../api";
 import { formatQueryError } from "../format-query-error";
 import { MastSourceLink } from "../mast-source-link";
 import { resultsView } from "../results-view";
+import { StoredFitsLink } from "../stored-fits-link";
 import { usePagedSort } from "../use-paged-sort";
 import { CatalogFacts, catalogLabels } from "./catalog-facts";
 import { DeleteImageDialog } from "./delete-image-dialog";
+import { ImportFitsControl } from "./import-fits-dialog";
 
 const filenameGlossary = { glossaryId: "slug-archivo" } as const;
 
@@ -112,14 +114,17 @@ export function ImageList({ query }: Readonly<ImageListProps>) {
             abre el visor.
           </HelpHint>
         </h2>
-        {view.status === "ready" && (
-          <SortControls
-            fields={SORT_FIELDS}
-            sort={sort}
-            order={order}
-            onSort={toggleSort}
-          />
-        )}
+        <div className="flex items-center gap-1">
+          <ImportFitsControl />
+          {view.status === "ready" && (
+            <SortControls
+              fields={SORT_FIELDS}
+              sort={sort}
+              order={order}
+              onSort={toggleSort}
+            />
+          )}
+        </div>
       </div>
       {view.status === "loading" && (
         <output className="block">
@@ -164,13 +169,20 @@ export function ImageList({ query }: Readonly<ImageListProps>) {
                 </RecordViewerLink>
               }
               detail={
-                <RecordViewerLink
-                  record={record}
-                  testId="image-list-item-open"
-                  className="text-primary underline-offset-2 hover:underline dark:text-ring"
-                >
-                  {record.name}
-                </RecordViewerLink>
+                <>
+                  <RecordViewerLink
+                    record={record}
+                    testId="image-list-item-open"
+                    className="text-primary underline-offset-2 hover:underline dark:text-ring"
+                  >
+                    {record.name}
+                  </RecordViewerLink>
+                  {record.description ? (
+                    <span className="mt-1 block text-foreground">
+                      {record.description}
+                    </span>
+                  ) : null}
+                </>
               }
               meta={
                 <CatalogFacts
@@ -186,7 +198,12 @@ export function ImageList({ query }: Readonly<ImageListProps>) {
                 <>
                   {record.data_uri ? (
                     <MastSourceLink dataUri={record.data_uri} />
-                  ) : null}
+                  ) : (
+                    <StoredFitsLink
+                      recordId={record.record_id}
+                      filename={record.name}
+                    />
+                  )}
                   <Button
                     type="button"
                     size="icon"

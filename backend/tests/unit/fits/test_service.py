@@ -316,6 +316,29 @@ async def test_import_from_url_stores_the_downloaded_file(monkeypatch: pytest.Mo
         await service.import_from_url("https://example.test/m31.fits", max_bytes=100)
 
 
+async def test_import_from_url_resolves_a_mast_uri(monkeypatch: pytest.MonkeyPatch) -> None:
+    seen: list[str] = []
+
+    async def _download(url: str, max_bytes: int) -> bytes:
+        seen.append(url)
+        assert max_bytes == 100
+        return b"payload"
+
+    monkeypatch.setattr("astroimage.fits.service._download_fits", _download)
+    service = _service(_FakeStorage(), _FakeRepository())
+
+    stored = await service.import_from_url(
+        "mast://HST/product/nebula.fits",
+        max_bytes=100,
+    )
+
+    assert stored.source_url == "mast:HST/product/nebula.fits"
+    assert stored.original_filename == "nebula.fits"
+    assert seen == [
+        "https://mast.stsci.edu/api/v0.1/Download/file?uri=mast:HST/product/nebula.fits"
+    ]
+
+
 async def test_import_from_url_rejects_a_non_http_address() -> None:
     service = _service(_FakeStorage(), _FakeRepository())
 
@@ -332,15 +355,19 @@ def test_summary_uses_the_filename_when_mast_provenance_is_missing() -> None:
         size_bytes=4,
         metadata_payload={
             "instrument": {"instrument": "FORS2", "filter_name": "B", "date_obs": "2020-01-02"},
+            "header": {"PROPOSID": 12058},
+            "description": "Campo de M31",
+            "display_name": "M31",
         },
         created_at=datetime(2026, 10, 27, tzinfo=UTC),
     )
 
     summary = FitsService._to_summary(record)
 
-    assert summary.display_name == "local.fits"
+    assert summary.display_name == "M31"
     assert summary.instrument == "FORS2"
-    assert summary.proposal_id is None
+    assert summary.proposal_id == "12058"
+    assert summary.description == "Campo de M31"
     assert summary.filters == "B"
     assert summary.observed_at == "2020-01-02"
     assert summary.data_uri is None

@@ -6,7 +6,7 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
-from urllib.parse import unquote, urlsplit
+from urllib.parse import quote, unquote, urlsplit
 from uuid import UUID, uuid4
 
 import httpx
@@ -30,21 +30,41 @@ def _keeping_mast(metadata: dict[str, Any], previous: object) -> dict[str, Any]:
 
 
 def _text_or_none(value: object) -> str | None:
-    if isinstance(value, str) and value != "":
-        return value
+    if isinstance(value, bool):
+        return None
+    if isinstance(value, int):
+        return str(value)
+    if isinstance(value, float):
+        return str(int(value)) if value.is_integer() else str(value)
+    if isinstance(value, str) and value.strip() != "":
+        return value.strip()
     return None
+
+
+def _optional_text(value: str | None, *, limit: int, message: str) -> str | None:
+    if value is None:
+        return None
+    text = value.strip()
+    if text == "":
+        return None
+    if len(text) > limit:
+        raise BadRequestError(message)
+    return text
 
 
 def _local_fields(
     record: FitsRecord,
-) -> tuple[str, str | None, None, str | None, str | None, None]:
+) -> tuple[str, str | None, str | None, str | None, str | None, None]:
     payload = record.metadata_payload if isinstance(record.metadata_payload, dict) else {}
     raw_instrument = payload.get("instrument")
     instrument = raw_instrument if isinstance(raw_instrument, dict) else {}
+    raw_header = payload.get("header")
+    header = raw_header if isinstance(raw_header, dict) else {}
+    proposal = _text_or_none(header.get("PROPOSID")) or _text_or_none(header.get("PROPNUM"))
     return (
-        record.original_filename,
+        _text_or_none(payload.get("display_name")) or record.original_filename,
         _text_or_none(instrument.get("instrument")),
-        None,
+        proposal,
         _text_or_none(instrument.get("filter_name")),
         _text_or_none(instrument.get("date_obs")),
         None,
@@ -69,10 +89,29 @@ def _filename_from_url(url: str) -> str:
     return name
 
 
-def _require_http_url(url: str) -> None:
-    parts = urlsplit(url.strip())
-    if parts.scheme not in {"http", "https"} or parts.netloc == "":
-        raise BadRequestError("The FITS URL must be an absolute http or https address")
+_MAST_DOWNLOAD = "https://mast.stsci.edu/api/v0.1/Download/file"
+
+
+def _normalize_import_url(url: str) -> str:
+    stripped = url.strip()
+    parts = urlsplit(stripped)
+    scheme = parts.scheme.casefold()
+    if scheme in {"http", "https"} and parts.netloc != "":
+        return stripped
+    if scheme != "mast":
+        raise BadRequestError("The FITS URL must be an absolute http, https, or MAST address")
+    body = parts.path.lstrip("/")
+    if parts.netloc != "":
+        body = parts.netloc if body == "" else f"{parts.netloc}/{body}"
+    if body == "":
+        raise BadRequestError("The FITS URL must be an absolute http, https, or MAST address")
+    return f"mast:{body}"
+
+
+def _fetch_url(normalized: str) -> str:
+    if normalized.casefold().startswith("mast:"):
+        return f"{_MAST_DOWNLOAD}?uri={quote(normalized, safe=':/')}"
+    return normalized
 
 
 async def _download_fits(url: str, max_bytes: int) -> bytes:
@@ -212,6 +251,8 @@ class FitsService:
         provenance: dict[str, Any] | None = None,
         content_hash: str | None = None,
         source_url: str | None = None,
+        description: str | None = None,
+        display_name: str | None = None,
     ) -> FitsRecord:
         with _tracer.start_as_current_span("fits_store_bytes") as span:
             span.set_attribute("source_name", source_name)
@@ -232,6 +273,20 @@ class FitsService:
             object_key = self._storage.object_key_for(record_id, source_name)
             if provenance is not None:
                 metadata_payload = {**metadata_payload, "mast": provenance}
+            text = _optional_text(
+                description,
+                limit=500,
+                message="The description is too long",
+            )
+            title = _optional_text(
+                display_name,
+                limit=200,
+                message="The title is too long",
+            )
+            if text is not None:
+                metadata_payload = {**metadata_payload, "description": text}
+            if title is not None:
+                metadata_payload = {**metadata_payload, "display_name": title}
             record = FitsRecord(
                 id=record_id,
                 object_key=object_key,
@@ -267,6 +322,8 @@ class FitsService:
         source_name: str,
         max_bytes: int,
         source_url: str | None = None,
+        description: str | None = None,
+        display_name: str | None = None,
     ) -> FitsRecord:
         if len(payload) > max_bytes:
             raise BadRequestError("FITS file exceeds the size limit")
@@ -279,20 +336,30 @@ class FitsService:
             source_name=source_name,
             content_hash=content_hash,
             source_url=source_url,
+            description=description,
+            display_name=display_name,
         )
 
-    async def import_from_url(self, url: str, *, max_bytes: int) -> FitsRecord:
-        _require_http_url(url)
-        normalized = url.strip()
+    async def import_from_url(
+        self,
+        url: str,
+        *,
+        max_bytes: int,
+        description: str | None = None,
+        display_name: str | None = None,
+    ) -> FitsRecord:
+        normalized = _normalize_import_url(url)
         existing = await self._repository.find_by_source_url(normalized)
         if existing is not None:
             raise ConflictError("This URL is already imported")
-        payload = await _download_fits(normalized, max_bytes)
+        payload = await _download_fits(_fetch_url(normalized), max_bytes)
         return await self.import_bytes(
             payload,
             source_name=_filename_from_url(normalized),
             max_bytes=max_bytes,
             source_url=normalized,
+            description=description,
+            display_name=display_name,
         )
 
     async def update_record_metadata(
@@ -333,7 +400,11 @@ class FitsService:
         payload = record.metadata_payload
         document = payload if isinstance(payload, dict) else {}
         mast = document.get("mast")
-        public = {key: value for key, value in document.items() if key != "mast"}
+        public = {
+            key: value
+            for key, value in document.items()
+            if key not in {"mast", "description", "display_name"}
+        }
         if isinstance(mast, dict):
             catalog_name = mast.get("display_name")
             if isinstance(catalog_name, str) and catalog_name != "":
@@ -396,6 +467,11 @@ class FitsService:
             created_at=record.created_at,
             size_bytes=record.size_bytes,
             data_uri=data_uri,
+            description=_text_or_none(
+                record.metadata_payload.get("description")
+                if isinstance(record.metadata_payload, dict)
+                else None
+            ),
         )
 
     async def get_payload(self, record: FitsRecord) -> bytes:

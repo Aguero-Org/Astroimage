@@ -1,5 +1,9 @@
 import { keepPreviousData, useQueryClient } from "@tanstack/react-query";
 import {
+  useImportFitsFiles,
+  useImportFitsFromUrl,
+} from "@/api/generated/fits/fits";
+import {
   getListHubbleImagesQueryKey,
   useDeleteHubbleImage,
   useGetImageInfo,
@@ -106,6 +110,33 @@ export function useDeleteImage() {
           queryKey: getListHubbleImagesQueryKey(),
         });
       },
+    },
+  });
+}
+
+function useRefreshImageList() {
+  const queryClient = useQueryClient();
+  return async () => {
+    await queryClient.invalidateQueries({
+      queryKey: getListHubbleImagesQueryKey(),
+    });
+  };
+}
+
+export function useImportLocalFits() {
+  const refresh = useRefreshImageList();
+  return useImportFitsFiles({
+    mutation: {
+      onSuccess: refresh,
+    },
+  });
+}
+
+export function useImportFitsUrl() {
+  const refresh = useRefreshImageList();
+  return useImportFitsFromUrl({
+    mutation: {
+      onSuccess: refresh,
     },
   });
 }

@@ -11,4 +11,6 @@ export interface FitsUrlImportRequest {
      * @maxLength 2048
      */
   url: string;
+  description?: string | null;
+  display_name?: string | null;
 }

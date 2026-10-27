@@ -78,6 +78,24 @@ async def test_import_fits_file_is_listed_without_mast_provenance(client: AsyncC
 
 
 @pytest.mark.asyncio
+async def test_download_imported_fits_file(client: AsyncClient) -> None:
+    payload = _sample_fits_bytes().replace(b"VLT", b"HST")
+    created = await client.post(
+        "/fits",
+        files={"files": ("vlt.fits", payload, "application/fits")},
+    )
+    assert created.status_code == 200
+    record_id = created.json()[0]["record_id"]
+
+    downloaded = await client.get(f"/fits/{record_id}/file")
+
+    assert downloaded.status_code == 200
+    assert downloaded.headers["content-type"] == "application/fits"
+    assert downloaded.headers["content-disposition"] == 'attachment; filename="vlt.fits"'
+    assert downloaded.content == payload
+
+
+@pytest.mark.asyncio
 async def test_import_fits_rejects_a_cube(client: AsyncClient) -> None:
     buffer = BytesIO()
     fits.PrimaryHDU(np.ones((2, 2, 2))).writeto(buffer)

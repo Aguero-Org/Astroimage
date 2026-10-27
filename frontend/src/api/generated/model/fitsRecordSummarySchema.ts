@@ -17,4 +17,5 @@ export interface FitsRecordSummarySchema {
   created_at: string;
   size_bytes: number;
   data_uri?: string | null;
+  description?: string | null;
 }

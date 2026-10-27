@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 from typing import Annotated
+from uuid import UUID
 
-from fastapi import APIRouter, Depends, File, UploadFile
+from fastapi import APIRouter, Depends, File, Form, Path, UploadFile
+from fastapi.responses import Response
 
 from astroimage.config import Settings, get_settings
 from astroimage.fits.deps import fits_service_dependency
@@ -14,6 +16,14 @@ from astroimage.shared.query import HduIndex
 router = APIRouter(prefix="/fits", tags=["fits"])
 
 FitsUpload = Annotated[UploadFile, File(description="FITS file to inspect")]
+RecordId = Annotated[UUID, Path(description="Stored FITS record id")]
+
+
+def _attachment_name(filename: str) -> str:
+    cleaned = filename.replace('"', "").replace("\r", "").replace("\n", "")
+    if cleaned.strip() == "":
+        return "image.fits"
+    return cleaned
 
 
 @router.post(
@@ -45,6 +55,8 @@ async def import_fits_files(
     service: Annotated[FitsService, Depends(fits_service_dependency)],
     settings: Annotated[Settings, Depends(get_settings)],
     files: Annotated[list[UploadFile], File(description="One or more FITS files")],
+    description: Annotated[str | None, Form()] = None,
+    display_name: Annotated[str | None, Form()] = None,
 ) -> list[FitsImportSchema]:
     if not files:
         raise BadRequestError("At least one FITS file is required")
@@ -56,6 +68,8 @@ async def import_fits_files(
             payload,
             source_name=source_name,
             max_bytes=settings.fits_import_max_bytes,
+            description=description,
+            display_name=display_name,
         )
         imported.append(FitsImportSchema(record_id=record.id, slug=record.slug))
     return imported
@@ -71,5 +85,29 @@ async def import_fits_from_url(
     service: Annotated[FitsService, Depends(fits_service_dependency)],
     settings: Annotated[Settings, Depends(get_settings)],
 ) -> FitsImportSchema:
-    record = await service.import_from_url(body.url, max_bytes=settings.fits_import_max_bytes)
+    record = await service.import_from_url(
+        body.url,
+        max_bytes=settings.fits_import_max_bytes,
+        description=body.description,
+        display_name=body.display_name,
+    )
     return FitsImportSchema(record_id=record.id, slug=record.slug)
+
+
+@router.get(
+    "/{record_id}/file",
+    operation_id="downloadFitsFile",
+    responses={200: {"content": {"application/fits": {}}}},
+)
+async def download_fits_file(
+    record_id: RecordId,
+    service: Annotated[FitsService, Depends(fits_service_dependency)],
+) -> Response:
+    record = await service.get_record(record_id)
+    payload = await service.get_payload(record)
+    filename = _attachment_name(record.original_filename)
+    return Response(
+        content=payload,
+        media_type="application/fits",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )

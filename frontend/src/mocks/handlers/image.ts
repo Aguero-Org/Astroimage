@@ -10,6 +10,12 @@ import {
 const apiBaseUrl = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000";
 
 export const imageHandlers = [
+  http.post(`${apiBaseUrl}/fits`, () =>
+    HttpResponse.json([{ record_id: "imported-1", slug: "local.fits" }]),
+  ),
+  http.post(`${apiBaseUrl}/fits/from-url`, () =>
+    HttpResponse.json({ record_id: "imported-2", slug: "remote.fits" }),
+  ),
   http.get(`${apiBaseUrl}/image`, ({ request }) => {
     const url = new URL(request.url);
     const cuerpoCeleste = url.searchParams.get("cuerpo_celeste");

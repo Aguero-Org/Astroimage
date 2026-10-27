@@ -8,4 +8,6 @@
 export interface BodyImportFitsFiles {
   /** One or more FITS files */
   files: Blob[];
+  description?: string | null;
+  display_name?: string | null;
 }

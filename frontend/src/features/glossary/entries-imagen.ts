@@ -10,6 +10,15 @@ export const IMAGEN_ENTRIES: GlossaryEntry[] = [
     where: "Inicio (listado) y visor",
   },
   {
+    id: "importar-fits",
+    name: "Importar FITS",
+    group: "imagen",
+    what: "Carga de un archivo FITS propio, desde la computadora o desde un enlace http, https o mast:.",
+    inApp:
+      "El inicio guarda el archivo en el servidor si es una imagen 2D. Arrastrar un archivo sobre la página abre la importación. Un archivo o enlace repetido no se vuelve a guardar.",
+    where: "Inicio (listado)",
+  },
+  {
     id: "slug-archivo",
     name: "Nombre de archivo",
     group: "imagen",

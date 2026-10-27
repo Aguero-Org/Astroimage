@@ -108,6 +108,7 @@ class FitsRecordSummarySchema(BaseModel):
     created_at: datetime
     size_bytes: int
     data_uri: str | None = None
+    description: str | None = None
 
 
 class FitsImportSchema(BaseModel):
@@ -121,3 +122,5 @@ class FitsUrlImportRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     url: str = Field(min_length=1, max_length=2048)
+    description: str | None = Field(default=None, max_length=500)
+    display_name: str | None = Field(default=None, max_length=200)
