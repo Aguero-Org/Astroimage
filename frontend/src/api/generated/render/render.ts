@@ -208,7 +208,7 @@ export const getGetFitsPreviewQueryKey = (recordId: string,
     }
 
 
-export const getGetFitsPreviewQueryOptions = <TData = Awaited<ReturnType<typeof getFitsPreview>>, TError = ErrorType<HTTPValidationError>>(recordId: string,
+export const getGetFitsPreviewQueryOptions = <TData = Awaited<ReturnType<typeof getFitsPreview>>, TError = ErrorType<void | HTTPValidationError>>(recordId: string,
     params?: GetFitsPreviewParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getFitsPreview>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
 ) => {
 
@@ -228,10 +228,10 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 }
 
 export type GetFitsPreviewQueryResult = NonNullable<Awaited<ReturnType<typeof getFitsPreview>>>
-export type GetFitsPreviewQueryError = ErrorType<HTTPValidationError>
+export type GetFitsPreviewQueryError = ErrorType<void | HTTPValidationError>
 
 
-export function useGetFitsPreview<TData = Awaited<ReturnType<typeof getFitsPreview>>, TError = ErrorType<HTTPValidationError>>(
+export function useGetFitsPreview<TData = Awaited<ReturnType<typeof getFitsPreview>>, TError = ErrorType<void | HTTPValidationError>>(
  recordId: string,
     params: undefined |  GetFitsPreviewParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getFitsPreview>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
@@ -242,7 +242,7 @@ export function useGetFitsPreview<TData = Awaited<ReturnType<typeof getFitsPrevi
       >, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetFitsPreview<TData = Awaited<ReturnType<typeof getFitsPreview>>, TError = ErrorType<HTTPValidationError>>(
+export function useGetFitsPreview<TData = Awaited<ReturnType<typeof getFitsPreview>>, TError = ErrorType<void | HTTPValidationError>>(
  recordId: string,
     params?: GetFitsPreviewParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getFitsPreview>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
@@ -253,7 +253,7 @@ export function useGetFitsPreview<TData = Awaited<ReturnType<typeof getFitsPrevi
       >, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetFitsPreview<TData = Awaited<ReturnType<typeof getFitsPreview>>, TError = ErrorType<HTTPValidationError>>(
+export function useGetFitsPreview<TData = Awaited<ReturnType<typeof getFitsPreview>>, TError = ErrorType<void | HTTPValidationError>>(
  recordId: string,
     params?: GetFitsPreviewParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getFitsPreview>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
@@ -262,7 +262,7 @@ export function useGetFitsPreview<TData = Awaited<ReturnType<typeof getFitsPrevi
  * @summary Get Fits Preview
  */
 
-export function useGetFitsPreview<TData = Awaited<ReturnType<typeof getFitsPreview>>, TError = ErrorType<HTTPValidationError>>(
+export function useGetFitsPreview<TData = Awaited<ReturnType<typeof getFitsPreview>>, TError = ErrorType<void | HTTPValidationError>>(
  recordId: string,
     params?: GetFitsPreviewParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getFitsPreview>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient

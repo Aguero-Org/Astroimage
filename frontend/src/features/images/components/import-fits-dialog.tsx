@@ -275,7 +275,7 @@ export function ImportFitsControl() {
                 data-testid="import-fits-source-files"
                 onChange={() => setSource("files")}
               />
-              Archivos de la computadora
+              <span>Archivos de la computadora</span>
             </Label>
             <Label className="cursor-pointer font-normal">
               <input
@@ -287,7 +287,7 @@ export function ImportFitsControl() {
                 data-testid="import-fits-source-url"
                 onChange={() => setSource("url")}
               />
-              Enlace
+              <span>Enlace</span>
             </Label>
           </div>
           {source === "files" ? (

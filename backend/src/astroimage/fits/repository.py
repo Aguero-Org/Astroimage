@@ -50,6 +50,10 @@ class FitsRepository:
             raise LookupError(f"FITS object not found: {object_key}")
         return record
 
+    async def list_record_ids(self) -> list[UUID]:
+        result = await self._session.execute(select(FitsRecord.id))
+        return list(result.scalars().all())
+
     async def list(self, *, offset: int = 0, limit: int = 100) -> Sequence[FitsRecord]:
         statement = (
             select(FitsRecord).order_by(FitsRecord.created_at.desc()).offset(offset).limit(limit)

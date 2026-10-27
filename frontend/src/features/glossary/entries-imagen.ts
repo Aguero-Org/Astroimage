@@ -24,7 +24,7 @@ export const IMAGEN_ENTRIES: GlossaryEntry[] = [
     group: "imagen",
     what: "Palabras que agregás a una imagen ya guardada para reconocerla.",
     inApp:
-      "Se editan desde la ficha del inicio. No modifican el archivo FITS ni el objeto guardado.",
+      "Se agregan con Enter o una coma en el diálogo de edición y se quitan con la cruz. No modifican el archivo FITS.",
     where: "Inicio (listado)",
   },
   {

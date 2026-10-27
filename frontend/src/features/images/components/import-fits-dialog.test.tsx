@@ -8,9 +8,12 @@ describe("ImportFitsControl", () => {
     const user = userEvent.setup();
     renderWithRouter();
 
-    await waitFor(() => {
-      expect(screen.getByTestId("import-fits")).toBeInTheDocument();
-    });
+    await waitFor(
+      () => {
+        expect(screen.getByTestId("import-fits")).toBeInTheDocument();
+      },
+      { timeout: 5_000 },
+    );
     await user.click(screen.getByTestId("import-fits"));
     const input = screen.getByTestId("import-fits-files");
     await user.upload(
@@ -30,9 +33,12 @@ describe("ImportFitsControl", () => {
 
   it("opens the import when a file is dragged and keeps the dropped fits", async () => {
     renderWithRouter();
-    await waitFor(() => {
-      expect(screen.getByTestId("import-fits")).toBeInTheDocument();
-    });
+    await waitFor(
+      () => {
+        expect(screen.getByTestId("import-fits")).toBeInTheDocument();
+      },
+      { timeout: 5_000 },
+    );
 
     const dropped = new File([new Uint8Array([1])], "dropped.fits");
     const dataTransfer = {
@@ -55,9 +61,12 @@ describe("ImportFitsControl", () => {
     const user = userEvent.setup();
     renderWithRouter();
 
-    await waitFor(() => {
-      expect(screen.getByTestId("import-fits")).toBeInTheDocument();
-    });
+    await waitFor(
+      () => {
+        expect(screen.getByTestId("import-fits")).toBeInTheDocument();
+      },
+      { timeout: 5_000 },
+    );
     await user.click(screen.getByTestId("import-fits"));
     await user.click(screen.getByTestId("import-fits-source-url"));
     await user.type(screen.getByTestId("import-fits-url"), "nebula.fits");

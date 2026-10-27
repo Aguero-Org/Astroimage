@@ -10,4 +10,4 @@ class PreviewScheduler(Protocol):
 
 class NullPreviewScheduler:
     def schedule(self, record_id: UUID) -> None:
-        return None
+        del record_id

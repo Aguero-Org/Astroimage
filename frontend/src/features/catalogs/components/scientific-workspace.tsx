@@ -169,6 +169,33 @@ type ScientificSidebarProps = {
   simbad: SimbadReferencesView;
 };
 
+type WorkspaceTab = "catalogs" | "papers" | "simbad";
+
+function visibleCount(
+  tab: WorkspaceTab,
+  catalogues: number,
+  publications: number,
+  simbadObjects: number,
+): number {
+  if (tab === "catalogs") {
+    return catalogues;
+  }
+  if (tab === "papers") {
+    return publications;
+  }
+  return simbadObjects;
+}
+
+function tabExplainer(tab: WorkspaceTab): string {
+  if (tab === "catalogs") {
+    return "Un catálogo es una tabla de fuentes del cielo (estrellas, galaxias, etc.) con sus posiciones y propiedades. Se listan los que cubren esta imagen.";
+  }
+  if (tab === "papers") {
+    return "Una publicación es un trabajo científico sobre los datos. Se listan los artículos de cada catálogo y las referencias de su documentación.";
+  }
+  return "SIMBAD reúne objetos astronómicos identificados, sus alias, propiedades y bibliografía. Se muestran los objetos que coinciden con las fuentes detectadas en esta imagen.";
+}
+
 function ScientificSidebar({
   recordId,
   enabled,
@@ -251,12 +278,12 @@ function ScientificSidebar({
   const items = result?.recommendations ?? [];
   const catalogues = filterCatalogues(items, { query, match });
   const papers = filterPublications(publications, query, kind);
-  const activeCount =
-    tab === "catalogs"
-      ? items.length
-      : tab === "papers"
-        ? publications.length
-        : simbad.objects.length;
+  const activeCount = visibleCount(
+    tab,
+    items.length,
+    publications.length,
+    simbad.objects.length,
+  );
   const showControls = tab !== "simbad" && activeCount >= 2;
   const updating = isFetching && result !== undefined;
   const region = regionDescription(result);
@@ -382,11 +409,7 @@ function ScientificSidebar({
             data-testid="scientific-explainer"
             className="px-2 pt-2 text-[11px] text-muted-foreground"
           >
-            {tab === "catalogs"
-              ? "Un catálogo es una tabla de fuentes del cielo (estrellas, galaxias, etc.) con sus posiciones y propiedades. Se listan los que cubren esta imagen."
-              : tab === "papers"
-                ? "Una publicación es un trabajo científico sobre los datos. Se listan los artículos de cada catálogo y las referencias de su documentación."
-                : "SIMBAD reúne objetos astronómicos identificados, sus alias, propiedades y bibliografía. Se muestran los objetos que coinciden con las fuentes detectadas en esta imagen."}
+            {tabExplainer(tab)}
           </p>
 
           {showControls ? (

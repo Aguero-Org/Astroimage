@@ -11,25 +11,21 @@ export function ImagePreview({ recordId, name }: Readonly<ImagePreviewProps>) {
   const [phase, setPhase] = useState<"loading" | "ready" | "hidden">("loading");
   const src = `${apiBaseUrl()}/image/${recordId}/preview?size=256`;
   return (
-    <div className="relative size-16 shrink-0 overflow-hidden rounded-md bg-muted">
+    <div className="relative size-32 shrink-0 overflow-hidden bg-muted">
+      <img
+        src={src}
+        alt={name}
+        className={`absolute inset-0 size-full object-cover ${phase === "hidden" ? "invisible" : ""}`}
+        data-testid="image-preview"
+        onLoad={() => setPhase("ready")}
+        onError={() => setPhase("hidden")}
+      />
       {phase === "loading" ? (
         <Skeleton
-          className="absolute inset-0 size-16"
+          className="absolute inset-0 size-full"
           data-testid="image-preview-skeleton"
         />
       ) : null}
-      {phase === "hidden" ? null : (
-        <img
-          src={src}
-          alt={name}
-          width={64}
-          height={64}
-          className="size-16 object-cover"
-          data-testid="image-preview"
-          onLoad={() => setPhase("ready")}
-          onError={() => setPhase("hidden")}
-        />
-      )}
     </div>
   );
 }

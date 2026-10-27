@@ -174,7 +174,10 @@ export const imageHandlers = [
       created_at: "2026-01-01T00:00:00Z",
       size_bytes: 1,
       data_uri: null,
-      description: body.description || null,
+      description:
+        body.description === undefined || body.description === ""
+          ? null
+          : body.description,
       tags: body.tags ?? [],
     });
   }),

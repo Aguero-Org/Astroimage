@@ -41,8 +41,8 @@ async def list_astro_images(
         str | None,
         Query(
             description=(
-                "Case-insensitive match on display name, filename, instrument, "
-                "proposal id, or MAST data URI"
+                "Case-insensitive match on title, description, tags, filename, "
+                "instrument, proposal id, or MAST data URI"
             ),
         ),
     ] = None,

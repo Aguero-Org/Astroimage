@@ -2,6 +2,16 @@ import type { PointSourceSchema } from "@/api/generated/model";
 import { cn } from "@/lib/utils";
 import { SimbadMatchBadge } from "./simbad-match-badge";
 
+function markerFace(simbadMatch: boolean, gaiaMatch: boolean): string {
+  if (simbadMatch) {
+    return "border-simbad bg-simbad/40";
+  }
+  if (gaiaMatch) {
+    return "border-gaia bg-gaia/40";
+  }
+  return "border-primary bg-primary/30";
+}
+
 function markerRing(
   selected: boolean,
   gaiaMatch: boolean,
@@ -51,11 +61,7 @@ export function SourceMarker({
       title={label}
       className={cn(
         "pointer-events-auto relative block size-4 cursor-pointer rounded-full border-2 shadow-sm ring-2",
-        simbadMatch
-          ? "border-simbad bg-simbad/40"
-          : gaiaMatch
-            ? "border-gaia bg-gaia/40"
-            : "border-primary bg-primary/30",
+        markerFace(simbadMatch, gaiaMatch),
         markerRing(selected, gaiaMatch, simbadMatch),
         pulseKey !== undefined && "source-focus-pulse",
       )}

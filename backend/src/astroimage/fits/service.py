@@ -30,6 +30,7 @@ _log = structlog.get_logger("astroimage.fits.service")
 
 
 _KEPT_PAYLOAD_KEYS = ("mast", "description", "display_name", "tags")
+_SIZE_LIMIT = "FITS file exceeds the size limit"
 
 
 def _keeping_mast(metadata: dict[str, Any], previous: object) -> dict[str, Any]:
@@ -165,13 +166,13 @@ async def _download_fits(url: str, max_bytes: int) -> bytes:
                 raise BadRequestError("Could not download the FITS file")
             declared = response.headers.get("content-length")
             if declared is not None and declared.isdigit() and int(declared) > max_bytes:
-                raise BadRequestError("FITS file exceeds the size limit")
+                raise BadRequestError(_SIZE_LIMIT)
             chunks: list[bytes] = []
             total = 0
             async for chunk in response.aiter_bytes():
                 total += len(chunk)
                 if total > max_bytes:
-                    raise BadRequestError("FITS file exceeds the size limit")
+                    raise BadRequestError(_SIZE_LIMIT)
                 chunks.append(chunk)
     except httpx.HTTPError as exc:
         raise BadRequestError("Could not download the FITS file") from exc
@@ -370,7 +371,7 @@ class FitsService:
         display_name: str | None = None,
     ) -> FitsRecord:
         if len(payload) > max_bytes:
-            raise BadRequestError("FITS file exceeds the size limit")
+            raise BadRequestError(_SIZE_LIMIT)
         content_hash = hashlib.sha256(payload).hexdigest()
         existing = await self._repository.find_by_content_hash(content_hash)
         if existing is not None:
@@ -470,6 +471,9 @@ class FitsService:
                 analyze_ms=analyze_ms,
             )
             return updated
+
+    async def list_record_ids(self) -> list[UUID]:
+        return await self._repository.list_record_ids()
 
     async def get_record(self, record_id: UUID) -> FitsRecord:
         record = await self._repository.get(record_id)

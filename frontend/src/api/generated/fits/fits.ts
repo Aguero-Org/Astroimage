@@ -262,7 +262,7 @@ return customFetch<FitsImportSchema>(getImportFitsFromUrlUrl(),
 
 export const getImportFitsFromUrlMutationKey = () => ['importFitsFromUrl'] as const;
 
-export const getImportFitsFromUrlMutationOptions = <TError = ErrorType<HTTPValidationError>,
+export const getImportFitsFromUrlMutationOptions = <TError = ErrorType<void | HTTPValidationError>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof importFitsFromUrl>>, TError,ImportFitsFromUrlMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof importFitsFromUrl>>, TError,ImportFitsFromUrlMutationVariables, TContext> => {
 
@@ -291,13 +291,13 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type ImportFitsFromUrlMutationResult = NonNullable<Awaited<ReturnType<typeof importFitsFromUrl>>>
     export type ImportFitsFromUrlMutationBody = FitsUrlImportRequest
-    export type ImportFitsFromUrlMutationError = ErrorType<HTTPValidationError>
+    export type ImportFitsFromUrlMutationError = ErrorType<void | HTTPValidationError>
     export type ImportFitsFromUrlMutationVariables = {data: FitsUrlImportRequest}
 
     /**
  * @summary Import Fits From Url
  */
-export const useImportFitsFromUrl = <TError = ErrorType<HTTPValidationError>,
+export const useImportFitsFromUrl = <TError = ErrorType<void | HTTPValidationError>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof importFitsFromUrl>>, TError,ImportFitsFromUrlMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof importFitsFromUrl>>,
@@ -340,7 +340,7 @@ export const getDownloadFitsFileQueryKey = (recordId: string,) => {
     }
 
 
-export const getDownloadFitsFileQueryOptions = <TData = Awaited<ReturnType<typeof downloadFitsFile>>, TError = ErrorType<HTTPValidationError>>(recordId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof downloadFitsFile>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+export const getDownloadFitsFileQueryOptions = <TData = Awaited<ReturnType<typeof downloadFitsFile>>, TError = ErrorType<void | HTTPValidationError>>(recordId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof downloadFitsFile>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
@@ -359,10 +359,10 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 }
 
 export type DownloadFitsFileQueryResult = NonNullable<Awaited<ReturnType<typeof downloadFitsFile>>>
-export type DownloadFitsFileQueryError = ErrorType<HTTPValidationError>
+export type DownloadFitsFileQueryError = ErrorType<void | HTTPValidationError>
 
 
-export function useDownloadFitsFile<TData = Awaited<ReturnType<typeof downloadFitsFile>>, TError = ErrorType<HTTPValidationError>>(
+export function useDownloadFitsFile<TData = Awaited<ReturnType<typeof downloadFitsFile>>, TError = ErrorType<void | HTTPValidationError>>(
  recordId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof downloadFitsFile>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof downloadFitsFile>>,
@@ -372,7 +372,7 @@ export function useDownloadFitsFile<TData = Awaited<ReturnType<typeof downloadFi
       >, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useDownloadFitsFile<TData = Awaited<ReturnType<typeof downloadFitsFile>>, TError = ErrorType<HTTPValidationError>>(
+export function useDownloadFitsFile<TData = Awaited<ReturnType<typeof downloadFitsFile>>, TError = ErrorType<void | HTTPValidationError>>(
  recordId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof downloadFitsFile>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof downloadFitsFile>>,
@@ -382,7 +382,7 @@ export function useDownloadFitsFile<TData = Awaited<ReturnType<typeof downloadFi
       >, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useDownloadFitsFile<TData = Awaited<ReturnType<typeof downloadFitsFile>>, TError = ErrorType<HTTPValidationError>>(
+export function useDownloadFitsFile<TData = Awaited<ReturnType<typeof downloadFitsFile>>, TError = ErrorType<void | HTTPValidationError>>(
  recordId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof downloadFitsFile>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
@@ -390,7 +390,7 @@ export function useDownloadFitsFile<TData = Awaited<ReturnType<typeof downloadFi
  * @summary Download Fits File
  */
 
-export function useDownloadFitsFile<TData = Awaited<ReturnType<typeof downloadFitsFile>>, TError = ErrorType<HTTPValidationError>>(
+export function useDownloadFitsFile<TData = Awaited<ReturnType<typeof downloadFitsFile>>, TError = ErrorType<void | HTTPValidationError>>(
  recordId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof downloadFitsFile>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {

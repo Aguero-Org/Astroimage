@@ -6,10 +6,10 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, File, Form, Path, UploadFile
 from fastapi.responses import Response
 
-from astroimage.config import Settings, get_settings
 from astroimage.fits.deps import fits_service_dependency
 from astroimage.fits.schema import FitsImportSchema, FitsMetadataSchema, FitsUrlImportRequest
 from astroimage.fits.service import FitsService
+from astroimage.shared.deps import Settings, settings_dependency
 from astroimage.shared.errors import BadRequestError
 from astroimage.shared.query import HduIndex
 
@@ -53,8 +53,8 @@ async def extract_fits_metadata(
 )
 async def import_fits_files(
     service: Annotated[FitsService, Depends(fits_service_dependency)],
-    settings: Annotated[Settings, Depends(get_settings)],
-    files: Annotated[list[UploadFile], File(description="One or more FITS files")],
+    settings: Annotated[Settings, Depends(settings_dependency)],
+    files: Annotated[list[UploadFile], File(..., description="One or more FITS files")],
     description: Annotated[str | None, Form()] = None,
     display_name: Annotated[str | None, Form()] = None,
 ) -> list[FitsImportSchema]:
@@ -79,11 +79,12 @@ async def import_fits_files(
     "/from-url",
     response_model=FitsImportSchema,
     operation_id="importFitsFromUrl",
+    responses={400: {"description": "The URL is not an absolute http, https, or MAST address"}},
 )
 async def import_fits_from_url(
     body: FitsUrlImportRequest,
     service: Annotated[FitsService, Depends(fits_service_dependency)],
-    settings: Annotated[Settings, Depends(get_settings)],
+    settings: Annotated[Settings, Depends(settings_dependency)],
 ) -> FitsImportSchema:
     record = await service.import_from_url(
         body.url,
@@ -97,7 +98,10 @@ async def import_fits_from_url(
 @router.get(
     "/{record_id}/file",
     operation_id="downloadFitsFile",
-    responses={200: {"content": {"application/fits": {}}}},
+    responses={
+        200: {"content": {"application/fits": {}}},
+        404: {"description": "FITS record not found"},
+    },
 )
 async def download_fits_file(
     record_id: RecordId,

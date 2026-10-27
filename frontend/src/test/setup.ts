@@ -15,9 +15,15 @@ afterAll(() => {
 });
 
 class ResizeObserverStub {
-  observe(): void {}
-  unobserve(): void {}
-  disconnect(): void {}
+  observe(): void {
+    return;
+  }
+  unobserve(): void {
+    return;
+  }
+  disconnect(): void {
+    return;
+  }
 }
 
 window.ResizeObserver = ResizeObserverStub;

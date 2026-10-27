@@ -161,6 +161,9 @@
               }
             }
           },
+          "400": {
+            "description": "The URL is not an absolute http, https, or MAST address"
+          },
           "422": {
             "description": "Validation Error",
             "content": {
@@ -205,6 +208,9 @@
               "application/fits": {}
             }
           },
+          "404": {
+            "description": "FITS record not found"
+          },
           "422": {
             "description": "Validation Error",
             "content": {
@@ -239,10 +245,10 @@
                   "type": "null"
                 }
               ],
-              "description": "Case-insensitive match on display name, filename, instrument, proposal id, or MAST data URI",
+              "description": "Case-insensitive match on title, description, tags, filename, instrument, proposal id, or MAST data URI",
               "title": "Cuerpo Celeste"
             },
-            "description": "Case-insensitive match on display name, filename, instrument, proposal id, or MAST data URI"
+            "description": "Case-insensitive match on title, description, tags, filename, instrument, proposal id, or MAST data URI"
           },
           {
             "name": "page",
@@ -2073,6 +2079,12 @@
               },
               "image/png": {}
             }
+          },
+          "400": {
+            "description": "Preview size is not available"
+          },
+          "404": {
+            "description": "FITS record not found"
           },
           "422": {
             "description": "Validation Error",

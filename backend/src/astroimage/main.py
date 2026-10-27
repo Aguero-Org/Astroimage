@@ -59,6 +59,10 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         app.state.session_factory,
         MinioObjectStorage(minio_client, settings.minio_bucket),
     )
+    app.state.background_tasks.start(
+        "preview-backfill",
+        app.state.preview_scheduler.backfill_missing,
+    )
     async with app.state.session_factory() as session:
         try:
             await TransferRepository(session).mark_running_as_interrupted()

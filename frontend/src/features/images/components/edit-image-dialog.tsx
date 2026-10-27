@@ -1,5 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Pencil } from "lucide-react";
+import { Pencil, X } from "lucide-react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -15,36 +15,24 @@ import {
 import { HelpHint } from "@/components/ui/help-hint";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { usePatchImageRecord } from "../api";
 import { formatQueryError } from "../format-query-error";
+import { TagChip } from "./image-tags";
 
-const editSchema = z
-  .object({
-    displayName: z
-      .string()
-      .trim()
-      .min(1, "El título no puede estar vacío")
-      .max(200, "El título es demasiado largo"),
-    description: z
-      .string()
-      .trim()
-      .max(500, "La descripción es demasiado larga"),
-    tags: z.string(),
-  })
-  .superRefine((value, context) => {
-    const labels = value.tags
-      .split(",")
-      .map((label) => label.trim())
-      .filter((label) => label.length > 0);
-    const folded = labels.map((label) => label.toLocaleLowerCase());
-    if (new Set(folded).size !== folded.length) {
-      context.addIssue({
-        code: "custom",
-        path: ["tags"],
-        message: "Hay etiquetas repetidas",
-      });
-    }
-  });
+const editSchema = z.object({
+  displayName: z
+    .string()
+    .trim()
+    .min(1, "El título no puede estar vacío")
+    .max(200, "El título es demasiado largo"),
+  description: z.string().trim().max(500, "La descripción es demasiado larga"),
+  tags: z.array(z.string().trim().min(1).max(40)).max(20),
+});
 
 type EditValues = z.infer<typeof editSchema>;
 
@@ -55,29 +43,28 @@ export type EditableImage = {
   tags?: string[];
 };
 
-function splitTags(value: string): string[] {
-  return value
-    .split(",")
-    .map((label) => label.trim())
-    .filter((label) => label.length > 0);
-}
-
 export function EditImageButton({
   record,
 }: Readonly<{ record: EditableImage }>) {
   const [open, setOpen] = useState(false);
   return (
     <>
-      <Button
-        type="button"
-        size="icon"
-        variant="ghost"
-        aria-label={`Editar ${record.display_name}`}
-        data-testid="edit-image"
-        onClick={() => setOpen(true)}
-      >
-        <Pencil className="size-4" />
-      </Button>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button
+            type="button"
+            size="icon"
+            variant="ghost"
+            className="size-8 text-primary hover:bg-accent dark:text-ring"
+            aria-label={`Editar ${record.display_name}`}
+            data-testid="edit-image"
+            onClick={() => setOpen(true)}
+          >
+            <Pencil className="size-4" />
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>Editar</TooltipContent>
+      </Tooltip>
       {open ? (
         <EditImageDialog record={record} onClose={() => setOpen(false)} />
       ) : null}
@@ -95,18 +82,71 @@ function EditImageDialog({
     defaultValues: {
       displayName: record.display_name,
       description: record.description ?? "",
-      tags: (record.tags ?? []).join(", "),
+      tags: record.tags ?? [],
     },
   });
+  const tags = form.watch("tags");
+  const [draft, setDraft] = useState("");
+
+  function addTags(rawParts: string[]) {
+    const next = [...tags];
+    for (const raw of rawParts) {
+      const text = raw.trim();
+      if (text.length === 0) {
+        continue;
+      }
+      if (text.length > 40) {
+        form.setError("tags", { message: "La etiqueta es demasiado larga" });
+        return;
+      }
+      if (
+        next.some(
+          (label) => label.toLocaleLowerCase() === text.toLocaleLowerCase(),
+        )
+      ) {
+        form.setError("tags", { message: "Esa etiqueta ya está" });
+        return;
+      }
+      if (next.length >= 20) {
+        form.setError("tags", { message: "Hay demasiadas etiquetas" });
+        return;
+      }
+      next.push(text);
+    }
+    form.clearErrors("tags");
+    form.setValue("tags", next, { shouldDirty: true });
+    setDraft("");
+  }
+
+  function removeTag(label: string) {
+    form.setValue(
+      "tags",
+      tags.filter((current) => current !== label),
+      { shouldDirty: true },
+    );
+  }
 
   async function onSubmit(values: EditValues) {
+    const pending = draft.trim();
+    const nextTags = [...values.tags];
+    if (pending.length > 0) {
+      if (
+        nextTags.some(
+          (label) => label.toLocaleLowerCase() === pending.toLocaleLowerCase(),
+        )
+      ) {
+        form.setError("tags", { message: "Esa etiqueta ya está" });
+        return;
+      }
+      nextTags.push(pending);
+    }
     try {
       await patch.mutateAsync({
         recordId: record.record_id,
         data: {
           display_name: values.displayName,
           description: values.description,
-          tags: splitTags(values.tags),
+          tags: nextTags,
         },
       });
       toast.success("Datos de la imagen actualizados");
@@ -145,11 +185,48 @@ function EditImageDialog({
             <Label htmlFor="edit-tags" className="flex items-center gap-1">
               Etiquetas
               <HelpHint label="Etiquetas" glossaryId="etiquetas-imagen">
-                Palabras separadas por coma. No cambian el archivo FITS.
+                Enter o una coma agrega la etiqueta. La cruz la quita. No
+                cambian el archivo FITS.
               </HelpHint>
             </Label>
-            <Input id="edit-tags" {...form.register("tags")} />
-            {form.formState.errors.tags ? (
+            {tags.length > 0 ? (
+              <ul className="flex flex-wrap gap-1.5">
+                {tags.map((label) => (
+                  <li key={label}>
+                    <TagChip label={label}>
+                      <button
+                        type="button"
+                        className="inline-flex size-4 items-center justify-center rounded-full hover:opacity-70"
+                        aria-label={`Quitar ${label}`}
+                        onClick={() => removeTag(label)}
+                      >
+                        <X className="size-3" />
+                      </button>
+                    </TagChip>
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+            <Input
+              id="edit-tags"
+              value={draft}
+              placeholder="Escribí y presioná Enter"
+              onChange={(event) => {
+                const value = event.target.value;
+                if (value.includes(",")) {
+                  addTags(value.split(","));
+                  return;
+                }
+                setDraft(value);
+              }}
+              onKeyDown={(event) => {
+                if (event.key === "Enter") {
+                  event.preventDefault();
+                  addTags([draft]);
+                }
+              }}
+            />
+            {form.formState.errors.tags?.message ? (
               <p className="text-sm text-destructive">
                 {form.formState.errors.tags.message}
               </p>
