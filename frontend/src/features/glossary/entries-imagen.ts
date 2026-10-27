@@ -19,6 +19,15 @@ export const IMAGEN_ENTRIES: GlossaryEntry[] = [
     where: "Inicio (listado)",
   },
   {
+    id: "etiquetas-imagen",
+    name: "Etiquetas",
+    group: "imagen",
+    what: "Palabras que agregás a una imagen ya guardada para reconocerla.",
+    inApp:
+      "Se editan desde la ficha del inicio. No modifican el archivo FITS ni el objeto guardado.",
+    where: "Inicio (listado)",
+  },
+  {
     id: "slug-archivo",
     name: "Nombre de archivo",
     group: "imagen",

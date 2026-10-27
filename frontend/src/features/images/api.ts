@@ -4,10 +4,12 @@ import {
   useImportFitsFromUrl,
 } from "@/api/generated/fits/fits";
 import {
+  getGetImageInfoQueryKey,
   getListHubbleImagesQueryKey,
   useDeleteHubbleImage,
   useGetImageInfo,
   useListHubbleImages,
+  usePatchImageRecord as usePatchImageRecordMutation,
 } from "@/api/generated/hub/hub";
 import type {
   DetectSourcesParams,
@@ -97,6 +99,22 @@ export function useBestPreset(recordId: string, hdu: number | null) {
     query: {
       enabled: false,
       retry: false,
+    },
+  });
+}
+
+export function usePatchImageRecord() {
+  const queryClient = useQueryClient();
+  return usePatchImageRecordMutation({
+    mutation: {
+      onSuccess: async (_data, variables) => {
+        await queryClient.invalidateQueries({
+          queryKey: getListHubbleImagesQueryKey(),
+        });
+        await queryClient.invalidateQueries({
+          queryKey: getGetImageInfoQueryKey(variables.recordId),
+        });
+      },
     },
   });
 }

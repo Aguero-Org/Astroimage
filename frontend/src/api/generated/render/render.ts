@@ -20,6 +20,7 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
+  GetFitsPreviewParams,
   HTTPValidationError,
   HistogramResponse,
   RenderFitsHistogramParams,
@@ -153,6 +154,121 @@ export function useRenderFitsImage<TData = Awaited<ReturnType<typeof renderFitsI
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getRenderFitsImageQueryOptions(recordId,params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export const getGetFitsPreviewUrl = (recordId: string,
+    params?: GetFitsPreviewParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/image/${recordId}/preview?${stringifiedParams}` : `/image/${recordId}/preview`
+}
+
+/**
+ * @summary Get Fits Preview
+ */
+export const getFitsPreview = async (recordId: string,
+    params?: GetFitsPreviewParams, options?: Parameters<typeof customFetch>[1]): Promise<unknown | Blob> => {
+
+  return customFetch<unknown | Blob>(getGetFitsPreviewUrl(recordId,params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetFitsPreviewQueryKey = (recordId: string,
+    params?: GetFitsPreviewParams,) => {
+    return [
+    `/image/${recordId}/preview`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetFitsPreviewQueryOptions = <TData = Awaited<ReturnType<typeof getFitsPreview>>, TError = ErrorType<HTTPValidationError>>(recordId: string,
+    params?: GetFitsPreviewParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getFitsPreview>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetFitsPreviewQueryKey(recordId,params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getFitsPreview>>> = ({ signal }) => getFitsPreview(recordId,params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: recordId !== null && recordId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getFitsPreview>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetFitsPreviewQueryResult = NonNullable<Awaited<ReturnType<typeof getFitsPreview>>>
+export type GetFitsPreviewQueryError = ErrorType<HTTPValidationError>
+
+
+export function useGetFitsPreview<TData = Awaited<ReturnType<typeof getFitsPreview>>, TError = ErrorType<HTTPValidationError>>(
+ recordId: string,
+    params: undefined |  GetFitsPreviewParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getFitsPreview>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getFitsPreview>>,
+          TError,
+          Awaited<ReturnType<typeof getFitsPreview>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetFitsPreview<TData = Awaited<ReturnType<typeof getFitsPreview>>, TError = ErrorType<HTTPValidationError>>(
+ recordId: string,
+    params?: GetFitsPreviewParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getFitsPreview>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getFitsPreview>>,
+          TError,
+          Awaited<ReturnType<typeof getFitsPreview>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetFitsPreview<TData = Awaited<ReturnType<typeof getFitsPreview>>, TError = ErrorType<HTTPValidationError>>(
+ recordId: string,
+    params?: GetFitsPreviewParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getFitsPreview>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get Fits Preview
+ */
+
+export function useGetFitsPreview<TData = Awaited<ReturnType<typeof getFitsPreview>>, TError = ErrorType<HTTPValidationError>>(
+ recordId: string,
+    params?: GetFitsPreviewParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getFitsPreview>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetFitsPreviewQueryOptions(recordId,params,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

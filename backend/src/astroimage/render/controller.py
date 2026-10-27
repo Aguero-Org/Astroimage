@@ -5,11 +5,15 @@ from typing import Annotated
 from uuid import UUID
 
 import structlog
-from fastapi import APIRouter, Depends, Path, Query, Response
+from fastapi import APIRouter, Depends, Path, Query, Request, Response
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from astroimage.render.deps import render_service_dependency
+from astroimage.render.preview_job import PREVIEW_EDGES, PreviewRenderer
 from astroimage.render.schema import HistogramResponse, RenderConfigSchema
 from astroimage.render.service import RenderService
+from astroimage.shared.deps import db_session_dependency
+from astroimage.shared.errors import BadRequestError
 from astroimage.shared.query import HduIndex
 
 router = APIRouter(prefix="/image", tags=["render"])
@@ -78,6 +82,27 @@ async def render_fits_image(
         png_bytes=len(png),
         elapsed_ms=elapsed_ms,
     )
+    return Response(content=png, media_type="image/png")
+
+
+@router.get(
+    "/{record_id}/preview",
+    responses={200: {"content": {"image/png": {}}}},
+    operation_id="getFitsPreview",
+)
+async def get_fits_preview(
+    record_id: RecordId,
+    request: Request,
+    session: Annotated[AsyncSession, Depends(db_session_dependency)],
+    size: Annotated[int, Query(description="Longest edge in pixels")] = 256,
+) -> Response:
+    if size not in PREVIEW_EDGES:
+        raise BadRequestError("Preview size is not available")
+    renderer: PreviewRenderer | None = getattr(request.app.state, "preview_scheduler", None)
+    if renderer is None:
+        raise BadRequestError("Preview size is not available")
+    stored = await renderer.stored_png(session, record_id, size)
+    png = stored if stored is not None else await renderer.render_fallback(session, record_id, size)
     return Response(content=png, media_type="image/png")
 
 

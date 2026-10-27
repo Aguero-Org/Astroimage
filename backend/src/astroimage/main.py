@@ -13,13 +13,18 @@ from astroimage.health.controller import router as health_router
 from astroimage.hub.controller import router as hub_router
 from astroimage.hub.repository import TransferRepository
 from astroimage.render.controller import router as render_router
+from astroimage.render.preview_job import PreviewRenderer
 from astroimage.shared.background import BackgroundTasks
 from astroimage.shared.database import create_engine_from_settings, create_session_factory
 from astroimage.shared.errors import register_exception_handlers
 from astroimage.shared.logging import setup_logging
 from astroimage.shared.metrics import setup_metrics
 from astroimage.shared.middleware import RequestContextMiddleware
-from astroimage.shared.minio_storage import create_object_storage_client, ensure_bucket
+from astroimage.shared.minio_storage import (
+    MinioObjectStorage,
+    create_object_storage_client,
+    ensure_bucket,
+)
 from astroimage.shared.telemetry import setup_tracing
 from astroimage.simbad.controller import router as simbad_router
 from astroimage.sources.controller import router as sources_router
@@ -49,6 +54,11 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     minio_client = create_object_storage_client(settings)
     ensure_bucket(minio_client, settings.minio_bucket)
     app.state.minio_client = minio_client
+    app.state.preview_scheduler = PreviewRenderer(
+        app.state.background_tasks,
+        app.state.session_factory,
+        MinioObjectStorage(minio_client, settings.minio_bucket),
+    )
     async with app.state.session_factory() as session:
         try:
             await TransferRepository(session).mark_running_as_interrupted()

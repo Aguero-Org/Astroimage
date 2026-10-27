@@ -27,6 +27,8 @@ import { StoredFitsLink } from "../stored-fits-link";
 import { usePagedSort } from "../use-paged-sort";
 import { CatalogFacts, catalogLabels } from "./catalog-facts";
 import { DeleteImageDialog } from "./delete-image-dialog";
+import { EditImageButton } from "./edit-image-dialog";
+import { ImagePreview } from "./image-preview";
 import { ImportFitsControl } from "./import-fits-dialog";
 
 const filenameGlossary = { glossaryId: "slug-archivo" } as const;
@@ -164,9 +166,15 @@ export function ImageList({ query }: Readonly<ImageListProps>) {
               key={record.record_id}
               testId="image-list-item"
               title={
-                <RecordViewerLink record={record} className="hover:underline">
-                  {record.display_name}
-                </RecordViewerLink>
+                <span className="flex items-center gap-3">
+                  <ImagePreview
+                    recordId={record.record_id}
+                    name={record.display_name}
+                  />
+                  <RecordViewerLink record={record} className="hover:underline">
+                    {record.display_name}
+                  </RecordViewerLink>
+                </span>
               }
               detail={
                 <>
@@ -196,6 +204,14 @@ export function ImageList({ query }: Readonly<ImageListProps>) {
               }
               actions={
                 <>
+                  <EditImageButton
+                    record={{
+                      record_id: record.record_id,
+                      display_name: record.display_name,
+                      description: record.description,
+                      tags: record.tags,
+                    }}
+                  />
                   {record.data_uri ? (
                     <MastSourceLink dataUri={record.data_uri} />
                   ) : (

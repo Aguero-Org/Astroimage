@@ -4,6 +4,7 @@ import hashlib
 import time
 from collections.abc import Sequence
 from dataclasses import dataclass
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 from urllib.parse import quote, unquote, urlsplit
@@ -14,19 +15,31 @@ import structlog
 from opentelemetry import trace
 
 from astroimage.fits.model import FitsRecord
+from astroimage.fits.preview_schedule import NullPreviewScheduler, PreviewScheduler
 from astroimage.fits.reader import FitsImageData, FitsMetadata, FitsReader
 from astroimage.fits.repository import FitsRepository
-from astroimage.fits.schema import FitsMetadataSchema, FitsRecordSummarySchema
+from astroimage.fits.schema import (
+    FitsMetadataSchema,
+    FitsRecordPatchSchema,
+    FitsRecordSummarySchema,
+)
 from astroimage.fits.storage import FitsStorage
 from astroimage.shared.errors import BadRequestError, ConflictError
 
 _log = structlog.get_logger("astroimage.fits.service")
 
 
+_KEPT_PAYLOAD_KEYS = ("mast", "description", "display_name", "tags")
+
+
 def _keeping_mast(metadata: dict[str, Any], previous: object) -> dict[str, Any]:
-    if not isinstance(previous, dict) or "mast" not in previous:
+    if not isinstance(previous, dict):
         return metadata
-    return {**metadata, "mast": previous["mast"]}
+    kept = dict(metadata)
+    for key in _KEPT_PAYLOAD_KEYS:
+        if key in previous:
+            kept[key] = previous[key]
+    return kept
 
 
 def _text_or_none(value: object) -> str | None:
@@ -39,6 +52,34 @@ def _text_or_none(value: object) -> str | None:
     if isinstance(value, str) and value.strip() != "":
         return value.strip()
     return None
+
+
+def _tags_from_payload(payload: object) -> list[str]:
+    if not isinstance(payload, dict):
+        return []
+    raw_tags = payload.get("tags")
+    if not isinstance(raw_tags, list):
+        return []
+    return [tag for tag in raw_tags if isinstance(tag, str) and tag != ""]
+
+
+def normalize_tags(tags: list[str]) -> list[str]:
+    seen: set[str] = set()
+    cleaned: list[str] = []
+    for raw in tags:
+        text = " ".join(raw.split())
+        if text == "":
+            continue
+        if len(text) > 40:
+            raise BadRequestError("A tag is too long")
+        key = text.casefold()
+        if key in seen:
+            continue
+        seen.add(key)
+        cleaned.append(text)
+    if len(cleaned) > 20:
+        raise BadRequestError("Too many tags")
+    return cleaned
 
 
 def _optional_text(value: str | None, *, limit: int, message: str) -> str | None:
@@ -181,10 +222,12 @@ class FitsService:
         reader: FitsReader,
         repository: FitsRepository,
         storage: FitsStorage,
+        scheduler: PreviewScheduler | None = None,
     ) -> None:
         self._reader = reader
         self._repository = repository
         self._storage = storage
+        self._scheduler = scheduler or NullPreviewScheduler()
 
     def metadata_from_path(
         self,
@@ -313,6 +356,7 @@ class FitsService:
                 upload_ms=upload_ms,
             )
             span.set_attribute("record_id", str(record_id))
+            self._scheduler.schedule(record_id)
             return record
 
     async def import_bytes(
@@ -362,6 +406,43 @@ class FitsService:
             display_name=display_name,
         )
 
+    async def patch_record(
+        self,
+        record_id: UUID,
+        patch: FitsRecordPatchSchema,
+    ) -> FitsRecordSummarySchema:
+        record = await self.get_record(record_id)
+        payload = dict(record.metadata_payload) if isinstance(record.metadata_payload, dict) else {}
+        if patch.display_name is not None:
+            title = _optional_text(
+                patch.display_name,
+                limit=200,
+                message="The title is too long",
+            )
+            if title is None:
+                raise BadRequestError("The title is empty")
+            mast = payload.get("mast")
+            if isinstance(mast, dict):
+                payload["mast"] = {**mast, "display_name": title}
+            else:
+                payload["display_name"] = title
+        if patch.description is not None:
+            text = _optional_text(
+                patch.description,
+                limit=500,
+                message="The description is too long",
+            )
+            if text is None:
+                payload.pop("description", None)
+            else:
+                payload["description"] = text
+        if patch.tags is not None:
+            payload["tags"] = normalize_tags(patch.tags)
+        record.metadata_payload = payload
+        record.updated_at = datetime.now(UTC)
+        updated = await self._repository.update(record)
+        return self._to_summary(updated)
+
     async def update_record_metadata(
         self,
         record: FitsRecord,
@@ -403,7 +484,7 @@ class FitsService:
         public = {
             key: value
             for key, value in document.items()
-            if key not in {"mast", "description", "display_name"}
+            if key not in {"mast", "description", "display_name", "tags"}
         }
         if isinstance(mast, dict):
             catalog_name = mast.get("display_name")
@@ -472,6 +553,7 @@ class FitsService:
                 if isinstance(record.metadata_payload, dict)
                 else None
             ),
+            tags=_tags_from_payload(record.metadata_payload),
         )
 
     async def get_payload(self, record: FitsRecord) -> bytes:

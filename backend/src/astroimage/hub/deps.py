@@ -3,7 +3,11 @@ from typing import Annotated
 from fastapi import Depends, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from astroimage.fits.deps import fits_service_dependency, fits_service_from_resources
+from astroimage.fits.deps import (
+    fits_service_dependency,
+    fits_service_from_resources,
+    preview_scheduler_from_request,
+)
 from astroimage.fits.service import FitsService
 from astroimage.hub.importer import HubbleImporter
 from astroimage.hub.repository import TransferRepository
@@ -28,6 +32,7 @@ def hubble_service_dependency(
     storage: Annotated[ObjectStorage, Depends(object_storage_dependency)],
 ) -> HubbleImageService:
     tasks: BackgroundTasks = request.app.state.background_tasks
+    scheduler = preview_scheduler_from_request(request)
     return HubbleImageService(
         importer,
         fits,
@@ -36,5 +41,9 @@ def hubble_service_dependency(
         session_factory=request.app.state.session_factory,
         storage=storage,
         token_secret=request.app.state.settings.candidate_token_secret,
-        fits_factory=lambda db_session: fits_service_from_resources(db_session, storage),
+        fits_factory=lambda db_session: fits_service_from_resources(
+            db_session,
+            storage,
+            scheduler,
+        ),
     )

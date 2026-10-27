@@ -145,6 +145,39 @@ export const imageHandlers = [
     });
   }),
 
+  http.get(`${apiBaseUrl}/image/:recordId/preview`, () => {
+    const png = Uint8Array.from(
+      atob(
+        "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==",
+      ),
+      (char) => char.charCodeAt(0),
+    );
+    return new HttpResponse(png, {
+      headers: { "Content-Type": "image/png" },
+    });
+  }),
+  http.patch(`${apiBaseUrl}/image/:recordId`, async ({ request }) => {
+    const body = (await request.json()) as {
+      display_name?: string;
+      description?: string;
+      tags?: string[];
+    };
+    return HttpResponse.json({
+      record_id: "patched",
+      slug: "local.fits",
+      name: "local.fits",
+      display_name: body.display_name ?? "NGC 5128",
+      instrument: null,
+      proposal_id: null,
+      filters: null,
+      observed_at: null,
+      created_at: "2026-01-01T00:00:00Z",
+      size_bytes: 1,
+      data_uri: null,
+      description: body.description || null,
+      tags: body.tags ?? [],
+    });
+  }),
   http.get(`${apiBaseUrl}/image/:recordId/info`, ({ params }) => {
     const record = findRecord(params.recordId as string);
     if (!record) {

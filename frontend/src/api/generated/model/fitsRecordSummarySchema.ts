@@ -18,4 +18,5 @@ export interface FitsRecordSummarySchema {
   size_bytes: number;
   data_uri?: string | null;
   description?: string | null;
+  tags?: string[];
 }

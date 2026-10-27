@@ -7,7 +7,11 @@ from uuid import UUID
 import structlog
 from fastapi import APIRouter, Depends, Path, Query
 
-from astroimage.fits.schema import FitsMetadataSchema
+from astroimage.fits.schema import (
+    FitsMetadataSchema,
+    FitsRecordPatchSchema,
+    FitsRecordSummarySchema,
+)
 from astroimage.hub.deps import hubble_service_dependency
 from astroimage.hub.schema import (
     CandidatePageSchema,
@@ -145,6 +149,19 @@ async def resume_image_transfer(
     service: Annotated[HubbleImageService, Depends(hubble_service_dependency)],
 ) -> TransferStatusSchema:
     return await service.resume(transfer_id)
+
+
+@router.patch(
+    "/image/{record_id}",
+    response_model=FitsRecordSummarySchema,
+    operation_id="patchImageRecord",
+)
+async def patch_astro_image(
+    record_id: RecordId,
+    body: FitsRecordPatchSchema,
+    service: Annotated[HubbleImageService, Depends(hubble_service_dependency)],
+) -> FitsRecordSummarySchema:
+    return await service.patch_record(record_id, body)
 
 
 @router.delete(

@@ -6,6 +6,13 @@ from astropy.io import fits
 from httpx import AsyncClient
 
 
+def _fresh_fits_bytes() -> bytes:
+    data = np.random.default_rng().random((4, 4))
+    buffer = BytesIO()
+    fits.PrimaryHDU(data).writeto(buffer)
+    return buffer.getvalue()
+
+
 def _sample_fits_bytes() -> bytes:
     data = np.full((5, 5), 42.0)
     hdu = fits.PrimaryHDU(data)
@@ -135,6 +142,60 @@ async def test_import_fits_from_url(client: AsyncClient, monkeypatch: pytest.Mon
 async def test_import_fits_from_url_rejects_a_relative_address(client: AsyncClient) -> None:
     response = await client.post("/fits/from-url", json={"url": "nebula.fits"})
     assert response.status_code == 400
+
+
+@pytest.mark.asyncio
+async def test_patch_image_record_updates_visible_fields_only(client: AsyncClient) -> None:
+    payload = _fresh_fits_bytes()
+    created = await client.post(
+        "/fits",
+        files={"files": ("patch-me.fits", payload, "application/fits")},
+        data={"display_name": "Antes", "description": "vieja"},
+    )
+    assert created.status_code == 200
+    record_id = created.json()[0]["record_id"]
+
+    patched = await client.patch(
+        f"/image/{record_id}",
+        json={
+            "display_name": "Después",
+            "description": "",
+            "tags": [" M31 ", "m31", "Hubble"],
+        },
+    )
+    assert patched.status_code == 200
+    body = patched.json()
+    assert body["display_name"] == "Después"
+    assert body["description"] is None
+    assert body["tags"] == ["M31", "Hubble"]
+    assert body["slug"] == "patch-me.fits"
+    assert body["name"] == "patch-me.fits"
+
+    missing = await client.patch(
+        "/image/00000000-0000-0000-0000-000000000000",
+        json={"display_name": "Nada"},
+    )
+    assert missing.status_code == 404
+
+    empty = await client.patch(f"/image/{record_id}", json={"display_name": "   "})
+    assert empty.status_code == 400
+
+
+@pytest.mark.asyncio
+async def test_preview_falls_back_to_a_png(client: AsyncClient) -> None:
+    payload = _fresh_fits_bytes()
+    created = await client.post(
+        "/fits",
+        files={"files": ("preview-me.fits", payload, "application/fits")},
+    )
+    assert created.status_code == 200
+    record_id = created.json()[0]["record_id"]
+    preview = await client.get(f"/image/{record_id}/preview", params={"size": 256})
+    assert preview.status_code == 200
+    assert preview.headers["content-type"].startswith("image/png")
+    assert preview.content.startswith(b"\x89PNG")
+    rejected = await client.get(f"/image/{record_id}/preview", params={"size": 100})
+    assert rejected.status_code == 400
 
 
 @pytest.mark.asyncio
