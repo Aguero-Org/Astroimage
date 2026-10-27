@@ -78,9 +78,11 @@ function SimbadFocusRow({
   if (!match?.matched || sourceLabel === null) {
     return null;
   }
-  const canFocus =
-    onFocusSource !== undefined &&
-    (match.object_type === "point" || match.object_type === "extended");
+  const objectType =
+    match.object_type === "point" || match.object_type === "extended"
+      ? match.object_type
+      : null;
+  const canFocus = onFocusSource !== undefined && objectType !== null;
   const separation = match.separation_arcsec;
   return (
     <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
@@ -95,7 +97,7 @@ function SimbadFocusRow({
           variant="outline"
           className="h-7 px-2 text-xs"
           data-testid="simbad-object-focus"
-          onClick={() => onFocusSource(match.source_id, match.object_type)}
+          onClick={() => onFocusSource(match.source_id, objectType)}
         >
           <LocateFixed aria-hidden className="size-3.5" />
           Ir a la fuente
