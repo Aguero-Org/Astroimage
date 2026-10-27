@@ -1,12 +1,15 @@
 from __future__ import annotations
 
+import hashlib
 import time
 from collections.abc import Sequence
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
+from urllib.parse import unquote, urlsplit
 from uuid import UUID, uuid4
 
+import httpx
 import structlog
 from opentelemetry import trace
 
@@ -15,6 +18,7 @@ from astroimage.fits.reader import FitsImageData, FitsMetadata, FitsReader
 from astroimage.fits.repository import FitsRepository
 from astroimage.fits.schema import FitsMetadataSchema, FitsRecordSummarySchema
 from astroimage.fits.storage import FitsStorage
+from astroimage.shared.errors import BadRequestError, ConflictError
 
 _log = structlog.get_logger("astroimage.fits.service")
 
@@ -29,6 +33,69 @@ def _text_or_none(value: object) -> str | None:
     if isinstance(value, str) and value != "":
         return value
     return None
+
+
+def _local_fields(
+    record: FitsRecord,
+) -> tuple[str, str | None, None, str | None, str | None, None]:
+    payload = record.metadata_payload if isinstance(record.metadata_payload, dict) else {}
+    raw_instrument = payload.get("instrument")
+    instrument = raw_instrument if isinstance(raw_instrument, dict) else {}
+    return (
+        record.original_filename,
+        _text_or_none(instrument.get("instrument")),
+        None,
+        _text_or_none(instrument.get("filter_name")),
+        _text_or_none(instrument.get("date_obs")),
+        None,
+    )
+
+
+def _summary_fields(
+    record: FitsRecord,
+) -> tuple[str, str | None, str | None, str | None, str | None, str | None]:
+    payload = record.metadata_payload
+    raw_mast = payload.get("mast") if isinstance(payload, dict) else None
+    if isinstance(raw_mast, dict):
+        return _mast_fields(record)
+    return _local_fields(record)
+
+
+def _filename_from_url(url: str) -> str:
+    path = unquote(urlsplit(url).path)
+    name = Path(path).name.strip()
+    if name == "" or name in {".", ".."}:
+        return "upload.fits"
+    return name
+
+
+def _require_http_url(url: str) -> None:
+    parts = urlsplit(url.strip())
+    if parts.scheme not in {"http", "https"} or parts.netloc == "":
+        raise BadRequestError("The FITS URL must be an absolute http or https address")
+
+
+async def _download_fits(url: str, max_bytes: int) -> bytes:
+    try:
+        async with (
+            httpx.AsyncClient(timeout=60.0, follow_redirects=True) as client,
+            client.stream("GET", url) as response,
+        ):
+            if response.status_code >= 400:
+                raise BadRequestError("Could not download the FITS file")
+            declared = response.headers.get("content-length")
+            if declared is not None and declared.isdigit() and int(declared) > max_bytes:
+                raise BadRequestError("FITS file exceeds the size limit")
+            chunks: list[bytes] = []
+            total = 0
+            async for chunk in response.aiter_bytes():
+                total += len(chunk)
+                if total > max_bytes:
+                    raise BadRequestError("FITS file exceeds the size limit")
+                chunks.append(chunk)
+    except httpx.HTTPError as exc:
+        raise BadRequestError("Could not download the FITS file") from exc
+    return b"".join(chunks)
 
 
 def _mast_fields(
@@ -143,6 +210,8 @@ class FitsService:
         slug: str | None = None,
         original_filename: str | None = None,
         provenance: dict[str, Any] | None = None,
+        content_hash: str | None = None,
+        source_url: str | None = None,
     ) -> FitsRecord:
         with _tracer.start_as_current_span("fits_store_bytes") as span:
             span.set_attribute("source_name", source_name)
@@ -169,6 +238,8 @@ class FitsService:
                 slug=slug or source_name,
                 original_filename=original_filename or source_name,
                 size_bytes=len(payload),
+                content_hash=content_hash,
+                source_url=source_url,
                 metadata_payload=metadata_payload,
             )
             await self._repository.create(record)
@@ -188,6 +259,41 @@ class FitsService:
             )
             span.set_attribute("record_id", str(record_id))
             return record
+
+    async def import_bytes(
+        self,
+        payload: bytes,
+        *,
+        source_name: str,
+        max_bytes: int,
+        source_url: str | None = None,
+    ) -> FitsRecord:
+        if len(payload) > max_bytes:
+            raise BadRequestError("FITS file exceeds the size limit")
+        content_hash = hashlib.sha256(payload).hexdigest()
+        existing = await self._repository.find_by_content_hash(content_hash)
+        if existing is not None:
+            raise ConflictError("A FITS file with the same content is already stored")
+        return await self.store_bytes(
+            payload,
+            source_name=source_name,
+            content_hash=content_hash,
+            source_url=source_url,
+        )
+
+    async def import_from_url(self, url: str, *, max_bytes: int) -> FitsRecord:
+        _require_http_url(url)
+        normalized = url.strip()
+        existing = await self._repository.find_by_source_url(normalized)
+        if existing is not None:
+            raise ConflictError("This URL is already imported")
+        payload = await _download_fits(normalized, max_bytes)
+        return await self.import_bytes(
+            payload,
+            source_name=_filename_from_url(normalized),
+            max_bytes=max_bytes,
+            source_url=normalized,
+        )
 
     async def update_record_metadata(
         self,
@@ -275,7 +381,9 @@ class FitsService:
 
     @staticmethod
     def _to_summary(record: FitsRecord) -> FitsRecordSummarySchema:
-        display_name, instrument, proposal_id, filters, observed_at, data_uri = _mast_fields(record)
+        display_name, instrument, proposal_id, filters, observed_at, data_uri = _summary_fields(
+            record
+        )
         return FitsRecordSummarySchema(
             record_id=record.id,
             slug=record.slug,

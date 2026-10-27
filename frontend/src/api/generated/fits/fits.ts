@@ -16,8 +16,11 @@ import type {
 
 import type {
   BodyExtractFitsMetadata,
+  BodyImportFitsFiles,
   ExtractFitsMetadataParams,
+  FitsImportSchema,
   FitsMetadataSchema,
+  FitsUrlImportRequest,
   HTTPValidationError
 } from '../model';
 
@@ -111,4 +114,166 @@ export const useExtractFitsMetadata = <TError = ErrorType<HTTPValidationError>,
         TContext
       > => {
       return useMutation(getExtractFitsMetadataMutationOptions(options), queryClient);
+    }
+    export const getImportFitsFilesUrl = () => {
+
+
+
+
+  return `/fits`
+}
+
+/**
+ * @summary Import Fits Files
+ */
+export const importFitsFiles = async (bodyImportFitsFiles: BodyImportFitsFiles, options?: Parameters<typeof customFetch>[1]): Promise<FitsImportSchema[]> => {
+    const formData = new FormData();
+bodyImportFitsFiles.files.forEach(value => formData.append(`files`, value));
+
+  return customFetch<FitsImportSchema[]>(getImportFitsFilesUrl(),
+  {
+    ...options,
+    method: 'POST'
+    ,
+    body: formData
+  }
+);}
+
+
+
+
+
+export const getImportFitsFilesMutationKey = () => ['importFitsFiles'] as const;
+
+export const getImportFitsFilesMutationOptions = <TError = ErrorType<HTTPValidationError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof importFitsFiles>>, TError,ImportFitsFilesMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof importFitsFiles>>, TError,ImportFitsFilesMutationVariables, TContext> => {
+
+const mutationKey = getImportFitsFilesMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof importFitsFiles>>, ImportFitsFilesMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  importFitsFiles(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ImportFitsFilesMutationResult = NonNullable<Awaited<ReturnType<typeof importFitsFiles>>>
+    export type ImportFitsFilesMutationBody = BodyImportFitsFiles
+    export type ImportFitsFilesMutationError = ErrorType<HTTPValidationError>
+    export type ImportFitsFilesMutationVariables = {data: BodyImportFitsFiles}
+
+    /**
+ * @summary Import Fits Files
+ */
+export const useImportFitsFiles = <TError = ErrorType<HTTPValidationError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof importFitsFiles>>, TError,ImportFitsFilesMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof importFitsFiles>>,
+        TError,
+        ImportFitsFilesMutationVariables,
+        TContext
+      > => {
+      return useMutation(getImportFitsFilesMutationOptions(options), queryClient);
+    }
+    export const getImportFitsFromUrlUrl = () => {
+
+
+
+
+  return `/fits/from-url`
+}
+
+/**
+ * @summary Import Fits From Url
+ */
+export const importFitsFromUrl = async (fitsUrlImportRequest: FitsUrlImportRequest, options?: Parameters<typeof customFetch>[1]): Promise<FitsImportSchema> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<FitsImportSchema>(getImportFitsFromUrlUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(fitsUrlImportRequest)
+  }
+);}
+
+
+
+
+
+export const getImportFitsFromUrlMutationKey = () => ['importFitsFromUrl'] as const;
+
+export const getImportFitsFromUrlMutationOptions = <TError = ErrorType<HTTPValidationError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof importFitsFromUrl>>, TError,ImportFitsFromUrlMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof importFitsFromUrl>>, TError,ImportFitsFromUrlMutationVariables, TContext> => {
+
+const mutationKey = getImportFitsFromUrlMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof importFitsFromUrl>>, ImportFitsFromUrlMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  importFitsFromUrl(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ImportFitsFromUrlMutationResult = NonNullable<Awaited<ReturnType<typeof importFitsFromUrl>>>
+    export type ImportFitsFromUrlMutationBody = FitsUrlImportRequest
+    export type ImportFitsFromUrlMutationError = ErrorType<HTTPValidationError>
+    export type ImportFitsFromUrlMutationVariables = {data: FitsUrlImportRequest}
+
+    /**
+ * @summary Import Fits From Url
+ */
+export const useImportFitsFromUrl = <TError = ErrorType<HTTPValidationError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof importFitsFromUrl>>, TError,ImportFitsFromUrlMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof importFitsFromUrl>>,
+        TError,
+        ImportFitsFromUrlMutationVariables,
+        TContext
+      > => {
+      return useMutation(getImportFitsFromUrlMutationOptions(options), queryClient);
     }

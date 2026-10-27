@@ -51,6 +51,75 @@ async def test_extract_fits_metadata_rejects_empty(client: AsyncClient) -> None:
 
 
 @pytest.mark.asyncio
+async def test_import_fits_file_is_listed_without_mast_provenance(client: AsyncClient) -> None:
+    payload = _sample_fits_bytes()
+    response = await client.post(
+        "/fits",
+        files={"files": ("vlt.fits", payload, "application/fits")},
+    )
+    assert response.status_code == 200
+    body = response.json()
+    assert body[0]["slug"] == "vlt.fits"
+    listed = await client.get("/image")
+    assert listed.status_code == 200
+    match = next(
+        item for item in listed.json()["records"] if item["record_id"] == body[0]["record_id"]
+    )
+    assert match["display_name"] == "vlt.fits"
+    assert match["proposal_id"] is None
+    assert match["data_uri"] is None
+    assert match["instrument"] == "FORS2"
+
+    duplicate = await client.post(
+        "/fits",
+        files={"files": ("copy.fits", payload, "application/fits")},
+    )
+    assert duplicate.status_code == 409
+
+
+@pytest.mark.asyncio
+async def test_import_fits_rejects_a_cube(client: AsyncClient) -> None:
+    buffer = BytesIO()
+    fits.PrimaryHDU(np.ones((2, 2, 2))).writeto(buffer)
+    response = await client.post(
+        "/fits",
+        files={"files": ("cube.fits", buffer.getvalue(), "application/fits")},
+    )
+    assert response.status_code == 400
+
+
+@pytest.mark.asyncio
+async def test_import_fits_from_url(client: AsyncClient, monkeypatch: pytest.MonkeyPatch) -> None:
+    payload = _sample_fits_bytes()
+    payload = payload.replace(b"FORS2", b"UVES ")
+
+    async def _download(url: str, max_bytes: int) -> bytes:
+        assert url == "https://example.test/folder/nebula.fits"
+        assert max_bytes > len(payload)
+        return payload
+
+    monkeypatch.setattr("astroimage.fits.service._download_fits", _download)
+    response = await client.post(
+        "/fits/from-url",
+        json={"url": "https://example.test/folder/nebula.fits"},
+    )
+    assert response.status_code == 200
+    assert response.json()["slug"] == "nebula.fits"
+
+    again = await client.post(
+        "/fits/from-url",
+        json={"url": "https://example.test/folder/nebula.fits"},
+    )
+    assert again.status_code == 409
+
+
+@pytest.mark.asyncio
+async def test_import_fits_from_url_rejects_a_relative_address(client: AsyncClient) -> None:
+    response = await client.post("/fits/from-url", json={"url": "nebula.fits"})
+    assert response.status_code == 400
+
+
+@pytest.mark.asyncio
 async def test_extract_fits_metadata_rejects_garbage(client: AsyncClient) -> None:
     response = await client.post(
         "/fits/metadata",

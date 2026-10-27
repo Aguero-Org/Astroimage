@@ -6,6 +6,7 @@
  */
 
 export * from './bodyExtractFitsMetadata';
+export * from './bodyImportFitsFiles';
 export * from './candidatePageSchema';
 export * from './candidatePageSchemaOrder';
 export * from './candidatePageSchemaSort';
@@ -26,12 +27,14 @@ export * from './extractFitsMetadataParams';
 export * from './fitsHduDetailSchema';
 export * from './fitsHduInfoSchema';
 export * from './fitsImageInfoSchema';
+export * from './fitsImportSchema';
 export * from './fitsInstrumentInfoSchema';
 export * from './fitsMetadataSchema';
 export * from './fitsMetadataSchemaHeader';
 export * from './fitsPhotometryInfoSchema';
 export * from './fitsRecordSummarySchema';
 export * from './fitsTableInfoSchema';
+export * from './fitsUrlImportRequest';
 export * from './fitsWcsInfoSchema';
 export * from './gaiaJobStatusSchema';
 export * from './gaiaMatchSchema';

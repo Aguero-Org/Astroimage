@@ -43,8 +43,8 @@ def _matches_query(record: FitsRecordSummarySchema, needle: str) -> bool:
         record.display_name,
         record.name,
         record.instrument or "",
-        record.proposal_id,
-        record.data_uri,
+        record.proposal_id or "",
+        record.data_uri or "",
     )
     return any(needle in value.casefold() for value in values)
 

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from datetime import UTC, datetime
 from uuid import UUID, uuid4
 
 import pytest
@@ -7,6 +8,7 @@ import pytest
 from astroimage.fits.model import FitsRecord
 from astroimage.fits.reader import FitsHduInfo, FitsMetadata
 from astroimage.fits.service import FitsService
+from astroimage.shared.errors import BadRequestError, ConflictError
 
 
 class _FakeReader:
@@ -73,6 +75,18 @@ class _FakeRepository:
 
     async def delete(self, record: FitsRecord) -> None:
         self.deleted.append(record.id)
+
+    async def find_by_content_hash(self, content_hash: str) -> FitsRecord | None:
+        for record in self.rows.values():
+            if record.content_hash == content_hash:
+                return record
+        return None
+
+    async def find_by_source_url(self, source_url: str) -> FitsRecord | None:
+        for record in self.rows.values():
+            if record.source_url == source_url:
+                return record
+        return None
 
 
 def _service(
@@ -260,3 +274,73 @@ async def test_reconcile_records_updates_fallback_name() -> None:
     assert report.updated == [f"fits/{existing_id}.fits"]
     assert existing.original_filename == "hst_10118_02_acs_wfc_fr423n_flc.fits"
     assert repository.updated == [existing]
+
+
+async def test_import_bytes_stores_content_hash_and_rejects_a_duplicate() -> None:
+    storage = _FakeStorage()
+    repository = _FakeRepository()
+    service = _service(storage, repository)
+
+    stored = await service.import_bytes(b"payload", source_name="local.fits", max_bytes=100)
+
+    assert stored.content_hash is not None
+    assert stored.source_url is None
+    assert stored.slug == "local.fits"
+    with pytest.raises(ConflictError):
+        await service.import_bytes(b"payload", source_name="copy.fits", max_bytes=100)
+    assert len(repository.created) == 1
+
+
+async def test_import_bytes_rejects_an_oversized_payload() -> None:
+    service = _service(_FakeStorage(), _FakeRepository())
+
+    with pytest.raises(BadRequestError, match="size limit"):
+        await service.import_bytes(b"payload", source_name="local.fits", max_bytes=3)
+
+
+async def test_import_from_url_stores_the_downloaded_file(monkeypatch: pytest.MonkeyPatch) -> None:
+    async def _download(url: str, max_bytes: int) -> bytes:
+        assert url == "https://example.test/m31.fits"
+        assert max_bytes == 100
+        return b"payload"
+
+    monkeypatch.setattr("astroimage.fits.service._download_fits", _download)
+    repository = _FakeRepository()
+    service = _service(_FakeStorage(), repository)
+
+    stored = await service.import_from_url("https://example.test/m31.fits", max_bytes=100)
+
+    assert stored.source_url == "https://example.test/m31.fits"
+    assert stored.original_filename == "m31.fits"
+    with pytest.raises(ConflictError):
+        await service.import_from_url("https://example.test/m31.fits", max_bytes=100)
+
+
+async def test_import_from_url_rejects_a_non_http_address() -> None:
+    service = _service(_FakeStorage(), _FakeRepository())
+
+    with pytest.raises(BadRequestError):
+        await service.import_from_url("file:///tmp/local.fits", max_bytes=100)
+
+
+def test_summary_uses_the_filename_when_mast_provenance_is_missing() -> None:
+    record = FitsRecord(
+        id=uuid4(),
+        object_key="fits/local.fits",
+        slug="local.fits",
+        original_filename="local.fits",
+        size_bytes=4,
+        metadata_payload={
+            "instrument": {"instrument": "FORS2", "filter_name": "B", "date_obs": "2020-01-02"},
+        },
+        created_at=datetime(2026, 10, 27, tzinfo=UTC),
+    )
+
+    summary = FitsService._to_summary(record)
+
+    assert summary.display_name == "local.fits"
+    assert summary.instrument == "FORS2"
+    assert summary.proposal_id is None
+    assert summary.filters == "B"
+    assert summary.observed_at == "2020-01-02"
+    assert summary.data_uri is None

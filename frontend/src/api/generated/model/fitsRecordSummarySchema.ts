@@ -11,10 +11,10 @@ export interface FitsRecordSummarySchema {
   name: string;
   display_name: string;
   instrument: string | null;
-  proposal_id: string;
+  proposal_id?: string | null;
   filters: string | null;
   observed_at: string | null;
   created_at: string;
   size_bytes: number;
-  data_uri: string;
+  data_uri?: string | null;
 }

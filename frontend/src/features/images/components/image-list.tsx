@@ -175,7 +175,7 @@ export function ImageList({ query }: Readonly<ImageListProps>) {
               meta={
                 <CatalogFacts
                   instrument={record.instrument}
-                  proposalId={record.proposal_id}
+                  proposalId={record.proposal_id ?? null}
                   filters={record.filters}
                   observedAt={record.observed_at}
                   importedAt={record.created_at}
@@ -184,7 +184,9 @@ export function ImageList({ query }: Readonly<ImageListProps>) {
               }
               actions={
                 <>
-                  <MastSourceLink dataUri={record.data_uri} />
+                  {record.data_uri ? (
+                    <MastSourceLink dataUri={record.data_uri} />
+                  ) : null}
                   <Button
                     type="button"
                     size="icon"

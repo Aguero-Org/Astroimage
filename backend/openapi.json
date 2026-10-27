@@ -88,6 +88,92 @@
         }
       }
     },
+    "/fits": {
+      "post": {
+        "tags": [
+          "fits"
+        ],
+        "summary": "Import Fits Files",
+        "operationId": "importFitsFiles",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_importFitsFiles"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/FitsImportSchema"
+                  },
+                  "type": "array",
+                  "title": "Response Importfitsfiles"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/fits/from-url": {
+      "post": {
+        "tags": [
+          "fits"
+        ],
+        "summary": "Import Fits From Url",
+        "operationId": "importFitsFromUrl",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FitsUrlImportRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FitsImportSchema"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/image": {
       "get": {
         "tags": [
@@ -1942,6 +2028,24 @@
         ],
         "title": "Body_extractFitsMetadata"
       },
+      "Body_importFitsFiles": {
+        "properties": {
+          "files": {
+            "items": {
+              "type": "string",
+              "contentMediaType": "application/octet-stream"
+            },
+            "type": "array",
+            "title": "Files",
+            "description": "One or more FITS files"
+          }
+        },
+        "type": "object",
+        "required": [
+          "files"
+        ],
+        "title": "Body_importFitsFiles"
+      },
       "CandidatePageSchema": {
         "properties": {
           "items": {
@@ -3013,6 +3117,26 @@
         "type": "object",
         "title": "FitsImageInfoSchema"
       },
+      "FitsImportSchema": {
+        "properties": {
+          "record_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Record Id"
+          },
+          "slug": {
+            "type": "string",
+            "title": "Slug"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "record_id",
+          "slug"
+        ],
+        "title": "FitsImportSchema"
+      },
       "FitsInstrumentInfoSchema": {
         "properties": {
           "telescope": {
@@ -3227,7 +3351,14 @@
             "title": "Instrument"
           },
           "proposal_id": {
-            "type": "string",
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Proposal Id"
           },
           "filters": {
@@ -3262,7 +3393,14 @@
             "title": "Size Bytes"
           },
           "data_uri": {
-            "type": "string",
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Data Uri"
           }
         },
@@ -3274,12 +3412,10 @@
           "name",
           "display_name",
           "instrument",
-          "proposal_id",
           "filters",
           "observed_at",
           "created_at",
-          "size_bytes",
-          "data_uri"
+          "size_bytes"
         ],
         "title": "FitsRecordSummarySchema"
       },
@@ -3314,6 +3450,22 @@
           "columns"
         ],
         "title": "FitsTableInfoSchema"
+      },
+      "FitsUrlImportRequest": {
+        "properties": {
+          "url": {
+            "type": "string",
+            "maxLength": 2048,
+            "minLength": 1,
+            "title": "Url"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "url"
+        ],
+        "title": "FitsUrlImportRequest"
       },
       "FitsWcsInfoSchema": {
         "properties": {
