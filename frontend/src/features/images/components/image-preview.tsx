@@ -11,7 +11,7 @@ export function ImagePreview({ recordId, name }: Readonly<ImagePreviewProps>) {
   const [phase, setPhase] = useState<"loading" | "ready" | "hidden">("loading");
   const src = `${apiBaseUrl()}/image/${recordId}/preview?size=256`;
   return (
-    <div className="relative size-32 shrink-0 overflow-hidden bg-muted">
+    <div className="relative w-32 shrink-0 self-stretch overflow-hidden bg-muted">
       <img
         src={src}
         alt={name}

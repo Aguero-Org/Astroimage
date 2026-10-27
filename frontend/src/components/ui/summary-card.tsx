@@ -79,7 +79,7 @@ export function SummaryCardSkeleton({
         data-testid={testId}
         aria-hidden
       >
-        {preview ? <Skeleton className="size-32 shrink-0" /> : null}
+        {preview ? <Skeleton className="w-32 shrink-0 self-stretch" /> : null}
         {preview ? (
           <div className="flex min-w-0 flex-1 flex-col gap-2 p-3">
             {header}
