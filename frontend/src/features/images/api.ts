@@ -1,9 +1,15 @@
 import { keepPreviousData, useQueryClient } from "@tanstack/react-query";
 import {
+  useImportFitsFiles,
+  useImportFitsFromUrl,
+} from "@/api/generated/fits/fits";
+import {
+  getGetImageInfoQueryKey,
   getListHubbleImagesQueryKey,
   useDeleteHubbleImage,
   useGetImageInfo,
   useListHubbleImages,
+  usePatchImageRecord as usePatchImageRecordMutation,
 } from "@/api/generated/hub/hub";
 import type {
   DetectSourcesParams,
@@ -40,20 +46,13 @@ export function useImageRecords(
     {
       query: {
         placeholderData: keepPreviousData,
-        select: (response) =>
-          response.status === 200 ? response.data : undefined,
       },
     },
   );
 }
 
 export function useImageInfo(recordId: string) {
-  return useGetImageInfo(recordId, {
-    query: {
-      select: (response) =>
-        response.status === 200 ? response.data : undefined,
-    },
-  });
+  return useGetImageInfo(recordId);
 }
 
 export function useImageRender(
@@ -62,9 +61,9 @@ export function useImageRender(
 ) {
   return useRenderFitsImage(recordId, params, {
     query: {
-      placeholderData: keepPreviousData,
-      select: (response) =>
-        response.status === 200 ? response.data : undefined,
+      retry: false,
+      structuralSharing: false,
+      gcTime: 60_000,
     },
   });
 }
@@ -77,8 +76,7 @@ export function useImageHistogram(
   return useRenderFitsHistogram(recordId, params, {
     query: {
       enabled,
-      select: (response) =>
-        response.status === 200 ? response.data : undefined,
+      retry: false,
     },
   });
 }
@@ -91,8 +89,7 @@ export function useSourceDetection(
   return useDetectSources(recordId, params, {
     query: {
       enabled,
-      select: (response) =>
-        response.status === 200 ? response.data : undefined,
+      retry: false,
     },
   });
 }
@@ -101,8 +98,23 @@ export function useBestPreset(recordId: string, hdu: number | null) {
   return useGetBestPreset(recordId, hdu === null ? undefined : { hdu }, {
     query: {
       enabled: false,
-      select: (response) =>
-        response.status === 200 ? response.data : undefined,
+      retry: false,
+    },
+  });
+}
+
+export function usePatchImageRecord() {
+  const queryClient = useQueryClient();
+  return usePatchImageRecordMutation({
+    mutation: {
+      onSuccess: async (_data, variables) => {
+        await queryClient.invalidateQueries({
+          queryKey: getListHubbleImagesQueryKey(),
+        });
+        await queryClient.invalidateQueries({
+          queryKey: getGetImageInfoQueryKey(variables.recordId),
+        });
+      },
     },
   });
 }
@@ -116,6 +128,33 @@ export function useDeleteImage() {
           queryKey: getListHubbleImagesQueryKey(),
         });
       },
+    },
+  });
+}
+
+function useRefreshImageList() {
+  const queryClient = useQueryClient();
+  return async () => {
+    await queryClient.invalidateQueries({
+      queryKey: getListHubbleImagesQueryKey(),
+    });
+  };
+}
+
+export function useImportLocalFits() {
+  const refresh = useRefreshImageList();
+  return useImportFitsFiles({
+    mutation: {
+      onSuccess: refresh,
+    },
+  });
+}
+
+export function useImportFitsUrl() {
+  const refresh = useRefreshImageList();
+  return useImportFitsFromUrl({
+    mutation: {
+      onSuccess: refresh,
     },
   });
 }

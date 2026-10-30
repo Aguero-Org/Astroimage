@@ -4,7 +4,7 @@ from datetime import datetime
 from typing import Any
 from uuid import UUID, uuid4
 
-from sqlalchemy import DateTime, Integer, String, Uuid, func
+from sqlalchemy import DateTime, Integer, String, Text, UniqueConstraint, Uuid, func
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -13,12 +13,18 @@ from astroimage.shared.database import Base
 
 class FitsRecord(Base):
     __tablename__ = "fits_records"
+    __table_args__ = (
+        UniqueConstraint("content_hash", name="uq_fits_records_content_hash"),
+        UniqueConstraint("source_url", name="uq_fits_records_source_url"),
+    )
 
     id: Mapped[UUID] = mapped_column(Uuid(as_uuid=True), primary_key=True, default=uuid4)
     object_key: Mapped[str] = mapped_column(String(512), unique=True, nullable=False)
     slug: Mapped[str] = mapped_column(String(512), nullable=False)
     original_filename: Mapped[str] = mapped_column(String(512), nullable=False)
     size_bytes: Mapped[int] = mapped_column(Integer, nullable=False)
+    content_hash: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    source_url: Mapped[str | None] = mapped_column(Text, nullable=True)
     metadata_payload: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=False)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),

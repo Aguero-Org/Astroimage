@@ -26,6 +26,8 @@ import type {
 import type {
   CandidatePageSchema,
   FitsMetadataSchema,
+  FitsRecordPatchSchema,
+  FitsRecordSummarySchema,
   HTTPValidationError,
   ListHubbleImagesParams,
   ListRecordsResponseSchema,
@@ -35,6 +37,7 @@ import type {
 } from '../model';
 
 import { customFetch } from '../../../lib/api-client';
+import type { ErrorType } from '../../../lib/api-client';
 
 
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
@@ -56,25 +59,6 @@ const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKe
   return result;
 };
 
-export type listHubbleImagesResponse200 = {
-  data: ListRecordsResponseSchema
-  status: 200
-}
-
-export type listHubbleImagesResponse422 = {
-  data: HTTPValidationError
-  status: 422
-}
-
-export type listHubbleImagesResponseSuccess = (listHubbleImagesResponse200) & {
-  headers: Headers;
-};
-export type listHubbleImagesResponseError = (listHubbleImagesResponse422) & {
-  headers: Headers;
-};
-
-export type listHubbleImagesResponse = (listHubbleImagesResponseSuccess | listHubbleImagesResponseError)
-
 export const getListHubbleImagesUrl = (params?: ListHubbleImagesParams,) => {
   const normalizedParams = new URLSearchParams();
 
@@ -93,9 +77,9 @@ export const getListHubbleImagesUrl = (params?: ListHubbleImagesParams,) => {
 /**
  * @summary List Astro Images
  */
-export const listHubbleImages = async (params?: ListHubbleImagesParams, options?: Parameters<typeof customFetch>[1]): Promise<listHubbleImagesResponse> => {
+export const listHubbleImages = async (params?: ListHubbleImagesParams, options?: Parameters<typeof customFetch>[1]): Promise<ListRecordsResponseSchema> => {
 
-  return customFetch<listHubbleImagesResponse>(getListHubbleImagesUrl(params),
+  return customFetch<ListRecordsResponseSchema>(getListHubbleImagesUrl(params),
   {
     ...options,
     method: 'GET'
@@ -115,7 +99,7 @@ export const getListHubbleImagesQueryKey = (params?: ListHubbleImagesParams,) =>
     }
 
 
-export const getListHubbleImagesQueryOptions = <TData = Awaited<ReturnType<typeof listHubbleImages>>, TError = HTTPValidationError>(params?: ListHubbleImagesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listHubbleImages>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+export const getListHubbleImagesQueryOptions = <TData = Awaited<ReturnType<typeof listHubbleImages>>, TError = ErrorType<HTTPValidationError>>(params?: ListHubbleImagesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listHubbleImages>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
@@ -134,10 +118,10 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 }
 
 export type ListHubbleImagesQueryResult = NonNullable<Awaited<ReturnType<typeof listHubbleImages>>>
-export type ListHubbleImagesQueryError = HTTPValidationError
+export type ListHubbleImagesQueryError = ErrorType<HTTPValidationError>
 
 
-export function useListHubbleImages<TData = Awaited<ReturnType<typeof listHubbleImages>>, TError = HTTPValidationError>(
+export function useListHubbleImages<TData = Awaited<ReturnType<typeof listHubbleImages>>, TError = ErrorType<HTTPValidationError>>(
  params: undefined |  ListHubbleImagesParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listHubbleImages>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof listHubbleImages>>,
@@ -147,7 +131,7 @@ export function useListHubbleImages<TData = Awaited<ReturnType<typeof listHubble
       >, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useListHubbleImages<TData = Awaited<ReturnType<typeof listHubbleImages>>, TError = HTTPValidationError>(
+export function useListHubbleImages<TData = Awaited<ReturnType<typeof listHubbleImages>>, TError = ErrorType<HTTPValidationError>>(
  params?: ListHubbleImagesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listHubbleImages>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof listHubbleImages>>,
@@ -157,7 +141,7 @@ export function useListHubbleImages<TData = Awaited<ReturnType<typeof listHubble
       >, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useListHubbleImages<TData = Awaited<ReturnType<typeof listHubbleImages>>, TError = HTTPValidationError>(
+export function useListHubbleImages<TData = Awaited<ReturnType<typeof listHubbleImages>>, TError = ErrorType<HTTPValidationError>>(
  params?: ListHubbleImagesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listHubbleImages>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
@@ -165,7 +149,7 @@ export function useListHubbleImages<TData = Awaited<ReturnType<typeof listHubble
  * @summary List Astro Images
  */
 
-export function useListHubbleImages<TData = Awaited<ReturnType<typeof listHubbleImages>>, TError = HTTPValidationError>(
+export function useListHubbleImages<TData = Awaited<ReturnType<typeof listHubbleImages>>, TError = ErrorType<HTTPValidationError>>(
  params?: ListHubbleImagesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listHubbleImages>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
@@ -181,25 +165,6 @@ export function useListHubbleImages<TData = Awaited<ReturnType<typeof listHubble
 
 
 
-
-export type searchHubbleCandidatesResponse200 = {
-  data: CandidatePageSchema
-  status: 200
-}
-
-export type searchHubbleCandidatesResponse422 = {
-  data: HTTPValidationError
-  status: 422
-}
-
-export type searchHubbleCandidatesResponseSuccess = (searchHubbleCandidatesResponse200) & {
-  headers: Headers;
-};
-export type searchHubbleCandidatesResponseError = (searchHubbleCandidatesResponse422) & {
-  headers: Headers;
-};
-
-export type searchHubbleCandidatesResponse = (searchHubbleCandidatesResponseSuccess | searchHubbleCandidatesResponseError)
 
 export const getSearchHubbleCandidatesUrl = (params: SearchHubbleCandidatesParams,) => {
   const normalizedParams = new URLSearchParams();
@@ -219,9 +184,9 @@ export const getSearchHubbleCandidatesUrl = (params: SearchHubbleCandidatesParam
 /**
  * @summary Search Astro Image
  */
-export const searchHubbleCandidates = async (params: SearchHubbleCandidatesParams, options?: Parameters<typeof customFetch>[1]): Promise<searchHubbleCandidatesResponse> => {
+export const searchHubbleCandidates = async (params: SearchHubbleCandidatesParams, options?: Parameters<typeof customFetch>[1]): Promise<CandidatePageSchema> => {
 
-  return customFetch<searchHubbleCandidatesResponse>(getSearchHubbleCandidatesUrl(params),
+  return customFetch<CandidatePageSchema>(getSearchHubbleCandidatesUrl(params),
   {
     ...options,
     method: 'GET'
@@ -241,7 +206,7 @@ export const getSearchHubbleCandidatesQueryKey = (params?: SearchHubbleCandidate
     }
 
 
-export const getSearchHubbleCandidatesQueryOptions = <TData = Awaited<ReturnType<typeof searchHubbleCandidates>>, TError = HTTPValidationError>(params: SearchHubbleCandidatesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof searchHubbleCandidates>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+export const getSearchHubbleCandidatesQueryOptions = <TData = Awaited<ReturnType<typeof searchHubbleCandidates>>, TError = ErrorType<HTTPValidationError>>(params: SearchHubbleCandidatesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof searchHubbleCandidates>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
@@ -260,10 +225,10 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 }
 
 export type SearchHubbleCandidatesQueryResult = NonNullable<Awaited<ReturnType<typeof searchHubbleCandidates>>>
-export type SearchHubbleCandidatesQueryError = HTTPValidationError
+export type SearchHubbleCandidatesQueryError = ErrorType<HTTPValidationError>
 
 
-export function useSearchHubbleCandidates<TData = Awaited<ReturnType<typeof searchHubbleCandidates>>, TError = HTTPValidationError>(
+export function useSearchHubbleCandidates<TData = Awaited<ReturnType<typeof searchHubbleCandidates>>, TError = ErrorType<HTTPValidationError>>(
  params: SearchHubbleCandidatesParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof searchHubbleCandidates>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof searchHubbleCandidates>>,
@@ -273,7 +238,7 @@ export function useSearchHubbleCandidates<TData = Awaited<ReturnType<typeof sear
       >, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useSearchHubbleCandidates<TData = Awaited<ReturnType<typeof searchHubbleCandidates>>, TError = HTTPValidationError>(
+export function useSearchHubbleCandidates<TData = Awaited<ReturnType<typeof searchHubbleCandidates>>, TError = ErrorType<HTTPValidationError>>(
  params: SearchHubbleCandidatesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof searchHubbleCandidates>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof searchHubbleCandidates>>,
@@ -283,7 +248,7 @@ export function useSearchHubbleCandidates<TData = Awaited<ReturnType<typeof sear
       >, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useSearchHubbleCandidates<TData = Awaited<ReturnType<typeof searchHubbleCandidates>>, TError = HTTPValidationError>(
+export function useSearchHubbleCandidates<TData = Awaited<ReturnType<typeof searchHubbleCandidates>>, TError = ErrorType<HTTPValidationError>>(
  params: SearchHubbleCandidatesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof searchHubbleCandidates>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
@@ -291,7 +256,7 @@ export function useSearchHubbleCandidates<TData = Awaited<ReturnType<typeof sear
  * @summary Search Astro Image
  */
 
-export function useSearchHubbleCandidates<TData = Awaited<ReturnType<typeof searchHubbleCandidates>>, TError = HTTPValidationError>(
+export function useSearchHubbleCandidates<TData = Awaited<ReturnType<typeof searchHubbleCandidates>>, TError = ErrorType<HTTPValidationError>>(
  params: SearchHubbleCandidatesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof searchHubbleCandidates>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
@@ -308,25 +273,6 @@ export function useSearchHubbleCandidates<TData = Awaited<ReturnType<typeof sear
 
 
 
-export type selectHubbleCandidateResponse200 = {
-  data: TransferStatusSchema
-  status: 200
-}
-
-export type selectHubbleCandidateResponse422 = {
-  data: HTTPValidationError
-  status: 422
-}
-
-export type selectHubbleCandidateResponseSuccess = (selectHubbleCandidateResponse200) & {
-  headers: Headers;
-};
-export type selectHubbleCandidateResponseError = (selectHubbleCandidateResponse422) & {
-  headers: Headers;
-};
-
-export type selectHubbleCandidateResponse = (selectHubbleCandidateResponseSuccess | selectHubbleCandidateResponseError)
-
 export const getSelectHubbleCandidateUrl = () => {
 
 
@@ -338,7 +284,7 @@ export const getSelectHubbleCandidateUrl = () => {
 /**
  * @summary Select Astro Image
  */
-export const selectHubbleCandidate = async (selectCandidateRequestSchema: SelectCandidateRequestSchema, options?: Parameters<typeof customFetch>[1]): Promise<selectHubbleCandidateResponse> => {
+export const selectHubbleCandidate = async (selectCandidateRequestSchema: SelectCandidateRequestSchema, options?: Parameters<typeof customFetch>[1]): Promise<TransferStatusSchema> => {
 
     const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
     if (!h) return {};
@@ -354,7 +300,7 @@ export const selectHubbleCandidate = async (selectCandidateRequestSchema: Select
     }
     return headers;
   };
-return customFetch<selectHubbleCandidateResponse>(getSelectHubbleCandidateUrl(),
+return customFetch<TransferStatusSchema>(getSelectHubbleCandidateUrl(),
   {
     ...options,
     method: 'POST',
@@ -369,7 +315,7 @@ return customFetch<selectHubbleCandidateResponse>(getSelectHubbleCandidateUrl(),
 
 export const getSelectHubbleCandidateMutationKey = () => ['selectHubbleCandidate'] as const;
 
-export const getSelectHubbleCandidateMutationOptions = <TError = HTTPValidationError,
+export const getSelectHubbleCandidateMutationOptions = <TError = ErrorType<HTTPValidationError>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof selectHubbleCandidate>>, TError,SelectHubbleCandidateMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof selectHubbleCandidate>>, TError,SelectHubbleCandidateMutationVariables, TContext> => {
 
@@ -398,13 +344,13 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type SelectHubbleCandidateMutationResult = NonNullable<Awaited<ReturnType<typeof selectHubbleCandidate>>>
     export type SelectHubbleCandidateMutationBody = SelectCandidateRequestSchema
-    export type SelectHubbleCandidateMutationError = HTTPValidationError
+    export type SelectHubbleCandidateMutationError = ErrorType<HTTPValidationError>
     export type SelectHubbleCandidateMutationVariables = {data: SelectCandidateRequestSchema}
 
     /**
  * @summary Select Astro Image
  */
-export const useSelectHubbleCandidate = <TError = HTTPValidationError,
+export const useSelectHubbleCandidate = <TError = ErrorType<HTTPValidationError>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof selectHubbleCandidate>>, TError,SelectHubbleCandidateMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof selectHubbleCandidate>>,
@@ -414,26 +360,7 @@ export const useSelectHubbleCandidate = <TError = HTTPValidationError,
       > => {
       return useMutation(getSelectHubbleCandidateMutationOptions(options), queryClient);
     }
-    export type getImageTransferResponse200 = {
-  data: TransferStatusSchema
-  status: 200
-}
-
-export type getImageTransferResponse422 = {
-  data: HTTPValidationError
-  status: 422
-}
-
-export type getImageTransferResponseSuccess = (getImageTransferResponse200) & {
-  headers: Headers;
-};
-export type getImageTransferResponseError = (getImageTransferResponse422) & {
-  headers: Headers;
-};
-
-export type getImageTransferResponse = (getImageTransferResponseSuccess | getImageTransferResponseError)
-
-export const getGetImageTransferUrl = (transferId: string,) => {
+    export const getGetImageTransferUrl = (transferId: string,) => {
 
 
 
@@ -444,9 +371,9 @@ export const getGetImageTransferUrl = (transferId: string,) => {
 /**
  * @summary Get Image Transfer
  */
-export const getImageTransfer = async (transferId: string, options?: Parameters<typeof customFetch>[1]): Promise<getImageTransferResponse> => {
+export const getImageTransfer = async (transferId: string, options?: Parameters<typeof customFetch>[1]): Promise<TransferStatusSchema> => {
 
-  return customFetch<getImageTransferResponse>(getGetImageTransferUrl(transferId),
+  return customFetch<TransferStatusSchema>(getGetImageTransferUrl(transferId),
   {
     ...options,
     method: 'GET'
@@ -466,7 +393,7 @@ export const getGetImageTransferQueryKey = (transferId: string,) => {
     }
 
 
-export const getGetImageTransferQueryOptions = <TData = Awaited<ReturnType<typeof getImageTransfer>>, TError = HTTPValidationError>(transferId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getImageTransfer>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+export const getGetImageTransferQueryOptions = <TData = Awaited<ReturnType<typeof getImageTransfer>>, TError = ErrorType<HTTPValidationError>>(transferId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getImageTransfer>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
@@ -485,10 +412,10 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 }
 
 export type GetImageTransferQueryResult = NonNullable<Awaited<ReturnType<typeof getImageTransfer>>>
-export type GetImageTransferQueryError = HTTPValidationError
+export type GetImageTransferQueryError = ErrorType<HTTPValidationError>
 
 
-export function useGetImageTransfer<TData = Awaited<ReturnType<typeof getImageTransfer>>, TError = HTTPValidationError>(
+export function useGetImageTransfer<TData = Awaited<ReturnType<typeof getImageTransfer>>, TError = ErrorType<HTTPValidationError>>(
  transferId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getImageTransfer>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof getImageTransfer>>,
@@ -498,7 +425,7 @@ export function useGetImageTransfer<TData = Awaited<ReturnType<typeof getImageTr
       >, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetImageTransfer<TData = Awaited<ReturnType<typeof getImageTransfer>>, TError = HTTPValidationError>(
+export function useGetImageTransfer<TData = Awaited<ReturnType<typeof getImageTransfer>>, TError = ErrorType<HTTPValidationError>>(
  transferId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getImageTransfer>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof getImageTransfer>>,
@@ -508,7 +435,7 @@ export function useGetImageTransfer<TData = Awaited<ReturnType<typeof getImageTr
       >, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetImageTransfer<TData = Awaited<ReturnType<typeof getImageTransfer>>, TError = HTTPValidationError>(
+export function useGetImageTransfer<TData = Awaited<ReturnType<typeof getImageTransfer>>, TError = ErrorType<HTTPValidationError>>(
  transferId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getImageTransfer>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
@@ -516,7 +443,7 @@ export function useGetImageTransfer<TData = Awaited<ReturnType<typeof getImageTr
  * @summary Get Image Transfer
  */
 
-export function useGetImageTransfer<TData = Awaited<ReturnType<typeof getImageTransfer>>, TError = HTTPValidationError>(
+export function useGetImageTransfer<TData = Awaited<ReturnType<typeof getImageTransfer>>, TError = ErrorType<HTTPValidationError>>(
  transferId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getImageTransfer>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
@@ -533,25 +460,6 @@ export function useGetImageTransfer<TData = Awaited<ReturnType<typeof getImageTr
 
 
 
-export type cancelImageTransferResponse200 = {
-  data: TransferStatusSchema
-  status: 200
-}
-
-export type cancelImageTransferResponse422 = {
-  data: HTTPValidationError
-  status: 422
-}
-
-export type cancelImageTransferResponseSuccess = (cancelImageTransferResponse200) & {
-  headers: Headers;
-};
-export type cancelImageTransferResponseError = (cancelImageTransferResponse422) & {
-  headers: Headers;
-};
-
-export type cancelImageTransferResponse = (cancelImageTransferResponseSuccess | cancelImageTransferResponseError)
-
 export const getCancelImageTransferUrl = (transferId: string,) => {
 
 
@@ -563,9 +471,9 @@ export const getCancelImageTransferUrl = (transferId: string,) => {
 /**
  * @summary Cancel Image Transfer
  */
-export const cancelImageTransfer = async (transferId: string, options?: Parameters<typeof customFetch>[1]): Promise<cancelImageTransferResponse> => {
+export const cancelImageTransfer = async (transferId: string, options?: Parameters<typeof customFetch>[1]): Promise<TransferStatusSchema> => {
 
-  return customFetch<cancelImageTransferResponse>(getCancelImageTransferUrl(transferId),
+  return customFetch<TransferStatusSchema>(getCancelImageTransferUrl(transferId),
   {
     ...options,
     method: 'POST'
@@ -580,7 +488,7 @@ export const cancelImageTransfer = async (transferId: string, options?: Paramete
 
 export const getCancelImageTransferMutationKey = () => ['cancelImageTransfer'] as const;
 
-export const getCancelImageTransferMutationOptions = <TError = HTTPValidationError,
+export const getCancelImageTransferMutationOptions = <TError = ErrorType<HTTPValidationError>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof cancelImageTransfer>>, TError,CancelImageTransferMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof cancelImageTransfer>>, TError,CancelImageTransferMutationVariables, TContext> => {
 
@@ -609,13 +517,13 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type CancelImageTransferMutationResult = NonNullable<Awaited<ReturnType<typeof cancelImageTransfer>>>
 
-    export type CancelImageTransferMutationError = HTTPValidationError
+    export type CancelImageTransferMutationError = ErrorType<HTTPValidationError>
     export type CancelImageTransferMutationVariables = {transferId: string}
 
     /**
  * @summary Cancel Image Transfer
  */
-export const useCancelImageTransfer = <TError = HTTPValidationError,
+export const useCancelImageTransfer = <TError = ErrorType<HTTPValidationError>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof cancelImageTransfer>>, TError,CancelImageTransferMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof cancelImageTransfer>>,
@@ -625,26 +533,7 @@ export const useCancelImageTransfer = <TError = HTTPValidationError,
       > => {
       return useMutation(getCancelImageTransferMutationOptions(options), queryClient);
     }
-    export type resumeImageTransferResponse200 = {
-  data: TransferStatusSchema
-  status: 200
-}
-
-export type resumeImageTransferResponse422 = {
-  data: HTTPValidationError
-  status: 422
-}
-
-export type resumeImageTransferResponseSuccess = (resumeImageTransferResponse200) & {
-  headers: Headers;
-};
-export type resumeImageTransferResponseError = (resumeImageTransferResponse422) & {
-  headers: Headers;
-};
-
-export type resumeImageTransferResponse = (resumeImageTransferResponseSuccess | resumeImageTransferResponseError)
-
-export const getResumeImageTransferUrl = (transferId: string,) => {
+    export const getResumeImageTransferUrl = (transferId: string,) => {
 
 
 
@@ -655,9 +544,9 @@ export const getResumeImageTransferUrl = (transferId: string,) => {
 /**
  * @summary Resume Image Transfer
  */
-export const resumeImageTransfer = async (transferId: string, options?: Parameters<typeof customFetch>[1]): Promise<resumeImageTransferResponse> => {
+export const resumeImageTransfer = async (transferId: string, options?: Parameters<typeof customFetch>[1]): Promise<TransferStatusSchema> => {
 
-  return customFetch<resumeImageTransferResponse>(getResumeImageTransferUrl(transferId),
+  return customFetch<TransferStatusSchema>(getResumeImageTransferUrl(transferId),
   {
     ...options,
     method: 'POST'
@@ -672,7 +561,7 @@ export const resumeImageTransfer = async (transferId: string, options?: Paramete
 
 export const getResumeImageTransferMutationKey = () => ['resumeImageTransfer'] as const;
 
-export const getResumeImageTransferMutationOptions = <TError = HTTPValidationError,
+export const getResumeImageTransferMutationOptions = <TError = ErrorType<HTTPValidationError>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof resumeImageTransfer>>, TError,ResumeImageTransferMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof resumeImageTransfer>>, TError,ResumeImageTransferMutationVariables, TContext> => {
 
@@ -701,13 +590,13 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type ResumeImageTransferMutationResult = NonNullable<Awaited<ReturnType<typeof resumeImageTransfer>>>
 
-    export type ResumeImageTransferMutationError = HTTPValidationError
+    export type ResumeImageTransferMutationError = ErrorType<HTTPValidationError>
     export type ResumeImageTransferMutationVariables = {transferId: string}
 
     /**
  * @summary Resume Image Transfer
  */
-export const useResumeImageTransfer = <TError = HTTPValidationError,
+export const useResumeImageTransfer = <TError = ErrorType<HTTPValidationError>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof resumeImageTransfer>>, TError,ResumeImageTransferMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof resumeImageTransfer>>,
@@ -717,26 +606,95 @@ export const useResumeImageTransfer = <TError = HTTPValidationError,
       > => {
       return useMutation(getResumeImageTransferMutationOptions(options), queryClient);
     }
-    export type deleteHubbleImageResponse204 = {
-  data: void
-  status: 204
+    export const getPatchImageRecordUrl = (recordId: string,) => {
+
+
+
+
+  return `/image/${recordId}`
 }
 
-export type deleteHubbleImageResponse422 = {
-  data: HTTPValidationError
-  status: 422
-}
+/**
+ * @summary Patch Astro Image
+ */
+export const patchImageRecord = async (recordId: string,
+    fitsRecordPatchSchema: FitsRecordPatchSchema, options?: Parameters<typeof customFetch>[1]): Promise<FitsRecordSummarySchema> => {
 
-export type deleteHubbleImageResponseSuccess = (deleteHubbleImageResponse204) & {
-  headers: Headers;
-};
-export type deleteHubbleImageResponseError = (deleteHubbleImageResponse422) & {
-  headers: Headers;
-};
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<FitsRecordSummarySchema>(getPatchImageRecordUrl(recordId),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(fitsRecordPatchSchema)
+  }
+);}
 
-export type deleteHubbleImageResponse = (deleteHubbleImageResponseSuccess | deleteHubbleImageResponseError)
 
-export const getDeleteHubbleImageUrl = (recordId: string,) => {
+
+
+
+export const getPatchImageRecordMutationKey = () => ['patchImageRecord'] as const;
+
+export const getPatchImageRecordMutationOptions = <TError = ErrorType<HTTPValidationError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof patchImageRecord>>, TError,PatchImageRecordMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof patchImageRecord>>, TError,PatchImageRecordMutationVariables, TContext> => {
+
+const mutationKey = getPatchImageRecordMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof patchImageRecord>>, PatchImageRecordMutationVariables> = (props) => {
+          const {recordId,data} = props ?? {};
+
+          return  patchImageRecord(recordId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PatchImageRecordMutationResult = NonNullable<Awaited<ReturnType<typeof patchImageRecord>>>
+    export type PatchImageRecordMutationBody = FitsRecordPatchSchema
+    export type PatchImageRecordMutationError = ErrorType<HTTPValidationError>
+    export type PatchImageRecordMutationVariables = {recordId: string;data: FitsRecordPatchSchema}
+
+    /**
+ * @summary Patch Astro Image
+ */
+export const usePatchImageRecord = <TError = ErrorType<HTTPValidationError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof patchImageRecord>>, TError,PatchImageRecordMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof patchImageRecord>>,
+        TError,
+        PatchImageRecordMutationVariables,
+        TContext
+      > => {
+      return useMutation(getPatchImageRecordMutationOptions(options), queryClient);
+    }
+    export const getDeleteHubbleImageUrl = (recordId: string,) => {
 
 
 
@@ -747,9 +705,9 @@ export const getDeleteHubbleImageUrl = (recordId: string,) => {
 /**
  * @summary Delete Astro Image
  */
-export const deleteHubbleImage = async (recordId: string, options?: Parameters<typeof customFetch>[1]): Promise<deleteHubbleImageResponse> => {
+export const deleteHubbleImage = async (recordId: string, options?: Parameters<typeof customFetch>[1]): Promise<void> => {
 
-  return customFetch<deleteHubbleImageResponse>(getDeleteHubbleImageUrl(recordId),
+  return customFetch<void>(getDeleteHubbleImageUrl(recordId),
   {
     ...options,
     method: 'DELETE'
@@ -764,7 +722,7 @@ export const deleteHubbleImage = async (recordId: string, options?: Parameters<t
 
 export const getDeleteHubbleImageMutationKey = () => ['deleteHubbleImage'] as const;
 
-export const getDeleteHubbleImageMutationOptions = <TError = HTTPValidationError,
+export const getDeleteHubbleImageMutationOptions = <TError = ErrorType<HTTPValidationError>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteHubbleImage>>, TError,DeleteHubbleImageMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof deleteHubbleImage>>, TError,DeleteHubbleImageMutationVariables, TContext> => {
 
@@ -793,13 +751,13 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type DeleteHubbleImageMutationResult = NonNullable<Awaited<ReturnType<typeof deleteHubbleImage>>>
 
-    export type DeleteHubbleImageMutationError = HTTPValidationError
+    export type DeleteHubbleImageMutationError = ErrorType<HTTPValidationError>
     export type DeleteHubbleImageMutationVariables = {recordId: string}
 
     /**
  * @summary Delete Astro Image
  */
-export const useDeleteHubbleImage = <TError = HTTPValidationError,
+export const useDeleteHubbleImage = <TError = ErrorType<HTTPValidationError>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteHubbleImage>>, TError,DeleteHubbleImageMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof deleteHubbleImage>>,
@@ -809,26 +767,7 @@ export const useDeleteHubbleImage = <TError = HTTPValidationError,
       > => {
       return useMutation(getDeleteHubbleImageMutationOptions(options), queryClient);
     }
-    export type getImageInfoResponse200 = {
-  data: FitsMetadataSchema
-  status: 200
-}
-
-export type getImageInfoResponse422 = {
-  data: HTTPValidationError
-  status: 422
-}
-
-export type getImageInfoResponseSuccess = (getImageInfoResponse200) & {
-  headers: Headers;
-};
-export type getImageInfoResponseError = (getImageInfoResponse422) & {
-  headers: Headers;
-};
-
-export type getImageInfoResponse = (getImageInfoResponseSuccess | getImageInfoResponseError)
-
-export const getGetImageInfoUrl = (recordId: string,) => {
+    export const getGetImageInfoUrl = (recordId: string,) => {
 
 
 
@@ -839,9 +778,9 @@ export const getGetImageInfoUrl = (recordId: string,) => {
 /**
  * @summary Get Image Info
  */
-export const getImageInfo = async (recordId: string, options?: Parameters<typeof customFetch>[1]): Promise<getImageInfoResponse> => {
+export const getImageInfo = async (recordId: string, options?: Parameters<typeof customFetch>[1]): Promise<FitsMetadataSchema> => {
 
-  return customFetch<getImageInfoResponse>(getGetImageInfoUrl(recordId),
+  return customFetch<FitsMetadataSchema>(getGetImageInfoUrl(recordId),
   {
     ...options,
     method: 'GET'
@@ -861,7 +800,7 @@ export const getGetImageInfoQueryKey = (recordId: string,) => {
     }
 
 
-export const getGetImageInfoQueryOptions = <TData = Awaited<ReturnType<typeof getImageInfo>>, TError = HTTPValidationError>(recordId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getImageInfo>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+export const getGetImageInfoQueryOptions = <TData = Awaited<ReturnType<typeof getImageInfo>>, TError = ErrorType<HTTPValidationError>>(recordId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getImageInfo>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
@@ -880,10 +819,10 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 }
 
 export type GetImageInfoQueryResult = NonNullable<Awaited<ReturnType<typeof getImageInfo>>>
-export type GetImageInfoQueryError = HTTPValidationError
+export type GetImageInfoQueryError = ErrorType<HTTPValidationError>
 
 
-export function useGetImageInfo<TData = Awaited<ReturnType<typeof getImageInfo>>, TError = HTTPValidationError>(
+export function useGetImageInfo<TData = Awaited<ReturnType<typeof getImageInfo>>, TError = ErrorType<HTTPValidationError>>(
  recordId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getImageInfo>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof getImageInfo>>,
@@ -893,7 +832,7 @@ export function useGetImageInfo<TData = Awaited<ReturnType<typeof getImageInfo>>
       >, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetImageInfo<TData = Awaited<ReturnType<typeof getImageInfo>>, TError = HTTPValidationError>(
+export function useGetImageInfo<TData = Awaited<ReturnType<typeof getImageInfo>>, TError = ErrorType<HTTPValidationError>>(
  recordId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getImageInfo>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof getImageInfo>>,
@@ -903,7 +842,7 @@ export function useGetImageInfo<TData = Awaited<ReturnType<typeof getImageInfo>>
       >, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetImageInfo<TData = Awaited<ReturnType<typeof getImageInfo>>, TError = HTTPValidationError>(
+export function useGetImageInfo<TData = Awaited<ReturnType<typeof getImageInfo>>, TError = ErrorType<HTTPValidationError>>(
  recordId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getImageInfo>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
@@ -911,7 +850,7 @@ export function useGetImageInfo<TData = Awaited<ReturnType<typeof getImageInfo>>
  * @summary Get Image Info
  */
 
-export function useGetImageInfo<TData = Awaited<ReturnType<typeof getImageInfo>>, TError = HTTPValidationError>(
+export function useGetImageInfo<TData = Awaited<ReturnType<typeof getImageInfo>>, TError = ErrorType<HTTPValidationError>>(
  recordId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getImageInfo>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {

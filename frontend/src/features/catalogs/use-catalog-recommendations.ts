@@ -3,7 +3,6 @@ import {
   useRecommendCatalogs,
 } from "@/api/generated/catalogs/catalogs";
 import type { RecommendCatalogsParams } from "@/api/generated/model";
-import { okData } from "@/lib/api-response";
 import { pendingJobId, polledJobResult } from "@/lib/polled-job";
 import {
   collectPublications,
@@ -30,8 +29,6 @@ export function useCatalogRecommendations({
       enabled,
       staleTime: RESULT_STALE_TIME_MS,
       retry: false,
-      select: (response) =>
-        response.status === 200 ? response.data : undefined,
     },
   });
 
@@ -40,13 +37,11 @@ export function useCatalogRecommendations({
     query: {
       enabled: enabled && jobId !== undefined,
       retry: false,
-      select: (response) =>
-        response.status === 200 ? response.data : undefined,
       refetchInterval: (query) => {
         if (query.state.status === "error") {
           return false;
         }
-        return isCatalogRecommendation(okData(query.state.data))
+        return isCatalogRecommendation(query.state.data)
           ? false
           : JOB_POLL_INTERVAL_MS;
       },

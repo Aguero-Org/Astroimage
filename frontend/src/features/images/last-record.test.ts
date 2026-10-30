@@ -1,85 +1,110 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import {
   LAST_IMAGE_RECORD_KEY,
-  readLastImageRecord,
   rememberLastImageRecord,
-  subscribeLastImageRecord,
+  useLastRecordStore,
 } from "./last-record";
 
-describe("last image record", () => {
-  afterEach(() => {
-    sessionStorage.removeItem(LAST_IMAGE_RECORD_KEY);
+function resetStore(): void {
+  sessionStorage.removeItem(LAST_IMAGE_RECORD_KEY);
+  useLastRecordStore.setState({ record: null });
+}
+
+describe("useLastRecordStore", () => {
+  beforeEach(resetStore);
+  afterEach(resetStore);
+
+  it("keeps the persisted key", () => {
+    expect(LAST_IMAGE_RECORD_KEY).toBe("astroimage-last-record");
   });
 
-  it("stores and reads the last opened record", () => {
-    expect(readLastImageRecord()).toBeNull();
+  it("updates state and writes the raw record JSON", () => {
+    expect(useLastRecordStore.getState().record).toBeNull();
+
     rememberLastImageRecord("m31");
-    expect(readLastImageRecord()).toEqual({ recordId: "m31" });
+
+    expect(useLastRecordStore.getState().record).toEqual({ recordId: "m31" });
+    expect(sessionStorage.getItem(LAST_IMAGE_RECORD_KEY)).toBe(
+      '{"recordId":"m31"}',
+    );
   });
 
-  it("keeps the slug used in the image link", () => {
+  it("keeps the slug and omits an empty one", () => {
     rememberLastImageRecord("m31", "hst_123.fits");
-    expect(readLastImageRecord()).toEqual({
+
+    expect(useLastRecordStore.getState().record).toEqual({
       recordId: "m31",
       slug: "hst_123.fits",
     });
+    expect(sessionStorage.getItem(LAST_IMAGE_RECORD_KEY)).toBe(
+      '{"recordId":"m31","slug":"hst_123.fits"}',
+    );
+
+    rememberLastImageRecord("m42", "");
+
+    expect(useLastRecordStore.getState().record).toEqual({ recordId: "m42" });
+    expect(sessionStorage.getItem(LAST_IMAGE_RECORD_KEY)).toBe(
+      '{"recordId":"m42"}',
+    );
   });
 
-  it("reads a record id stored before slugs existed", () => {
-    sessionStorage.setItem(LAST_IMAGE_RECORD_KEY, "m31");
-    expect(readLastImageRecord()).toEqual({ recordId: "m31" });
-  });
-
-  it("keeps the persisted key and refreshes after the record is removed", () => {
-    expect(LAST_IMAGE_RECORD_KEY).toBe("astroimage-last-record");
-
+  it("clears the record and removes the stored key", () => {
     rememberLastImageRecord("m31");
-    expect(readLastImageRecord()).toEqual({ recordId: "m31" });
 
-    sessionStorage.removeItem(LAST_IMAGE_RECORD_KEY);
-    expect(readLastImageRecord()).toBeNull();
+    useLastRecordStore.getState().clear();
+
+    expect(useLastRecordStore.getState().record).toBeNull();
+    expect(sessionStorage.getItem(LAST_IMAGE_RECORD_KEY)).toBeNull();
   });
 
-  it("drops malformed or incomplete stored values", () => {
+  it("rehydrates a legacy plain record id", async () => {
+    sessionStorage.setItem(LAST_IMAGE_RECORD_KEY, "m31");
+
+    await useLastRecordStore.persist.rehydrate();
+
+    expect(useLastRecordStore.getState().record).toEqual({ recordId: "m31" });
+  });
+
+  it("rehydrates a raw legacy record and drops an empty slug", async () => {
+    sessionStorage.setItem(
+      LAST_IMAGE_RECORD_KEY,
+      JSON.stringify({ recordId: "m31", slug: "hst_123.fits" }),
+    );
+
+    await useLastRecordStore.persist.rehydrate();
+
+    expect(useLastRecordStore.getState().record).toEqual({
+      recordId: "m31",
+      slug: "hst_123.fits",
+    });
+
+    sessionStorage.setItem(
+      LAST_IMAGE_RECORD_KEY,
+      JSON.stringify({ recordId: "m42", slug: "" }),
+    );
+
+    await useLastRecordStore.persist.rehydrate();
+
+    expect(useLastRecordStore.getState().record).toEqual({ recordId: "m42" });
+  });
+
+  it("drops malformed or incomplete stored values", async () => {
     sessionStorage.setItem(LAST_IMAGE_RECORD_KEY, "{not-json");
-    expect(readLastImageRecord()).toBeNull();
+    await useLastRecordStore.persist.rehydrate();
+    expect(useLastRecordStore.getState().record).toBeNull();
 
     sessionStorage.setItem(
       LAST_IMAGE_RECORD_KEY,
       JSON.stringify({ recordId: 42 }),
     );
-    expect(readLastImageRecord()).toBeNull();
+    await useLastRecordStore.persist.rehydrate();
+    expect(useLastRecordStore.getState().record).toBeNull();
 
     sessionStorage.setItem(
       LAST_IMAGE_RECORD_KEY,
       JSON.stringify({ recordId: "" }),
     );
-    expect(readLastImageRecord()).toBeNull();
-  });
-
-  it("omits an empty slug and keeps a record id without one", () => {
-    sessionStorage.setItem(
-      LAST_IMAGE_RECORD_KEY,
-      JSON.stringify({ recordId: "m31", slug: "" }),
-    );
-    expect(readLastImageRecord()).toEqual({ recordId: "m31" });
-
-    sessionStorage.setItem(
-      LAST_IMAGE_RECORD_KEY,
-      JSON.stringify({ recordId: "m42" }),
-    );
-    expect(readLastImageRecord()).toEqual({ recordId: "m42" });
-  });
-
-  it("notifies subscribers until they unsubscribe", () => {
-    const listener = vi.fn();
-    const unsubscribe = subscribeLastImageRecord(listener);
-
-    rememberLastImageRecord("m31");
-    expect(listener).toHaveBeenCalledOnce();
-
-    unsubscribe();
-    rememberLastImageRecord("m42");
-    expect(listener).toHaveBeenCalledOnce();
+    await useLastRecordStore.persist.rehydrate();
+    expect(useLastRecordStore.getState().record).toBeNull();
   });
 });

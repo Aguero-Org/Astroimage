@@ -20,6 +20,7 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
+  GetFitsPreviewParams,
   HTTPValidationError,
   HistogramResponse,
   RenderFitsHistogramParams,
@@ -27,6 +28,7 @@ import type {
 } from '../model';
 
 import { customFetch } from '../../../lib/api-client';
+import type { ErrorType } from '../../../lib/api-client';
 
 
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
@@ -48,30 +50,6 @@ const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKe
   return result;
 };
 
-export type renderFitsImageResponse200ApplicationJson = {
-  data: unknown
-  status: 200
-}
-
-export type renderFitsImageResponse200ImagePng = {
-  data: Blob
-  status: 200
-}
-
-export type renderFitsImageResponse422 = {
-  data: HTTPValidationError
-  status: 422
-}
-
-export type renderFitsImageResponseSuccess = (renderFitsImageResponse200ApplicationJson | renderFitsImageResponse200ImagePng) & {
-  headers: Headers;
-};
-export type renderFitsImageResponseError = (renderFitsImageResponse422) & {
-  headers: Headers;
-};
-
-export type renderFitsImageResponse = (renderFitsImageResponseSuccess | renderFitsImageResponseError)
-
 export const getRenderFitsImageUrl = (recordId: string,
     params?: RenderFitsImageParams,) => {
   const normalizedParams = new URLSearchParams();
@@ -92,9 +70,9 @@ export const getRenderFitsImageUrl = (recordId: string,
  * @summary Render Fits Image
  */
 export const renderFitsImage = async (recordId: string,
-    params?: RenderFitsImageParams, options?: Parameters<typeof customFetch>[1]): Promise<renderFitsImageResponse> => {
+    params?: RenderFitsImageParams, options?: Parameters<typeof customFetch>[1]): Promise<unknown | Blob> => {
 
-  return customFetch<renderFitsImageResponse>(getRenderFitsImageUrl(recordId,params),
+  return customFetch<unknown | Blob>(getRenderFitsImageUrl(recordId,params),
   {
     ...options,
     method: 'GET'
@@ -115,7 +93,7 @@ export const getRenderFitsImageQueryKey = (recordId: string,
     }
 
 
-export const getRenderFitsImageQueryOptions = <TData = Awaited<ReturnType<typeof renderFitsImage>>, TError = HTTPValidationError>(recordId: string,
+export const getRenderFitsImageQueryOptions = <TData = Awaited<ReturnType<typeof renderFitsImage>>, TError = ErrorType<HTTPValidationError>>(recordId: string,
     params?: RenderFitsImageParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof renderFitsImage>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
 ) => {
 
@@ -135,10 +113,10 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 }
 
 export type RenderFitsImageQueryResult = NonNullable<Awaited<ReturnType<typeof renderFitsImage>>>
-export type RenderFitsImageQueryError = HTTPValidationError
+export type RenderFitsImageQueryError = ErrorType<HTTPValidationError>
 
 
-export function useRenderFitsImage<TData = Awaited<ReturnType<typeof renderFitsImage>>, TError = HTTPValidationError>(
+export function useRenderFitsImage<TData = Awaited<ReturnType<typeof renderFitsImage>>, TError = ErrorType<HTTPValidationError>>(
  recordId: string,
     params: undefined |  RenderFitsImageParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof renderFitsImage>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
@@ -149,7 +127,7 @@ export function useRenderFitsImage<TData = Awaited<ReturnType<typeof renderFitsI
       >, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useRenderFitsImage<TData = Awaited<ReturnType<typeof renderFitsImage>>, TError = HTTPValidationError>(
+export function useRenderFitsImage<TData = Awaited<ReturnType<typeof renderFitsImage>>, TError = ErrorType<HTTPValidationError>>(
  recordId: string,
     params?: RenderFitsImageParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof renderFitsImage>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
@@ -160,7 +138,7 @@ export function useRenderFitsImage<TData = Awaited<ReturnType<typeof renderFitsI
       >, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useRenderFitsImage<TData = Awaited<ReturnType<typeof renderFitsImage>>, TError = HTTPValidationError>(
+export function useRenderFitsImage<TData = Awaited<ReturnType<typeof renderFitsImage>>, TError = ErrorType<HTTPValidationError>>(
  recordId: string,
     params?: RenderFitsImageParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof renderFitsImage>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
@@ -169,7 +147,7 @@ export function useRenderFitsImage<TData = Awaited<ReturnType<typeof renderFitsI
  * @summary Render Fits Image
  */
 
-export function useRenderFitsImage<TData = Awaited<ReturnType<typeof renderFitsImage>>, TError = HTTPValidationError>(
+export function useRenderFitsImage<TData = Awaited<ReturnType<typeof renderFitsImage>>, TError = ErrorType<HTTPValidationError>>(
  recordId: string,
     params?: RenderFitsImageParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof renderFitsImage>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
@@ -187,24 +165,120 @@ export function useRenderFitsImage<TData = Awaited<ReturnType<typeof renderFitsI
 
 
 
-export type renderFitsHistogramResponse200 = {
-  data: HistogramResponse
-  status: 200
+export const getGetFitsPreviewUrl = (recordId: string,
+    params?: GetFitsPreviewParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/image/${recordId}/preview?${stringifiedParams}` : `/image/${recordId}/preview`
 }
 
-export type renderFitsHistogramResponse422 = {
-  data: HTTPValidationError
-  status: 422
+/**
+ * @summary Get Fits Preview
+ */
+export const getFitsPreview = async (recordId: string,
+    params?: GetFitsPreviewParams, options?: Parameters<typeof customFetch>[1]): Promise<unknown | Blob> => {
+
+  return customFetch<unknown | Blob>(getGetFitsPreviewUrl(recordId,params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetFitsPreviewQueryKey = (recordId: string,
+    params?: GetFitsPreviewParams,) => {
+    return [
+    `/image/${recordId}/preview`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetFitsPreviewQueryOptions = <TData = Awaited<ReturnType<typeof getFitsPreview>>, TError = ErrorType<void | HTTPValidationError>>(recordId: string,
+    params?: GetFitsPreviewParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getFitsPreview>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetFitsPreviewQueryKey(recordId,params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getFitsPreview>>> = ({ signal }) => getFitsPreview(recordId,params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: recordId !== null && recordId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getFitsPreview>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
-export type renderFitsHistogramResponseSuccess = (renderFitsHistogramResponse200) & {
-  headers: Headers;
-};
-export type renderFitsHistogramResponseError = (renderFitsHistogramResponse422) & {
-  headers: Headers;
-};
+export type GetFitsPreviewQueryResult = NonNullable<Awaited<ReturnType<typeof getFitsPreview>>>
+export type GetFitsPreviewQueryError = ErrorType<void | HTTPValidationError>
 
-export type renderFitsHistogramResponse = (renderFitsHistogramResponseSuccess | renderFitsHistogramResponseError)
+
+export function useGetFitsPreview<TData = Awaited<ReturnType<typeof getFitsPreview>>, TError = ErrorType<void | HTTPValidationError>>(
+ recordId: string,
+    params: undefined |  GetFitsPreviewParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getFitsPreview>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getFitsPreview>>,
+          TError,
+          Awaited<ReturnType<typeof getFitsPreview>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetFitsPreview<TData = Awaited<ReturnType<typeof getFitsPreview>>, TError = ErrorType<void | HTTPValidationError>>(
+ recordId: string,
+    params?: GetFitsPreviewParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getFitsPreview>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getFitsPreview>>,
+          TError,
+          Awaited<ReturnType<typeof getFitsPreview>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetFitsPreview<TData = Awaited<ReturnType<typeof getFitsPreview>>, TError = ErrorType<void | HTTPValidationError>>(
+ recordId: string,
+    params?: GetFitsPreviewParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getFitsPreview>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get Fits Preview
+ */
+
+export function useGetFitsPreview<TData = Awaited<ReturnType<typeof getFitsPreview>>, TError = ErrorType<void | HTTPValidationError>>(
+ recordId: string,
+    params?: GetFitsPreviewParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getFitsPreview>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetFitsPreviewQueryOptions(recordId,params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
 
 export const getRenderFitsHistogramUrl = (recordId: string,
     params?: RenderFitsHistogramParams,) => {
@@ -226,9 +300,9 @@ export const getRenderFitsHistogramUrl = (recordId: string,
  * @summary Render Fits Histogram
  */
 export const renderFitsHistogram = async (recordId: string,
-    params?: RenderFitsHistogramParams, options?: Parameters<typeof customFetch>[1]): Promise<renderFitsHistogramResponse> => {
+    params?: RenderFitsHistogramParams, options?: Parameters<typeof customFetch>[1]): Promise<HistogramResponse> => {
 
-  return customFetch<renderFitsHistogramResponse>(getRenderFitsHistogramUrl(recordId,params),
+  return customFetch<HistogramResponse>(getRenderFitsHistogramUrl(recordId,params),
   {
     ...options,
     method: 'GET'
@@ -249,7 +323,7 @@ export const getRenderFitsHistogramQueryKey = (recordId: string,
     }
 
 
-export const getRenderFitsHistogramQueryOptions = <TData = Awaited<ReturnType<typeof renderFitsHistogram>>, TError = HTTPValidationError>(recordId: string,
+export const getRenderFitsHistogramQueryOptions = <TData = Awaited<ReturnType<typeof renderFitsHistogram>>, TError = ErrorType<HTTPValidationError>>(recordId: string,
     params?: RenderFitsHistogramParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof renderFitsHistogram>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
 ) => {
 
@@ -269,10 +343,10 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 }
 
 export type RenderFitsHistogramQueryResult = NonNullable<Awaited<ReturnType<typeof renderFitsHistogram>>>
-export type RenderFitsHistogramQueryError = HTTPValidationError
+export type RenderFitsHistogramQueryError = ErrorType<HTTPValidationError>
 
 
-export function useRenderFitsHistogram<TData = Awaited<ReturnType<typeof renderFitsHistogram>>, TError = HTTPValidationError>(
+export function useRenderFitsHistogram<TData = Awaited<ReturnType<typeof renderFitsHistogram>>, TError = ErrorType<HTTPValidationError>>(
  recordId: string,
     params: undefined |  RenderFitsHistogramParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof renderFitsHistogram>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
@@ -283,7 +357,7 @@ export function useRenderFitsHistogram<TData = Awaited<ReturnType<typeof renderF
       >, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useRenderFitsHistogram<TData = Awaited<ReturnType<typeof renderFitsHistogram>>, TError = HTTPValidationError>(
+export function useRenderFitsHistogram<TData = Awaited<ReturnType<typeof renderFitsHistogram>>, TError = ErrorType<HTTPValidationError>>(
  recordId: string,
     params?: RenderFitsHistogramParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof renderFitsHistogram>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
@@ -294,7 +368,7 @@ export function useRenderFitsHistogram<TData = Awaited<ReturnType<typeof renderF
       >, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useRenderFitsHistogram<TData = Awaited<ReturnType<typeof renderFitsHistogram>>, TError = HTTPValidationError>(
+export function useRenderFitsHistogram<TData = Awaited<ReturnType<typeof renderFitsHistogram>>, TError = ErrorType<HTTPValidationError>>(
  recordId: string,
     params?: RenderFitsHistogramParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof renderFitsHistogram>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
@@ -303,7 +377,7 @@ export function useRenderFitsHistogram<TData = Awaited<ReturnType<typeof renderF
  * @summary Render Fits Histogram
  */
 
-export function useRenderFitsHistogram<TData = Awaited<ReturnType<typeof renderFitsHistogram>>, TError = HTTPValidationError>(
+export function useRenderFitsHistogram<TData = Awaited<ReturnType<typeof renderFitsHistogram>>, TError = ErrorType<HTTPValidationError>>(
  recordId: string,
     params?: RenderFitsHistogramParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof renderFitsHistogram>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient

@@ -25,6 +25,16 @@ class FitsRepository:
             raise LookupError(f"FITS record not found: {record_id}")
         return record
 
+    async def find_by_content_hash(self, content_hash: str) -> FitsRecord | None:
+        statement = select(FitsRecord).where(FitsRecord.content_hash == content_hash)
+        result = await self._session.execute(statement)
+        return result.scalar_one_or_none()
+
+    async def find_by_source_url(self, source_url: str) -> FitsRecord | None:
+        statement = select(FitsRecord).where(FitsRecord.source_url == source_url)
+        result = await self._session.execute(statement)
+        return result.scalar_one_or_none()
+
     async def find_by_mast_data_uri(self, data_uri: str) -> FitsRecord | None:
         statement = select(FitsRecord).where(
             FitsRecord.metadata_payload["mast"]["data_uri"].astext == data_uri
@@ -39,6 +49,10 @@ class FitsRepository:
         if record is None:
             raise LookupError(f"FITS object not found: {object_key}")
         return record
+
+    async def list_record_ids(self) -> list[UUID]:
+        result = await self._session.execute(select(FitsRecord.id))
+        return list(result.scalars().all())
 
     async def list(self, *, offset: int = 0, limit: int = 100) -> Sequence[FitsRecord]:
         statement = (

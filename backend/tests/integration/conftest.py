@@ -2,11 +2,12 @@ from __future__ import annotations
 
 from collections.abc import AsyncIterator, Iterator
 from io import BytesIO
+from typing import Protocol
 
 import numpy as np
 import pytest
 from astropy.io import fits
-from sqlalchemy import create_engine, text
+from sqlalchemy import create_engine, event, text
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession
 
 from astroimage.catalogs import download as catalog_download
@@ -23,6 +24,16 @@ from astroimage.shared.minio_storage import (
     ensure_bucket,
 )
 from astroimage.shared.object_storage import ObjectStorage
+
+
+class _SyncCursor(Protocol):
+    def execute(self, statement: str) -> object: ...
+
+    def close(self) -> None: ...
+
+
+class _SyncConnection(Protocol):
+    def cursor(self) -> _SyncCursor: ...
 
 
 def sample_fits_bytes(*, telescope: str = "KECK") -> bytes:
@@ -80,6 +91,14 @@ async def db_engine(
 ) -> AsyncIterator[AsyncEngine]:
     _ = (catalog_download.CatalogDownload, PaperMetadata)
     engine = create_engine_from_settings(settings)
+
+    @event.listens_for(engine.sync_engine, "connect")
+    def _limit_lock_wait(dbapi_connection: _SyncConnection, connection_record: object) -> None:
+        del connection_record
+        cursor = dbapi_connection.cursor()
+        cursor.execute("SET lock_timeout = '5s'")
+        cursor.close()
+
     async with engine.begin() as connection:
         await connection.run_sync(Base.metadata.create_all)
     yield engine

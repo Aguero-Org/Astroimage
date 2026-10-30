@@ -9,7 +9,7 @@ import type { ListHubbleImagesSort } from './listHubbleImagesSort';
 
 export type ListHubbleImagesParams = {
 /**
- * Case-insensitive match on display name, filename, instrument, proposal id, or MAST data URI
+ * Case-insensitive match on title, description, tags, filename, instrument, proposal id, or MAST data URI
  */
 cuerpo_celeste?: string | null;
 /**

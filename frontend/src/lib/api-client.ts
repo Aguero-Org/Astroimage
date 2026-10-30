@@ -1,4 +1,4 @@
-function apiBaseUrl(): string {
+export function apiBaseUrl(): string {
   return import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000";
 }
 
@@ -35,6 +35,8 @@ async function parseResponseBody(response: Response): Promise<unknown> {
 
   return response.blob();
 }
+
+export type ErrorType<T = unknown> = Error & { status?: number; info?: T };
 
 export class ApiError extends Error {
   status: number;
@@ -76,5 +78,5 @@ export async function customFetch<T>(
     throw new ApiError(response.status, response.statusText, data);
   }
 
-  return { data, status: response.status, headers: response.headers } as T;
+  return data as T;
 }

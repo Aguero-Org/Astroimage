@@ -10,7 +10,6 @@ import {
 } from "@/api/generated/sources/sources";
 import { HelpHint } from "@/components/ui/help-hint";
 import { Skeleton } from "@/components/ui/skeleton";
-import { okData } from "@/lib/api-response";
 import { pendingJobId, polledJobResult } from "@/lib/polled-job";
 
 type GaiaCrossMatchProps = {
@@ -27,18 +26,13 @@ export function useGaiaCrossMatch(
   const start = useVerifySourcesGaia(recordId, params, {
     query: {
       enabled,
-      select: (response) =>
-        response.status === 200 ? response.data : undefined,
     },
   });
   const jobId = pendingJobId(start.data, isGaiaJob);
   const job = useGetSourcesGaiaJob(recordId, jobId ?? "", {
     query: {
       enabled: jobId !== undefined,
-      select: (response) =>
-        response.status === 200 ? response.data : undefined,
-      refetchInterval: (query) =>
-        isGaiaJob(okData(query.state.data)) ? 2000 : false,
+      refetchInterval: (query) => (isGaiaJob(query.state.data) ? 2000 : false),
     },
   });
   const { result, isFetching, isError } = polledJobResult({

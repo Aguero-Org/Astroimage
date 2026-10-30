@@ -20,6 +20,12 @@ def encode_rgb_png(frame: np.ndarray) -> bytes:
     return _encode_png(Image.fromarray(image, mode="RGB"))
 
 
+def thumbnail_png(png: bytes, edge: int) -> bytes:
+    image = Image.open(BytesIO(png))
+    image.thumbnail((edge, edge), Image.Resampling.LANCZOS)
+    return _encode_png(image)
+
+
 def _encode_png(image: Image.Image) -> bytes:
     buffer = BytesIO()
     image.save(buffer, format="PNG")

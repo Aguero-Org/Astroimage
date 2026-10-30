@@ -1,5 +1,8 @@
-import type { SyntheticEvent } from "react";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
+import { CUSTOM_PRESET_ID, matchNamedPreset } from "../named-preset";
 import {
   COLORMAP_OPTIONS,
   DEFAULT_RENDER_PARAMS,
@@ -7,10 +10,11 @@ import {
   paramsToDraft,
   parseRenderDraft,
   RENDER_PRESETS,
+  type RenderDraft,
   type RenderViewParams,
+  renderDraftSchema,
   STRETCH_OPTIONS,
 } from "../render-view";
-import { useNamedPresetDraft } from "../use-named-preset-draft";
 import { DecimalInput } from "./decimal-input";
 import { ExclusiveChoice } from "./exclusive-choice";
 import { NamedPresetField } from "./named-preset-field";
@@ -21,32 +25,61 @@ type RenderViewFormProps = {
   onSubmit: (params: RenderViewParams) => void;
 };
 
+function initialNamedPresetId() {
+  const matched = matchNamedPreset(RENDER_PRESETS, DEFAULT_RENDER_PARAMS);
+  return matched === CUSTOM_PRESET_ID
+    ? (RENDER_PRESETS[0]?.id ?? CUSTOM_PRESET_ID)
+    : matched;
+}
+
 export function RenderViewForm({
   isPending,
   onSubmit,
 }: Readonly<RenderViewFormProps>) {
-  const { draft, presetId, lastNamedId, applyParams, applyDraft, parseDraft } =
-    useNamedPresetDraft({
-      presets: RENDER_PRESETS,
-      defaults: DEFAULT_RENDER_PARAMS,
-      toDraft: paramsToDraft,
-      parseDraft: parseRenderDraft,
-    });
+  const { watch, setValues, handleSubmit, reset } = useForm<RenderDraft>({
+    resolver: zodResolver(renderDraftSchema),
+    defaultValues: paramsToDraft(DEFAULT_RENDER_PARAMS),
+    mode: "onChange",
+  });
+  const draft = watch();
+  const parsedDraft = parseRenderDraft(draft);
+  const presetId =
+    parsedDraft === null
+      ? CUSTOM_PRESET_ID
+      : matchNamedPreset(RENDER_PRESETS, parsedDraft);
+  const [lastNamedId, setLastNamedId] = useState(initialNamedPresetId);
 
-  function handleSubmit(event: SyntheticEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const parsed = parseDraft();
-    if (parsed === null || parsed.pmin >= parsed.pmax) {
+  function updateDraftValue<K extends keyof RenderDraft>(
+    key: K,
+    value: RenderDraft[K],
+  ) {
+    const next = { ...watch(), [key]: value };
+    setValues((current) => ({ ...current, [key]: value }), {
+      shouldValidate: true,
+      shouldDirty: true,
+    });
+    const parsed = parseRenderDraft(next);
+    if (parsed !== null) {
+      const matched = matchNamedPreset(RENDER_PRESETS, parsed);
+      if (matched !== CUSTOM_PRESET_ID) {
+        setLastNamedId(matched);
+      }
+    }
+  }
+
+  const submitForm = handleSubmit((values) => {
+    const parsed = parseRenderDraft(values);
+    if (parsed === null) {
       return;
     }
     onSubmit(parsed);
-  }
+  });
 
   return (
     <form
       data-testid="render-view-form"
       className="flex flex-col gap-3"
-      onSubmit={handleSubmit}
+      onSubmit={submitForm}
     >
       <NamedPresetField
         label="Preset"
@@ -57,7 +90,8 @@ export function RenderViewForm({
         lastNamedId={lastNamedId}
         disabled={isPending}
         onSelect={(preset) => {
-          applyParams(preset.values);
+          setLastNamedId(preset.id);
+          reset(paramsToDraft(preset.values));
         }}
       />
       <RenderField
@@ -72,7 +106,7 @@ export function RenderViewForm({
           options={STRETCH_OPTIONS}
           disabled={isPending}
           onChange={(stretch) => {
-            applyDraft({ ...draft, stretch });
+            updateDraftValue("stretch", stretch);
           }}
         />
       </RenderField>
@@ -88,7 +122,7 @@ export function RenderViewForm({
           options={LIMITS_OPTIONS}
           disabled={isPending}
           onChange={(limits) => {
-            applyDraft({ ...draft, limits });
+            updateDraftValue("limits", limits);
           }}
         />
       </RenderField>
@@ -104,7 +138,7 @@ export function RenderViewForm({
           options={COLORMAP_OPTIONS}
           disabled={isPending}
           onChange={(colormap) => {
-            applyDraft({ ...draft, colormap });
+            updateDraftValue("colormap", colormap);
           }}
         />
       </RenderField>
@@ -122,7 +156,7 @@ export function RenderViewForm({
             value={draft.pmin}
             disabled={isPending}
             onValueChange={(pmin) => {
-              applyDraft({ ...draft, pmin });
+              updateDraftValue("pmin", pmin);
             }}
           />
         </RenderField>
@@ -139,7 +173,7 @@ export function RenderViewForm({
             value={draft.pmax}
             disabled={isPending}
             onValueChange={(pmax) => {
-              applyDraft({ ...draft, pmax });
+              updateDraftValue("pmax", pmax);
             }}
           />
         </RenderField>
@@ -157,7 +191,7 @@ export function RenderViewForm({
           value={draft.gamma}
           disabled={isPending}
           onValueChange={(gamma) => {
-            applyDraft({ ...draft, gamma });
+            updateDraftValue("gamma", gamma);
           }}
         />
       </RenderField>
@@ -175,7 +209,8 @@ export function RenderViewForm({
           data-testid="render-view-reset"
           disabled={isPending}
           onClick={() => {
-            applyParams(DEFAULT_RENDER_PARAMS);
+            reset(paramsToDraft(DEFAULT_RENDER_PARAMS));
+            setLastNamedId(initialNamedPresetId());
           }}
         >
           Restablecer

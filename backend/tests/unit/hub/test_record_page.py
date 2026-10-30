@@ -37,6 +37,11 @@ def test_filter_matches_catalog_fields() -> None:
     assert [record.name for record in filter_summaries(records, "wfc")] == ["hst_a.fits"]
     assert [record.name for record in filter_summaries(records, "12058")] == ["hst_a.fits"]
     assert [record.name for record in filter_summaries(records, "mast:hst_b")] == ["hst_b.fits"]
+    tagged = records[1].model_copy(
+        update={"tags": ["cielo-profundo"], "description": "campo norte"}
+    )
+    assert [record.name for record in filter_summaries([tagged], "Prof")] == ["hst_b.fits"]
+    assert [record.name for record in filter_summaries([tagged], "norte")] == ["hst_b.fits"]
 
 
 def test_page_puts_missing_instruments_last_and_slices() -> None:

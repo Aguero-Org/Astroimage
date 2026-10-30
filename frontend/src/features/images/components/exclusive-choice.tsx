@@ -1,3 +1,4 @@
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -57,10 +58,10 @@ export function ExclusiveChoice<T extends string>({
       {options.map((option) => {
         const optionId = `render-${name}-${option.value}`;
         return (
-          <label
+          <Label
             key={option.value}
             htmlFor={optionId}
-            className="flex cursor-pointer items-center gap-2 text-sm"
+            className="cursor-pointer font-normal leading-normal"
           >
             <input
               id={optionId}
@@ -75,7 +76,7 @@ export function ExclusiveChoice<T extends string>({
               }}
             />
             {option.label}
-          </label>
+          </Label>
         );
       })}
     </div>

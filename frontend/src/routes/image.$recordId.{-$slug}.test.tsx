@@ -1,15 +1,11 @@
-import { QueryClientProvider } from "@tanstack/react-query";
-import {
-  createMemoryHistory,
-  createRouter,
-  RouterProvider,
-} from "@tanstack/react-router";
-import { render, screen, waitFor } from "@testing-library/react";
+import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { HttpResponse, http } from "msw";
 import { describe, expect, it, vi } from "vitest";
 import { MOCK_EXTENDED_SOURCE, MOCK_POINT_SOURCE } from "@/mocks/data/image";
-import { routeTree } from "@/routeTree.gen";
-import { createTestQueryClient } from "@/test/render";
+import { simbadReferencesResponse } from "@/mocks/data/simbad";
+import { renderWithRouter } from "@/test/router";
+import { server } from "@/test/server";
 
 vi.mock("@cellbytes/react-openseadragon", () => ({
   useOpenseadragon: () => ({
@@ -31,25 +27,9 @@ vi.mock("@cellbytes/react-openseadragon", () => ({
   }),
 }));
 
-function renderImageDetail(recordId: string) {
-  const queryClient = createTestQueryClient();
-  const router = createRouter({
-    routeTree,
-    history: createMemoryHistory({
-      initialEntries: [`/image/${recordId}`],
-    }),
-  });
-
-  return render(
-    <QueryClientProvider client={queryClient}>
-      <RouterProvider router={router} />
-    </QueryClientProvider>,
-  );
-}
-
 describe("ImageDetailPage", () => {
   it("loads point markers without submitting the detection form", async () => {
-    renderImageDetail("m31");
+    renderWithRouter("/image/m31");
 
     const markerName = `Fuente ${MOCK_POINT_SOURCE.rank}, SNR ${MOCK_POINT_SOURCE.snr.toFixed(1)}`;
     const extendedName = `Fuente extendida ${MOCK_EXTENDED_SOURCE.rank}, área ${MOCK_EXTENDED_SOURCE.area_pixels} px`;
@@ -82,7 +62,7 @@ describe("ImageDetailPage", () => {
 
   it("opens the inspector drawer from the hamburger control", async () => {
     const user = userEvent.setup();
-    renderImageDetail("m31");
+    renderWithRouter("/image/m31");
 
     await waitFor(
       () => {
@@ -109,7 +89,7 @@ describe("ImageDetailPage", () => {
 
   it("fills Selección when a point marker is clicked", async () => {
     const user = userEvent.setup();
-    renderImageDetail("m31");
+    renderWithRouter("/image/m31");
 
     await waitFor(
       () => {
@@ -127,7 +107,7 @@ describe("ImageDetailPage", () => {
 
   it("fills Selección when an extended marker is clicked", async () => {
     const user = userEvent.setup();
-    renderImageDetail("m31");
+    renderWithRouter("/image/m31");
 
     await waitFor(
       () => {
@@ -147,7 +127,7 @@ describe("ImageDetailPage", () => {
   });
 
   it("cross-matches with Gaia automatically and opens recommendations", async () => {
-    renderImageDetail("m31");
+    renderWithRouter("/image/m31");
 
     await waitFor(
       () => {
@@ -166,9 +146,54 @@ describe("ImageDetailPage", () => {
     );
   });
 
+  it("requests SIMBAD once when the workspace opens", async () => {
+    const onRequest = vi.fn();
+    server.use(
+      http.get(
+        "http://localhost:8000/image/:recordId/simbad-references",
+        () => {
+          onRequest();
+          return HttpResponse.json(simbadReferencesResponse);
+        },
+      ),
+    );
+    renderWithRouter("/image/m31");
+
+    await waitFor(
+      () => {
+        expect(screen.getByTestId("scientific-tab-simbad")).toHaveTextContent(
+          "SIMBAD (2)",
+        );
+      },
+      { timeout: 8000 },
+    );
+    expect(onRequest).toHaveBeenCalledTimes(1);
+  });
+
+  it("shows the not-found view when the image info returns 404", async () => {
+    server.use(
+      http.get("http://localhost:8000/image/:recordId/info", () =>
+        HttpResponse.json({ detail: "Image not found" }, { status: 404 }),
+      ),
+    );
+    renderWithRouter("/image/missing");
+
+    await waitFor(
+      () => {
+        expect(
+          screen.getByRole("heading", { name: "Imagen no encontrada" }),
+        ).toBeInTheDocument();
+      },
+      { timeout: 8000 },
+    );
+    expect(
+      screen.getByRole("link", { name: "Volver al inicio" }),
+    ).toHaveAttribute("href", "/");
+  });
+
   it("searches from the navbar and shows filtered home results", async () => {
     const user = userEvent.setup();
-    renderImageDetail("m31");
+    renderWithRouter("/image/m31");
 
     await waitFor(
       () => {

@@ -26,6 +26,7 @@ class Settings(BaseSettings):
     catalog_download_ttl_s: float = 86_400.0
     ads_api_token: str = ""
     paper_metadata_ttl_s: float = 2_592_000.0
+    fits_import_max_bytes: int = 200 * 1024 * 1024
 
     @computed_field  # type: ignore[prop-decorator]
     @property

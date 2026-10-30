@@ -1,12 +1,18 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { ApiError } from "@/lib/api-client";
 import type { ImageTransfer } from "../candidate-api";
 import { TransferFeedback } from "./transfer-feedback";
 
 const cancel = vi.fn();
 const resume = vi.fn();
 const useImageTransfer = vi.fn();
+const toastError = vi.fn();
+
+vi.mock("sonner", () => ({
+  toast: { error: (...args: unknown[]) => toastError(...args) },
+}));
 
 vi.mock("@tanstack/react-router", () => ({
   Link: ({
@@ -28,8 +34,8 @@ vi.mock("../candidate-api", async () => {
   return {
     ...actual,
     useImageTransfer: (...args: unknown[]) => useImageTransfer(...args),
-    useCancelTransfer: () => ({ mutateAsync: cancel }),
-    useResumeTransfer: () => ({ mutateAsync: resume }),
+    useCancelTransfer: () => ({ mutate: cancel }),
+    useResumeTransfer: () => ({ mutate: resume }),
   };
 });
 
@@ -61,6 +67,7 @@ describe("TransferFeedback", () => {
   beforeEach(() => {
     cancel.mockReset();
     resume.mockReset();
+    toastError.mockReset();
   });
 
   it("renders nothing until the transfer exists", () => {
@@ -80,7 +87,10 @@ describe("TransferFeedback", () => {
     expect(screen.getByRole("progressbar")).toHaveValue(50);
 
     await user.click(screen.getByRole("button", { name: "Cancelar" }));
-    expect(cancel).toHaveBeenCalledWith({ transferId: "transfer-1" });
+    expect(cancel).toHaveBeenCalledWith(
+      { transferId: "transfer-1" },
+      expect.objectContaining({ onError: expect.any(Function) }),
+    );
   });
 
   it("offers resume and the stored image once the transfer settles", async () => {
@@ -102,7 +112,10 @@ describe("TransferFeedback", () => {
       screen.queryByRole("button", { name: "Cancelar" }),
     ).not.toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Reanudar" }));
-    expect(resume).toHaveBeenCalledWith({ transferId: "transfer-1" });
+    expect(resume).toHaveBeenCalledWith(
+      { transferId: "transfer-1" },
+      expect.objectContaining({ onError: expect.any(Function) }),
+    );
 
     show(
       transfer({
@@ -117,6 +130,26 @@ describe("TransferFeedback", () => {
     expect(screen.getByRole("link", { name: "Abrir imagen" })).toHaveAttribute(
       "href",
       "/image/record-1/andromeda",
+    );
+  });
+
+  it("shows the normalized error when cancelling fails", async () => {
+    const user = userEvent.setup();
+    cancel.mockImplementation(
+      (
+        _variables: unknown,
+        options?: { onError?: (error: unknown) => void },
+      ) => {
+        options?.onError?.(new ApiError(500, "Internal Server Error", null));
+      },
+    );
+    show(transfer());
+    render(<TransferFeedback transferId="transfer-1" />);
+
+    await user.click(screen.getByRole("button", { name: "Cancelar" }));
+
+    expect(toastError).toHaveBeenCalledWith(
+      "El servidor no pudo completar la operación.",
     );
   });
 });

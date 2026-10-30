@@ -135,7 +135,24 @@ class FitsImageData:
     source_name: str | None = None
 
 
-_FILTER_KEYS = ("FILTER", "FILTER1", "FILTER2")
+_FILTER_KEYS = ("FILTER", "FILTER1", "FILTER2", "FILTNAM", "FILTNAM1", "FILTNAM2")
+_IGNORED_FILTERS = frozenset({"", "CLEAR", "NONE", "N/A"})
+_CATALOG_HEADER_KEYS = (
+    "TELESCOP",
+    "INSTRUME",
+    "DETECTOR",
+    "FILTER",
+    "FILTER1",
+    "FILTER2",
+    "FILTNAM",
+    "FILTNAM1",
+    "FILTNAM2",
+    "PROPOSID",
+    "PROPNUM",
+    "DATE-OBS",
+    "TIME-OBS",
+    "EXPTIME",
+)
 _SKIP_CARDS = frozenset({"", "COMMENT", "HISTORY"})
 _WCS_HINTS = frozenset(
     {
@@ -168,10 +185,44 @@ def _header_dict(header: fits.Header) -> dict[str, Any]:
 
 
 def _filter_name(header: fits.Header) -> str | None:
+    names: list[str] = []
     for key in _FILTER_KEYS:
-        if key in header:
-            return str(header[key])
-    return None
+        if key not in header:
+            continue
+        text = str(header[key]).strip()
+        if (
+            text.upper() in _IGNORED_FILTERS
+            or text.upper().startswith("CLEAR")
+            or text.casefold() == "detection"
+            or text in names
+        ):
+            continue
+        names.append(text)
+    if not names:
+        return None
+    return "; ".join(names)
+
+
+def _instrument_name(header: fits.Header) -> str | None:
+    instrument = header.get("INSTRUME")
+    detector = header.get("DETECTOR")
+    if not isinstance(instrument, str) or instrument.strip() == "":
+        return None
+    name = instrument.strip()
+    if isinstance(detector, str) and detector.strip() != "" and detector.strip() not in name:
+        return f"{name}/{detector.strip()}"
+    return name
+
+
+def _catalog_header(hdul: fits.HDUList, selected: int) -> fits.Header:
+    header = hdul[selected].header.copy()
+    if selected == 0:
+        return header
+    primary = hdul[0].header
+    for key in _CATALOG_HEADER_KEYS:
+        if key in primary and key not in header:
+            header[key] = primary[key]
+    return header
 
 
 def _float_list(values: Any) -> list[float]:
@@ -225,7 +276,7 @@ def _instrument_info(header: fits.Header) -> FitsInstrumentInfo:
     return FitsInstrumentInfo.model_validate(
         {
             "telescope": header.get("TELESCOP"),
-            "instrument": header.get("INSTRUME"),
+            "instrument": _instrument_name(header),
             "detector": header.get("DETECTOR"),
             "filter_name": _filter_name(header),
             "exptime": header.get("EXPTIME"),
@@ -327,14 +378,15 @@ def _read(hdul: fits.HDUList, *, source_name: str | None, hdu_index: int | None)
     if hdu.data is None:
         raise ValueError(f"HDU {selected} has no data")
 
-    header = hdu.header
+    science_header = hdu.header
+    header = _catalog_header(hdul, selected)
     data = np.asarray(hdu.data)
     return FitsMetadata(
         source_name=source_name,
-        image=_image_info(header, data),
+        image=_image_info(science_header, data),
         instrument=_instrument_info(header),
         photometry=_photometry_info(header),
-        wcs=_wcs_info(header),
+        wcs=_wcs_info(science_header),
         hdus=FitsHduInfo(
             selected=selected,
             image_indices=image_indices,

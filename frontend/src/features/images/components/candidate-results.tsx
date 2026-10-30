@@ -8,6 +8,7 @@ import {
   Weight,
 } from "lucide-react";
 import { useState } from "react";
+import { toast } from "sonner";
 import { useSelectHubbleCandidate } from "@/api/generated/hub/hub";
 import type { CandidateSchema } from "@/api/generated/model";
 import { Button } from "@/components/ui/button";
@@ -20,12 +21,13 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { type CandidateSortField, useCandidateSearch } from "../candidate-api";
+import { formatQueryError } from "../format-query-error";
 import { MastSourceLink } from "../mast-source-link";
 import { resultsView } from "../results-view";
+import { useTransfersStore } from "../transfers-store";
 import { usePagedSort } from "../use-paged-sort";
 import { CatalogFacts, catalogLabels } from "./catalog-facts";
 import { ImportNameDialog } from "./import-name-dialog";
-import { TransferFeedback } from "./transfer-feedback";
 
 const SKELETON_ROWS = [0, 1, 2];
 
@@ -44,8 +46,11 @@ type CandidateResultsProps = {
 
 export function CandidateResults({ query }: Readonly<CandidateResultsProps>) {
   const { page, setPage, sort, order, toggleSort } =
-    usePagedSort<CandidateSortField>("product_filename", "asc");
-  const [transferIds, setTransferIds] = useState<string[]>([]);
+    usePagedSort<CandidateSortField>(
+      { page: "cpage", sort: "csort", order: "corder" },
+      "product_filename",
+      "asc",
+    );
   const [importing, setImporting] = useState<CandidateSchema | null>(null);
   const search = useCandidateSearch(query, page, sort, order);
   const select = useSelectHubbleCandidate();
@@ -159,30 +164,23 @@ export function CandidateResults({ query }: Readonly<CandidateResultsProps>) {
           if (importing === null) {
             return;
           }
-          void select
-            .mutateAsync({
+          select.mutate(
+            {
               data: {
                 candidate_token: importing.token,
                 display_name: displayName,
               },
-            })
-            .then((result) => {
-              if (result.status !== 200) {
-                return;
-              }
-              const transferId = result.data.transfer_id;
-              setTransferIds((current) =>
-                current.includes(transferId)
-                  ? current
-                  : [...current, transferId],
-              );
-              setImporting(null);
-            });
+            },
+            {
+              onSuccess: (result) => {
+                useTransfersStore.getState().add(result.transfer_id);
+                setImporting(null);
+              },
+              onError: (error) => toast.error(formatQueryError(error)),
+            },
+          );
         }}
       />
-      {transferIds.map((transferId) => (
-        <TransferFeedback key={transferId} transferId={transferId} />
-      ))}
     </section>
   );
 }

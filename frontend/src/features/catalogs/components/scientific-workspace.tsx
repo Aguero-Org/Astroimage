@@ -8,13 +8,11 @@ import {
   useRef,
   useState,
 } from "react";
-import type {
-  RecommendCatalogsParams,
-  SimbadObjectSchema,
-} from "@/api/generated/model";
+import type { RecommendCatalogsParams } from "@/api/generated/model";
 import { Button } from "@/components/ui/button";
 import { HelpHint } from "@/components/ui/help-hint";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Sidebar,
   SidebarContent,
@@ -22,6 +20,7 @@ import {
   SidebarProvider,
   useSidebar,
 } from "@/components/ui/sidebar";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   type CatalogueMatchFilter,
   filterCatalogues,
@@ -31,7 +30,7 @@ import {
 } from "../catalog-recommendations";
 import { simbadObjectsForSource } from "../simbad-references";
 import { useCatalogRecommendations } from "../use-catalog-recommendations";
-import { useSimbadReferences } from "../use-simbad-references";
+import type { SimbadReferencesView } from "../use-simbad-references";
 import {
   RecommendationError,
   RecommendationInfo,
@@ -46,19 +45,12 @@ type ScientificWorkspaceProps = {
   params: RecommendCatalogsParams | undefined;
   image: ReactNode;
   preview?: string;
-  hdu?: number | null;
   selectedSource?: {
     source_id: number;
     object_type: "point" | "extended";
   } | null;
   onFocusSource?: (sourceId: number, objectType: "point" | "extended") => void;
-  simbadObjects?: SimbadObjectSchema[];
-  simbadResult?: unknown;
-  simbadIsError?: boolean;
-  simbadErrorMessage?: string;
-  simbadIsLoading?: boolean;
-  simbadIsFetching?: boolean;
-  onSimbadRetry?: () => void;
+  simbad: SimbadReferencesView;
 };
 
 const DEFAULT_WIDTH_PX = 360;
@@ -71,20 +63,13 @@ export function ScientificWorkspace({
   params,
   preview,
   image,
-  hdu = null,
   selectedSource,
   onFocusSource,
-  simbadObjects,
-  simbadResult,
-  simbadIsError,
-  simbadErrorMessage,
-  simbadIsLoading,
-  simbadIsFetching,
-  onSimbadRetry,
+  simbad,
 }: Readonly<ScientificWorkspaceProps>) {
-  const [open, setOpen] = useState(false);
+  const [openRequest, setOpenRequest] = useState<boolean | null>(null);
   const [width, setWidth] = useState(DEFAULT_WIDTH_PX);
-  const openedFor = useRef<string | null>(null);
+  const open = openRequest ?? enabled;
 
   const startResize = useCallback(
     (event: ReactPointerEvent<HTMLButtonElement>) => {
@@ -115,18 +100,10 @@ export function ScientificWorkspace({
     [width],
   );
 
-  useEffect(() => {
-    if (openedFor.current === recordId) {
-      return;
-    }
-    openedFor.current = enabled ? recordId : null;
-    setOpen(enabled);
-  }, [enabled, recordId]);
-
   return (
     <SidebarProvider
       open={open}
-      onOpenChange={setOpen}
+      onOpenChange={setOpenRequest}
       data-testid="scientific-workspace"
       className="h-full w-full"
       style={{ "--sidebar-width": `${width}px` } as CSSProperties}
@@ -140,17 +117,10 @@ export function ScientificWorkspace({
         enabled={enabled}
         params={params}
         preview={preview}
-        hdu={hdu}
         selectedSource={selectedSource}
         onFocusSource={onFocusSource}
         onResizeStart={startResize}
-        simbadObjects={simbadObjects}
-        simbadResult={simbadResult}
-        simbadIsError={simbadIsError}
-        simbadErrorMessage={simbadErrorMessage}
-        simbadIsLoading={simbadIsLoading}
-        simbadIsFetching={simbadIsFetching}
-        onSimbadRetry={onSimbadRetry}
+        simbad={simbad}
       />
     </SidebarProvider>
   );
@@ -190,38 +160,51 @@ type ScientificSidebarProps = {
   enabled: boolean;
   params: RecommendCatalogsParams | undefined;
   preview: string | undefined;
-  hdu: number | null;
   selectedSource?: {
     source_id: number;
     object_type: "point" | "extended";
   } | null;
   onFocusSource?: (sourceId: number, objectType: "point" | "extended") => void;
   onResizeStart: (event: ReactPointerEvent<HTMLButtonElement>) => void;
-  simbadObjects?: SimbadObjectSchema[];
-  simbadResult?: unknown;
-  simbadIsError?: boolean;
-  simbadErrorMessage?: string;
-  simbadIsLoading?: boolean;
-  simbadIsFetching?: boolean;
-  onSimbadRetry?: () => void;
+  simbad: SimbadReferencesView;
 };
+
+type WorkspaceTab = "catalogs" | "papers" | "simbad";
+
+function visibleCount(
+  tab: WorkspaceTab,
+  catalogues: number,
+  publications: number,
+  simbadObjects: number,
+): number {
+  if (tab === "catalogs") {
+    return catalogues;
+  }
+  if (tab === "papers") {
+    return publications;
+  }
+  return simbadObjects;
+}
+
+function tabExplainer(tab: WorkspaceTab): string {
+  if (tab === "catalogs") {
+    return "Un catálogo es una tabla de fuentes del cielo (estrellas, galaxias, etc.) con sus posiciones y propiedades. Se listan los que cubren esta imagen.";
+  }
+  if (tab === "papers") {
+    return "Una publicación es un trabajo científico sobre los datos. Se listan los artículos de cada catálogo y las referencias de su documentación.";
+  }
+  return "SIMBAD reúne objetos astronómicos identificados, sus alias, propiedades y bibliografía. Se muestran los objetos que coinciden con las fuentes detectadas en esta imagen.";
+}
 
 function ScientificSidebar({
   recordId,
   enabled,
   params,
   preview,
-  hdu,
   selectedSource,
   onFocusSource,
   onResizeStart,
-  simbadObjects,
-  simbadResult,
-  simbadIsError,
-  simbadErrorMessage,
-  simbadIsLoading: simbadIsLoadingProp,
-  simbadIsFetching: simbadIsFetchingProp,
-  onSimbadRetry,
+  simbad,
 }: Readonly<ScientificSidebarProps>) {
   const { setOpen } = useSidebar();
   const {
@@ -233,43 +216,34 @@ function ScientificSidebar({
     errorMessage,
     refetch,
   } = useCatalogRecommendations({ recordId, enabled, params });
-  const simbadHook = useSimbadReferences({
-    recordId,
-    hdu: hdu ?? null,
-    enabled: enabled && simbadObjects === undefined,
-  });
-  const simbad = {
-    objects: simbadObjects ?? simbadHook.objects,
-    result: (simbadResult ?? simbadHook.result) as
-      | typeof simbadHook.result
-      | undefined,
-    isError: simbadIsError ?? simbadHook.isError,
-    isLoading: simbadIsLoadingProp ?? simbadHook.isLoading,
-    isFetching: simbadIsFetchingProp ?? simbadHook.isFetching,
-    errorMessage: simbadErrorMessage ?? simbadHook.errorMessage,
-    refetch: onSimbadRetry ?? simbadHook.refetch,
-  };
   const [tab, setTab] = useState<"catalogs" | "papers" | "simbad">("catalogs");
   const simbadListRef = useRef<HTMLDivElement>(null);
   const [showNoMatchToast, setShowNoMatchToast] = useState(false);
   const lastFocusedRef = useRef<string | null>(null);
+  const selectedSourceId = selectedSource?.source_id;
+  const selectedSourceType = selectedSource?.object_type;
 
   useEffect(() => {
-    if (enabled && selectedSource) {
+    if (enabled && selectedSourceId !== undefined) {
       setTab("simbad");
     }
-  }, [enabled, selectedSource]);
+  }, [enabled, selectedSourceId]);
 
   useEffect(() => {
-    if (!enabled || !selectedSource || tab !== "simbad") {
+    if (
+      !enabled ||
+      selectedSourceId === undefined ||
+      selectedSourceType === undefined ||
+      tab !== "simbad"
+    ) {
       return undefined;
     }
     const matches = simbadObjectsForSource(
       simbad.objects,
-      selectedSource.source_id,
-      selectedSource.object_type,
+      selectedSourceId,
+      selectedSourceType,
     );
-    const key = `${selectedSource.object_type}:${selectedSource.source_id}`;
+    const key = `${selectedSourceType}:${selectedSourceId}`;
     if (matches.length === 0) {
       if (lastFocusedRef.current === key) {
         return undefined;
@@ -286,7 +260,7 @@ function ScientificSidebar({
       return undefined;
     }
     const id = `simbad-card-${target.main_id}`;
-    window.setTimeout(() => {
+    const timer = window.setTimeout(() => {
       const element = document.getElementById(id);
       if (element) {
         element.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -294,8 +268,8 @@ function ScientificSidebar({
         simbadListRef.current.scrollTo({ top: 0, behavior: "smooth" });
       }
     }, 50);
-    return undefined;
-  }, [enabled, selectedSource, tab, simbad.objects]);
+    return () => window.clearTimeout(timer);
+  }, [enabled, selectedSourceId, selectedSourceType, tab, simbad.objects]);
 
   const [query, setQuery] = useState("");
   const [match, setMatch] = useState<CatalogueMatchFilter>("all");
@@ -304,12 +278,12 @@ function ScientificSidebar({
   const items = result?.recommendations ?? [];
   const catalogues = filterCatalogues(items, { query, match });
   const papers = filterPublications(publications, query, kind);
-  const activeCount =
-    tab === "catalogs"
-      ? items.length
-      : tab === "papers"
-        ? publications.length
-        : simbad.objects.length;
+  const activeCount = visibleCount(
+    tab,
+    items.length,
+    publications.length,
+    simbad.objects.length,
+  );
   const showControls = tab !== "simbad" && activeCount >= 2;
   const updating = isFetching && result !== undefined;
   const region = regionDescription(result);
@@ -397,110 +371,132 @@ function ScientificSidebar({
           ) : null}
         </SidebarHeader>
 
-        <div
-          role="tablist"
-          aria-label="Recomendaciones"
-          className="flex gap-1 px-2 pt-2"
+        <Tabs
+          value={tab}
+          onValueChange={(value) =>
+            setTab(value as "catalogs" | "papers" | "simbad")
+          }
+          className="flex min-h-0 flex-1 flex-col gap-0"
         >
-          <TabButton
-            id="catalogs"
-            label={`Catálogos (${items.length})`}
-            active={tab === "catalogs"}
-            onSelect={() => setTab("catalogs")}
-          />
-          <TabButton
-            id="papers"
-            label={`Publicaciones (${publications.length})`}
-            active={tab === "papers"}
-            onSelect={() => setTab("papers")}
-          />
-          <TabButton
-            id="simbad"
-            label={`SIMBAD (${simbad.objects.length})`}
-            active={tab === "simbad"}
-            onSelect={() => setTab("simbad")}
-          />
-        </div>
+          <TabsList
+            aria-label="Recomendaciones"
+            className="flex h-auto w-full justify-start gap-1 rounded-none bg-transparent p-0 px-2 pt-2"
+          >
+            <TabsTrigger
+              value="catalogs"
+              data-testid="scientific-tab-catalogs"
+              className={TAB_TRIGGER_CLASS}
+            >
+              Catálogos ({items.length})
+            </TabsTrigger>
+            <TabsTrigger
+              value="papers"
+              data-testid="scientific-tab-papers"
+              className={TAB_TRIGGER_CLASS}
+            >
+              Publicaciones ({publications.length})
+            </TabsTrigger>
+            <TabsTrigger
+              value="simbad"
+              data-testid="scientific-tab-simbad"
+              className={TAB_TRIGGER_CLASS}
+            >
+              SIMBAD ({simbad.objects.length})
+            </TabsTrigger>
+          </TabsList>
 
-        <p
-          data-testid="scientific-explainer"
-          className="px-2 pt-2 text-[11px] text-muted-foreground"
-        >
-          {tab === "catalogs"
-            ? "Un catálogo es una tabla de fuentes del cielo (estrellas, galaxias, etc.) con sus posiciones y propiedades. Se listan los que cubren esta imagen."
-            : tab === "papers"
-              ? "Una publicación es un trabajo científico sobre los datos. Se listan los artículos de cada catálogo y las referencias de su documentación."
-              : "SIMBAD reúne objetos astronómicos identificados, sus alias, propiedades y bibliografía. Se muestran los objetos que coinciden con las fuentes detectadas en esta imagen."}
-        </p>
+          <p
+            data-testid="scientific-explainer"
+            className="px-2 pt-2 text-[11px] text-muted-foreground"
+          >
+            {tabExplainer(tab)}
+          </p>
 
-        {showControls ? (
-          <div className="flex flex-col gap-2 px-2 pt-2">
-            <Input
-              data-testid="catalog-search"
-              type="search"
-              value={query}
-              aria-label={
-                tab === "catalogs" ? "Buscar catálogos" : "Buscar publicaciones"
-              }
-              placeholder={
-                tab === "catalogs"
-                  ? "Buscar por nombre, autores o identificador"
-                  : "Buscar por bibcode, DOI o catálogo"
-              }
-              onChange={(event) => setQuery(event.target.value)}
-            />
-            {tab === "catalogs" ? (
-              <div className="flex items-center gap-1">
-                <FilterChips
-                  legend="Tipo de coincidencia"
-                  name="catalogue-match"
-                  testIdPrefix="catalog-filter"
-                  options={MATCH_OPTIONS}
-                  value={match}
-                  onSelect={setMatch}
-                />
-                <HelpHint
-                  label="Coincidencia por objeto"
-                  testId="help-match"
-                  glossaryId="coincidencia-objeto"
-                >
-                  Objeto identificado significa que el identificador aparece en
-                  el catálogo. Solo catálogo indica cobertura de la región sin
-                  esa coincidencia.
-                </HelpHint>
-              </div>
-            ) : (
-              <FilterChips
-                legend="Tipo de publicación"
-                name="publication-kind"
-                testIdPrefix="publication-filter"
-                options={KIND_OPTIONS}
-                value={kind}
-                onSelect={setKind}
+          {showControls ? (
+            <div className="flex flex-col gap-2 px-2 pt-2">
+              <Input
+                data-testid="catalog-search"
+                type="search"
+                value={query}
+                aria-label={
+                  tab === "catalogs"
+                    ? "Buscar catálogos"
+                    : "Buscar publicaciones"
+                }
+                placeholder={
+                  tab === "catalogs"
+                    ? "Buscar por nombre, autores o identificador"
+                    : "Buscar por bibcode, DOI o catálogo"
+                }
+                onChange={(event) => setQuery(event.target.value)}
               />
-            )}
-          </div>
-        ) : null}
+              {tab === "catalogs" ? (
+                <div className="flex items-center gap-1">
+                  <FilterChips
+                    legend="Tipo de coincidencia"
+                    name="catalogue-match"
+                    testIdPrefix="catalog-filter"
+                    options={MATCH_OPTIONS}
+                    value={match}
+                    onSelect={setMatch}
+                  />
+                  <HelpHint
+                    label="Coincidencia por objeto"
+                    testId="help-match"
+                    glossaryId="coincidencia-objeto"
+                  >
+                    Objeto identificado significa que el identificador aparece
+                    en el catálogo. Solo catálogo indica cobertura de la región
+                    sin esa coincidencia.
+                  </HelpHint>
+                </div>
+              ) : (
+                <FilterChips
+                  legend="Tipo de publicación"
+                  name="publication-kind"
+                  testIdPrefix="publication-filter"
+                  options={KIND_OPTIONS}
+                  value={kind}
+                  onSelect={setKind}
+                />
+              )}
+            </div>
+          ) : null}
 
-        <SidebarContent className="pb-24">
-          {tab === "simbad" ? (
-            renderSimbad()
-          ) : (
-            <RecommendationContent
-              enabled={enabled}
-              isError={isError}
-              isLoading={isLoading}
-              result={result}
-              tab={tab}
-              items={items}
-              matches={catalogues}
-              publications={publications}
-              papers={papers}
-              errorMessage={errorMessage}
-              onRetry={refetch}
-            />
-          )}
-        </SidebarContent>
+          <SidebarContent className="pb-24">
+            <TabsContent value="catalogs">
+              <RecommendationContent
+                enabled={enabled}
+                isError={isError}
+                isLoading={isLoading}
+                result={result}
+                tab="catalogs"
+                items={items}
+                matches={catalogues}
+                publications={publications}
+                papers={papers}
+                errorMessage={errorMessage}
+                onRetry={refetch}
+              />
+            </TabsContent>
+            <TabsContent value="papers">
+              <RecommendationContent
+                enabled={enabled}
+                isError={isError}
+                isLoading={isLoading}
+                result={result}
+                tab="papers"
+                items={items}
+                matches={catalogues}
+                publications={publications}
+                papers={papers}
+                errorMessage={errorMessage}
+                onRetry={refetch}
+              />
+            </TabsContent>
+            <TabsContent value="simbad">{renderSimbad()}</TabsContent>
+          </SidebarContent>
+        </Tabs>
       </div>
     </Sidebar>
   );
@@ -616,6 +612,9 @@ function ScientificSidebar({
   }
 }
 
+const TAB_TRIGGER_CLASS =
+  "flex-none rounded-md px-2 py-1 text-xs font-normal text-muted-foreground shadow-none hover:bg-sidebar-accent/50 data-[state=active]:bg-sidebar-accent data-[state=active]:text-sidebar-accent-foreground data-[state=active]:shadow-none";
+
 const MATCH_OPTIONS: { value: CatalogueMatchFilter; label: string }[] = [
   { value: "all", label: "Todos" },
   { value: "object", label: "Con objeto" },
@@ -652,7 +651,10 @@ function FilterChips<T extends string>({
     >
       <legend className="sr-only">{legend}</legend>
       {options.map((option) => (
-        <label key={option.value} className="inline-flex items-center gap-1">
+        <Label
+          key={option.value}
+          className="inline-flex gap-1 font-normal leading-normal"
+        >
           <input
             type="radio"
             name={name}
@@ -662,34 +664,8 @@ function FilterChips<T extends string>({
             onChange={() => onSelect(option.value)}
           />
           {option.label}
-        </label>
+        </Label>
       ))}
     </fieldset>
-  );
-}
-
-type TabButtonProps = {
-  id: string;
-  label: string;
-  active: boolean;
-  onSelect: () => void;
-};
-
-function TabButton({ id, label, active, onSelect }: Readonly<TabButtonProps>) {
-  return (
-    <button
-      type="button"
-      role="tab"
-      aria-selected={active}
-      data-testid={`scientific-tab-${id}`}
-      className={
-        active
-          ? "rounded-md bg-sidebar-accent px-2 py-1 text-xs font-medium text-sidebar-accent-foreground"
-          : "rounded-md px-2 py-1 text-xs text-muted-foreground hover:bg-sidebar-accent/50"
-      }
-      onClick={onSelect}
-    >
-      {label}
-    </button>
   );
 }

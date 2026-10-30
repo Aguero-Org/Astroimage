@@ -1,4 +1,5 @@
 import { HelpHint } from "@/components/ui/help-hint";
+import { Label } from "@/components/ui/label";
 import type { DetectionField } from "../source-detection-fields";
 import { DecimalInput } from "./decimal-input";
 
@@ -16,9 +17,12 @@ export function DetectionFieldInput({
   return (
     <div className="flex flex-col gap-1 text-sm">
       <div className="flex items-center gap-1">
-        <label htmlFor={field.key} className="text-muted-foreground">
+        <Label
+          htmlFor={field.key}
+          className="font-normal leading-normal text-muted-foreground"
+        >
           {field.label}
-        </label>
+        </Label>
         <HelpHint
           label={field.label}
           testId={`source-help-${field.key}`}

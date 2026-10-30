@@ -9,7 +9,11 @@ schema = schemathesis.openapi.from_asgi("/openapi.json", app)
 
 _SKIP_PATHS = frozenset(
     {
+        "/fits",
+        "/fits/from-url",
         "/fits/metadata",
+        "/fits/{record_id}/file",
+        "/image/{record_id}/preview",
         "/image/{record_id}",
         "/image/{record_id}/histogram",
         "/image/{record_id}/info",

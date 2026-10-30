@@ -5,11 +5,13 @@ from typing import Annotated
 from uuid import UUID
 
 import structlog
-from fastapi import APIRouter, Depends, Path, Query, Response
+from fastapi import APIRouter, Depends, Path, Query, Request, Response
 
 from astroimage.render.deps import render_service_dependency
+from astroimage.render.preview_job import PREVIEW_EDGES, PreviewRenderer
 from astroimage.render.schema import HistogramResponse, RenderConfigSchema
 from astroimage.render.service import RenderService
+from astroimage.shared.errors import BadRequestError
 from astroimage.shared.query import HduIndex
 
 router = APIRouter(prefix="/image", tags=["render"])
@@ -79,6 +81,33 @@ async def render_fits_image(
         elapsed_ms=elapsed_ms,
     )
     return Response(content=png, media_type="image/png")
+
+
+@router.get(
+    "/{record_id}/preview",
+    responses={
+        200: {"content": {"image/png": {}}},
+        400: {"description": "Preview size is not available"},
+        404: {"description": "FITS record not found"},
+    },
+    operation_id="getFitsPreview",
+)
+async def get_fits_preview(
+    record_id: RecordId,
+    request: Request,
+    size: Annotated[int, Query(description="Longest edge in pixels")] = 256,
+) -> Response:
+    if size not in PREVIEW_EDGES:
+        raise BadRequestError("Preview size is not available")
+    renderer: PreviewRenderer | None = getattr(request.app.state, "preview_scheduler", None)
+    if renderer is None:
+        raise BadRequestError("Preview size is not available")
+    png = await renderer.png(record_id, size)
+    return Response(
+        content=png,
+        media_type="image/png",
+        headers={"Cache-Control": "private, max-age=86400"},
+    )
 
 
 @router.get(

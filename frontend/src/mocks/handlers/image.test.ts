@@ -9,43 +9,35 @@ type ListRecordsResponse = {
 
 describe("image mock contract", () => {
   it("GET /image returns all records as { records: [...] }", async () => {
-    const result = await customFetch<{
-      data: ListRecordsResponse;
-      status: number;
-    }>("/image");
+    const result = await customFetch<ListRecordsResponse>("/image");
 
-    expect(result.status).toBe(200);
-    expect(result.data.records.length).toBe(4);
+    expect(result.records.length).toBe(4);
   });
 
   it("GET /image?cuerpo_celeste=orion filters records", async () => {
-    const result = await customFetch<{
-      data: ListRecordsResponse;
-      status: number;
-    }>("/image?cuerpo_celeste=orion");
+    const result = await customFetch<ListRecordsResponse>(
+      "/image?cuerpo_celeste=orion",
+    );
 
-    expect(result.data.records).toHaveLength(1);
-    expect(result.data.records[0]?.record_id).toBe("m42");
+    expect(result.records).toHaveLength(1);
+    expect(result.records[0]?.record_id).toBe("m42");
   });
 
   it("GET /image/search?query=orion returns candidate products", async () => {
-    const result = await customFetch<{
-      data: { items: { observation_id: string }[] };
-      status: number;
-    }>("/image/search?query=orion");
+    const result = await customFetch<{ items: { observation_id: string }[] }>(
+      "/image/search?query=orion",
+    );
 
-    expect(result.status).toBe(200);
-    expect(result.data.items[0]?.observation_id).toBe("m42");
+    expect(result.items[0]?.observation_id).toBe("m42");
   });
 
   it("GET /image/:id/info returns image metadata", async () => {
     const result = await customFetch<{
-      data: { source_name: string; hdus: { selected: number } };
-      status: number;
+      source_name: string;
+      hdus: { selected: number };
     }>("/image/m31/info");
 
-    expect(result.status).toBe(200);
-    expect(result.data.source_name).toBe("M31 - Andromeda Galaxy");
+    expect(result.source_name).toBe("M31 - Andromeda Galaxy");
   });
 
   it("GET /image/:id/info returns 404 for unknown id", async () => {
@@ -59,23 +51,19 @@ describe("image mock contract", () => {
   });
 
   it("GET /image/:id/sources returns canned point detections", async () => {
-    const result = await customFetch<{
-      data: SourceDetectionResponse;
-      status: number;
-    }>("/image/m31/sources");
+    const result =
+      await customFetch<SourceDetectionResponse>("/image/m31/sources");
 
-    expect(result.status).toBe(200);
-    expect(result.data.summary.point_count).toBe(1);
-    expect(result.data.point_sources?.[0]).toEqual(MOCK_POINT_SOURCE);
+    expect(result.summary.point_count).toBe(1);
+    expect(result.point_sources?.[0]).toEqual(MOCK_POINT_SOURCE);
   });
 
   it("GET /image/:id/sources ignores detection query params", async () => {
-    const result = await customFetch<{
-      data: SourceDetectionResponse;
-      status: number;
-    }>("/image/m31/sources?fwhm=99&sigma=99&max_sources=1");
+    const result = await customFetch<SourceDetectionResponse>(
+      "/image/m31/sources?fwhm=99&sigma=99&max_sources=1",
+    );
 
-    expect(result.data.point_sources?.[0]).toEqual(MOCK_POINT_SOURCE);
+    expect(result.point_sources?.[0]).toEqual(MOCK_POINT_SOURCE);
   });
 
   it("GET /image/:id/sources returns 404 for unknown id", async () => {
@@ -89,14 +77,10 @@ describe("image mock contract", () => {
   });
 
   it("GET /image/:id returns a PNG blob", async () => {
-    const result = await customFetch<{
-      data: Blob;
-      status: number;
-    }>("/image/m42");
+    const result = await customFetch<Blob>("/image/m42");
 
-    expect(result.status).toBe(200);
-    expect(result.data.size).toBeGreaterThan(0);
-    expect(result.data.type).toBe("image/png");
+    expect(result.size).toBeGreaterThan(0);
+    expect(result.type).toBe("image/png");
   });
 
   it("GET /image/:id returns 404 for unknown id", async () => {

@@ -160,6 +160,29 @@ def test_read_image_data_selects_explicit_hdu(tmp_path: Path) -> None:
     assert image.data.shape == (16, 16)
 
 
+def test_metadata_inherits_catalog_cards_from_the_primary_hdu(tmp_path: Path) -> None:
+    primary = fits.PrimaryHDU()
+    primary.header["INSTRUME"] = "WFC3"
+    primary.header["DETECTOR"] = "IR"
+    primary.header["FILTER1"] = "F250W"
+    primary.header["FILTER2"] = "CLEAR1S"
+    primary.header["PROPOSID"] = 12058
+    primary.header["DATE-OBS"] = "2011-01-02"
+    science = fits.ImageHDU(np.ones((4, 4)))
+    science.header["EXTNAME"] = "SCI"
+    science.header["FILTER"] = "detection"
+    fits_path = tmp_path / "drz.fits"
+    fits.HDUList([primary, science]).writeto(fits_path)
+
+    metadata = FitsReader().read_metadata_from_path(fits_path)
+
+    assert metadata.hdus.selected == 1
+    assert metadata.instrument.instrument == "WFC3/IR"
+    assert metadata.instrument.filter_name == "F250W"
+    assert metadata.instrument.date_obs == "2011-01-02"
+    assert metadata.header["PROPOSID"] == 12058
+
+
 def test_metadata_lists_image_hdu_details(tmp_path: Path) -> None:
     primary = fits.PrimaryHDU(np.zeros((32, 64)))
     science = fits.ImageHDU(np.ones((16, 32)))

@@ -1,10 +1,5 @@
-import { useSyncExternalStore } from "react";
-import { readLastImageRecord, subscribeLastImageRecord } from "./last-record";
+import { useLastRecordStore } from "./last-record";
 
 export function useLastImageRecord() {
-  return useSyncExternalStore(
-    subscribeLastImageRecord,
-    readLastImageRecord,
-    () => null,
-  );
+  return useLastRecordStore((state) => state.record);
 }
