@@ -1,9 +1,15 @@
 import { keepPreviousData, useQueryClient } from "@tanstack/react-query";
 import {
+  useImportFitsFiles,
+  useImportFitsFromUrl,
+} from "@/api/generated/fits/fits";
+import {
+  getGetImageInfoQueryKey,
   getListHubbleImagesQueryKey,
   useDeleteHubbleImage,
   useGetImageInfo,
   useListHubbleImages,
+  usePatchImageRecord as usePatchImageRecordMutation,
 } from "@/api/generated/hub/hub";
 import type {
   DetectSourcesParams,
@@ -97,6 +103,22 @@ export function useBestPreset(recordId: string, hdu: number | null) {
   });
 }
 
+export function usePatchImageRecord() {
+  const queryClient = useQueryClient();
+  return usePatchImageRecordMutation({
+    mutation: {
+      onSuccess: async (_data, variables) => {
+        await queryClient.invalidateQueries({
+          queryKey: getListHubbleImagesQueryKey(),
+        });
+        await queryClient.invalidateQueries({
+          queryKey: getGetImageInfoQueryKey(variables.recordId),
+        });
+      },
+    },
+  });
+}
+
 export function useDeleteImage() {
   const queryClient = useQueryClient();
   return useDeleteHubbleImage({
@@ -106,6 +128,33 @@ export function useDeleteImage() {
           queryKey: getListHubbleImagesQueryKey(),
         });
       },
+    },
+  });
+}
+
+function useRefreshImageList() {
+  const queryClient = useQueryClient();
+  return async () => {
+    await queryClient.invalidateQueries({
+      queryKey: getListHubbleImagesQueryKey(),
+    });
+  };
+}
+
+export function useImportLocalFits() {
+  const refresh = useRefreshImageList();
+  return useImportFitsFiles({
+    mutation: {
+      onSuccess: refresh,
+    },
+  });
+}
+
+export function useImportFitsUrl() {
+  const refresh = useRefreshImageList();
+  return useImportFitsFromUrl({
+    mutation: {
+      onSuccess: refresh,
     },
   });
 }

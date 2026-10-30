@@ -18,14 +18,24 @@ import { FilePager } from "@/components/ui/file-pager";
 import { HelpHint } from "@/components/ui/help-hint";
 import { SortControls, type SortField } from "@/components/ui/sort-controls";
 import { SummaryCard, SummaryCardSkeleton } from "@/components/ui/summary-card";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { glossaryPath } from "@/features/glossary/entries";
 import { type RecordSortField, useDeleteImage, useImageRecords } from "../api";
 import { formatQueryError } from "../format-query-error";
 import { MastSourceLink } from "../mast-source-link";
 import { resultsView } from "../results-view";
+import { StoredFitsLink } from "../stored-fits-link";
 import { usePagedSort } from "../use-paged-sort";
 import { CatalogFacts, catalogLabels } from "./catalog-facts";
 import { DeleteImageDialog } from "./delete-image-dialog";
+import { EditImageButton } from "./edit-image-dialog";
+import { ImagePreview } from "./image-preview";
+import { ImageTags } from "./image-tags";
+import { ImportFitsControl } from "./import-fits-dialog";
 
 const filenameGlossary = { glossaryId: "slug-archivo" } as const;
 
@@ -112,14 +122,17 @@ export function ImageList({ query }: Readonly<ImageListProps>) {
             abre el visor.
           </HelpHint>
         </h2>
-        {view.status === "ready" && (
-          <SortControls
-            fields={SORT_FIELDS}
-            sort={sort}
-            order={order}
-            onSort={toggleSort}
-          />
-        )}
+        <div className="flex items-center gap-1">
+          <ImportFitsControl />
+          {view.status === "ready" && (
+            <SortControls
+              fields={SORT_FIELDS}
+              sort={sort}
+              order={order}
+              onSort={toggleSort}
+            />
+          )}
+        </div>
       </div>
       {view.status === "loading" && (
         <output className="block">
@@ -130,7 +143,7 @@ export function ImageList({ query }: Readonly<ImageListProps>) {
             aria-hidden
           >
             {SKELETON_ROWS.map((row) => (
-              <SummaryCardSkeleton key={row} />
+              <SummaryCardSkeleton key={row} preview />
             ))}
           </ul>
         </output>
@@ -158,49 +171,88 @@ export function ImageList({ query }: Readonly<ImageListProps>) {
             <SummaryCard
               key={record.record_id}
               testId="image-list-item"
+              media={
+                <ImagePreview
+                  recordId={record.record_id}
+                  name={record.display_name}
+                />
+              }
               title={
-                <RecordViewerLink record={record} className="hover:underline">
+                <RecordViewerLink
+                  record={record}
+                  className="inline-flex min-h-6 items-center hover:underline"
+                >
                   {record.display_name}
                 </RecordViewerLink>
               }
               detail={
-                <RecordViewerLink
-                  record={record}
-                  testId="image-list-item-open"
-                  className="text-primary underline-offset-2 hover:underline dark:text-ring"
-                >
-                  {record.name}
-                </RecordViewerLink>
+                <span className="mt-1 block min-w-0 space-y-1">
+                  <RecordViewerLink
+                    record={record}
+                    testId="image-list-item-open"
+                    className="block truncate text-primary underline-offset-2 hover:underline dark:text-ring"
+                  >
+                    {record.name}
+                  </RecordViewerLink>
+                  <span className="block h-4 truncate text-muted-foreground">
+                    {record.description ?? ""}
+                  </span>
+                </span>
               }
               meta={
-                <CatalogFacts
-                  instrument={record.instrument}
-                  proposalId={record.proposal_id}
-                  filters={record.filters}
-                  observedAt={record.observed_at}
-                  importedAt={record.created_at}
-                  sizeBytes={record.size_bytes}
-                />
+                <span className="flex min-w-0 flex-col gap-1">
+                  <ImageTags tags={record.tags ?? []} />
+                  <span className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                    <CatalogFacts
+                      instrument={record.instrument}
+                      proposalId={record.proposal_id ?? null}
+                      filters={record.filters}
+                      observedAt={record.observed_at}
+                      importedAt={record.created_at}
+                      sizeBytes={record.size_bytes}
+                    />
+                  </span>
+                </span>
               }
               actions={
                 <>
-                  <MastSourceLink dataUri={record.data_uri} />
-                  <Button
-                    type="button"
-                    size="icon"
-                    variant="ghost"
-                    className="text-destructive hover:bg-destructive/10 hover:text-destructive"
-                    aria-label={`Eliminar ${record.display_name}`}
-                    data-testid="delete-image"
-                    onClick={() =>
-                      setPendingDelete({
-                        id: record.record_id,
-                        name: record.display_name,
-                      })
-                    }
-                  >
-                    <Trash2 className="size-4" />
-                  </Button>
+                  <EditImageButton
+                    record={{
+                      record_id: record.record_id,
+                      display_name: record.display_name,
+                      description: record.description,
+                      tags: record.tags,
+                    }}
+                  />
+                  {record.data_uri ? (
+                    <MastSourceLink dataUri={record.data_uri} />
+                  ) : (
+                    <StoredFitsLink
+                      recordId={record.record_id}
+                      filename={record.name}
+                    />
+                  )}
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        type="button"
+                        size="icon"
+                        variant="ghost"
+                        className="size-8 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                        aria-label={`Eliminar ${record.display_name}`}
+                        data-testid="delete-image"
+                        onClick={() =>
+                          setPendingDelete({
+                            id: record.record_id,
+                            name: record.display_name,
+                          })
+                        }
+                      >
+                        <Trash2 className="size-4" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>Eliminar</TooltipContent>
+                  </Tooltip>
                 </>
               }
             />

@@ -5,19 +5,31 @@
  * OpenAPI spec version: 0.1.0
  */
 import {
-  useMutation
+  useMutation,
+  useQuery
 } from '@tanstack/react-query';
 import type {
+  DataTag,
+  DefinedInitialDataOptions,
+  DefinedUseQueryResult,
   MutationFunction,
   QueryClient,
+  QueryFunction,
+  QueryKey,
+  UndefinedInitialDataOptions,
   UseMutationOptions,
-  UseMutationResult
+  UseMutationResult,
+  UseQueryOptions,
+  UseQueryResult
 } from '@tanstack/react-query';
 
 import type {
   BodyExtractFitsMetadata,
+  BodyImportFitsFiles,
   ExtractFitsMetadataParams,
+  FitsImportSchema,
   FitsMetadataSchema,
+  FitsUrlImportRequest,
   HTTPValidationError
 } from '../model';
 
@@ -28,6 +40,21 @@ import type { ErrorType } from '../../../lib/api-client';
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
 
+
+const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKey: K } => {
+  const result = { queryKey } as T & { queryKey: K };
+  for (const key of Object.keys(query)) {
+    // The explicit queryKey always wins, matching the previous
+    // `{ ...query, queryKey }` spread where it was set last.
+    if (key === 'queryKey') continue;
+    Object.defineProperty(result, key, {
+      enumerable: true,
+      configurable: true,
+      get: () => (query as Record<string, unknown>)[key],
+    });
+  }
+  return result;
+};
 
 export const getExtractFitsMetadataUrl = (params?: ExtractFitsMetadataParams,) => {
   const normalizedParams = new URLSearchParams();
@@ -112,3 +139,271 @@ export const useExtractFitsMetadata = <TError = ErrorType<HTTPValidationError>,
       > => {
       return useMutation(getExtractFitsMetadataMutationOptions(options), queryClient);
     }
+    export const getImportFitsFilesUrl = () => {
+
+
+
+
+  return `/fits`
+}
+
+/**
+ * @summary Import Fits Files
+ */
+export const importFitsFiles = async (bodyImportFitsFiles: BodyImportFitsFiles, options?: Parameters<typeof customFetch>[1]): Promise<FitsImportSchema[]> => {
+    const formData = new FormData();
+bodyImportFitsFiles.files.forEach(value => formData.append(`files`, value));
+if(bodyImportFitsFiles.description !== undefined && bodyImportFitsFiles.description !== null) {
+ formData.append(`description`, bodyImportFitsFiles.description);
+ }
+if(bodyImportFitsFiles.display_name !== undefined && bodyImportFitsFiles.display_name !== null) {
+ formData.append(`display_name`, bodyImportFitsFiles.display_name);
+ }
+
+  return customFetch<FitsImportSchema[]>(getImportFitsFilesUrl(),
+  {
+    ...options,
+    method: 'POST'
+    ,
+    body: formData
+  }
+);}
+
+
+
+
+
+export const getImportFitsFilesMutationKey = () => ['importFitsFiles'] as const;
+
+export const getImportFitsFilesMutationOptions = <TError = ErrorType<HTTPValidationError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof importFitsFiles>>, TError,ImportFitsFilesMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof importFitsFiles>>, TError,ImportFitsFilesMutationVariables, TContext> => {
+
+const mutationKey = getImportFitsFilesMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof importFitsFiles>>, ImportFitsFilesMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  importFitsFiles(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ImportFitsFilesMutationResult = NonNullable<Awaited<ReturnType<typeof importFitsFiles>>>
+    export type ImportFitsFilesMutationBody = BodyImportFitsFiles
+    export type ImportFitsFilesMutationError = ErrorType<HTTPValidationError>
+    export type ImportFitsFilesMutationVariables = {data: BodyImportFitsFiles}
+
+    /**
+ * @summary Import Fits Files
+ */
+export const useImportFitsFiles = <TError = ErrorType<HTTPValidationError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof importFitsFiles>>, TError,ImportFitsFilesMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof importFitsFiles>>,
+        TError,
+        ImportFitsFilesMutationVariables,
+        TContext
+      > => {
+      return useMutation(getImportFitsFilesMutationOptions(options), queryClient);
+    }
+    export const getImportFitsFromUrlUrl = () => {
+
+
+
+
+  return `/fits/from-url`
+}
+
+/**
+ * @summary Import Fits From Url
+ */
+export const importFitsFromUrl = async (fitsUrlImportRequest: FitsUrlImportRequest, options?: Parameters<typeof customFetch>[1]): Promise<FitsImportSchema> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<FitsImportSchema>(getImportFitsFromUrlUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(fitsUrlImportRequest)
+  }
+);}
+
+
+
+
+
+export const getImportFitsFromUrlMutationKey = () => ['importFitsFromUrl'] as const;
+
+export const getImportFitsFromUrlMutationOptions = <TError = ErrorType<void | HTTPValidationError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof importFitsFromUrl>>, TError,ImportFitsFromUrlMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof importFitsFromUrl>>, TError,ImportFitsFromUrlMutationVariables, TContext> => {
+
+const mutationKey = getImportFitsFromUrlMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof importFitsFromUrl>>, ImportFitsFromUrlMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  importFitsFromUrl(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ImportFitsFromUrlMutationResult = NonNullable<Awaited<ReturnType<typeof importFitsFromUrl>>>
+    export type ImportFitsFromUrlMutationBody = FitsUrlImportRequest
+    export type ImportFitsFromUrlMutationError = ErrorType<void | HTTPValidationError>
+    export type ImportFitsFromUrlMutationVariables = {data: FitsUrlImportRequest}
+
+    /**
+ * @summary Import Fits From Url
+ */
+export const useImportFitsFromUrl = <TError = ErrorType<void | HTTPValidationError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof importFitsFromUrl>>, TError,ImportFitsFromUrlMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof importFitsFromUrl>>,
+        TError,
+        ImportFitsFromUrlMutationVariables,
+        TContext
+      > => {
+      return useMutation(getImportFitsFromUrlMutationOptions(options), queryClient);
+    }
+    export const getDownloadFitsFileUrl = (recordId: string,) => {
+
+
+
+
+  return `/fits/${recordId}/file`
+}
+
+/**
+ * @summary Download Fits File
+ */
+export const downloadFitsFile = async (recordId: string, options?: Parameters<typeof customFetch>[1]): Promise<unknown> => {
+
+  return customFetch<unknown>(getDownloadFitsFileUrl(recordId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getDownloadFitsFileQueryKey = (recordId: string,) => {
+    return [
+    `/fits/${recordId}/file`
+    ] as const;
+    }
+
+
+export const getDownloadFitsFileQueryOptions = <TData = Awaited<ReturnType<typeof downloadFitsFile>>, TError = ErrorType<void | HTTPValidationError>>(recordId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof downloadFitsFile>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getDownloadFitsFileQueryKey(recordId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof downloadFitsFile>>> = ({ signal }) => downloadFitsFile(recordId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: recordId !== null && recordId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof downloadFitsFile>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type DownloadFitsFileQueryResult = NonNullable<Awaited<ReturnType<typeof downloadFitsFile>>>
+export type DownloadFitsFileQueryError = ErrorType<void | HTTPValidationError>
+
+
+export function useDownloadFitsFile<TData = Awaited<ReturnType<typeof downloadFitsFile>>, TError = ErrorType<void | HTTPValidationError>>(
+ recordId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof downloadFitsFile>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof downloadFitsFile>>,
+          TError,
+          Awaited<ReturnType<typeof downloadFitsFile>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useDownloadFitsFile<TData = Awaited<ReturnType<typeof downloadFitsFile>>, TError = ErrorType<void | HTTPValidationError>>(
+ recordId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof downloadFitsFile>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof downloadFitsFile>>,
+          TError,
+          Awaited<ReturnType<typeof downloadFitsFile>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useDownloadFitsFile<TData = Awaited<ReturnType<typeof downloadFitsFile>>, TError = ErrorType<void | HTTPValidationError>>(
+ recordId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof downloadFitsFile>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Download Fits File
+ */
+
+export function useDownloadFitsFile<TData = Awaited<ReturnType<typeof downloadFitsFile>>, TError = ErrorType<void | HTTPValidationError>>(
+ recordId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof downloadFitsFile>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getDownloadFitsFileQueryOptions(recordId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+

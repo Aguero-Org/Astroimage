@@ -20,7 +20,7 @@ export function usePagedSort<Field extends SortFieldName>(
 
   const page = search[keys.page];
   const sort = (search[keys.sort] ?? initialSort) as Field;
-  const order = (search[keys.order] ?? initialOrder) as "asc" | "desc";
+  const order = search[keys.order] ?? initialOrder;
 
   function setPage(nextPage: number) {
     const clamped = Math.max(1, Math.trunc(nextPage));

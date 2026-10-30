@@ -26,6 +26,8 @@ import type {
 import type {
   CandidatePageSchema,
   FitsMetadataSchema,
+  FitsRecordPatchSchema,
+  FitsRecordSummarySchema,
   HTTPValidationError,
   ListHubbleImagesParams,
   ListRecordsResponseSchema,
@@ -603,6 +605,94 @@ export const useResumeImageTransfer = <TError = ErrorType<HTTPValidationError>,
         TContext
       > => {
       return useMutation(getResumeImageTransferMutationOptions(options), queryClient);
+    }
+    export const getPatchImageRecordUrl = (recordId: string,) => {
+
+
+
+
+  return `/image/${recordId}`
+}
+
+/**
+ * @summary Patch Astro Image
+ */
+export const patchImageRecord = async (recordId: string,
+    fitsRecordPatchSchema: FitsRecordPatchSchema, options?: Parameters<typeof customFetch>[1]): Promise<FitsRecordSummarySchema> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<FitsRecordSummarySchema>(getPatchImageRecordUrl(recordId),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(fitsRecordPatchSchema)
+  }
+);}
+
+
+
+
+
+export const getPatchImageRecordMutationKey = () => ['patchImageRecord'] as const;
+
+export const getPatchImageRecordMutationOptions = <TError = ErrorType<HTTPValidationError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof patchImageRecord>>, TError,PatchImageRecordMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof patchImageRecord>>, TError,PatchImageRecordMutationVariables, TContext> => {
+
+const mutationKey = getPatchImageRecordMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof patchImageRecord>>, PatchImageRecordMutationVariables> = (props) => {
+          const {recordId,data} = props ?? {};
+
+          return  patchImageRecord(recordId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PatchImageRecordMutationResult = NonNullable<Awaited<ReturnType<typeof patchImageRecord>>>
+    export type PatchImageRecordMutationBody = FitsRecordPatchSchema
+    export type PatchImageRecordMutationError = ErrorType<HTTPValidationError>
+    export type PatchImageRecordMutationVariables = {recordId: string;data: FitsRecordPatchSchema}
+
+    /**
+ * @summary Patch Astro Image
+ */
+export const usePatchImageRecord = <TError = ErrorType<HTTPValidationError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof patchImageRecord>>, TError,PatchImageRecordMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof patchImageRecord>>,
+        TError,
+        PatchImageRecordMutationVariables,
+        TContext
+      > => {
+      return useMutation(getPatchImageRecordMutationOptions(options), queryClient);
     }
     export const getDeleteHubbleImageUrl = (recordId: string,) => {
 

@@ -8,9 +8,10 @@ from astroimage.catalogs.papers import PaperMetadata
 from astroimage.config import get_settings
 from astroimage.fits.model import FitsRecord
 from astroimage.hub.model import ImageTransfer
+from astroimage.render.model import ImagePreview
 from astroimage.shared.database import Base
 
-_ = (CatalogDownload, FitsRecord, ImageTransfer, PaperMetadata)
+_ = (CatalogDownload, FitsRecord, ImagePreview, ImageTransfer, PaperMetadata)
 
 config = context.config
 if config.config_file_name is not None:

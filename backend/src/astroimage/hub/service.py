@@ -9,7 +9,11 @@ import structlog
 from opentelemetry import trace
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
-from astroimage.fits.schema import FitsMetadataSchema
+from astroimage.fits.schema import (
+    FitsMetadataSchema,
+    FitsRecordPatchSchema,
+    FitsRecordSummarySchema,
+)
 from astroimage.fits.service import FitsService
 from astroimage.hub.candidate_token import read_candidate_token, sign_candidate_token
 from astroimage.hub.importer import HubbleImporter, HubbleProduct
@@ -139,6 +143,13 @@ class HubbleImageService:
             sort=sort,
             order=order,
         )
+
+    async def patch_record(
+        self,
+        record_id: UUID,
+        patch: FitsRecordPatchSchema,
+    ) -> FitsRecordSummarySchema:
+        return await self._fits.patch_record(record_id, patch)
 
     async def delete_record(self, record_id: UUID) -> None:
         await self._fits.delete_record(record_id)

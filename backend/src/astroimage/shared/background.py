@@ -37,8 +37,10 @@ class BackgroundTasks:
             if current is asyncio.current_task():
                 self._tasks.pop(key, None)
 
-    def clear(self) -> None:
-        for task in self._tasks.values():
-            if not task.done():
-                task.cancel()
+    async def aclose(self) -> None:
+        pending = [task for task in self._tasks.values() if not task.done()]
+        for task in pending:
+            task.cancel()
         self._tasks.clear()
+        if pending:
+            await asyncio.wait(pending)

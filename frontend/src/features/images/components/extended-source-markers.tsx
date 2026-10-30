@@ -9,6 +9,33 @@ import {
 } from "../source-focus-pulse";
 import { SimbadMatchBadge } from "./simbad-match-badge";
 
+function extendedFace(simbadMatch: boolean, gaiaMatch: boolean): string {
+  if (simbadMatch) {
+    return "border-simbad bg-simbad/20";
+  }
+  if (gaiaMatch) {
+    return "border-gaia bg-gaia/20";
+  }
+  return "border-amber-300 bg-amber-300/20";
+}
+
+function extendedRing(
+  selected: boolean,
+  simbadMatch: boolean,
+  gaiaMatch: boolean,
+): string {
+  if (selected) {
+    return "ring-accent";
+  }
+  if (simbadMatch) {
+    return "ring-simbad";
+  }
+  if (gaiaMatch) {
+    return "ring-gaia";
+  }
+  return "ring-background";
+}
+
 type ExtendedSourceMarkersProps = {
   sources: ExtendedSourceSchema[];
   selectedId?: number | null;
@@ -90,18 +117,8 @@ export function ExtendedSourceMarkers({
               title={label}
               className={cn(
                 "pointer-events-auto absolute left-1/2 top-1/2 h-full w-full -translate-x-1/2 -translate-y-1/2 cursor-pointer rounded-sm border-2 shadow-sm ring-2",
-                simbadMatch
-                  ? "border-simbad bg-simbad/20"
-                  : gaiaMatch
-                    ? "border-gaia bg-gaia/20"
-                    : "border-amber-300 bg-amber-300/20",
-                selected
-                  ? "ring-accent"
-                  : simbadMatch
-                    ? "ring-simbad"
-                    : gaiaMatch
-                      ? "ring-gaia"
-                      : "ring-background",
+                extendedFace(simbadMatch, gaiaMatch),
+                extendedRing(selected, simbadMatch, gaiaMatch),
                 sourceFocusPulseKey(
                   focusPulse,
                   source.source_id,

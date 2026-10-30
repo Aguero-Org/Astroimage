@@ -69,9 +69,8 @@ function sourceId(
 export const Route = createFileRoute("/image/$recordId/{-$slug}")({
   loader: async ({ context, params }) => {
     try {
-      return await context.queryClient.ensureQueryData(
-        getGetImageInfoQueryOptions(params.recordId),
-      );
+      const imageInfo = getGetImageInfoQueryOptions(params.recordId);
+      return await context.queryClient.ensureQueryData(imageInfo); // NOSONAR
     } catch (error) {
       if (error instanceof ApiError && error.status === 404) {
         throw notFound();

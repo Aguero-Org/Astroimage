@@ -6,6 +6,13 @@ from astropy.io import fits
 from httpx import AsyncClient
 
 
+def _fresh_fits_bytes() -> bytes:
+    data = np.random.default_rng().random((4, 4))
+    buffer = BytesIO()
+    fits.PrimaryHDU(data).writeto(buffer)
+    return buffer.getvalue()
+
+
 def _sample_fits_bytes() -> bytes:
     data = np.full((5, 5), 42.0)
     hdu = fits.PrimaryHDU(data)
@@ -48,6 +55,147 @@ async def test_extract_fits_metadata_rejects_empty(client: AsyncClient) -> None:
         files={"file": ("empty.fits", b"", "application/fits")},
     )
     assert response.status_code == 400
+
+
+@pytest.mark.asyncio
+async def test_import_fits_file_is_listed_without_mast_provenance(client: AsyncClient) -> None:
+    payload = _sample_fits_bytes()
+    response = await client.post(
+        "/fits",
+        files={"files": ("vlt.fits", payload, "application/fits")},
+    )
+    assert response.status_code == 200
+    body = response.json()
+    assert body[0]["slug"] == "vlt.fits"
+    listed = await client.get("/image")
+    assert listed.status_code == 200
+    match = next(
+        item for item in listed.json()["records"] if item["record_id"] == body[0]["record_id"]
+    )
+    assert match["display_name"] == "vlt.fits"
+    assert match["proposal_id"] is None
+    assert match["data_uri"] is None
+    assert match["instrument"] == "FORS2"
+
+    duplicate = await client.post(
+        "/fits",
+        files={"files": ("copy.fits", payload, "application/fits")},
+    )
+    assert duplicate.status_code == 409
+
+
+@pytest.mark.asyncio
+async def test_download_imported_fits_file(client: AsyncClient) -> None:
+    payload = _sample_fits_bytes().replace(b"VLT", b"HST")
+    created = await client.post(
+        "/fits",
+        files={"files": ("vlt.fits", payload, "application/fits")},
+    )
+    assert created.status_code == 200
+    record_id = created.json()[0]["record_id"]
+
+    downloaded = await client.get(f"/fits/{record_id}/file")
+
+    assert downloaded.status_code == 200
+    assert downloaded.headers["content-type"] == "application/fits"
+    assert downloaded.headers["content-disposition"] == 'attachment; filename="vlt.fits"'
+    assert downloaded.content == payload
+
+
+@pytest.mark.asyncio
+async def test_import_fits_rejects_a_cube(client: AsyncClient) -> None:
+    buffer = BytesIO()
+    fits.PrimaryHDU(np.ones((2, 2, 2))).writeto(buffer)
+    response = await client.post(
+        "/fits",
+        files={"files": ("cube.fits", buffer.getvalue(), "application/fits")},
+    )
+    assert response.status_code == 400
+
+
+@pytest.mark.asyncio
+async def test_import_fits_from_url(client: AsyncClient, monkeypatch: pytest.MonkeyPatch) -> None:
+    payload = _sample_fits_bytes()
+    payload = payload.replace(b"FORS2", b"UVES ")
+
+    async def _download(url: str, max_bytes: int) -> bytes:
+        assert url == "https://example.test/folder/nebula.fits"
+        assert max_bytes > len(payload)
+        return payload
+
+    monkeypatch.setattr("astroimage.fits.service._download_fits", _download)
+    response = await client.post(
+        "/fits/from-url",
+        json={"url": "https://example.test/folder/nebula.fits"},
+    )
+    assert response.status_code == 200
+    assert response.json()["slug"] == "nebula.fits"
+
+    again = await client.post(
+        "/fits/from-url",
+        json={"url": "https://example.test/folder/nebula.fits"},
+    )
+    assert again.status_code == 409
+
+
+@pytest.mark.asyncio
+async def test_import_fits_from_url_rejects_a_relative_address(client: AsyncClient) -> None:
+    response = await client.post("/fits/from-url", json={"url": "nebula.fits"})
+    assert response.status_code == 400
+
+
+@pytest.mark.asyncio
+async def test_patch_image_record_updates_visible_fields_only(client: AsyncClient) -> None:
+    payload = _fresh_fits_bytes()
+    created = await client.post(
+        "/fits",
+        files={"files": ("patch-me.fits", payload, "application/fits")},
+        data={"display_name": "Antes", "description": "vieja"},
+    )
+    assert created.status_code == 200
+    record_id = created.json()[0]["record_id"]
+
+    patched = await client.patch(
+        f"/image/{record_id}",
+        json={
+            "display_name": "Después",
+            "description": "",
+            "tags": [" M31 ", "m31", "Hubble"],
+        },
+    )
+    assert patched.status_code == 200
+    body = patched.json()
+    assert body["display_name"] == "Después"
+    assert body["description"] is None
+    assert body["tags"] == ["M31", "Hubble"]
+    assert body["slug"] == "patch-me.fits"
+    assert body["name"] == "patch-me.fits"
+
+    missing = await client.patch(
+        "/image/00000000-0000-0000-0000-000000000000",
+        json={"display_name": "Nada"},
+    )
+    assert missing.status_code == 404
+
+    empty = await client.patch(f"/image/{record_id}", json={"display_name": "   "})
+    assert empty.status_code == 400
+
+
+@pytest.mark.asyncio
+async def test_preview_falls_back_to_a_png(client: AsyncClient) -> None:
+    payload = _fresh_fits_bytes()
+    created = await client.post(
+        "/fits",
+        files={"files": ("preview-me.fits", payload, "application/fits")},
+    )
+    assert created.status_code == 200
+    record_id = created.json()[0]["record_id"]
+    preview = await client.get(f"/image/{record_id}/preview", params={"size": 256})
+    assert preview.status_code == 200
+    assert preview.headers["content-type"].startswith("image/png")
+    assert preview.content.startswith(b"\x89PNG")
+    rejected = await client.get(f"/image/{record_id}/preview", params={"size": 100})
+    assert rejected.status_code == 400
 
 
 @pytest.mark.asyncio

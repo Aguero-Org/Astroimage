@@ -57,18 +57,61 @@ function objectTypeLabel(object: SimbadObjectSchema): string | null {
   return simbadObjectTypeName(object.otype, object.otype_text);
 }
 
-export function SimbadObjectCard({
+function matchedSourceLabel(
+  match: SimbadObjectSchema["image_match"],
+): string | null {
+  if (!match?.matched) {
+    return null;
+  }
+  if (match.object_type === "point") {
+    return `Fuente puntual #${match.source_id}`;
+  }
+  return `Fuente extendida #${match.source_id}`;
+}
+
+function SimbadFocusRow({
   object,
   onFocusSource,
 }: Readonly<SimbadObjectCardProps>) {
   const match = object.image_match;
-  const canFocus =
-    match?.matched &&
-    onFocusSource &&
-    (match.object_type === "point" || match.object_type === "extended");
-  const sourceLabel = match?.matched
-    ? `Fuente ${match.object_type === "point" ? "puntual" : "extendida"} #${match.source_id}`
-    : null;
+  const sourceLabel = matchedSourceLabel(match);
+  if (!match?.matched || sourceLabel === null) {
+    return null;
+  }
+  const objectType =
+    match.object_type === "point" || match.object_type === "extended"
+      ? match.object_type
+      : null;
+  const canFocus = onFocusSource !== undefined && objectType !== null;
+  const separation = match.separation_arcsec;
+  return (
+    <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+      <span>{sourceLabel}</span>
+      {separation !== null && separation !== undefined ? (
+        <span>Δ {separation.toFixed(2)}″</span>
+      ) : null}
+      {canFocus ? (
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          className="h-7 px-2 text-xs"
+          data-testid="simbad-object-focus"
+          onClick={() => onFocusSource(match.source_id, objectType)}
+        >
+          <LocateFixed aria-hidden className="size-3.5" />
+          Ir a la fuente
+        </Button>
+      ) : null}
+    </div>
+  );
+}
+
+export function SimbadObjectCard({
+  object,
+  onFocusSource,
+}: Readonly<SimbadObjectCardProps>) {
+  const sourceLabel = matchedSourceLabel(object.image_match);
   const size = dimensions(object);
   const typeLabel = objectTypeLabel(object);
 
@@ -141,33 +184,7 @@ export function SimbadObjectCard({
 
         <CollapsibleContent>
           <div className="flex flex-col gap-3 border-t border-sidebar-border px-2.5 py-2">
-            {match?.matched ? (
-              <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                <span>{sourceLabel}</span>
-                {match.separation_arcsec !== null &&
-                match.separation_arcsec !== undefined ? (
-                  <span>Δ {match.separation_arcsec.toFixed(2)}″</span>
-                ) : null}
-                {canFocus ? (
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="outline"
-                    className="h-7 px-2 text-xs"
-                    data-testid="simbad-object-focus"
-                    onClick={() =>
-                      onFocusSource?.(
-                        match.source_id,
-                        match.object_type as "point" | "extended",
-                      )
-                    }
-                  >
-                    <LocateFixed aria-hidden className="size-3.5" />
-                    Ir a la fuente
-                  </Button>
-                ) : null}
-              </div>
-            ) : null}
+            <SimbadFocusRow object={object} onFocusSource={onFocusSource} />
 
             <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-xs">
               <dt className="text-muted-foreground">RA</dt>

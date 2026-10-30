@@ -102,9 +102,34 @@ class FitsRecordSummarySchema(BaseModel):
     name: str
     display_name: str
     instrument: str | None
-    proposal_id: str
+    proposal_id: str | None = None
     filters: str | None
     observed_at: str | None
     created_at: datetime
     size_bytes: int
-    data_uri: str
+    data_uri: str | None = None
+    description: str | None = None
+    tags: list[str] = Field(default_factory=list)
+
+
+class FitsRecordPatchSchema(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    display_name: str | None = Field(default=None, max_length=200)
+    description: str | None = Field(default=None, max_length=500)
+    tags: list[str] | None = None
+
+
+class FitsImportSchema(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    record_id: UUID
+    slug: str
+
+
+class FitsUrlImportRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    url: str = Field(min_length=1, max_length=2048)
+    description: str | None = Field(default=None, max_length=500)
+    display_name: str | None = Field(default=None, max_length=200)

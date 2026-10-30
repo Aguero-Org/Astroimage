@@ -88,7 +88,9 @@ export function ViewportSourceVisibility({
       viewer.viewport.getBounds(),
       coords.imageToViewport,
     );
-    const signature = [...keys].sort().join("|");
+    const signature = [...keys]
+      .sort((left, right) => left.localeCompare(right))
+      .join("|");
     if (signature === lastSignature.current) {
       return;
     }
