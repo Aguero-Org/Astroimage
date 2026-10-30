@@ -71,7 +71,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
             await session.rollback()
             _log.warning("transfer_recovery_skipped", reason="image_transfers is not migrated")
     yield
-    app.state.background_tasks.clear()
+    await app.state.background_tasks.aclose()
     await engine.dispose()
 
 

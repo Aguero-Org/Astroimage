@@ -114,14 +114,18 @@ class PreviewRenderer:
                 fits = fits_service_from_resources(session, self._storage)
                 record = await fits.get_record(record_id)
                 payload = await fits.get_payload(record)
-                full = await asyncio.to_thread(RenderService().render_png_from_bytes, payload)
+            full = await asyncio.to_thread(RenderService().render_png_from_bytes, payload)
+            thumbnails = {
+                edge: await asyncio.to_thread(thumbnail_png, full, edge) for edge in PREVIEW_EDGES
+            }
+            async with self._session_factory() as session:
                 repository = PreviewRepository(session)
                 for edge in PREVIEW_EDGES:
                     config_hash = preview_config_hash(BASE_PRESET_ID, edge)
                     existing = await repository.find(record_id, BASE_PRESET_ID, edge)
                     if existing is not None and existing.config_hash == config_hash:
                         continue
-                    png = await asyncio.to_thread(thumbnail_png, full, edge)
+                    png = thumbnails[edge]
                     object_key = preview_object_key(record_id, BASE_PRESET_ID, edge)
                     await self._storage.put_bytes(
                         object_key,
