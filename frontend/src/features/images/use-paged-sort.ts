@@ -24,7 +24,7 @@ export function usePagedSort<Field extends SortFieldName>(
 
   function setPage(nextPage: number) {
     const clamped = Math.max(1, Math.trunc(nextPage));
-    void navigate({
+    navigate({
       search: (prev) => ({ ...prev, [keys.page]: clamped }),
     });
   }
