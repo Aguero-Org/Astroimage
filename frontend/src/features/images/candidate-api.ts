@@ -75,7 +75,7 @@ export function useImageTransfer(transferId: string | null) {
 
   useEffect(() => {
     if (status === "completed") {
-      void queryClient.invalidateQueries({
+      queryClient.invalidateQueries({
         queryKey: getListHubbleImagesQueryKey(),
       });
     }
