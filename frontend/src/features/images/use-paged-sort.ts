@@ -30,7 +30,7 @@ export function usePagedSort<Field extends SortFieldName>(
   }
 
   function toggleSort(field: Field) {
-    void navigate({
+    navigate({
       search: (prev) => {
         const next = { ...prev };
         if (field === sort) {
