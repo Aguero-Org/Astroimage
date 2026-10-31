@@ -176,7 +176,8 @@ export function ImportFitsControl() {
           data: {
             files,
             display_name: title.trim() === "" ? undefined : title.trim(),
-            description: description.trim() || undefined,
+            description:
+              description.trim() === "" ? undefined : description.trim(),
           },
         },
         {
