@@ -49,10 +49,6 @@ docker run --rm --user 0 \
   -Dsonar.working.directory=/usr/src/.scannerwork \
   -Dsonar.qualitygate.wait=false
 
-if [[ -d .scannerwork ]]; then
-  chmod -R a+rX .scannerwork
-fi
-
 echo "==> Export issues.json and issues.md"
 python3 sonar/export_report.py \
   --url http://127.0.0.1:9002 \
