@@ -20,12 +20,12 @@ export function Navbar() {
           data-testid="navbar-logo"
           aria-label="Ir al inicio"
           className="flex shrink-0 cursor-pointer items-center gap-2"
-          onClick={() =>
-            void navigate({
+          onClick={() => {
+            navigate({
               to: "/",
               search: (prev) => ({ ...prev, query: "", page: 1, cpage: 1 }),
-            })
-          }
+            });
+          }}
         >
           <BrandLogo className="h-8 w-8" />
           <span className="text-lg font-semibold">Astroimage</span>
