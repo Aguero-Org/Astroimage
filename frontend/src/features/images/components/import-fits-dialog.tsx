@@ -73,7 +73,7 @@ export function ImportFitsControl() {
   const pendingRef = useRef(false);
   const importFiles = useImportLocalFits();
   const importUrl = useImportFitsUrl();
-  const pending = importFiles.isPending || importUrl.isPending;
+  const pending = importFiles.isPending ? true : importUrl.isPending;
   pendingRef.current = pending;
   const trimmedUrl = url.trim();
   const canSubmit =
