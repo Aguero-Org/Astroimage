@@ -35,7 +35,7 @@ export function useSimbadReferences({
   const error = query.error;
 
   function refetch() {
-    void query.refetch();
+    query.refetch();
   }
 
   return {
