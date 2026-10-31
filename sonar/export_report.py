@@ -367,6 +367,15 @@ def read_ce_task_id(path: Path) -> str:
     raise RuntimeError(f"scanner report has no ceTaskId: {path}")
 
 
+def task_id_from_activity(payload: dict[str, Any]) -> str:
+    tasks = payload.get("tasks")
+    if isinstance(tasks, list):
+        for task in tasks:
+            if isinstance(task, dict) and isinstance(task.get("id"), str) and task["id"]:
+                return task["id"]
+    raise RuntimeError("no compute engine task for the project")
+
+
 def write_report(out_dir: Path, report: dict[str, Any]) -> None:
     out_dir.mkdir(parents=True, exist_ok=True)
     (out_dir / "issues.json").write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
@@ -386,7 +395,11 @@ def main() -> int:
         return 1
     try:
         client = SonarClient(args.url, token)
-        client.wait_ce(read_ce_task_id(args.report_task))
+        try:
+            task_id = read_ce_task_id(args.report_task)
+        except RuntimeError:
+            task_id = task_id_from_activity(client.get("/api/ce/activity", {"component": PROJECT_KEY, "ps": "1"}))
+        client.wait_ce(task_id)
         try:
             raw_hotspots = client.hotspots()
             hotspots_error = None

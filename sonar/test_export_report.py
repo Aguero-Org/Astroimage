@@ -9,6 +9,7 @@ from export_report import (
     normalize_hotspot,
     normalize_issue,
     render_markdown,
+    task_id_from_activity,
 )
 
 
@@ -116,6 +117,14 @@ class ExportReportTests(unittest.TestCase):
         self.assertIn("| coverage | 81.0 |", text)
         self.assertIn("new_coverage", text)
         self.assertEqual(report["issues"][0]["rule"], "python:S1192")
+
+    def test_task_id_from_activity_uses_the_latest_task(self) -> None:
+        self.assertEqual(
+            task_id_from_activity({"tasks": [{"id": "685ca949-ceaf-406b-82e2-a070213c564f"}]}),
+            "685ca949-ceaf-406b-82e2-a070213c564f",
+        )
+        with self.assertRaises(RuntimeError):
+            task_id_from_activity({"tasks": []})
 
     def test_empty_report_says_there_are_no_issues(self) -> None:
         text = render_markdown(

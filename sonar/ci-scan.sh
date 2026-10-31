@@ -46,6 +46,7 @@ docker run --rm --user 0 \
   -v "${root}:/usr/src" \
   -w /usr/src \
   sonarsource/sonar-scanner-cli:11 \
+  -Dsonar.working.directory=/usr/src/.scannerwork \
   -Dsonar.qualitygate.wait=false
 
 if [[ -d .scannerwork ]]; then
