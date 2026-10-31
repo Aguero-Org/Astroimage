@@ -34,12 +34,12 @@ export function Navbar() {
           <ImageSearch
             variant="navbar"
             value={urlQuery}
-            onSearch={(query) =>
-              void navigate({
+            onSearch={(query) => {
+              navigate({
                 to: "/",
                 search: (prev) => ({ ...prev, query, page: 1, cpage: 1 }),
-              })
-            }
+              });
+            }}
           />
           <GlossaryLink testId="navbar-glossary" />
           <ThemeToggle />
