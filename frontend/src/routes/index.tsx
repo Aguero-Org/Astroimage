@@ -33,7 +33,7 @@ function HomePage() {
         variant="hero"
         value={query}
         onSearch={(nextQuery) => {
-          void navigate({
+          navigate({
             to: "/",
             search: (prev) => ({
               ...prev,
