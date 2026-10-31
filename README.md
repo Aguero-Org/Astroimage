@@ -191,11 +191,9 @@ GitHub Actions corre en pushes y pull requests a `main`, `develop`, `feature/*` 
 - **Backend**: Ruff + mypy + import-linter + pytest + `astroimage openapi export` (detección de drift) + cobertura.
 - **Frontend**: Biome + tsc + cobertura Vitest + Playwright + build (en paralelo con el backend).
 
-Si la variable de repositorio `SONAR_ENABLED=true` está activa, un job de **SonarQube** sube el análisis y exige el Quality Gate:
+El job **SonarQube** no usa SonarCloud ni secretos. Levanta SonarQube Community en el runner, escanea y sube el artefacto `sonar-report`:
 
-| Nombre | Tipo | Propósito |
-|------|------|--------|
-| `SONAR_ENABLED` | variable | `true` para ejecutar el job de Sonar |
-| `SONAR_TOKEN` | secret | Token de análisis (obligatorio si está habilitado) |
-| `SONAR_HOST_URL` | variable | URL de SonarQube autoalojado (omitir en SonarCloud) |
-| `SONAR_ORGANIZATION` | variable | Clave de organización de SonarCloud (solo SonarCloud) |
+- `issues.json` — informe para agentes
+- `issues.md` — el mismo informe para lectura
+
+No exige el quality gate: el servidor es efímero y no tiene baseline. Un fallo del análisis sí rompe el job. El análisis local sigue en [sonar/README.md](./sonar/README.md).

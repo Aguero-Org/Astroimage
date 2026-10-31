@@ -59,18 +59,18 @@ Dashboard: http://localhost:9002/dashboard?id=Astroimage
 > Project key is **case-sensitive** and must match the SonarQube project
 > (`Astroimage` in `sonar-project.properties`).
 
-## CI / SonarCloud
+## CI
 
-GitHub Actions job `sonar` runs when `SONAR_ENABLED=true`.
+The `sonar` job does not use SonarCloud or a GitHub secret. It starts
+SonarQube Community in the runner (`sonar/ci-scan.sh`), creates the project
+and analysis token against that container, scans, and uploads
+`sonar/reports/issues.json` (agents) and `issues.md` (humans) as the
+`sonar-report` artifact. The server is removed at the end of the job.
 
-| Name | Type | Required | Notes |
-|------|------|----------|--------|
-| `SONAR_ENABLED` | variable | yes | set to `true` |
-| `SONAR_TOKEN` | secret | yes | SonarQube or SonarCloud token |
-| `SONAR_HOST_URL` | variable | SonarQube only | e.g. `https://sonar.example.com` |
-| `SONAR_ORGANIZATION` | variable | SonarCloud only | organization key |
-
-Project key defaults to `Astroimage` (`sonar-project.properties`).
+The job does not fail on the quality gate. A fresh server has no baseline,
+so the new-code gate is not meaningful there. A scanner or compute-engine
+failure still fails the job. Do not run `sonar/ci-scan.sh` locally: it
+deletes its own Compose project volume.
 
 ## Quality profile and quality gate
 
@@ -83,9 +83,10 @@ for a single justified rule.
 The Sonar way gate applies to new code: no new issues, all new security
 hotspots reviewed, coverage at least 80%, duplicated lines at most 3%.
 It does not require cleaning historical code. `sonar.qualitygate.wait=true`
-makes the scanner wait for that gate. CI also runs
-`sonarqube-quality-gate-action`. New code detection needs full git history
-(`fetch-depth: 0` in the workflow).
+makes a local scanner wait for that gate. CI overrides it
+(`-Dsonar.qualitygate.wait=false`) and uploads the report instead: the
+server in that job has no previous analysis. New code detection on a
+long-lived server needs full git history (`fetch-depth: 0` in the workflow).
 
 Ruff, mypy, Biome, and `tsc` stay in CI. Do not import their reports
 (`sonar.python.ruff.reportPaths`, `sonar.python.mypy.reportPaths`, or a

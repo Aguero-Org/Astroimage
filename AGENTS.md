@@ -216,7 +216,7 @@ Every change must pass:
 
 1. Backend: `ruff format`, `ruff check`, `mypy`, `lint-imports`, `pytest` (unit + integration + architecture; writes `coverage.xml`)
 2. Frontend: `biome check`, `tsc`, `vitest` / `pnpm test:coverage`, Playwright for critical flows
-3. SonarQube (when `SONAR_ENABLED=true`): scan via `sonar-project.properties` + Quality Gate
+3. SonarQube: CI starts an ephemeral Community server (no SonarCloud, no external token), scans with `sonar-project.properties`, and uploads `issues.json` and `issues.md`. It does not fail the build on the quality gate (no baseline). Local analysis still waits for the gate (`sonar.qualitygate.wait`).
 4. Mutation testing (local completion gate, not CI yet): before marking branch work as
    done, run the mutation suite for the affected stack.
    - Backend: `wsl.exe -d Ubuntu -- bash -lc "cd /mnt/d/repos/tip/Astroimage/backend && UV_PROJECT_ENVIRONMENT=/tmp/astroimage-mutmut-venv ~/.local/bin/uv run mutmut run --max-children 2"`.

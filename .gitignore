@@ -58,7 +58,8 @@ Thumbs.db
 .vscode/
 *.swp
 
-# Local Sonar tokens
+# Local Sonar tokens and CI report exports
 sonar/.env
+sonar/reports/
 
 documentos

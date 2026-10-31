@@ -14,6 +14,7 @@ on:
       - ".github/workflows/**"
       - "docker-compose.yml"
       - "sonar-project.properties"
+      - "sonar/**"
   pull_request:
     branches:
       - main
@@ -27,6 +28,7 @@ on:
       - ".github/workflows/**"
       - "docker-compose.yml"
       - "sonar-project.properties"
+      - "sonar/**"
 
 jobs:
   backend:
@@ -145,12 +147,14 @@ jobs:
     name: SonarQube
     runs-on: ubuntu-latest
     needs: [backend, frontend]
-    # Opt-in: set repository variable SONAR_ENABLED=true and secret SONAR_TOKEN.
-    if: ${{ vars.SONAR_ENABLED == 'true' }}
+    timeout-minutes: 40
     steps:
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
+
+      - name: Check report renderer
+        run: python3 -m unittest discover -s sonar -p "test_*.py"
 
       - name: Download backend coverage
         uses: actions/download-artifact@v8
@@ -167,27 +171,15 @@ jobs:
       - name: Normalize coverage paths for the monorepo
         run: python3 sonar/normalize-coverage.py
 
-      - name: Build scanner args
-        id: sonar_args
-        shell: bash
-        run: |
-          args=()
-          if [[ -n "${{ vars.SONAR_ORGANIZATION }}" ]]; then
-            args+=("-Dsonar.organization=${{ vars.SONAR_ORGANIZATION }}")
-          fi
-          echo "args=${args[*]}" >> "$GITHUB_OUTPUT"
+      - name: Scan with ephemeral SonarQube
+        run: bash sonar/ci-scan.sh
 
-      - name: SonarQube scan
-        uses: SonarSource/sonarqube-scan-action@v8
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          SONAR_HOST_URL: ${{ vars.SONAR_HOST_URL }}
+      - name: Upload Sonar report
+        if: always()
+        uses: actions/upload-artifact@v7
         with:
-          args: ${{ steps.sonar_args.outputs.args }}
-
-      - name: SonarQube quality gate
-        uses: SonarSource/sonarqube-quality-gate-action@v1
-        timeout-minutes: 5
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          SONAR_HOST_URL: ${{ vars.SONAR_HOST_URL }}
+          name: sonar-report
+          path: |
+            sonar/reports/issues.json
+            sonar/reports/issues.md
+          if-no-files-found: ignore
