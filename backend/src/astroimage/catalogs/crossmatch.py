@@ -91,3 +91,6 @@ def _join_identifiers(row: CatalogRow) -> str | None:
     if not identifiers:
         return None
     return identifiers[0]
+
+
+# coderabbit-review

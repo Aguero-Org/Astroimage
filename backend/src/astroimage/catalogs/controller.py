@@ -168,3 +168,6 @@ async def get_catalogs_job(
     if failure is not None:
         raise failure
     raise NotFoundError(f"Unknown catalog job: {job_id}")
+
+
+# coderabbit-review

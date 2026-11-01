@@ -56,3 +56,6 @@ def simbad_cache_key(
         "config": config.model_dump(mode="json"),
     }
     return json.dumps(payload, sort_keys=True, separators=(",", ":"))
+
+
+# coderabbit-review

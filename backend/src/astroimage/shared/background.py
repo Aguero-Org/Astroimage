@@ -44,3 +44,6 @@ class BackgroundTasks:
         self._tasks.clear()
         if pending:
             await asyncio.wait(pending)
+
+
+# coderabbit-review

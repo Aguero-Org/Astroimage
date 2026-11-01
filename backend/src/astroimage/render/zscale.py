@@ -128,3 +128,6 @@ def zscale_bounds(data: np.ndarray) -> tuple[float, float]:
     low = max(sample_min, median - (center_pixel - 1) * fitted_slope)
     high = min(sample_max, median + (sorted_samples.size - center_pixel) * fitted_slope)
     return float(low), float(high)
+
+
+# coderabbit-review

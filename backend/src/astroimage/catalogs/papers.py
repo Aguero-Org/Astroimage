@@ -268,3 +268,6 @@ def _quoted(value: str) -> str:
 
 def _batches[T](items: Sequence[T], size: int) -> list[list[T]]:
     return [list(items[start : start + size]) for start in range(0, len(items), size)]
+
+
+# coderabbit-review

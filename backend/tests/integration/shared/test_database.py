@@ -15,3 +15,6 @@ async def test_engine_and_session_query_postgres(settings: Settings) -> None:
         assert value == 1
     finally:
         await engine.dispose()
+
+
+# coderabbit-review

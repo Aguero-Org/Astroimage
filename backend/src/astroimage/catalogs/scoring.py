@@ -100,3 +100,6 @@ def _identifiers_in_text(text: str, normalized_known: Mapping[str, str]) -> list
         for normalized_id, original_id in normalized_known.items()
         if normalized_id and normalized_id in normalized_value
     ]
+
+
+# coderabbit-review

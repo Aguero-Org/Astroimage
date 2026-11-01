@@ -205,3 +205,6 @@ async def test_extract_fits_metadata_rejects_garbage(client: AsyncClient) -> Non
         files={"file": ("bad.fits", b"not-a-fits-file", "application/octet-stream")},
     )
     assert response.status_code == 400
+
+
+# coderabbit-review

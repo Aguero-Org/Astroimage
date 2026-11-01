@@ -38,3 +38,6 @@ def test_database_url_is_required() -> None:
 
     with pytest.raises(ValidationError):
         Settings(database_url="")
+
+
+# coderabbit-review

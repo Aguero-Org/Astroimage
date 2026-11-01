@@ -371,3 +371,6 @@ def test_summary_uses_the_filename_when_mast_provenance_is_missing() -> None:
     assert summary.filters == "B"
     assert summary.observed_at == "2020-01-02"
     assert summary.data_uri is None
+
+
+# coderabbit-review

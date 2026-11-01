@@ -88,3 +88,6 @@ async def test_replace_missing_record_raises(
 ) -> None:
     with pytest.raises(LookupError):
         await fits_service.replace_bytes(uuid4(), fits_bytes, source_name="keck.fits")
+
+
+# coderabbit-review

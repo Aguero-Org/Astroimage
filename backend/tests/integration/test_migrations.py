@@ -80,3 +80,6 @@ def test_migrations_match_orm_metadata(monkeypatch: pytest.MonkeyPatch) -> None:
             monkeypatch.setenv("DATABASE_URL", previous_database_url)
 
     assert diff == []
+
+
+# coderabbit-review

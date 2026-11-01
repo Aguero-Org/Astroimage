@@ -61,3 +61,6 @@ def test_invalid_background_rms_raises() -> None:
 
     with pytest.raises(ValueError, match="RMS"):
         detect_point_sources(image, np.full((256, 256), 0.0))
+
+
+# coderabbit-review

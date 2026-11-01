@@ -420,3 +420,6 @@ def _paper_schema(record: PaperRecord) -> CatalogPaperSchema:
         title=record.title,
         abstract=record.abstract,
     )
+
+
+# coderabbit-review

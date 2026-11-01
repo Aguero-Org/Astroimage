@@ -30,3 +30,6 @@ def test_current_trace_ids_from_active_span() -> None:
     assert len(trace_id) == 32
     assert len(span_id) == 16
     assert int(trace_id, 16) != 0
+
+
+# coderabbit-review

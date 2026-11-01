@@ -424,3 +424,6 @@ async def test_verify_from_record_times_out_gracefully() -> None:
     assert result.summary.point.count + result.summary.extended.count == len(result.matches)
 
     await asyncio.sleep(1.2)
+
+
+# coderabbit-review

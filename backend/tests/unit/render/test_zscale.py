@@ -186,3 +186,6 @@ def test_fit_line_recovers_linear_samples() -> None:
     assert good_count == 10
     assert offset == pytest.approx(0.0)
     assert slope == pytest.approx(1.0)
+
+
+# coderabbit-review

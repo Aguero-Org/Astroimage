@@ -92,3 +92,6 @@ def test_object_type_clause_only_accepts_codes() -> None:
     assert _object_type_clause(None) == ""
     with pytest.raises(ValueError):
         _object_type_clause("SNR' OR 1=1")
+
+
+# coderabbit-review

@@ -525,3 +525,6 @@ class SimbadReferenceService:
             ),
             objects=objects,
         )
+
+
+# coderabbit-review

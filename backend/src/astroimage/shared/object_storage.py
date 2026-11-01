@@ -21,3 +21,6 @@ class ObjectStorage(Protocol):
     async def remove(self, object_key: str) -> None: ...
 
     async def list_object_keys(self, prefix: str) -> list[str]: ...
+
+
+# coderabbit-review

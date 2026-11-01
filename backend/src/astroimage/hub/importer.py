@@ -335,3 +335,6 @@ def annotate_fits_header(payload: bytes, target_name: str, product: HubbleProduc
         output = io.BytesIO()
         hdul.writeto(output, overwrite=True)
         return output.getvalue()
+
+
+# coderabbit-review

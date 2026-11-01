@@ -8,3 +8,6 @@ def setup_metrics(app: FastAPI) -> None:
         should_ignore_untemplated=True,
         excluded_handlers=["/metrics"],
     ).instrument(app).expose(app, include_in_schema=False, should_gzip=True)
+
+
+# coderabbit-review

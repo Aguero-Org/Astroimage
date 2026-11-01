@@ -155,3 +155,6 @@ class CatalogLookup:
             else:
                 pairs.append((result, table))
         return pairs
+
+
+# coderabbit-review

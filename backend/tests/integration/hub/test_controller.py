@@ -267,3 +267,6 @@ async def test_fetch_astro_image_not_found(client: AsyncClient) -> None:
 
     assert response.status_code == 404
     assert "unknown" in response.json()["detail"]
+
+
+# coderabbit-review

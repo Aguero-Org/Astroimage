@@ -28,3 +28,6 @@ def simbad_reference_service_dependency(
         provider=provider,
         cache=_simbad_cache,
     )
+
+
+# coderabbit-review

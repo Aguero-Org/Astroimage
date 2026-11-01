@@ -61,3 +61,6 @@ def test_non_2d_image_raises() -> None:
 
     with pytest.raises(ValueError, match="2D"):
         detect_extended_sources(image)
+
+
+# coderabbit-review

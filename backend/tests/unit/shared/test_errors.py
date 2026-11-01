@@ -92,3 +92,6 @@ def test_unknown_error_maps_to_internal_without_leaking_message() -> None:
 def test_base_app_error_is_internal_by_default() -> None:
     assert AppError().status_code == 500
     assert AppError().message == INTERNAL_ERROR_MESSAGE
+
+
+# coderabbit-review

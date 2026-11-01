@@ -378,3 +378,6 @@ async def test_fetch_image_download_failure(resolved_target: None) -> None:
 def test_importer_errors_carry_http_statuses() -> None:
     assert HubbleNotFoundError("nothing found").status_code == 404
     assert HubbleDownloadError("mast is down").status_code == 502
+
+
+# coderabbit-review

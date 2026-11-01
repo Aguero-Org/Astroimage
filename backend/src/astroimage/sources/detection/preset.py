@@ -280,3 +280,6 @@ def median_source_snr(sources: list[PointSource]) -> float | None:
     if not values:
         return None
     return round(float(np.median(np.asarray(values, dtype=float))), 3)
+
+
+# coderabbit-review

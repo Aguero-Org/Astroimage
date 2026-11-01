@@ -322,3 +322,6 @@ class HubbleImageService:
             slug=transfer.slug,
             resumable=status in {item.value for item in RESUMABLE_TRANSFER_STATUSES},
         )
+
+
+# coderabbit-review

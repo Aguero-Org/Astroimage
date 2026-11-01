@@ -33,3 +33,6 @@ def test_speed_uses_a_window_not_a_single_chunk() -> None:
     samples = [(0.0, 0), (1.0, 100), (2.0, 300), (6.0, 300)]
     speed = moving_average_bytes_per_second(samples, now=6.0, window_seconds=5.0)
     assert speed == 40.0
+
+
+# coderabbit-review

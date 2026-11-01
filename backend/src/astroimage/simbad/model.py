@@ -54,3 +54,6 @@ class SimbadImageMatch:
     separation_arcsec: float
     probability: float
     matched: bool
+
+
+# coderabbit-review

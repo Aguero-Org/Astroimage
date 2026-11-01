@@ -17,3 +17,6 @@ def product_slug(
     raw = f"{target_name}-{label}-{digest}".lower()
     cleaned = re.sub(r"[^a-z0-9]+", "-", raw).strip("-")
     return cleaned[:120] or digest
+
+
+# coderabbit-review

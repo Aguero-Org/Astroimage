@@ -175,3 +175,6 @@ class SourcePresetResponse(BaseModel):
     baseline_extended_config: ExtendedDetectionConfigSchema
     evidence: PresetEvidenceSchema = Field(default_factory=PresetEvidenceSchema)
     changes: list[PresetChangeSchema] = Field(default_factory=list)
+
+
+# coderabbit-review

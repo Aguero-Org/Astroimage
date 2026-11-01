@@ -75,3 +75,6 @@ async def test_registry_discard_allows_a_retry() -> None:
     registry.start("job", factory)
     await registry.wait("job")
     assert calls == 2
+
+
+# coderabbit-review

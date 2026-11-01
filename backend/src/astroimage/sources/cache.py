@@ -96,3 +96,6 @@ def detection_scope_key(
         "hdu": hdu_index,
     }
     return json.dumps(payload, sort_keys=True, separators=(",", ":"))
+
+
+# coderabbit-review

@@ -261,3 +261,6 @@ def test_nonfinite_values_are_zeroed_before_stretch() -> None:
     )
 
     assert np.array_equal(frame, np.array([[0, 255, 0, 0, 0]], dtype=np.uint8))
+
+
+# coderabbit-review

@@ -40,3 +40,6 @@ def estimate_background(
         background_rms=background.background_rms,
         data_sub=clean - background.background,
     )
+
+
+# coderabbit-review

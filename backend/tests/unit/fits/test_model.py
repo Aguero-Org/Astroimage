@@ -12,3 +12,6 @@ def test_fits_record_persists_object_key_and_filename() -> None:
     assert record.original_filename == "sample.fits"
     assert record.size_bytes == 128
     assert record.metadata_payload["source_name"] == "sample.fits"
+
+
+# coderabbit-review

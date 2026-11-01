@@ -114,3 +114,6 @@ class CatalogCrossmatch:
     detection_count: int = 0
     matched_count: int = 0
     matches: tuple[CrossmatchRow, ...] = field(default_factory=tuple)
+
+
+# coderabbit-review

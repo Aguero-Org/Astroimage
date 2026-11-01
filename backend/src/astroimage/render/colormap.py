@@ -111,3 +111,6 @@ def apply_colormap(frame: np.ndarray, colormap: ColormapType) -> np.ndarray:
     indices: np.ndarray = frame.astype(np.intp)
     colored: np.ndarray = lut[indices]
     return colored
+
+
+# coderabbit-review

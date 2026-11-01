@@ -11,3 +11,6 @@ def render_service_dependency(
     fits: Annotated[FitsService, Depends(fits_service_dependency)],
 ) -> RenderService:
     return RenderService(fits=fits)
+
+
+# coderabbit-review

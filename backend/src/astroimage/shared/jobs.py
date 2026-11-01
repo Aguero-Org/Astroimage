@@ -107,3 +107,6 @@ class JobRegistry[ResultT]:
         self._done.clear()
         self._failed.clear()
         self._running.clear()
+
+
+# coderabbit-review

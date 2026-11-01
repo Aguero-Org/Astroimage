@@ -98,3 +98,6 @@ class CatalogDownloadStore(Protocol):
         row_limit: int,
         tables: list[CatalogTable],
     ) -> None: ...
+
+
+# coderabbit-review

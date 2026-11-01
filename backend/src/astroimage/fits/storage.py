@@ -37,3 +37,6 @@ class FitsStorage:
 
     async def list_fits_keys(self) -> list[str]:
         return await self._objects.list_object_keys(_OBJECT_PREFIX)
+
+
+# coderabbit-review

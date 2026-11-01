@@ -92,3 +92,6 @@ class CatalogJobRegistry(JobRegistry[CatalogRecommendationResponse]):
             max_failures=max_failures,
             max_jobs=max_jobs,
         )
+
+
+# coderabbit-review

@@ -363,3 +363,6 @@ def detect_point_sources(
     final_sources = _apply_isolation_and_rank(sources_after_nms, min_distance)
 
     return final_sources
+
+
+# coderabbit-review

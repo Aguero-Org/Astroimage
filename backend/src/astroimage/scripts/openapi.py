@@ -14,3 +14,6 @@ def cmd_openapi_export(args: argparse.Namespace) -> int:
     target.write_text(json.dumps(app.openapi(), indent=2) + "\n", encoding="utf-8")
     print(f"Wrote {target}")
     return 0
+
+
+# coderabbit-review

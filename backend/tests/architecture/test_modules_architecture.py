@@ -512,3 +512,6 @@ def test_controllers_do_not_raise_http_exceptions(features: list[str]) -> None:
     assert offenders == [], (
         f"controllers must not import HTTPException; raise an AppError instead: {offenders}"
     )
+
+
+# coderabbit-review

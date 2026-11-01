@@ -149,3 +149,6 @@ def fits_storage(object_storage: ObjectStorage) -> FitsStorage:
 @pytest.fixture
 def fits_service(fits_repository: FitsRepository, fits_storage: FitsStorage) -> FitsService:
     return FitsService(FitsReader(), fits_repository, fits_storage)
+
+
+# coderabbit-review

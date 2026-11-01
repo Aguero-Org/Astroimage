@@ -14,3 +14,6 @@ def backend_root() -> Path:
         if (candidate / "alembic.ini").is_file():
             return candidate
     return package_root.parents[1]
+
+
+# coderabbit-review

@@ -385,3 +385,4 @@ class SourceDetectionService:
 
 
 __all__ = ["FITS_SERVICE_NOT_CONFIGURED", "SourceDetectionService"]
+# coderabbit-review

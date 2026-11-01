@@ -105,3 +105,6 @@ class TransferStatusSchema(BaseModel):
     record_id: UUID | None
     slug: str | None
     resumable: bool
+
+
+# coderabbit-review

@@ -102,3 +102,4 @@ def can_resume(probe: ResourceProbe, *, bytes_transferred: int) -> bool:
 
 
 ClientFactory = Callable[[], httpx.AsyncClient]
+# coderabbit-review

@@ -50,3 +50,6 @@ class SourceDetectionResult:
     source_name: str | None
     point_sources: list[PointSource] = field(default_factory=list)
     extended_sources: list[ExtendedSource] = field(default_factory=list)
+
+
+# coderabbit-review

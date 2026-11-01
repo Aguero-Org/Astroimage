@@ -652,3 +652,6 @@ class FitsService:
             skipped=skipped,
             failed=failed,
         )
+
+
+# coderabbit-review

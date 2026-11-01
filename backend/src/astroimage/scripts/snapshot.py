@@ -140,3 +140,6 @@ def _add_bytes(archive: tarfile.TarFile, name: str, payload: bytes) -> None:
     info = tarfile.TarInfo(name=name)
     info.size = len(payload)
     archive.addfile(info, io.BytesIO(payload))
+
+
+# coderabbit-review

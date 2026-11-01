@@ -77,3 +77,6 @@ async def test_purge_parts_swallows_storage_errors(storage_error: Exception) -> 
     await _runner(storage)._purge_parts(transfer_id)
 
     assert storage.removed == []
+
+
+# coderabbit-review

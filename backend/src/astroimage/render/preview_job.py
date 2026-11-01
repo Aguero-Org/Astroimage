@@ -148,3 +148,6 @@ class PreviewRenderer:
                 await session.commit()
         except Exception:  # noqa: BLE001
             _log.exception("preview_render_failed", record_id=str(record_id))
+
+
+# coderabbit-review

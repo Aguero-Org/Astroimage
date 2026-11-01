@@ -122,3 +122,6 @@ class CatalogJobStatusSchema(BaseModel):
     status: Literal["pending"]
     job_id: str
     record_id: UUID
+
+
+# coderabbit-review

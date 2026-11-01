@@ -66,3 +66,6 @@ def test_query_region_uses_the_next_mirror_when_the_first_fails(
 
     assert calls == ["vizier.cds.unistra.fr", "vizier.cfa.harvard.edu"]
     assert [catalog.catalogue_id for catalog in catalogs] == ["I/350/gaia"]
+
+
+# coderabbit-review

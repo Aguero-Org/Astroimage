@@ -233,3 +233,6 @@ def cmd_seed_delete(args: argparse.Namespace) -> int:
     catalog.delete_asset(args.tag, target.name)
     print(f"deleted {target.name} from release {args.tag}")
     return 0
+
+
+# coderabbit-review

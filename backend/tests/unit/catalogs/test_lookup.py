@@ -119,3 +119,6 @@ async def test_query_region_stores_a_miss() -> None:
     assert tables == [CatalogTable(catalogue_id="I/350")]
     assert provider.calls == 1
     assert store.replaced == tables
+
+
+# coderabbit-review

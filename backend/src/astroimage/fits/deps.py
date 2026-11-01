@@ -56,3 +56,6 @@ def fits_service_from_resources(
         FitsStorage(objects),
         scheduler=scheduler,
     )
+
+
+# coderabbit-review

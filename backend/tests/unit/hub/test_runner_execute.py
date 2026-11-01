@@ -386,3 +386,6 @@ async def test_read_parts_joins_every_chunk(monkeypatch: pytest.MonkeyPatch) -> 
     payload = await runner._read_parts(transfer)  # type: ignore[arg-type]
 
     assert payload == b"abcd"
+
+
+# coderabbit-review

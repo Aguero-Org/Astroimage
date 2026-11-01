@@ -85,3 +85,6 @@ class RenderService:
             histogram = build_histogram(image.data, bins)
             span.set_attribute("bins", bins)
             return histogram
+
+
+# coderabbit-review

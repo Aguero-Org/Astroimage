@@ -58,3 +58,6 @@ async def test_update_and_delete(fits_repository: FitsRepository) -> None:
     await fits_repository.delete(updated)
     with pytest.raises(LookupError):
         await fits_repository.get(updated.id)
+
+
+# coderabbit-review

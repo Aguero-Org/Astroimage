@@ -36,3 +36,6 @@ def read_candidate_token(token: str, secret: str) -> dict[str, Any]:
     if not isinstance(payload, dict) or "data_uri" not in payload:
         raise InvalidCandidateTokenError("candidate token payload is invalid")
     return payload
+
+
+# coderabbit-review

@@ -187,3 +187,6 @@ def register_exception_handlers(app: FastAPI) -> None:
     _register(app, ValueError, value_error_handler)
     _register(app, OSError, os_error_handler)
     app.add_exception_handler(Exception, internal_error_handler)
+
+
+# coderabbit-review
