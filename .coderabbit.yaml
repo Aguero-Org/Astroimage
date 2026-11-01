@@ -1,0 +1,61 @@
+reviews:
+  profile: assertive
+  auto_approvals:
+    enabled: false
+  poem: false
+  auto_review:
+    enabled: true
+    drafts: false
+    base_branches:
+      - "^develop$"
+      - "^feature/.*$"
+      - "^chore/.*$"
+  path_filters:
+    - "**"
+    - "!frontend/src/api/generated/**"
+    - "!frontend/src/routeTree.gen.ts"
+    - "!**/*.gen.ts"
+    - "!**/*.gen.tsx"
+    - "!backend/alembic/**"
+    - "!backend/mutants/**"
+    - "!frontend/.stryker-tmp/**"
+    - "!frontend/reports/**"
+    - "!**/.venv/**"
+    - "!**/node_modules/**"
+    - "!**/dist/**"
+    - "!**/coverage/**"
+  path_instructions:
+    - path: "backend/src/**/*.py"
+      instructions: |
+        Follow AGENTS.md. Dependency direction is controller, then service, then dao, then model.
+        Do not import another feature's dao or model. Do not suggest libraries outside AGENTS.md.
+        Ruff, mypy, and import-linter already gate style, types, and imports. Do not repeat those findings.
+        Do not add comments.
+    - path: "frontend/src/**/*.{ts,tsx}"
+      instructions: |
+        Follow AGENTS.md. Server state is TanStack Query. Client state is Zustand.
+        Use theme tokens, not hardcoded brand colors. Two to four exclusive options use a radio group. Five or more use the styled Select, never a native select.
+        Biome and tsc already gate style and types. Do not repeat those findings.
+        Do not add comments.
+    - path: "backend/tests/**/*.py"
+      instructions: |
+        Mirror src/astroimage/<module>/<component>.py to tests/<unit|integration>/<module>/test_<component>.py.
+        Do not add empty test files for symmetry.
+  tools:
+    ruff:
+      enabled: true
+    biome:
+      enabled: true
+    eslint:
+      enabled: false
+    flake8:
+      enabled: false
+    pylint:
+      enabled: false
+    oxc:
+      enabled: false
+  finishing_touches:
+    docstrings:
+      enabled: false
+    unit_tests:
+      enabled: false
