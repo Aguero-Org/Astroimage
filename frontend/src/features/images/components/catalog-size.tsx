@@ -41,3 +41,4 @@ export function CatalogSize({ bytes, value }: Readonly<CatalogSizeProps>) {
     </Tooltip>
   );
 }
+// coderabbit-review

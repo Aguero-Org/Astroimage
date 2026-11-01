@@ -89,3 +89,4 @@ describe("SourceMarkers", () => {
     expect(screen.getByTestId("simbad-match-badge")).toHaveClass("bg-simbad");
   });
 });
+// coderabbit-review

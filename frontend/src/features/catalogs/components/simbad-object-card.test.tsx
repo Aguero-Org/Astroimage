@@ -36,3 +36,4 @@ describe("SimbadObjectCard", () => {
     expect(screen.getByText("Andromeda Galaxy")).toBeInTheDocument();
   });
 });
+// coderabbit-review

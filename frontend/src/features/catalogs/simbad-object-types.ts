@@ -156,3 +156,4 @@ export function simbadObjectTypeName(
   }
   return otype ?? null;
 }
+// coderabbit-review

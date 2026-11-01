@@ -37,3 +37,4 @@ describe("IMAGE_ARCHIVE_GROUPS", () => {
     expect(imageRows[0]).toMatchObject({ id: "shape", value: "512 × 512" });
   });
 });
+// coderabbit-review

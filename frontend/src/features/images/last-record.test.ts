@@ -108,3 +108,4 @@ describe("useLastRecordStore", () => {
     expect(useLastRecordStore.getState().record).toBeNull();
   });
 });
+// coderabbit-review

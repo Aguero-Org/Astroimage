@@ -36,3 +36,4 @@ describe("PixelHistogram", () => {
     ).toHaveLength(4);
   });
 });
+// coderabbit-review

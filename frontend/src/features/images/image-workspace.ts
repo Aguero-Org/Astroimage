@@ -75,3 +75,4 @@ export function resolveWorkspaceHdu(
   }
   return selectedHdu ?? images[0]?.index ?? null;
 }
+// coderabbit-review

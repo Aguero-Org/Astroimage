@@ -249,3 +249,4 @@ export const FUENTES_ENTRIES: GlossaryEntry[] = [
     where: "Inspector → Fuentes",
   },
 ];
+// coderabbit-review

@@ -68,3 +68,4 @@ export const VISTA_ENTRIES: GlossaryEntry[] = [
     where: "Inspector → Vista",
   },
 ];
+// coderabbit-review

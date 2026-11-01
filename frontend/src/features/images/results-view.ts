@@ -34,3 +34,4 @@ export function resultsView<TPage>(
   }
   return isEmpty(page) ? { status: "empty", page } : { status: "ready", page };
 }
+// coderabbit-review

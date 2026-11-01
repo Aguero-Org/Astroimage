@@ -39,3 +39,4 @@ describe("ImageArchive", () => {
     ).toHaveAttribute("href", "/glossary#copiar-dato");
   });
 });
+// coderabbit-review

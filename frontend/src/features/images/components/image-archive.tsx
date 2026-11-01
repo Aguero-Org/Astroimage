@@ -97,3 +97,4 @@ export function ImageArchive({ info, isPending }: Readonly<ImageArchiveProps>) {
     </div>
   );
 }
+// coderabbit-review

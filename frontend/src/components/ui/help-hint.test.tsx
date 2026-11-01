@@ -49,3 +49,4 @@ describe("HelpHint", () => {
     expect(await screen.findByText("Ver en el glosario")).toBeInTheDocument();
   });
 });
+// coderabbit-review

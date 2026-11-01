@@ -16,3 +16,4 @@ function snapshot() {
 export function useIsMobile() {
   return useSyncExternalStore(subscribe, snapshot, () => false);
 }
+// coderabbit-review

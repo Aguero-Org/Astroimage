@@ -57,3 +57,4 @@ export function hydrateTheme(): void {
   applyPalette(paletteId);
   useThemeStore.setState({ theme, paletteId });
 }
+// coderabbit-review

@@ -78,3 +78,4 @@ export function bestPresetSummary(evidence?: PresetEvidenceSchema): string {
       : `, dispersión ${spread.toFixed(1)} px`;
   return `Medido en esta imagen: FWHM ${measured.toFixed(1)} px sobre ${samples} ${samples === 1 ? "fuente" : "fuentes"}${spreadText}.`;
 }
+// coderabbit-review

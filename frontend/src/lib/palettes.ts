@@ -24,3 +24,4 @@ export function applyPalette(paletteId: PaletteId): void {
     document.documentElement.style.setProperty(`--palette-${index + 1}`, hex);
   });
 }
+// coderabbit-review

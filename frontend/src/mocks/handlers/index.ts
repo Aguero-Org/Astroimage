@@ -9,3 +9,4 @@ export const handlers = [
   ...catalogHandlers,
   ...simbadHandlers,
 ];
+// coderabbit-review

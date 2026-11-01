@@ -35,3 +35,4 @@ describe("formatQueryError", () => {
     expect(formatQueryError("boom")).toBe("error desconocido");
   });
 });
+// coderabbit-review

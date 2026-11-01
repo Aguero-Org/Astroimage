@@ -49,3 +49,4 @@ export function BrandLogo({ className }: Readonly<BrandLogoProps>) {
     </svg>
   );
 }
+// coderabbit-review

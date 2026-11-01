@@ -38,3 +38,4 @@ export const VISOR_ENTRIES: GlossaryEntry[] = [
     where: "Visor",
   },
 ];
+// coderabbit-review

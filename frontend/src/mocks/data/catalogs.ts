@@ -108,3 +108,4 @@ export function mockCatalogRecommendation(): CatalogRecommendationResponse {
     ],
   };
 }
+// coderabbit-review

@@ -115,3 +115,4 @@ export const useLastRecordStore = create<LastRecordState>()(
 export function rememberLastImageRecord(recordId: string, slug?: string): void {
   useLastRecordStore.getState().remember(recordId, slug);
 }
+// coderabbit-review

@@ -51,3 +51,4 @@ export function useSimbadReferences({
 }
 
 export type SimbadReferencesView = ReturnType<typeof useSimbadReferences>;
+// coderabbit-review

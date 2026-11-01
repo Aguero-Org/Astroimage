@@ -65,3 +65,4 @@ describe("TransfersTray", () => {
     expect(useTransfersStore.getState().transferIds).toEqual([]);
   });
 });
+// coderabbit-review

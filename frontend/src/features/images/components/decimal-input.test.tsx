@@ -28,3 +28,4 @@ describe("DecimalInput", () => {
     expect(field).toHaveValue("0.5");
   });
 });
+// coderabbit-review

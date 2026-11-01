@@ -114,3 +114,4 @@ export const IMAGEN_ENTRIES: GlossaryEntry[] = [
     where: "Inspector → Archivo",
   },
 ];
+// coderabbit-review

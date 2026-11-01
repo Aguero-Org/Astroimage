@@ -6,3 +6,4 @@ export const simbadHandlers = [
     return HttpResponse.json(simbadReferencesResponse);
   }),
 ];
+// coderabbit-review

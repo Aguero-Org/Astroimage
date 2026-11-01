@@ -184,3 +184,4 @@ export function CandidateResults({ query }: Readonly<CandidateResultsProps>) {
     </section>
   );
 }
+// coderabbit-review

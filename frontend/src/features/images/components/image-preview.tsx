@@ -29,3 +29,4 @@ export function ImagePreview({ recordId, name }: Readonly<ImagePreviewProps>) {
     </div>
   );
 }
+// coderabbit-review
