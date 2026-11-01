@@ -148,3 +148,6 @@ def test_apply_colormap_maps_every_index(name: str) -> None:
     colored = apply_colormap(frame, name)  # type: ignore[arg-type]
 
     assert np.array_equal(colored, COLORMAPS[name][frame])
+
+
+# coderabbit-review

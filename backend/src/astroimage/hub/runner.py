@@ -286,3 +286,6 @@ def _product_from_transfer(transfer: ImageTransfer) -> HubbleProduct:
         ra_deg=transfer.ra_deg,
         dec_deg=transfer.dec_deg,
     )
+
+
+# coderabbit-review

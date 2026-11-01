@@ -33,3 +33,6 @@ class HistogramResponse(BaseModel):
     counts: list[int]
     minimum: float
     maximum: float
+
+
+# coderabbit-review

@@ -37,3 +37,6 @@ class FitsRecord(Base):
         onupdate=func.now(),
         nullable=False,
     )
+
+
+# coderabbit-review

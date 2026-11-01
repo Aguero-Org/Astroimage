@@ -34,3 +34,6 @@ async def test_object_storage_put_get_remove(object_storage: ObjectStorage) -> N
     await object_storage.remove("fits/a.fits")
     with pytest.raises(LookupError):
         await object_storage.get_bytes("fits/a.fits")
+
+
+# coderabbit-review

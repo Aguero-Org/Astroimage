@@ -162,3 +162,6 @@ async def test_render_png_from_missing_record_raises() -> None:
 
     with pytest.raises(LookupError):
         await service.render_png_from_record(uuid4())
+
+
+# coderabbit-review

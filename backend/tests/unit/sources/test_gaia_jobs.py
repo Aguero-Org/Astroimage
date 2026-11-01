@@ -173,3 +173,6 @@ async def test_registry_restarts_after_failure() -> None:
     await registry.wait("key")
     assert registry.get("key") == _success_response()
     assert registry.get_failure("key") is None
+
+
+# coderabbit-review

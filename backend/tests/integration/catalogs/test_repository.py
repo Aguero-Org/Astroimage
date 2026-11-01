@@ -107,3 +107,6 @@ async def test_paper_metadata_accepts_a_long_bibcode(db_session: AsyncSession) -
     fresh = await repository.find_fresh([bibcode])
 
     assert fresh[bibcode].title == "ROSAT"
+
+
+# coderabbit-review

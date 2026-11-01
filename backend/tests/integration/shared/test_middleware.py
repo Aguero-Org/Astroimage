@@ -18,3 +18,6 @@ async def test_request_log_includes_otel_trace_id(client: AsyncClient) -> None:
     assert isinstance(trace_id, str)
     assert len(trace_id) == 32
     assert int(trace_id, 16) != 0
+
+
+# coderabbit-review

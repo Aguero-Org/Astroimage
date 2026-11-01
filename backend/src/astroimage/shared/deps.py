@@ -41,3 +41,6 @@ def object_storage_dependency(
     settings: Annotated[Settings, Depends(settings_dependency)],
 ) -> ObjectStorage:
     return MinioObjectStorage(client, settings.minio_bucket)
+
+
+# coderabbit-review

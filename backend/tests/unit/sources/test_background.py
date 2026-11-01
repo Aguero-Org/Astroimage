@@ -33,3 +33,6 @@ def test_all_nan_image_raises() -> None:
 
     with pytest.raises(ValueError, match="No finite values"):
         estimate_background(image)
+
+
+# coderabbit-review

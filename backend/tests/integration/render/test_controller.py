@@ -194,3 +194,6 @@ class TestRenderFitsHistogram:
         response = await client.get(f"/image/{uuid4()}/histogram")
 
         assert response.status_code == 404
+
+
+# coderabbit-review

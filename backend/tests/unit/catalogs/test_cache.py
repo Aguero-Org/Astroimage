@@ -53,3 +53,6 @@ def test_recommendation_cache_key_depends_on_config_and_client() -> None:
     )
     assert base != other_client
     assert base != other_config
+
+
+# coderabbit-review

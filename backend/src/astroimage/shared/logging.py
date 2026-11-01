@@ -38,3 +38,6 @@ def setup_logging(log_level: str) -> None:
         logger_factory=structlog.stdlib.LoggerFactory(),
         cache_logger_on_first_use=True,
     )
+
+
+# coderabbit-review

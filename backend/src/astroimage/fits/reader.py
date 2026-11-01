@@ -469,3 +469,6 @@ class FitsReader:
             if isinstance(value, str) and value:
                 return value
             return None
+
+
+# coderabbit-review

@@ -59,3 +59,6 @@ def test_field_center_uses_crval() -> None:
 
     assert center.ra.deg == pytest.approx(150.0)
     assert center.dec.deg == pytest.approx(2.0)
+
+
+# coderabbit-review

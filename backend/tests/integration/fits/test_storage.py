@@ -38,3 +38,6 @@ def test_object_key_for_uses_record_id(fits_storage: FitsStorage) -> None:
     key = fits_storage.object_key_for(uuid4(), "hst.fits")
     assert key.startswith("fits/")
     assert key.endswith(".fits")
+
+
+# coderabbit-review

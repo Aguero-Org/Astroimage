@@ -293,3 +293,6 @@ async def test_references_from_record_caches_until_refresh() -> None:
     assert first == second
     assert refreshed == first
     assert len(provider.region_calls) == 2
+
+
+# coderabbit-review

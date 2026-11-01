@@ -149,3 +149,6 @@ def _optional_gmag(value: object) -> float | None:
     if not np.isfinite(converted):
         return None
     return converted
+
+
+# coderabbit-review

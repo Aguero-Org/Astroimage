@@ -279,3 +279,6 @@ async def test_recommend_uses_a_cached_paper_without_lookup() -> None:
     assert result.papers[0].title == "Cached title"
     assert lookup.calls == []
     assert store.saved == []
+
+
+# coderabbit-review

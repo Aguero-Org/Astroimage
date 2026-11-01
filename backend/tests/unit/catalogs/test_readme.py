@@ -80,3 +80,6 @@ def test_determine_paper_doi_prefers_readme_reference_doi() -> None:
     assert determine_paper_doi("2016A&A...595A...1G", ReadmeData(), "10.0000/meta") == (
         "10.0000/meta"
     )
+
+
+# coderabbit-review

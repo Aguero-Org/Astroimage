@@ -44,3 +44,6 @@ def test_sort_products_covers_each_field() -> None:
     assert [item.proposal_id for item in by_proposal] == ["2", "100"]
     assert by_filters[-1].filters is None
     assert by_observed[-1].observed_at is None
+
+
+# coderabbit-review

@@ -339,3 +339,6 @@ def detect_extended_sources(
         threshold=threshold,
     )
     return _merge_overlapping(scored, factor=factor)
+
+
+# coderabbit-review

@@ -90,3 +90,6 @@ class SimbadReferencesResponse(BaseModel):
     warnings: list[str] = Field(default_factory=list)
     summary: SimbadReferencesSummarySchema = Field(default_factory=SimbadReferencesSummarySchema)
     objects: list[SimbadObjectSchema] = Field(default_factory=list)
+
+
+# coderabbit-review

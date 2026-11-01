@@ -83,3 +83,6 @@ def cmd_db_reconcile(_args: argparse.Namespace) -> int:
     for key in report.failed:
         print(f"  failed:  {key}")
     return 1 if report.failed else 0
+
+
+# coderabbit-review

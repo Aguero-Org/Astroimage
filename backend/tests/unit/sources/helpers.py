@@ -55,3 +55,6 @@ def synthetic_extended_source_image(
     distance_sq = (coordinates[1] - center_x) ** 2 + (coordinates[0] - center_y) ** 2
     image = image + peak * np.exp(-distance_sq / (2.0 * spread**2))
     return image, noise
+
+
+# coderabbit-review

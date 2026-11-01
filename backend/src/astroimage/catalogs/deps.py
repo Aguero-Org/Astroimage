@@ -106,3 +106,6 @@ def catalog_background_dependency(
 
 def catalog_job_registry_dependency() -> CatalogJobRegistry:
     return _catalog_jobs
+
+
+# coderabbit-review

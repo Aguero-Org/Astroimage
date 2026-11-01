@@ -51,3 +51,6 @@ async def test_deps_use_live_postgres_and_minio(asgi_app: FastAPI) -> None:
         )
         assert await storage.get_bytes("shared/deps-check.bin") == b"ok"
         await storage.remove("shared/deps-check.bin")
+
+
+# coderabbit-review

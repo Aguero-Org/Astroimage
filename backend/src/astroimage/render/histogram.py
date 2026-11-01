@@ -18,3 +18,6 @@ def build_histogram(data: np.ndarray, bins: int) -> HistogramResponse:
         minimum=float(np.min(values)),
         maximum=float(np.max(values)),
     )
+
+
+# coderabbit-review

@@ -201,3 +201,6 @@ async def test_detect_from_record_writes_metadata_until_analysis_matches() -> No
             config=PointDetectionConfigSchema(sigma=8.0),
         )
     assert fits.metadata_writes == 2
+
+
+# coderabbit-review

@@ -13,3 +13,6 @@ def cmd_serve(args: argparse.Namespace) -> int:
         reload=args.reload,
     )
     return 0
+
+
+# coderabbit-review

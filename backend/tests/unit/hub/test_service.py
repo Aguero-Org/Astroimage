@@ -169,3 +169,6 @@ async def test_service_searches_records_by_name() -> None:
     result = await service.search_records("m31")
 
     assert [r.name for r in result.records] == ["hst_m31_drz.fits"]
+
+
+# coderabbit-review

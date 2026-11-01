@@ -86,3 +86,6 @@ class FitsRepository:
     async def delete(self, record: FitsRecord) -> None:
         await self._session.delete(record)
         await self._session.flush()
+
+
+# coderabbit-review

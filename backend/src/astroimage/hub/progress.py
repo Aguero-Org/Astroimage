@@ -26,3 +26,6 @@ def progress_ratio(bytes_transferred: int, total_bytes: int | None) -> float | N
     if total_bytes is None or total_bytes <= 0:
         return None
     return min(1.0, bytes_transferred / total_bytes)
+
+
+# coderabbit-review

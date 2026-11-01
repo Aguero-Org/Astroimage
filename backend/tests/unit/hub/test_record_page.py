@@ -55,3 +55,6 @@ def test_page_puts_missing_instruments_last_and_slices() -> None:
     assert page.has_more is True
     next_page = page_summaries(records, page=2, limit=2, sort="instrument", order="asc")
     assert [record.name for record in next_page.records] == ["a.fits"]
+
+
+# coderabbit-review

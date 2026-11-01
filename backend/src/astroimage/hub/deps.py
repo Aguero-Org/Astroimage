@@ -47,3 +47,6 @@ def hubble_service_dependency(
             scheduler,
         ),
     )
+
+
+# coderabbit-review

@@ -587,3 +587,6 @@ async def test_poll_gaia_job_unknown_job_returns_not_found(client: AsyncClient) 
     response = await client.get(f"/image/{uuid4()}/sources/gaia/jobs/unknown-job")
 
     assert response.status_code == 404
+
+
+# coderabbit-review

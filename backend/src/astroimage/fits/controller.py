@@ -115,3 +115,6 @@ async def download_fits_file(
         media_type="application/fits",
         headers={"Content-Disposition": f'attachment; filename="{filename}"'},
     )
+
+
+# coderabbit-review

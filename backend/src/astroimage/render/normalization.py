@@ -67,3 +67,6 @@ def normalize_to_uint8(
     gamma_corrected: np.ndarray = np.power(stretched, 1.0 / gamma)
     frame: np.ndarray = np.round(gamma_corrected * 255.0).astype(np.uint8)
     return frame
+
+
+# coderabbit-review

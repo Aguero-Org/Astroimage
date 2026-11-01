@@ -228,3 +228,6 @@ def test_crossmatch_without_visible_text_identifier_returns_none() -> None:
     result = crossmatch_catalog("I/350", rows, detections, match_radius_arcsec=1.0)
 
     assert result.matches[0].object_identifier is None
+
+
+# coderabbit-review

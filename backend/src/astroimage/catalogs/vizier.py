@@ -228,3 +228,6 @@ def _float_or_none(value: object) -> float | None:
     if not np.isfinite(converted):
         return None
     return converted
+
+
+# coderabbit-review

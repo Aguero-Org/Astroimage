@@ -81,3 +81,6 @@ def test_find_identifiers_in_row_returns_empty_without_matches() -> None:
     )
     assert identifiers == ()
     assert columns == ()
+
+
+# coderabbit-review

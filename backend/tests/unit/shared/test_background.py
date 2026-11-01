@@ -56,3 +56,6 @@ async def test_aclose_finishes_when_the_worker_is_cancelled_during_a_wait() -> N
     await tasks.aclose()
     assert cleaned.is_set()
     assert not tasks.is_running("backfill")
+
+
+# coderabbit-review

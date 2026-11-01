@@ -286,3 +286,6 @@ class CdsReadmeFetcher:
             return None
         _log.debug("readme_downloaded", url=url, bytes=len(payload))
         return text
+
+
+# coderabbit-review

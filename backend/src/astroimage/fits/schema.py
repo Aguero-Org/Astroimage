@@ -133,3 +133,6 @@ class FitsUrlImportRequest(BaseModel):
     url: str = Field(min_length=1, max_length=2048)
     description: str | None = Field(default=None, max_length=500)
     display_name: str | None = Field(default=None, max_length=200)
+
+
+# coderabbit-review

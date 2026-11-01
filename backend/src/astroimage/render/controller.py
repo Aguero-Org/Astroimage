@@ -131,3 +131,6 @@ async def render_fits_histogram(
         elapsed_ms=elapsed_ms,
     )
     return result
+
+
+# coderabbit-review

@@ -202,3 +202,6 @@ def test_cmd_seed_load_from_local_file(
     captured = capsys.readouterr()
     assert "seed-demo" in captured.out
     assert "restored=1" in captured.out
+
+
+# coderabbit-review

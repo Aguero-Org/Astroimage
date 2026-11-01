@@ -81,3 +81,6 @@ def test_rgb_converts_float_frame_to_uint8() -> None:
 
     decoded = np.asarray(Image.open(BytesIO(png)).convert("RGB"), dtype=np.uint8)
     assert np.array_equal(decoded, np.array([[[0, 127, 255]]], dtype=np.uint8))
+
+
+# coderabbit-review

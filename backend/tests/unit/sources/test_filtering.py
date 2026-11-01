@@ -99,3 +99,6 @@ def test_select_extended_returns_empty_for_empty_input() -> None:
     empty_frame = pd.DataFrame(columns=["relevance_score", "area_pixels", "peak"])
     selected = select_extended_sources(empty_frame)
     assert selected is None or len(selected) == 0
+
+
+# coderabbit-review

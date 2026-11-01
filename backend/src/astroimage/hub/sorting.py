@@ -49,3 +49,6 @@ def sort_products(
     order: CandidateSortOrder,
 ) -> list[HubbleProduct]:
     return sort_by_key(products, key=lambda product: _field_value(product, sort), order=order)
+
+
+# coderabbit-review

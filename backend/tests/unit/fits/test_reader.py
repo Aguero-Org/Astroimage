@@ -244,3 +244,6 @@ def test_instrument_coerces_values() -> None:
     instrument = FitsInstrumentInfo.model_validate({"telescope": "  VLT  ", "exptime": "12.5"})
     assert instrument.telescope == "VLT"
     assert instrument.exptime == 12.5
+
+
+# coderabbit-review

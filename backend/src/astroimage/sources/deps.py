@@ -55,3 +55,6 @@ def gaia_background_dependency(
 
 def gaia_job_registry_dependency() -> GaiaJobRegistry:
     return _gaia_jobs
+
+
+# coderabbit-review

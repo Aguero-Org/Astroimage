@@ -30,3 +30,6 @@ def setup_tracing(app: FastAPI, *, service_name: str, otlp_endpoint: str | None)
         provider.add_span_processor(BatchSpanProcessor(exporter))
     trace.set_tracer_provider(provider)
     FastAPIInstrumentor.instrument_app(app, excluded_urls="health,metrics")
+
+
+# coderabbit-review

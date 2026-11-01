@@ -186,3 +186,6 @@ async def get_image_info(
     service: Annotated[HubbleImageService, Depends(hubble_service_dependency)],
 ) -> FitsMetadataSchema:
     return await service.get_record_info(record_id)
+
+
+# coderabbit-review

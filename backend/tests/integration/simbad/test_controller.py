@@ -243,3 +243,6 @@ async def test_simbad_references_missing_record_returns_not_found(client: AsyncC
 
     assert response.status_code == 404
     assert provider.region_calls == 0
+
+
+# coderabbit-review

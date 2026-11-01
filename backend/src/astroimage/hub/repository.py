@@ -58,3 +58,6 @@ class TransferRepository:
         await self._session.flush()
         cursor = cast(CursorResult[object], result)
         return int(cursor.rowcount or 0)
+
+
+# coderabbit-review

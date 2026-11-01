@@ -40,3 +40,6 @@ def test_openapi_operations(case: schemathesis.Case[Any]) -> None:
             "paths requiring stored FITS records or external calls are covered by integration tests"
         )
     case.call_and_validate()
+
+
+# coderabbit-review

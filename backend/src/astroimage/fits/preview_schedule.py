@@ -11,3 +11,6 @@ class PreviewScheduler(Protocol):
 class NullPreviewScheduler:
     def schedule(self, record_id: UUID) -> None:
         del record_id
+
+
+# coderabbit-review

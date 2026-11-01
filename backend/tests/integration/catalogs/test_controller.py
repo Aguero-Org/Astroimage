@@ -281,3 +281,6 @@ async def test_poll_unknown_catalog_job_returns_not_found(client: AsyncClient) -
     )
 
     assert response.status_code == 404
+
+
+# coderabbit-review

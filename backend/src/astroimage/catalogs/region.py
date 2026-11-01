@@ -15,3 +15,6 @@ def region_key(
     dec_text = f"{dec_deg:.{_RA_DECIMALS}f}"
     radius_text = f"{radius_arcsec:.{_RADIUS_DECIMALS}f}"
     return f"{ra_text}:{dec_text}:{radius_text}:{row_limit}"
+
+
+# coderabbit-review

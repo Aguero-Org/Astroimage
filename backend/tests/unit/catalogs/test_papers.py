@@ -71,3 +71,6 @@ def test_ads_lookup_skips_the_network_without_a_token(
     records = AdsPaperLookup(token="  ").fetch([PaperIdentifier(bibcode=_BIBCODE)])
 
     assert records == []
+
+
+# coderabbit-review

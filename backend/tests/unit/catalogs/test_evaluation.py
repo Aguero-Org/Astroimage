@@ -25,3 +25,6 @@ def test_score_catalogue_keeps_a_metadata_title() -> None:
     )
 
     assert evaluation.metadata.title == "Gaia EDR3"
+
+
+# coderabbit-review

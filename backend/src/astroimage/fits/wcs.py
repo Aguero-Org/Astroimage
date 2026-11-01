@@ -29,3 +29,6 @@ def field_center(wcs: WCS) -> SkyCoord:
 def to_sky(wcs: WCS, x: float, y: float) -> SkyCoord:
     world = wcs.pixel_to_world(x, y)
     return SkyCoord(ra=float(world.ra.deg) * u.deg, dec=float(world.dec.deg) * u.deg, frame="icrs")
+
+
+# coderabbit-review

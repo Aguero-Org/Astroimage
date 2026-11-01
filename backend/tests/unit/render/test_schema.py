@@ -24,3 +24,6 @@ def test_pmin_must_be_lower_than_pmax() -> None:
 def test_extra_fields_are_forbidden() -> None:
     with pytest.raises(ValidationError):
         RenderConfigSchema.model_validate({"stretch": "log", "brightness": 2.0})
+
+
+# coderabbit-review

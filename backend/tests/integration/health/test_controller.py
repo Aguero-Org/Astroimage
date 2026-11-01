@@ -14,3 +14,6 @@ async def test_health_returns_ok(client: AsyncClient) -> None:
 async def test_health_echoes_request_id(client: AsyncClient) -> None:
     response = await client.get("/health", headers={"x-request-id": "test-correlation-id"})
     assert response.headers["x-request-id"] == "test-correlation-id"
+
+
+# coderabbit-review

@@ -190,3 +190,6 @@ async def test_logging_failure_still_returns_error_response(
         not_found = await client.get("/lookup-error")
         assert not_found.status_code == 404
         assert not_found.json() == {"detail": "missing record"}
+
+
+# coderabbit-review

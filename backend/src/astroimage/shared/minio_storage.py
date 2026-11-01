@@ -83,3 +83,6 @@ class MinioObjectStorage:
             await asyncio.to_thread(self._client.remove_object, self._bucket, object_key)
         except _CLIENT_ERRORS as exc:
             raise ObjectStorageError(str(exc)) from exc
+
+
+# coderabbit-review

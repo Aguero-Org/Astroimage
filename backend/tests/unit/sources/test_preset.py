@@ -309,3 +309,6 @@ def test_median_snr_of_the_detected_sources() -> None:
 
 def test_median_snr_without_sources() -> None:
     assert median_source_snr([]) is None
+
+
+# coderabbit-review

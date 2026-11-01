@@ -101,3 +101,6 @@ async def get_simbad_references(
         elapsed_ms=round((time.perf_counter() - start) * 1000, 2),
     )
     return result
+
+
+# coderabbit-review
