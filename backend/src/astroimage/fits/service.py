@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import hashlib
 import time
 from collections.abc import Sequence
@@ -253,6 +254,20 @@ class FitsService:
             hdu_index=hdu_index,
         )
 
+    async def _metadata_from_bytes(
+        self,
+        payload: bytes,
+        *,
+        source_name: str,
+        hdu_index: int | None = None,
+    ) -> FitsMetadata:
+        return await asyncio.to_thread(
+            self.metadata_from_bytes,
+            payload,
+            source_name=source_name,
+            hdu_index=hdu_index,
+        )
+
     def image_data_from_path(
         self,
         path: Path | str,
@@ -303,10 +318,12 @@ class FitsService:
             span.set_attribute("payload_bytes", len(payload))
             span.set_attribute("analyze", analyze)
             if analyze:
-                metadata_payload = self.metadata_from_bytes(
-                    payload,
-                    source_name=source_name,
-                    hdu_index=hdu_index,
+                metadata_payload = (
+                    await self._metadata_from_bytes(
+                        payload,
+                        source_name=source_name,
+                        hdu_index=hdu_index,
+                    )
                 ).model_dump(mode="json")
             else:
                 metadata_payload = {
@@ -454,7 +471,7 @@ class FitsService:
         with _tracer.start_as_current_span("fits_update_metadata") as span:
             span.set_attribute("record_id", str(record.id))
             analyze_start = time.perf_counter()
-            metadata = self.metadata_from_bytes(
+            metadata = await self._metadata_from_bytes(
                 payload,
                 source_name=record.original_filename,
                 hdu_index=hdu_index,
@@ -578,7 +595,7 @@ class FitsService:
         hdu_index: int | None = None,
     ) -> FitsRecord:
         record = await self.get_record(record_id)
-        metadata = self.metadata_from_bytes(
+        metadata = await self._metadata_from_bytes(
             payload,
             source_name=source_name,
             hdu_index=hdu_index,
@@ -608,7 +625,7 @@ class FitsService:
                 continue
             try:
                 payload = await self._storage.get(object_key)
-                metadata = self.metadata_from_bytes(
+                metadata = await self._metadata_from_bytes(
                     payload,
                     source_name=Path(object_key).name,
                 )

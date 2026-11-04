@@ -111,7 +111,34 @@ async def test_store_bytes_persists_metadata_then_uploads_object() -> None:
     assert storage.uploaded == [(f"fits/{record.id}.fits", b"payload")]
 
 
-async def test_store_bytes_without_analysis_skips_metadata_read() -> None:
+async def test_store_bytes_reads_metadata_off_the_event_loop(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    calls: list[str] = []
+
+    async def _to_thread(function: object, /, *args: object, **kwargs: object) -> object:
+        calls.append(getattr(function, "__name__", ""))
+        return function(*args, **kwargs)  # type: ignore[operator]
+
+    monkeypatch.setattr("astroimage.fits.service.asyncio.to_thread", _to_thread)
+    await _service(_FakeStorage(), _FakeRepository()).store_bytes(
+        b"payload",
+        source_name="hst_drz.fits",
+    )
+
+    assert calls == ["metadata_from_bytes"]
+
+
+async def test_store_bytes_without_analysis_skips_metadata_read(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    calls: list[str] = []
+
+    async def _to_thread(function: object, /, *args: object, **kwargs: object) -> object:
+        calls.append(getattr(function, "__name__", ""))
+        return function(*args, **kwargs)  # type: ignore[operator]
+
+    monkeypatch.setattr("astroimage.fits.service.asyncio.to_thread", _to_thread)
     storage = _FakeStorage()
     repository = _FakeRepository()
     service = _service(storage, repository)
@@ -127,6 +154,7 @@ async def test_store_bytes_without_analysis_skips_metadata_read() -> None:
         "hdus": {"selected": 0},
     }
     assert storage.uploaded == [(f"fits/{record.id}.fits", b"payload")]
+    assert calls == []
 
 
 async def test_update_record_metadata_persists_analyzed_payload() -> None:

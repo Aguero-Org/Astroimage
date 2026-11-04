@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 from typing import Annotated
 from uuid import UUID
 
@@ -38,7 +39,8 @@ async def extract_fits_metadata(
 ) -> FitsMetadataSchema:
     payload = await file.read()
     source_name = file.filename or "upload.fits"
-    metadata = service.metadata_from_bytes(
+    metadata = await asyncio.to_thread(
+        service.metadata_from_bytes,
         payload,
         source_name=source_name,
         hdu_index=hdu,
