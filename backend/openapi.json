@@ -2080,6 +2080,9 @@
               "image/png": {}
             }
           },
+          "304": {
+            "description": "Stored preview is unchanged"
+          },
           "400": {
             "description": "Preview size is not available"
           },

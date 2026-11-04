@@ -5,7 +5,7 @@ import hashlib
 import json
 from collections.abc import Callable
 from contextlib import AbstractAsyncContextManager
-from dataclasses import asdict
+from dataclasses import asdict, dataclass
 from typing import Any, Protocol
 from uuid import UUID
 
@@ -62,6 +62,16 @@ def preview_object_key(record_id: UUID, preset_id: str, edge_px: int) -> str:
     return f"previews/{record_id}/{preset_id}/{edge_px}.png"
 
 
+def preview_etag(edge_px: int) -> str:
+    return f'"{preview_config_hash(PRESET_ID, edge_px, EQUILIBRIO)}"'
+
+
+@dataclass(frozen=True)
+class PreviewImage:
+    content: bytes
+    etag: str | None
+
+
 def _repository_for(session: Any) -> PreviewRepository:
     return PreviewRepository(session)
 
@@ -111,19 +121,20 @@ class PreviewService:
     def schedule(self, record_id: UUID) -> None:
         self._tasks.start(f"preview:{record_id}", lambda: self._run(record_id))
 
-    async def png(self, record_id: UUID, edge_px: int) -> bytes:
+    async def png(self, record_id: UUID, edge_px: int) -> PreviewImage:
         if edge_px not in PREVIEW_EDGES:
             raise BadRequestError(_UNAVAILABLE_SIZE)
         if self._session is None or self._reader is None or self._fits is None:
             raise TypeError("Preview read is not configured")
         stored = await self._current_bytes(self._session, record_id, edge_px)
         if stored is not None:
-            return stored
+            return PreviewImage(content=stored, etag=preview_etag(edge_px))
         full = await RenderService(self._reader, self._fits).png_for_record(
             record_id,
             config=EQUILIBRIO,
         )
-        return await asyncio.to_thread(thumbnail_png, full, edge_px)
+        png = await asyncio.to_thread(thumbnail_png, full, edge_px)
+        return PreviewImage(content=png, etag=None)
 
     async def render_stored(self, record_id: UUID) -> None:
         if await self._all_current(record_id):

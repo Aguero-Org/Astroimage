@@ -15,6 +15,7 @@ from astroimage.render.preview import (
     PRESET_ID,
     PreviewService,
     preview_config_hash,
+    preview_etag,
     preview_object_key,
 )
 from astroimage.render.service import render_png_bytes
@@ -182,7 +183,8 @@ async def test_png_returns_the_stored_object_without_rendering() -> None:
 
     png = await service.png(record_id, 256)
 
-    assert png == b"stored-png"
+    assert png.content == b"stored-png"
+    assert png.etag == preview_etag(256)
     assert source.reads == 0
     assert objects.puts == 0
 
@@ -197,8 +199,9 @@ async def test_png_live_renders_when_the_row_is_missing_and_does_not_write() -> 
         render_png_bytes(FitsReader(), source.payload, EQUILIBRIO),
         256,
     )
-    assert png == expected
-    assert png.startswith(_PNG_SIGNATURE)
+    assert png.content == expected
+    assert png.etag is None
+    assert png.content.startswith(_PNG_SIGNATURE)
     assert objects.puts == 0
     assert store.rows == {}
     assert session.commits == 0
@@ -212,7 +215,8 @@ async def test_png_live_renders_when_the_object_is_missing_and_does_not_write() 
 
     png = await service.png(record_id, 256)
 
-    assert png.startswith(_PNG_SIGNATURE)
+    assert png.content.startswith(_PNG_SIGNATURE)
+    assert png.etag is None
     assert source.reads == 1
     assert objects.puts == 0
 
@@ -232,7 +236,8 @@ async def test_png_ignores_a_stale_hash_and_does_not_write() -> None:
 
     png = await service.png(record_id, 256)
 
-    assert png != b"old-preset"
+    assert png.content != b"old-preset"
+    assert png.etag is None
     assert objects.puts == 0
     assert store.rows[(record_id, PRESET_ID, 256)].config_hash == "stale"
 

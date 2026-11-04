@@ -250,3 +250,11 @@ class TestFitsPreview:
 
         assert response.status_code == 200
         assert response.content == sentinel
+        assert response.headers["etag"]
+        cached = await client.get(
+            f"/image/{record_id}/preview",
+            params={"size": 256},
+            headers={"if-none-match": response.headers["etag"]},
+        )
+        assert cached.status_code == 304
+        assert cached.content == b""

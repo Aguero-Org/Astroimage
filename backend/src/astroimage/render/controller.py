@@ -5,7 +5,7 @@ from typing import Annotated
 from uuid import UUID
 
 import structlog
-from fastapi import APIRouter, Depends, Path, Query, Response
+from fastapi import APIRouter, Depends, Path, Query, Request, Response
 
 from astroimage.render.deps import (
     preview_service_dependency,
@@ -60,22 +60,26 @@ async def render_fits_image(
     "/{record_id}/preview",
     responses={
         200: {"content": {"image/png": {}}},
+        304: {"description": "Stored preview is unchanged"},
         400: {"description": "Preview size is not available"},
         404: {"description": "FITS record not found"},
     },
     operation_id="getFitsPreview",
 )
 async def get_fits_preview(
+    request: Request,
     record_id: RecordId,
     service: Annotated[PreviewService, Depends(preview_service_dependency)],
     size: Annotated[int, Query(description="Longest edge in pixels")] = 256,
 ) -> Response:
-    png = await service.png(record_id, size)
-    return Response(
-        content=png,
-        media_type="image/png",
-        headers={"Cache-Control": "private, max-age=86400"},
-    )
+    preview = await service.png(record_id, size)
+    headers = {"Cache-Control": "private, no-cache"}
+    if preview.etag is None:
+        return Response(content=preview.content, media_type="image/png", headers=headers)
+    headers["ETag"] = preview.etag
+    if request.headers.get("if-none-match") == preview.etag:
+        return Response(status_code=304, headers=headers)
+    return Response(content=preview.content, media_type="image/png", headers=headers)
 
 
 @router.get(
