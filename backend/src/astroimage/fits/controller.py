@@ -9,7 +9,7 @@ from fastapi.responses import Response
 
 from astroimage.fits.deps import fits_service_dependency
 from astroimage.fits.schema import FitsImportSchema, FitsMetadataSchema, FitsUrlImportRequest
-from astroimage.fits.service import FitsService
+from astroimage.fits.service import FitsService, read_bounded
 from astroimage.shared.deps import Settings, settings_dependency
 from astroimage.shared.errors import BadRequestError
 from astroimage.shared.query import HduIndex
@@ -62,19 +62,18 @@ async def import_fits_files(
 ) -> list[FitsImportSchema]:
     if not files:
         raise BadRequestError("At least one FITS file is required")
-    imported: list[FitsImportSchema] = []
+    prepared: list[tuple[str, bytes]] = []
     for upload in files:
-        payload = await upload.read()
         source_name = upload.filename or "upload.fits"
-        record = await service.import_bytes(
-            payload,
-            source_name=source_name,
-            max_bytes=settings.fits_import_max_bytes,
-            description=description,
-            display_name=display_name,
-        )
-        imported.append(FitsImportSchema(record_id=record.id, slug=record.slug))
-    return imported
+        payload = await read_bounded(upload, settings.fits_import_max_bytes)
+        prepared.append((source_name, payload))
+    records = await service.import_files(
+        prepared,
+        max_bytes=settings.fits_import_max_bytes,
+        description=description,
+        display_name=display_name,
+    )
+    return [FitsImportSchema(record_id=record.id, slug=record.slug) for record in records]
 
 
 @router.post(

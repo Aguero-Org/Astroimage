@@ -7,7 +7,7 @@ import pytest
 
 from astroimage.fits.model import FitsRecord
 from astroimage.fits.reader import FitsHduInfo, FitsMetadata
-from astroimage.fits.service import FitsService
+from astroimage.fits.service import FitsService, read_bounded
 from astroimage.shared.errors import BadRequestError, ConflictError
 
 
@@ -33,6 +33,7 @@ class _FakeStorage:
     def __init__(self) -> None:
         self.uploaded: list[tuple[str, bytes]] = []
         self.payloads: dict[str, bytes] = {}
+        self.removed: list[str] = []
         self.fail_put = False
 
     def object_key_for(self, record_id: UUID, source_name: str) -> str:
@@ -43,6 +44,10 @@ class _FakeStorage:
             raise RuntimeError("storage unavailable")
         self.uploaded.append((object_key, payload))
         self.payloads[object_key] = payload
+
+    async def remove(self, object_key: str) -> None:
+        self.removed.append(object_key)
+        self.payloads.pop(object_key, None)
 
     async def get(self, object_key: str) -> bytes:
         return self.payloads[object_key]
@@ -317,6 +322,40 @@ async def test_import_bytes_stores_content_hash_and_rejects_a_duplicate() -> Non
     with pytest.raises(ConflictError):
         await service.import_bytes(b"payload", source_name="copy.fits", max_bytes=100)
     assert len(repository.created) == 1
+
+
+class _Chunked:
+    def __init__(self, chunks: list[bytes]) -> None:
+        self._chunks = list(chunks)
+
+    async def read(self, size: int = -1) -> bytes:
+        del size
+        if len(self._chunks) == 0:
+            return b""
+        return self._chunks.pop(0)
+
+
+async def test_read_bounded_rejects_before_keeping_an_oversized_body() -> None:
+    with pytest.raises(BadRequestError, match="size limit"):
+        await read_bounded(_Chunked([b"abcd", b"efgh"]), 6)
+
+
+async def test_import_files_removes_the_object_when_a_later_file_fails() -> None:
+    storage = _FakeStorage()
+    repository = _FakeRepository()
+    service = _service(storage, repository)
+    await service.import_files([("one.fits", b"one")], max_bytes=100)
+
+    with pytest.raises(ConflictError):
+        await service.import_files(
+            [("two.fits", b"two"), ("copy.fits", b"one")],
+            max_bytes=100,
+        )
+
+    assert len(storage.removed) == 1
+    assert storage.removed[0].endswith(".fits")
+    assert b"two" not in storage.payloads.values()
+    assert b"one" in storage.payloads.values()
 
 
 async def test_import_bytes_rejects_an_oversized_payload() -> None:

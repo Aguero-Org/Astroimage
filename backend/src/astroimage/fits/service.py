@@ -7,7 +7,7 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, Protocol
 from urllib.parse import quote, unquote, urlsplit
 from uuid import UUID, uuid4
 
@@ -26,12 +26,32 @@ from astroimage.fits.schema import (
 )
 from astroimage.fits.storage import FitsStorage
 from astroimage.shared.errors import BadRequestError, ConflictError
+from astroimage.shared.object_storage import ObjectStorageError
 
 _log = structlog.get_logger("astroimage.fits.service")
 
 
 _KEPT_PAYLOAD_KEYS = ("mast", "description", "display_name", "tags")
 _SIZE_LIMIT = "FITS file exceeds the size limit"
+_READ_CHUNK = 1024 * 1024
+
+
+class _ChunkSource(Protocol):
+    async def read(self, size: int = -1) -> bytes: ...
+
+
+async def read_bounded(source: _ChunkSource, max_bytes: int) -> bytes:
+    chunks: list[bytes] = []
+    total = 0
+    while True:
+        chunk = await source.read(_READ_CHUNK)
+        if chunk == b"":
+            break
+        total += len(chunk)
+        if total > max_bytes:
+            raise BadRequestError(_SIZE_LIMIT)
+        chunks.append(chunk)
+    return b"".join(chunks)
 
 
 def _keeping_mast(metadata: dict[str, Any], previous: object) -> dict[str, Any]:
@@ -401,6 +421,38 @@ class FitsService:
             description=description,
             display_name=display_name,
         )
+
+    async def import_files(
+        self,
+        files: Sequence[tuple[str, bytes]],
+        *,
+        max_bytes: int,
+        description: str | None = None,
+        display_name: str | None = None,
+    ) -> list[FitsRecord]:
+        stored: list[FitsRecord] = []
+        try:
+            for source_name, payload in files:
+                stored.append(
+                    await self.import_bytes(
+                        payload,
+                        source_name=source_name,
+                        max_bytes=max_bytes,
+                        description=description,
+                        display_name=display_name,
+                    )
+                )
+        except Exception:
+            await self._discard_import_objects(stored)
+            raise
+        return stored
+
+    async def _discard_import_objects(self, records: Sequence[FitsRecord]) -> None:
+        for record in records:
+            try:
+                await self._storage.remove(record.object_key)
+            except (LookupError, ObjectStorageError):
+                _log.warning("import_object_cleanup_failed", object_key=record.object_key)
 
     async def import_from_url(
         self,
