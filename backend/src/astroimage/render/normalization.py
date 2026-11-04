@@ -2,14 +2,14 @@ from __future__ import annotations
 
 import numpy as np
 
-from astroimage.render.schema import LimitsType, StretchType
+from astroimage.render.spec import Limits, Stretch
 from astroimage.render.zscale import zscale_bounds
 
 _LOG_SCALE = 999.0
 _ASINH_SCALE = 200.0
 
 
-def _apply_stretch(values: np.ndarray, stretch: StretchType) -> np.ndarray:
+def _apply_stretch(values: np.ndarray, stretch: Stretch) -> np.ndarray:
     if stretch == "linear":
         values_linear: np.ndarray = values
         return values_linear
@@ -28,7 +28,7 @@ def _apply_stretch(values: np.ndarray, stretch: StretchType) -> np.ndarray:
 def _display_bounds(
     image: np.ndarray,
     finite: np.ndarray,
-    limits: LimitsType,
+    limits: Limits,
     pmin: float,
     pmax: float,
 ) -> tuple[float, float]:
@@ -42,8 +42,8 @@ def _display_bounds(
 def normalize_to_uint8(
     data: np.ndarray,
     *,
-    stretch: StretchType,
-    limits: LimitsType,
+    stretch: Stretch,
+    limits: Limits,
     pmin: float,
     pmax: float,
     gamma: float,

@@ -71,6 +71,7 @@ src = ["src", "tests"]
 # once the call records `exc_info`.
 logger-objects = [
     "astroimage.shared.logging.jobs_log",
+    "astroimage.shared.logging.preview_log",
     "astroimage.shared.logging.catalog_jobs_log",
     "astroimage.shared.logging.catalog_service_log",
     "astroimage.shared.logging.catalog_vizier_log",

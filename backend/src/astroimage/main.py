@@ -13,7 +13,7 @@ from astroimage.health.controller import router as health_router
 from astroimage.hub.controller import router as hub_router
 from astroimage.hub.repository import TransferRepository
 from astroimage.render.controller import router as render_router
-from astroimage.render.preview_job import PreviewRenderer
+from astroimage.render.preview import PreviewService
 from astroimage.shared.background import BackgroundTasks
 from astroimage.shared.database import create_engine_from_settings, create_session_factory
 from astroimage.shared.errors import register_exception_handlers
@@ -54,7 +54,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     minio_client = create_object_storage_client(settings)
     ensure_bucket(minio_client, settings.minio_bucket)
     app.state.minio_client = minio_client
-    app.state.preview_scheduler = PreviewRenderer(
+    app.state.preview_scheduler = PreviewService(
         app.state.background_tasks,
         app.state.session_factory,
         MinioObjectStorage(minio_client, settings.minio_bucket),

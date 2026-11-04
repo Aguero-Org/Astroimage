@@ -9,6 +9,7 @@ catalog_jobs_log = structlog.get_logger("astroimage.catalogs.jobs")
 catalog_service_log = structlog.get_logger("astroimage.catalogs.service")
 catalog_vizier_log = structlog.get_logger("astroimage.catalogs.vizier")
 jobs_log = structlog.get_logger("astroimage.shared.jobs")
+preview_log = structlog.get_logger("astroimage.render.preview")
 simbad_provider_log = structlog.get_logger("astroimage.simbad.provider")
 simbad_service_log = structlog.get_logger("astroimage.simbad.service")
 

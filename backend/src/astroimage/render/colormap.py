@@ -4,7 +4,7 @@ from collections.abc import Callable
 
 import numpy as np
 
-from astroimage.render.schema import ColormapType
+from astroimage.render.spec import Colormap
 
 _LUT_SIZE = 256
 
@@ -106,7 +106,7 @@ def _build_luts() -> dict[str, np.ndarray]:
 COLORMAPS: dict[str, np.ndarray] = _build_luts()
 
 
-def apply_colormap(frame: np.ndarray, colormap: ColormapType) -> np.ndarray:
+def apply_colormap(frame: np.ndarray, colormap: Colormap) -> np.ndarray:
     lut = COLORMAPS[colormap]
     indices: np.ndarray = frame.astype(np.intp)
     colored: np.ndarray = lut[indices]

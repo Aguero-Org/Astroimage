@@ -6,7 +6,7 @@ import numpy as np
 import pytest
 
 from astroimage.render.normalization import _apply_stretch, normalize_to_uint8
-from astroimage.render.schema import StretchType
+from astroimage.render.spec import Stretch
 
 
 def test_sqrt_stretch_maps_data_to_full_range() -> None:
@@ -176,7 +176,7 @@ def test_unknown_stretch_names_the_value() -> None:
     with pytest.raises(ValueError, match="Unknown stretch: bogus"):
         normalize_to_uint8(
             np.arange(4.0).reshape(2, 2),
-            stretch=cast(StretchType, "bogus"),
+            stretch=cast(Stretch, "bogus"),
             limits="percentiles",
             pmin=0.0,
             pmax=100.0,

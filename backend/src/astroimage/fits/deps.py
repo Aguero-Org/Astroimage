@@ -1,9 +1,9 @@
-from typing import Annotated, cast
+from typing import Annotated
 
 from fastapi import Depends, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from astroimage.fits.preview_schedule import NullPreviewScheduler, PreviewScheduler
+from astroimage.fits.preview_schedule import PreviewScheduler
 from astroimage.fits.reader import FitsReader
 from astroimage.fits.repository import FitsRepository
 from astroimage.fits.service import FitsService
@@ -26,9 +26,9 @@ def fits_storage_dependency(
 
 def preview_scheduler_from_request(request: Request) -> PreviewScheduler:
     scheduler = getattr(request.app.state, "preview_scheduler", None)
-    if scheduler is None:
-        return NullPreviewScheduler()
-    return cast("PreviewScheduler", scheduler)
+    if not isinstance(scheduler, PreviewScheduler):
+        raise TypeError("Preview scheduler is not configured")
+    return scheduler
 
 
 def fits_service_dependency(

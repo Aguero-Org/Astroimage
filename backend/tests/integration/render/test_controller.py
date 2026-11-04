@@ -1,15 +1,18 @@
 from __future__ import annotations
 
 from io import BytesIO
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 import numpy as np
 import pytest
 from astropy.io import fits
+from fastapi import FastAPI
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from astroimage.fits.service import FitsService
+from astroimage.render.preview import PRESET_ID, preview_object_key
+from astroimage.shared.object_storage import ObjectStorage
 
 _PNG_SIGNATURE = b"\x89PNG\r\n\x1a\n"
 
@@ -194,3 +197,56 @@ class TestRenderFitsHistogram:
         response = await client.get(f"/image/{uuid4()}/histogram")
 
         assert response.status_code == 404
+
+
+class TestFitsPreview:
+    @pytest.mark.asyncio
+    async def test_missing_record_returns_not_found(self, client: AsyncClient) -> None:
+        response = await client.get(f"/image/{uuid4()}/preview")
+
+        assert response.status_code == 404
+
+    @pytest.mark.asyncio
+    async def test_unknown_size_is_rejected_before_lookup(self, client: AsyncClient) -> None:
+        response = await client.get(f"/image/{uuid4()}/preview", params={"size": 100})
+
+        assert response.status_code == 400
+        assert response.json()["detail"] == "Preview size is not available"
+
+    @pytest.mark.asyncio
+    async def test_missing_preview_falls_back_to_png(
+        self,
+        client: AsyncClient,
+        fits_service: FitsService,
+        db_session: AsyncSession,
+    ) -> None:
+        record_id = await _store_gradient(fits_service, db_session)
+
+        response = await client.get(f"/image/{record_id}/preview", params={"size": 512})
+
+        assert response.status_code == 200
+        assert response.headers["content-type"] == "image/png"
+        assert response.content.startswith(_PNG_SIGNATURE)
+
+    @pytest.mark.asyncio
+    async def test_serves_the_stored_preview_not_a_fresh_render(
+        self,
+        client: AsyncClient,
+        asgi_app: FastAPI,
+        object_storage: ObjectStorage,
+        fits_service: FitsService,
+        db_session: AsyncSession,
+    ) -> None:
+        record_id = UUID(await _store_gradient(fits_service, db_session))
+        await asgi_app.state.preview_scheduler.render_stored(record_id)
+        sentinel = _PNG_SIGNATURE + b"stored-sentinel"
+        await object_storage.put_bytes(
+            preview_object_key(record_id, PRESET_ID, 256),
+            sentinel,
+            content_type="image/png",
+        )
+
+        response = await client.get(f"/image/{record_id}/preview", params={"size": 256})
+
+        assert response.status_code == 200
+        assert response.content == sentinel

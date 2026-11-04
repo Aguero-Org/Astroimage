@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import io
 from datetime import UTC, datetime
 from uuid import uuid4
@@ -9,8 +10,10 @@ import pytest
 from astropy.io import fits
 
 from astroimage.fits.model import FitsRecord
+from astroimage.fits.reader import FitsReader
 from astroimage.render.schema import RenderConfigSchema
-from astroimage.render.service import RenderService
+from astroimage.render.service import RenderService, domain_config
+from astroimage.render.spec import RenderConfig
 
 _PNG_SIGNATURE = b"\x89PNG\r\n\x1a\n"
 
@@ -49,16 +52,30 @@ class _FakeFitsService:
         return self._payload
 
 
+def _service(payload: bytes | None = None) -> RenderService:
+    return RenderService(
+        FitsReader(),
+        _FakeFitsService(payload or _gradient_fits_bytes()),  # type: ignore[arg-type]
+    )
+
+
 def test_render_png_from_bytes_returns_png() -> None:
-    png = RenderService().render_png_from_bytes(_gradient_fits_bytes())
+    png = _service().render_png_from_bytes(_gradient_fits_bytes())
 
     assert isinstance(png, bytes)
     assert png.startswith(_PNG_SIGNATURE)
 
 
 def test_render_png_respects_custom_config() -> None:
-    config = RenderConfigSchema(stretch="asinh", pmin=5.0, pmax=95.0, gamma=1.4)
-    service = RenderService()
+    config = RenderConfig(
+        stretch="asinh",
+        limits="percentiles",
+        colormap="grey",
+        pmin=5.0,
+        pmax=95.0,
+        gamma=1.4,
+    )
+    service = _service()
 
     default_png = service.render_png_from_bytes(_gradient_fits_bytes())
     custom_png = service.render_png_from_bytes(_gradient_fits_bytes(), config=config)
@@ -67,9 +84,23 @@ def test_render_png_respects_custom_config() -> None:
 
 
 def test_render_png_applies_colormap() -> None:
-    heat_config = RenderConfigSchema(colormap="heat")
-    rainbow_config = RenderConfigSchema(colormap="rainbow")
-    service = RenderService()
+    heat_config = RenderConfig(
+        stretch="sqrt",
+        limits="percentiles",
+        colormap="heat",
+        pmin=1.0,
+        pmax=99.0,
+        gamma=1.0,
+    )
+    rainbow_config = RenderConfig(
+        stretch="sqrt",
+        limits="percentiles",
+        colormap="rainbow",
+        pmin=1.0,
+        pmax=99.0,
+        gamma=1.0,
+    )
+    service = _service()
 
     grey_png = service.render_png_from_bytes(_gradient_fits_bytes())
     heat_png = service.render_png_from_bytes(_gradient_fits_bytes(), config=heat_config)
@@ -80,8 +111,15 @@ def test_render_png_applies_colormap() -> None:
 
 
 def test_render_png_with_zscale_limits() -> None:
-    zscale_config = RenderConfigSchema(limits="zscale", stretch="linear")
-    service = RenderService()
+    zscale_config = RenderConfig(
+        stretch="linear",
+        limits="zscale",
+        colormap="grey",
+        pmin=1.0,
+        pmax=99.0,
+        gamma=1.0,
+    )
+    service = _service()
 
     png = service.render_png_from_bytes(_gaussian_fits_bytes(), config=zscale_config)
 
@@ -89,7 +127,7 @@ def test_render_png_with_zscale_limits() -> None:
 
 
 def test_histogram_from_bytes_reports_distribution() -> None:
-    service = RenderService()
+    service = _service()
 
     histogram = service.histogram_from_bytes(_gaussian_fits_bytes(), bins=64)
 
@@ -100,7 +138,7 @@ def test_histogram_from_bytes_reports_distribution() -> None:
 
 
 def test_histogram_from_bytes_answers_bin_count() -> None:
-    service = RenderService()
+    service = _service()
 
     histogram = service.histogram_from_bytes(_gaussian_fits_bytes(), bins=16)
 
@@ -110,23 +148,35 @@ def test_histogram_from_bytes_answers_bin_count() -> None:
 
 def test_render_png_empty_payload_raises() -> None:
     with pytest.raises(ValueError, match="Empty"):
-        RenderService().render_png_from_bytes(b"")
+        _service().render_png_from_bytes(b"")
 
 
 def test_render_png_garbage_payload_raises() -> None:
     with pytest.raises((ValueError, OSError)):
-        RenderService().render_png_from_bytes(b"not-a-fits-file")
+        _service().render_png_from_bytes(b"not-a-fits-file")
 
 
 def test_histogram_empty_payload_raises() -> None:
     with pytest.raises(ValueError, match="Empty"):
-        RenderService().histogram_from_bytes(b"")
+        _service().histogram_from_bytes(b"")
+
+
+def test_domain_config_uses_schema_defaults_not_the_preview_preset() -> None:
+    config = domain_config()
+
+    assert config == RenderConfig(
+        stretch="sqrt",
+        limits="percentiles",
+        colormap="grey",
+        pmin=1.0,
+        pmax=99.0,
+        gamma=1.0,
+    )
+    assert config != domain_config(RenderConfigSchema(stretch="linear", gamma=0.5))
 
 
 async def test_render_png_from_record_returns_png() -> None:
-    service = RenderService(fits=_FakeFitsService(_gradient_fits_bytes()))  # type: ignore[arg-type]
-
-    png = await service.render_png_from_record(uuid4())
+    png = await _service().render_png_from_record(uuid4())
 
     assert isinstance(png, bytes)
     assert png.startswith(_PNG_SIGNATURE)
@@ -134,7 +184,7 @@ async def test_render_png_from_record_returns_png() -> None:
 
 async def test_render_png_from_record_respects_custom_config() -> None:
     config = RenderConfigSchema(stretch="asinh", pmin=5.0, pmax=95.0, gamma=1.4)
-    service = RenderService(fits=_FakeFitsService(_gradient_fits_bytes()))  # type: ignore[arg-type]
+    service = _service()
 
     default_png = await service.render_png_from_record(uuid4())
     custom_png = await service.render_png_from_record(uuid4(), config=config)
@@ -143,9 +193,7 @@ async def test_render_png_from_record_respects_custom_config() -> None:
 
 
 async def test_histogram_from_record_reports_distribution() -> None:
-    service = RenderService(fits=_FakeFitsService(_gaussian_fits_bytes()))  # type: ignore[arg-type]
-
-    histogram = await service.histogram_from_record(uuid4(), bins=64)
+    histogram = await _service(_gaussian_fits_bytes()).histogram_from_record(uuid4(), bins=64)
 
     assert len(histogram.bin_centers) == 64
     assert len(histogram.counts) == 64
@@ -158,7 +206,22 @@ async def test_render_png_from_missing_record_raises() -> None:
         async def get_record(self, record_id: object) -> FitsRecord:
             raise LookupError(f"FITS record not found: {record_id}")
 
-    service = RenderService(fits=_EmptyFitsService())  # type: ignore[arg-type]
+    service = RenderService(FitsReader(), _EmptyFitsService())  # type: ignore[arg-type]
 
     with pytest.raises(LookupError):
         await service.render_png_from_record(uuid4())
+
+
+async def test_record_render_runs_cpu_off_the_event_loop(monkeypatch: pytest.MonkeyPatch) -> None:
+    calls: list[str] = []
+
+    async def _to_thread(function: object, /, *args: object, **kwargs: object) -> object:
+        calls.append(getattr(function, "__name__", ""))
+        return function(*args, **kwargs)  # type: ignore[operator]
+
+    monkeypatch.setattr("astroimage.render.service.asyncio.to_thread", _to_thread)
+    await _service().render_png_from_record(uuid4())
+    await _service(_gaussian_fits_bytes()).histogram_from_record(uuid4(), bins=8)
+
+    assert calls == ["render_png_bytes", "histogram_bytes"]
+    assert asyncio.iscoroutinefunction(_to_thread)
