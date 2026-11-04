@@ -149,7 +149,7 @@ describe("TransferFeedback", () => {
     await user.click(screen.getByRole("button", { name: "Cancelar" }));
 
     expect(toastError).toHaveBeenCalledWith(
-      "El servidor no pudo completar la operación.",
+      "No se pudo completar. Probá de nuevo.",
     );
   });
 });

@@ -36,7 +36,7 @@ function importErrorMessage(error: unknown, source: ImportSource): string {
       : "Ese archivo ya está en el servidor.";
   }
   if (error instanceof ApiError && error.status === 400) {
-    return "No se pudo importar el FITS. Revisá que sea una imagen 2D y que no supere el tamaño permitido.";
+    return "Solo imágenes 2D, dentro del tamaño permitido.";
   }
   return formatQueryError(error);
 }
@@ -256,9 +256,7 @@ export function ImportFitsControl() {
                 testId="help-import-fits"
                 glossaryId="importar-fits"
               >
-                Sube uno o varios archivos, soltalos en el inicio, o indica un
-                enlace http, https o mast:. El servidor guarda solo imágenes
-                FITS de dos dimensiones.
+                Solo imágenes de dos dimensiones.
               </HelpHint>
             </DialogTitle>
           </DialogHeader>
@@ -337,7 +335,7 @@ export function ImportFitsControl() {
                 type="url"
                 value={url}
                 disabled={pending}
-                placeholder="https://"
+                placeholder="mast:HST/product.fits"
                 onChange={(event) => {
                   setUrl(event.target.value);
                   setUrlError(null);
@@ -356,7 +354,6 @@ export function ImportFitsControl() {
               value={title}
               maxLength={200}
               disabled={pending}
-              placeholder="Si lo dejás vacío, se usa el nombre del archivo"
               onChange={(event) => setTitle(event.target.value)}
             />
           </div>

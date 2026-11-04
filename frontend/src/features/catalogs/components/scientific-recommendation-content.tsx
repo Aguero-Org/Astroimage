@@ -64,8 +64,7 @@ export function RecommendationContent({
   if (result.wcs_present === false) {
     return (
       <RecommendationInfo testId="catalogs-info">
-        Esta imagen no tiene información de posición (WCS), así que no se puede
-        ubicar su región en el cielo para buscar catálogos.
+        Sin posición en el cielo (WCS) no hay catálogos.
       </RecommendationInfo>
     );
   }
@@ -89,7 +88,7 @@ export function RecommendationContent({
     return (
       <RecommendationInfo testId="papers-empty">
         {result.include_papers === false
-          ? "Las publicaciones no se incluyeron en esta consulta."
+          ? "Esta consulta no incluye publicaciones."
           : "No se encontraron publicaciones asociadas a estos catálogos."}
       </RecommendationInfo>
     );

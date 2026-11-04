@@ -41,7 +41,7 @@ export function GlossaryHeader({
           type="search"
           data-testid="glossary-search"
           aria-label="Buscar en el glosario"
-          placeholder="Buscar un concepto…"
+          placeholder="FWHM"
           className="mt-6 max-w-md"
           value={query}
           onChange={(event) => {

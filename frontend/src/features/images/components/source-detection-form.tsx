@@ -151,8 +151,7 @@ export function SourceDetectionForm({
             testId="source-help-group-point"
             glossaryId="fuente-puntual"
           >
-            Estrellas y picos nítidos. Se marcan con puntos. El preset solo
-            rellena estos valores.
+            Estrellas y picos nítidos. Se marcan con puntos.
           </HelpHint>
         </div>
         <NamedPresetField
@@ -192,16 +191,15 @@ export function SourceDetectionForm({
                 testId="source-help-best-preset"
                 glossaryId="preset-recomendado"
               >
-                Mide el núcleo de las fuentes que ya detectaste en esta imagen y
-                ajusta los valores que dependen de ese ancho. El resto los deja
-                como están.
+                Mide el ancho de las fuentes ya detectadas y ajusta esos
+                valores.
               </HelpHint>
               <p
                 data-testid="source-best-preset-summary"
                 className="text-muted-foreground text-xs leading-snug"
               >
                 {bestPreset.isError
-                  ? "No se pudo pedir el recomendado a la API."
+                  ? "No se pudo medir el recomendado."
                   : bestPresetSummary(bestPreset.data?.evidence)}
               </p>
             </div>

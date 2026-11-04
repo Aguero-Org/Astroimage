@@ -185,8 +185,7 @@ function EditImageDialog({
             <Label htmlFor="edit-tags" className="flex items-center gap-1">
               Etiquetas
               <HelpHint label="Etiquetas" glossaryId="etiquetas-imagen">
-                Enter o una coma agrega la etiqueta. La cruz la quita. No
-                cambian el archivo FITS.
+                Enter o una coma agrega la etiqueta. La cruz la quita.
               </HelpHint>
             </Label>
             {tags.length > 0 ? (
@@ -210,7 +209,7 @@ function EditImageDialog({
             <Input
               id="edit-tags"
               value={draft}
-              placeholder="Escribí y presioná Enter"
+              placeholder="M31"
               onChange={(event) => {
                 const value = event.target.value;
                 if (value.includes(",")) {

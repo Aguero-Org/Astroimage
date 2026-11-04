@@ -73,7 +73,7 @@ export function ImportNameDialog({
           <Input
             id="display-name"
             autoFocus
-            placeholder="Por ejemplo, núcleo de Andrómeda"
+            placeholder="Núcleo de Andrómeda"
             {...register("displayName")}
           />
         </Label>

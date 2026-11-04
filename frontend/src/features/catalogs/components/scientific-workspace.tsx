@@ -424,9 +424,7 @@ function ScientificSidebar({
                     : "Buscar publicaciones"
                 }
                 placeholder={
-                  tab === "catalogs"
-                    ? "Buscar por nombre, autores o identificador"
-                    : "Buscar por bibcode, DOI o catálogo"
+                  tab === "catalogs" ? "Gaia EDR3" : "2021A&A...649A...1G"
                 }
                 onChange={(event) => setQuery(event.target.value)}
               />
@@ -516,8 +514,7 @@ function ScientificSidebar({
     if (simbad.result?.wcs_present === false) {
       return (
         <RecommendationInfo testId="simbad-info">
-          Esta imagen no tiene información de posición (WCS), así que no se
-          puede ubicar su región en el cielo para buscar objetos SIMBAD.
+          Sin posición en el cielo (WCS) no hay objetos SIMBAD.
         </RecommendationInfo>
       );
     }

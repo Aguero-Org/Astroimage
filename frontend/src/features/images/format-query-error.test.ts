@@ -12,13 +12,13 @@ describe("formatQueryError", () => {
   it("normalizes a 422", () => {
     expect(
       formatQueryError(new ApiError(422, "Unprocessable Entity", null)),
-    ).toBe("Los datos enviados no son válidos.");
+    ).toBe("Esos datos no son válidos.");
   });
 
   it("normalizes a 500", () => {
     expect(
       formatQueryError(new ApiError(500, "Internal Server Error", null)),
-    ).toBe("El servidor no pudo completar la operación.");
+    ).toBe("No se pudo completar. Probá de nuevo.");
   });
 
   it("normalizes another 4xx", () => {

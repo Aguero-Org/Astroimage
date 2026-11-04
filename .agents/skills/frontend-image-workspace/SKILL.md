@@ -58,7 +58,8 @@ Almost every control and labeled value needs a short explanation.
 - Use `HelpHint` (`frontend/src/components/ui/help-hint.tsx`) next to labels.
 - Do not invent a second tooltip pattern. Wrap Radix `Tooltip` only there.
 - `TooltipProvider` lives at the app root.
-- Help copy explains meaning, not the implementation.
+- Help copy explains meaning, not the implementation. Voice and
+  placeholders: `.agents/skills/copy/SKILL.md`.
 - Concept tooltips pass `glossaryId` matching an entry `id` in
   `frontend/src/features/glossary/entries.ts`. The `?` stays a short
   tooltip; a book icon **beside** it (not inside the tooltip) goes to

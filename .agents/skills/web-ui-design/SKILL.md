@@ -49,7 +49,8 @@ Use this skill as a cross-cutting design review and decision framework for web a
 6. **Design forms for low cognitive effort**
    - Prefer a single-column flow for ordinary data-entry forms.
    - Group related fields and split genuinely long forms into meaningful steps with clear progress.
-   - Keep labels visible; do not rely on disappearing placeholders as the primary label.
+    - Keep labels visible; do not rely on disappearing placeholders as the primary label.
+    - A placeholder is one valid example, not an instruction. Voice: `.agents/skills/copy/SKILL.md`.
    - Explain non-obvious rules before or at the point where they matter.
    - Select controls according to the option set and interaction semantics, not personal preference.
    - Make targets sufficiently large and close to the action context.

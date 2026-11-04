@@ -192,6 +192,13 @@ and other layers), not hard-wired into the viewer.
 
 On-demand workflow: `.agents/skills/frontend-image-workspace/SKILL.md`.
 
+## User-facing copy
+
+Placeholders are one valid example, never an instruction. Help text, toasts,
+errors, glossary, and delivery docs state the fact or the constraint. Load
+`.agents/skills/copy/SKILL.md` before writing or reviewing that prose. The
+skill holds the tell list. Do not keep a second copy of it here.
+
 ## Out of current scope
 
 - Authentication

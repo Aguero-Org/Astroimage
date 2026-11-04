@@ -122,7 +122,7 @@ describe("RecommendationContent", () => {
     });
 
     expect(screen.getByTestId("papers-empty")).toHaveTextContent(
-      /no se incluyeron/,
+      /no incluye publicaciones/,
     );
 
     rerender(content({ tab: "papers" }));

@@ -268,7 +268,7 @@ describe("SourceDetectionForm con preset recomendado", () => {
     renderWithBestPreset({ isError: true });
 
     expect(screen.getByTestId("source-best-preset-summary")).toHaveTextContent(
-      "No se pudo pedir el recomendado",
+      "No se pudo medir el recomendado",
     );
   });
 

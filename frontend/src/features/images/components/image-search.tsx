@@ -39,11 +39,7 @@ function ImageSearchField({
       <Input
         type="search"
         data-testid="search-input"
-        placeholder={
-          isNavbar
-            ? "Nombre, archivo o cuerpo celeste…"
-            : "Nombre, archivo, instrumento, propuesta, fuente o cuerpo celeste…"
-        }
+        placeholder="NGC 1300"
         value={local}
         onChange={(event) => setLocal(event.target.value)}
         className={isNavbar ? "w-36 sm:w-52 md:w-64 lg:w-72" : "flex-1"}
@@ -65,8 +61,7 @@ function ImageSearchField({
           testId="help-objeto"
           glossaryId="objeto"
         >
-          Nombre del cielo, como M31 o NGC 1300. También acepta archivo o
-          instrumento y lista los recortes.
+          Nombre del cielo, archivo o instrumento.
         </HelpHint>
       )}
     </form>

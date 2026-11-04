@@ -6,10 +6,10 @@ export function formatQueryError(error: unknown): string {
       return "No encontrado.";
     }
     if (error.status === 422) {
-      return "Los datos enviados no son válidos.";
+      return "Esos datos no son válidos.";
     }
     if (error.status >= 500 && error.status < 600) {
-      return "El servidor no pudo completar la operación.";
+      return "No se pudo completar. Probá de nuevo.";
     }
     if (error.status >= 400 && error.status < 500) {
       return `Error ${error.status}.`;
