@@ -32,6 +32,22 @@ def test_minio_settings_accept_overrides() -> None:
     assert settings.minio_secure is False
 
 
+def test_vizier_servers_accept_overrides() -> None:
+    settings = Settings(
+        database_url=_TEST_DATABASE_URL,
+        catalog_vizier_servers=["vizier.example.org"],
+    )
+    assert settings.catalog_vizier_servers == ["vizier.example.org"]
+
+
+def test_vizier_servers_require_at_least_one_entry() -> None:
+    import pytest
+    from pydantic import ValidationError
+
+    with pytest.raises(ValidationError):
+        Settings(database_url=_TEST_DATABASE_URL, catalog_vizier_servers=[])
+
+
 def test_database_url_is_required() -> None:
     import pytest
     from pydantic import ValidationError

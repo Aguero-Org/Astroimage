@@ -1,18 +1,38 @@
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import datetime
 from typing import Any, Protocol
 from uuid import UUID, uuid4
 
-from sqlalchemy import DateTime, Float, Index, Integer, String, UniqueConstraint, Uuid, func
+from sqlalchemy import (
+    Computed,
+    DateTime,
+    Float,
+    Index,
+    Integer,
+    String,
+    UniqueConstraint,
+    Uuid,
+    func,
+)
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.types import UserDefinedType
 
 from astroimage.catalogs.model import CatalogRow, CatalogTable
 from astroimage.shared.database import Base
 
 VIZIER_SOURCE = "vizier"
 EMPTY_CATALOGUE_ID = ""
+
+
+class Geography(UserDefinedType[Any]):
+    cache_ok = True
+
+    def get_col_spec(self, **kw: Any) -> str:
+        del kw
+        return "geography(Point, 4326)"
 
 
 class CatalogDownload(Base):
@@ -27,6 +47,7 @@ class CatalogDownload(Base):
         ),
         Index("ix_catalog_downloads_region_lookup", "source", "region_key", "row_limit"),
         Index("ix_catalog_downloads_fetched_at", "fetched_at"),
+        Index("ix_catalog_downloads_center_gist", "center", postgresql_using="gist"),
     )
 
     id: Mapped[UUID] = mapped_column(Uuid(as_uuid=True), primary_key=True, default=uuid4)
@@ -35,6 +56,12 @@ class CatalogDownload(Base):
     region_key: Mapped[str] = mapped_column(String(160), nullable=False)
     ra_deg: Mapped[float] = mapped_column(Float, nullable=False)
     dec_deg: Mapped[float] = mapped_column(Float, nullable=False)
+    center: Mapped[Any] = mapped_column(
+        Geography(),
+        Computed("ST_SetSRID(ST_MakePoint(ra_deg, dec_deg), 4326)::geography", persisted=True),
+        nullable=False,
+        deferred=True,
+    )
     radius_arcsec: Mapped[float] = mapped_column(Float, nullable=False)
     row_limit: Mapped[int] = mapped_column(Integer, nullable=False)
     version: Mapped[str] = mapped_column(String(64), nullable=False)
@@ -78,14 +105,23 @@ def table_from_payload(catalogue_id: str, payload: dict[str, Any]) -> CatalogTab
     return CatalogTable(catalogue_id=catalogue_id, column_names=column_names, rows=rows)
 
 
+@dataclass(frozen=True)
+class CatalogDownloadHit:
+    tables: list[CatalogTable]
+    covered: bool
+
+
 class CatalogDownloadStore(Protocol):
     async def find_fresh(
         self,
         *,
         source: str,
         region_key: str,
+        ra_deg: float,
+        dec_deg: float,
+        radius_arcsec: float,
         row_limit: int,
-    ) -> list[CatalogTable] | None: ...
+    ) -> CatalogDownloadHit | None: ...
 
     async def replace(
         self,

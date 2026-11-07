@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import Sequence
 from typing import Any, Protocol
 
 import astropy.units as u
@@ -32,8 +33,18 @@ class VizierCatalogProvider(Protocol):
 class AstroqueryVizierProvider:
     """VizieR access through astroquery, mirroring the reference notebook."""
 
-    def __init__(self, *, timeout_s: float = 120.0) -> None:
-        self._timeout_s = timeout_s
+    def __init__(
+        self,
+        *,
+        timeout_s: float = 120.0,
+        servers: Sequence[str] | None = None,
+    ) -> None:
+        configured = tuple(server.strip() for server in servers or () if server.strip())
+        self._servers = configured or _VIZIER_SERVERS
+        self._server_timeout_s = max(
+            1,
+            min(int(timeout_s / len(self._servers)), _SERVER_TIMEOUT_S),
+        )
 
     def query_region(
         self,
@@ -43,7 +54,7 @@ class AstroqueryVizierProvider:
         row_limit: int,
     ) -> list[CatalogTable]:
         last_error: Exception | None = None
-        for server in _VIZIER_SERVERS:
+        for server in self._servers:
             _log.info(
                 "vizier_query",
                 server=server,
@@ -77,7 +88,7 @@ class AstroqueryVizierProvider:
             row_limit=row_limit,
             vizier_server=server,
         )
-        vizier.TIMEOUT = min(int(self._timeout_s), _SERVER_TIMEOUT_S)
+        vizier.TIMEOUT = self._server_timeout_s
         return vizier.query_region(
             center,
             radius=Angle(radius_arcsec * u.arcsec),

@@ -83,6 +83,13 @@ def ensure_test_database() -> None:
     finally:
         engine.dispose()
 
+    test_engine = create_engine(settings.sync_database_url, isolation_level="AUTOCOMMIT")
+    try:
+        with test_engine.connect() as connection:
+            connection.execute(text("CREATE EXTENSION IF NOT EXISTS postgis"))
+    finally:
+        test_engine.dispose()
+
 
 @pytest.fixture
 async def db_engine(
