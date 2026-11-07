@@ -176,8 +176,9 @@ async def test_recommend_surfaces_query_errors() -> None:
 
     assert result.wcs_present is True
     assert result.queried is False
-    assert result.error is not None
-    assert "tap down" in result.error
+    assert result.error == (
+        "La consulta a VizieR falló en todos sus servidores. Probá de nuevo en unos minutos."
+    )
 
 
 class _FakePaperLookup:

@@ -3,12 +3,19 @@ from __future__ import annotations
 import asyncio
 import functools
 from concurrent.futures import ThreadPoolExecutor
+from dataclasses import replace
 
+import astropy.units as u
 from astropy.coordinates import SkyCoord
 
 from astroimage.catalogs.download import VIZIER_SOURCE, CatalogDownloadStore
 from astroimage.catalogs.evaluation import best_object_row, score_catalogue, select_object_rows
-from astroimage.catalogs.model import CatalogEvaluation, CatalogMetadata, CatalogTable
+from astroimage.catalogs.model import (
+    CatalogEvaluation,
+    CatalogMetadata,
+    CatalogRow,
+    CatalogTable,
+)
 from astroimage.catalogs.readme import ReadmeFetcher
 from astroimage.catalogs.region import region_key
 from astroimage.catalogs.schema import CatalogRecommendationConfigSchema
@@ -55,13 +62,26 @@ class CatalogLookup:
             row_limit=config.row_limit,
         )
         if self._downloads is not None:
-            stored = await self._downloads.find_fresh(
+            hit = await self._downloads.find_fresh(
                 source=VIZIER_SOURCE,
                 region_key=key,
+                ra_deg=float(center.ra.deg),
+                dec_deg=float(center.dec.deg),
+                radius_arcsec=config.search_radius_arcsec,
                 row_limit=config.row_limit,
             )
-            if stored is not None:
-                _log.info("catalog_download_hit", region_key=key, catalogues=len(stored))
+            if hit is not None:
+                stored = (
+                    _narrow_to_cone(hit.tables, center, config.search_radius_arcsec)
+                    if hit.covered
+                    else hit.tables
+                )
+                _log.info(
+                    "catalog_download_hit",
+                    region_key=key,
+                    catalogues=len(stored),
+                    covered=hit.covered,
+                )
                 return stored, None
         try:
             tables = await asyncio.wait_for(
@@ -75,10 +95,16 @@ class CatalogLookup:
             )
         except TimeoutError:
             _log.warning("vizier_query_timed_out", timeout_s=self._query_timeout_s)
-            return [], f"VizieR query timed out after {self._query_timeout_s} seconds"
+            return [], (
+                f"La consulta a VizieR superó el límite de {self._query_timeout_s:g} s. "
+                "Probá de nuevo en unos minutos."
+            )
         except Exception as exc:
             _log.warning("vizier_query_failed", detail=str(exc), exc_info=exc)
-            return [], f"VizieR query failed: {exc}"
+            return [], (
+                "La consulta a VizieR falló en todos sus servidores. "
+                "Probá de nuevo en unos minutos."
+            )
         resolved = list(tables)
         if self._downloads is not None:
             await self._downloads.replace(
@@ -155,3 +181,54 @@ class CatalogLookup:
             else:
                 pairs.append((result, table))
         return pairs
+
+
+def _narrow_to_cone(
+    tables: list[CatalogTable],
+    center: SkyCoord,
+    radius_arcsec: float,
+) -> list[CatalogTable]:
+    narrowed: list[CatalogTable] = []
+    for table in tables:
+        rows = _narrow_rows(table.rows, center, radius_arcsec)
+        if rows:
+            narrowed.append(
+                CatalogTable(
+                    catalogue_id=table.catalogue_id,
+                    column_names=table.column_names,
+                    rows=rows,
+                )
+            )
+    return narrowed
+
+
+def _narrow_rows(
+    rows: tuple[CatalogRow, ...],
+    center: SkyCoord,
+    radius_arcsec: float,
+) -> tuple[CatalogRow, ...]:
+    located: list[tuple[CatalogRow, float, float]] = []
+    for row in rows:
+        if row.ra_deg is None or row.dec_deg is None:
+            continue
+        located.append((row, row.ra_deg, row.dec_deg))
+    separations: dict[int, float] = {}
+    if located:
+        coordinates = SkyCoord(
+            ra=[ra for _, ra, _ in located] * u.deg,
+            dec=[dec for _, _, dec in located] * u.deg,
+            frame="icrs",
+        )
+        values = coordinates.separation(center).to_value(u.arcsec)
+        separations = {
+            row.index: float(separation)
+            for (row, _, _), separation in zip(located, values, strict=True)
+        }
+    narrowed: list[CatalogRow] = []
+    for row in rows:
+        separation = separations.get(row.index)
+        if separation is None:
+            narrowed.append(replace(row, separation_arcsec=None))
+        elif separation <= radius_arcsec:
+            narrowed.append(replace(row, separation_arcsec=separation))
+    return tuple(narrowed)

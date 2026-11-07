@@ -45,7 +45,7 @@ jobs:
       MINIO_SECURE: "false"
     services:
       postgres:
-        image: postgres:16
+        image: postgis/postgis:16-3.4
         env:
           POSTGRES_USER: astroimage
           POSTGRES_PASSWORD: astroimage

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
+from typing import Any
 
 import pytest
 from alembic import command
@@ -20,6 +21,18 @@ from astroimage.shared.database import Base
 _MODELS = (CatalogDownload, FitsRecord, ImageTransfer, PaperMetadata)
 _BACKEND_ROOT = Path(__file__).resolve().parents[2]
 _DATABASE_NAME = "astroimage_migrations"
+_POSTGIS_TABLES = frozenset({"spatial_ref_sys"})
+
+
+def _include_object(
+    object_: Any,
+    name: str | None,
+    type_: str,
+    reflected: bool,
+    compare_to: Any,
+) -> bool:
+    del object_, compare_to
+    return not (reflected and type_ == "table" and name in _POSTGIS_TABLES)
 
 
 def _admin_url(sync_database_url: str) -> str:
@@ -48,6 +61,7 @@ def _create_database(admin_url: str) -> None:
         engine.dispose()
 
 
+@pytest.mark.filterwarnings("ignore:Did not recognize type 'geography'")
 def test_migrations_match_orm_metadata(monkeypatch: pytest.MonkeyPatch) -> None:
     settings = get_settings()
     admin_url = _admin_url(settings.sync_database_url)
@@ -67,8 +81,22 @@ def test_migrations_match_orm_metadata(monkeypatch: pytest.MonkeyPatch) -> None:
         engine = create_engine(migration_sync_url)
         try:
             with engine.connect() as connection:
-                context = MigrationContext.configure(connection)
+                context = MigrationContext.configure(
+                    connection,
+                    opts={"include_object": _include_object},
+                )
                 diff = compare_metadata(context, Base.metadata)
+                extensions = connection.execute(text("SELECT extname FROM pg_extension")).scalars()
+                assert "postgis" in extensions.all()
+                assert (
+                    connection.execute(
+                        text(
+                            "SELECT udt_name FROM information_schema.columns "
+                            "WHERE table_name = 'catalog_downloads' AND column_name = 'center'"
+                        )
+                    ).scalar_one()
+                    == "geography"
+                )
         finally:
             engine.dispose()
     finally:

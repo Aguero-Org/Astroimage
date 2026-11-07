@@ -24,6 +24,10 @@ class Settings(BaseSettings):
     minio_secure: bool = False
     candidate_token_secret: str = "astroimage-dev-candidate-token"
     catalog_download_ttl_s: float = 86_400.0
+    catalog_vizier_servers: list[str] = Field(
+        default_factory=lambda: ["vizier.cds.unistra.fr", "vizier.cfa.harvard.edu"],
+        min_length=1,
+    )
     ads_api_token: str = ""
     paper_metadata_ttl_s: float = 2_592_000.0
     fits_import_max_bytes: int = 200 * 1024 * 1024

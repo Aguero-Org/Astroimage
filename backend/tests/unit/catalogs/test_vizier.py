@@ -66,3 +66,67 @@ def test_query_region_uses_the_next_mirror_when_the_first_fails(
 
     assert calls == ["vizier.cds.unistra.fr", "vizier.cfa.harvard.edu"]
     assert [catalog.catalogue_id for catalog in catalogs] == ["I/350/gaia"]
+
+
+def test_query_region_uses_configured_mirrors(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    calls: list[str] = []
+
+    class FakeVizier:
+        def __init__(self, *, columns: list[str], row_limit: int, vizier_server: str) -> None:
+            self.columns = columns
+            self.row_limit = row_limit
+            self.server = vizier_server
+            self.TIMEOUT = 0
+
+        def query_region(self, center: SkyCoord, radius: object, *, cache: bool) -> list[Table]:
+            calls.append(self.server)
+            if self.server == "mirror.one":
+                raise TimeoutError(self.server)
+            table = Table({"_r": [0.2]})
+            table.meta["name"] = "I/350/gaia"
+            return [table]
+
+    monkeypatch.setattr("astroimage.catalogs.vizier.Vizier", FakeVizier)
+    catalogs = AstroqueryVizierProvider(servers=("mirror.one", "mirror.two")).query_region(
+        SkyCoord(ra=10.0, dec=41.0, unit="deg"),
+        10.0,
+        row_limit=50,
+    )
+
+    assert calls == ["mirror.one", "mirror.two"]
+    assert [catalog.catalogue_id for catalog in catalogs] == ["I/350/gaia"]
+
+
+def test_query_region_splits_the_timeout_across_mirrors(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    timeouts: list[int] = []
+
+    class FakeVizier:
+        def __init__(self, *, columns: list[str], row_limit: int, vizier_server: str) -> None:
+            self.columns = columns
+            self.row_limit = row_limit
+            self.server = vizier_server
+            self.TIMEOUT = 0
+
+        def query_region(self, center: SkyCoord, radius: object, *, cache: bool) -> list[Table]:
+            timeouts.append(self.TIMEOUT)
+            if self.server == "mirror.one":
+                raise TimeoutError(self.server)
+            table = Table({"_r": [0.2]})
+            table.meta["name"] = "I/350/gaia"
+            return [table]
+
+    monkeypatch.setattr("astroimage.catalogs.vizier.Vizier", FakeVizier)
+    AstroqueryVizierProvider(
+        timeout_s=120,
+        servers=("mirror.one", "mirror.two", "mirror.three"),
+    ).query_region(
+        SkyCoord(ra=10.0, dec=41.0, unit="deg"),
+        10.0,
+        row_limit=50,
+    )
+
+    assert timeouts == [40, 40]

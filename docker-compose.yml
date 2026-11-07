@@ -17,6 +17,7 @@ services:
       MINIO_SECRET_KEY: minioadmin
       MINIO_BUCKET: astroimage
       MINIO_SECURE: "false"
+      CATALOG_VIZIER_SERVERS: '${CATALOG_VIZIER_SERVERS:-["vizier.cds.unistra.fr","vizier.cfa.harvard.edu"]}'
       ADS_API_TOKEN: ${ADS_API_TOKEN:-}
     volumes:
       - ./backend:/app
@@ -44,7 +45,7 @@ services:
       - api
 
   postgres:
-    image: postgres:16
+    image: postgis/postgis:16-3.4
     environment:
       POSTGRES_USER: astroimage
       POSTGRES_PASSWORD: astroimage
