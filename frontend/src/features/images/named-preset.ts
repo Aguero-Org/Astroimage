@@ -31,3 +31,4 @@ function shallowEqualRecord(
   }
   return keys.every((key) => Object.is(left[key], right[key]));
 }
+// coderabbit-review

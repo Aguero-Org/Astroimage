@@ -36,3 +36,4 @@ describe("ImageSearch", () => {
     expect(screen.getByTestId("search-submit").className).toContain("h-8");
   });
 });
+// coderabbit-review

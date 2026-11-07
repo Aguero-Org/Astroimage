@@ -65,3 +65,4 @@ export const CATALOGOS_ENTRIES: GlossaryEntry[] = [
     where: "Imagen → Exploración científica → Publicaciones",
   },
 ];
+// coderabbit-review

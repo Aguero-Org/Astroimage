@@ -23,3 +23,4 @@ describe("simbadObjectTypeName", () => {
     expect(simbadObjectTypeName(null, null)).toBeNull();
   });
 });
+// coderabbit-review

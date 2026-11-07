@@ -16,3 +16,4 @@ export type GlossaryEntry = {
   inApp: string;
   where: string;
 };
+// coderabbit-review

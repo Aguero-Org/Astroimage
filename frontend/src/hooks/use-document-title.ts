@@ -8,3 +8,4 @@ export function useDocumentTitle(title: string, fallback: string) {
     };
   }, [title, fallback]);
 }
+// coderabbit-review

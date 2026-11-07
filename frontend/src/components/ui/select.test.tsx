@@ -36,3 +36,4 @@ describe("Select", () => {
     expect(screen.getByTestId("ui-select")).toHaveTextContent("Calor");
   });
 });
+// coderabbit-review

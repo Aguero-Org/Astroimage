@@ -29,3 +29,4 @@ describe("CollapsibleSection", () => {
     expect(screen.getByText("Formulario")).toBeVisible();
   });
 });
+// coderabbit-review

@@ -12,3 +12,4 @@ export const catalogHandlers = [
     () => HttpResponse.json(mockCatalogRecommendation()),
   ),
 ];
+// coderabbit-review

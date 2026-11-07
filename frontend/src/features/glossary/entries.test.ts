@@ -62,3 +62,4 @@ describe("filterGlossaryEntries", () => {
     expect(found.length).toBeLessThan(GLOSSARY_ENTRIES.length);
   });
 });
+// coderabbit-review

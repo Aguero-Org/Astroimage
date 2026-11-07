@@ -80,3 +80,4 @@ export function FitsImageViewer({
     </ViewerStateProvider>
   );
 }
+// coderabbit-review

@@ -263,3 +263,4 @@ export function readNumber(raw: string): number | null {
   const numeric = Number(trimmed);
   return Number.isFinite(numeric) ? numeric : null;
 }
+// coderabbit-review

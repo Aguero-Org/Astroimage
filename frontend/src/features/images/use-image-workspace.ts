@@ -7,3 +7,4 @@ import {
 export function useImageWorkspace() {
   return useReducer(imageWorkspaceReducer, DEFAULT_IMAGE_WORKSPACE);
 }
+// coderabbit-review

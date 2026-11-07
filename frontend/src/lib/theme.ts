@@ -22,3 +22,4 @@ export function resolveTheme(stored: Theme | null): Theme {
 export function applyThemeClass(theme: Theme): void {
   document.documentElement.classList.toggle("dark", theme === "dark");
 }
+// coderabbit-review

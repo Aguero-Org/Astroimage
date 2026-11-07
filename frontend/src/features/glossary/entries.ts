@@ -36,3 +36,4 @@ export function filterGlossaryEntries(
 export function glossaryPath(id: string): string {
   return `/glossary#${id}`;
 }
+// coderabbit-review

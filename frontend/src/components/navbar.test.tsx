@@ -33,3 +33,4 @@ describe("Navbar", () => {
     expect(searchButton.className).toContain("cursor-pointer");
   });
 });
+// coderabbit-review

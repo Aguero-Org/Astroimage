@@ -18,3 +18,4 @@ describe("useDocumentTitle", () => {
     expect(document.title).toBe("Astroimage 🌌");
   });
 });
+// coderabbit-review

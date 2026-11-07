@@ -82,3 +82,4 @@ describe("applyThemeClass", () => {
     expect(document.documentElement.classList.contains("dark")).toBe(false);
   });
 });
+// coderabbit-review

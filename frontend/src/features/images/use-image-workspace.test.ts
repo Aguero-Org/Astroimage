@@ -15,3 +15,4 @@ describe("useImageWorkspace", () => {
     expect(result.current[0].inspectorOpen).toBe(true);
   });
 });
+// coderabbit-review

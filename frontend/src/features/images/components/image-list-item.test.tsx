@@ -33,3 +33,4 @@ describe("StoredFitsLink", () => {
     expect(link).toHaveAttribute("href", storedFitsUrl("record-1"));
   });
 });
+// coderabbit-review

@@ -108,3 +108,4 @@ describe("ImageWorkspaceUi", () => {
     expect(next.selectedSource).toBeNull();
   });
 });
+// coderabbit-review

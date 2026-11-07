@@ -246,3 +246,4 @@ export function SimbadObjectCard({
     </Collapsible>
   );
 }
+// coderabbit-review

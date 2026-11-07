@@ -25,3 +25,4 @@ describe("palettes", () => {
     expect(isPaletteId(null)).toBe(false);
   });
 });
+// coderabbit-review

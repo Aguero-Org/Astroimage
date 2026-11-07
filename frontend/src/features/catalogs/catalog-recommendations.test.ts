@@ -455,3 +455,4 @@ describe("catalog-recommendations", () => {
     expect(shortenText("uno  dos tres", 8)).toBe("uno…");
   });
 });
+// coderabbit-review

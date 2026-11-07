@@ -373,3 +373,4 @@ function formatArcsec(value: number): string {
   const digits = value < 1 ? 2 : 1;
   return `${value.toFixed(digits)}″`;
 }
+// coderabbit-review

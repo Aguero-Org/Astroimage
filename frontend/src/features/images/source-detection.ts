@@ -160,3 +160,4 @@ export const POINT_DETECTION_PRESETS: NamedPreset<PointDetectionParams>[] = [
     },
   },
 ];
+// coderabbit-review
