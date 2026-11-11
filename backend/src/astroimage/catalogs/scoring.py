@@ -11,24 +11,22 @@ MATCH_TYPE_OBJECT_IN_TABLE = "OBJECT_IN_TABLE"
 MATCH_TYPE_CATALOGUE_ONLY = "CATALOGUE_ONLY"
 
 _NON_IDENTIFIER = re.compile(r"[^0-9a-z]+")
+_SEPARATION_LIMITS = (
+    (0.1, 50.0),
+    (0.5, 40.0),
+    (1.0, 30.0),
+    (2.0, 20.0),
+    (5.0, 10.0),
+)
 
 
 def separation_score(separation_arcsec: float | None) -> float:
     if separation_arcsec is None:
         return 0.0
-    if separation_arcsec < 0.1:
-        return 50.0
-    if separation_arcsec < 0.5:
-        return 40.0
-    if separation_arcsec < 1.0:
-        return 30.0
-    if separation_arcsec < 2.0:
-        return 20.0
-    if separation_arcsec < 5.0:
-        return 10.0
-    if separation_arcsec <= 10.0:
-        return 5.0
-    return 0.0
+    return next(
+        (score for limit, score in _SEPARATION_LIMITS if separation_arcsec < limit),
+        5.0 if separation_arcsec <= 10.0 else 0.0,
+    )
 
 
 def identifier_score(matched: bool) -> float:
@@ -80,15 +78,14 @@ def find_identifiers_in_row(
     normalized_known: Mapping[str, str] = {
         normalize_identifier(identifier): identifier for identifier in known_identifiers
     }
-    matched: list[str] = []
-    columns: list[str] = []
-    for column, text in values:
-        for original_id in _identifiers_in_text(text, normalized_known):
-            if original_id not in matched:
-                matched.append(original_id)
-            if column not in columns:
-                columns.append(column)
-    return tuple(matched), tuple(columns)
+    hits = [
+        (column, original_id)
+        for column, text in values
+        for original_id in _identifiers_in_text(text, normalized_known)
+    ]
+    matched = tuple(dict.fromkeys(original_id for _, original_id in hits))
+    columns = tuple(dict.fromkeys(column for column, _ in hits))
+    return matched, columns
 
 
 def _identifiers_in_text(text: str, normalized_known: Mapping[str, str]) -> list[str]:

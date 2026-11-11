@@ -1,31 +1,32 @@
 from __future__ import annotations
 
+from collections.abc import Callable
 from datetime import datetime
 
 from astroimage.fits.schema import FitsRecordSummarySchema
 from astroimage.hub.schema import CandidateSortOrder, ListRecordsResponseSchema, RecordSortField
 from astroimage.hub.sorting import sort_by_key
 
+_RECORD_VALUE: dict[
+    RecordSortField,
+    Callable[[FitsRecordSummarySchema], str | int | datetime | None],
+] = {
+    "product_filename": lambda record: record.name,
+    "instrument": lambda record: record.instrument,
+    "proposal_id": lambda record: record.proposal_id,
+    "filters": lambda record: record.filters,
+    "size_bytes": lambda record: record.size_bytes,
+    "observed_at": lambda record: record.observed_at,
+    "display_name": lambda record: record.display_name,
+    "created_at": lambda record: record.created_at,
+}
+
 
 def _sort_value(
     record: FitsRecordSummarySchema,
     sort: RecordSortField,
 ) -> str | int | datetime | None:
-    if sort == "product_filename":
-        return record.name
-    if sort == "instrument":
-        return record.instrument
-    if sort == "proposal_id":
-        return record.proposal_id
-    if sort == "filters":
-        return record.filters
-    if sort == "size_bytes":
-        return record.size_bytes
-    if sort == "observed_at":
-        return record.observed_at
-    if sort == "display_name":
-        return record.display_name
-    return record.created_at
+    return _RECORD_VALUE[sort](record)
 
 
 def filter_summaries(

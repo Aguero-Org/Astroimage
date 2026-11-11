@@ -7,7 +7,7 @@ import pytest
 
 from astroimage.fits.model import FitsRecord
 from astroimage.fits.reader import FitsHduInfo, FitsMetadata
-from astroimage.fits.service import FitsService, read_bounded
+from astroimage.fits.service import FitsService, normalize_tags, read_bounded
 from astroimage.shared.errors import BadRequestError, ConflictError
 
 
@@ -411,6 +411,17 @@ async def test_import_from_url_rejects_a_non_http_address() -> None:
 
     with pytest.raises(BadRequestError):
         await service.import_from_url("file:///tmp/local.fits", max_bytes=100)
+
+
+def test_normalize_tags_keeps_the_first_spelling_and_drops_blanks() -> None:
+    assert normalize_tags(["  M31  ", "m31", "", "   ", "NGC 224"]) == ["M31", "NGC 224"]
+
+
+def test_normalize_tags_rejects_a_long_tag_and_too_many() -> None:
+    with pytest.raises(BadRequestError, match="too long"):
+        normalize_tags(["x" * 41])
+    with pytest.raises(BadRequestError, match="Too many"):
+        normalize_tags([f"tag-{index}" for index in range(21)])
 
 
 def test_summary_uses_the_filename_when_mast_provenance_is_missing() -> None:

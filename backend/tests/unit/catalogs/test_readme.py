@@ -71,6 +71,26 @@ def test_determine_bibcodes_prefers_origin_article_and_skips_ycat() -> None:
     assert determine_paper_bibcode("2016A&A...595A...1G", readme) == "2016A&A...595A...1G"
 
 
+def test_determine_paper_doi_picks_the_doi_beside_the_bibcode() -> None:
+    near = f"{' ' * 20}2016A&A...595A...1G 10.1051/0004-6361/201629272"
+    far = f"{' ' * 800}10.9999/other"
+    readme = ReadmeData(
+        reference_dois=("10.9999/other", "10.1051/0004-6361/201629272"),
+        references=near + far,
+        dois=("10.0000/readme-only", "10.0000/second"),
+    )
+    assert (
+        determine_paper_doi("2016A&A...595A...1G", readme, "10.0000/meta")
+        == "10.1051/0004-6361/201629272"
+    )
+    unmatched = ReadmeData(
+        reference_dois=("10.9999/other", "10.8888/else"),
+        references="sin bibcode",
+        dois=("10.0000/only",),
+    )
+    assert determine_paper_doi("2016A&A...595A...1G", unmatched, "10.0000/meta") == "10.0000/only"
+
+
 def test_determine_paper_doi_prefers_readme_reference_doi() -> None:
     readme = ReadmeData(reference_dois=("10.1051/0004-6361/201629272",))
     assert determine_paper_doi("2016A&A...595A...1G", readme, "10.0000/meta") == (

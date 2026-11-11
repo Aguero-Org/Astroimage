@@ -6,6 +6,15 @@ from datetime import datetime
 from astroimage.hub.importer import HubbleProduct
 from astroimage.hub.schema import CandidateSortField, CandidateSortOrder
 
+_PRODUCT_VALUE: dict[CandidateSortField, Callable[[HubbleProduct], str | int | None]] = {
+    "size_bytes": lambda product: product.size_bytes,
+    "instrument": lambda product: product.instrument,
+    "proposal_id": lambda product: product.proposal_id,
+    "filters": lambda product: product.filters,
+    "observed_at": lambda product: product.observed_at,
+    "product_filename": lambda product: product.product_filename,
+}
+
 
 def sort_by_key[Item](
     items: list[Item],
@@ -29,17 +38,7 @@ def sort_by_key[Item](
 
 
 def _field_value(product: HubbleProduct, sort: CandidateSortField) -> str | int | None:
-    if sort == "size_bytes":
-        return product.size_bytes
-    if sort == "instrument":
-        return product.instrument
-    if sort == "proposal_id":
-        return product.proposal_id
-    if sort == "filters":
-        return product.filters
-    if sort == "observed_at":
-        return product.observed_at
-    return product.product_filename
+    return _PRODUCT_VALUE[sort](product)
 
 
 def sort_products(

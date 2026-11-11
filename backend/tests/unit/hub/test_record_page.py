@@ -1,8 +1,10 @@
 from datetime import UTC, datetime
+from typing import get_args
 from uuid import uuid4
 
 from astroimage.fits.schema import FitsRecordSummarySchema
 from astroimage.hub.record_page import filter_summaries, page_summaries
+from astroimage.hub.schema import RecordSortField
 
 
 def _summary(name: str, instrument: str | None, size: int) -> FitsRecordSummarySchema:
@@ -42,6 +44,23 @@ def test_filter_matches_catalog_fields() -> None:
     )
     assert [record.name for record in filter_summaries([tagged], "Prof")] == ["hst_b.fits"]
     assert [record.name for record in filter_summaries([tagged], "norte")] == ["hst_b.fits"]
+
+
+def test_page_sorts_filename_and_display_name_apart() -> None:
+    first = _summary("file-b.fits", "WFC3", 10).model_copy(update={"display_name": "Zeta"})
+    second = _summary("file-a.fits", "ACS", 20).model_copy(update={"display_name": "Alpha"})
+    by_name = page_summaries([first, second], page=1, limit=2, sort="product_filename", order="asc")
+    by_label = page_summaries([first, second], page=1, limit=2, sort="display_name", order="asc")
+    assert [record.name for record in by_name.records] == ["file-a.fits", "file-b.fits"]
+    assert [record.display_name for record in by_label.records] == ["Alpha", "Zeta"]
+
+
+def test_every_sort_field_returns_the_record() -> None:
+    record = _summary("a.fits", "WFC3", 10)
+    for sort in get_args(RecordSortField):
+        page = page_summaries([record], page=1, limit=1, sort=sort, order="asc")
+        assert page.sort == sort
+        assert page.records == [record]
 
 
 def test_page_puts_missing_instruments_last_and_slices() -> None:

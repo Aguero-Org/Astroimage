@@ -85,23 +85,25 @@ def _tags_from_payload(payload: object) -> list[str]:
     return [tag for tag in raw_tags if isinstance(tag, str) and tag != ""]
 
 
+def _accepted_tag(raw: str) -> str | None:
+    text = " ".join(raw.split())
+    if text == "":
+        return None
+    if len(text) > 40:
+        raise BadRequestError("A tag is too long")
+    return text
+
+
 def normalize_tags(tags: list[str]) -> list[str]:
-    seen: set[str] = set()
-    cleaned: list[str] = []
+    unique: dict[str, str] = {}
     for raw in tags:
-        text = " ".join(raw.split())
-        if text == "":
+        text = _accepted_tag(raw)
+        if text is None:
             continue
-        if len(text) > 40:
-            raise BadRequestError("A tag is too long")
-        key = text.casefold()
-        if key in seen:
-            continue
-        seen.add(key)
-        cleaned.append(text)
-    if len(cleaned) > 20:
+        unique.setdefault(text.casefold(), text)
+    if len(unique) > 20:
         raise BadRequestError("Too many tags")
-    return cleaned
+    return list(unique.values())
 
 
 def _optional_text(value: str | None, *, limit: int, message: str) -> str | None:

@@ -8,7 +8,10 @@ import type {
 import { Button } from "@/components/ui/button";
 import { HelpHint } from "@/components/ui/help-hint";
 import { ScientificWorkspace } from "@/features/catalogs/components/scientific-workspace";
-import { simbadObjectsInView } from "@/features/catalogs/simbad-references";
+import {
+  simbadMatchedIds,
+  simbadObjectsInView,
+} from "@/features/catalogs/simbad-references";
 import { useSimbadReferences } from "@/features/catalogs/use-simbad-references";
 import {
   useBestPreset,
@@ -183,19 +186,8 @@ function ImageWorkspacePage({
     hdu,
     enabled: gaia.summary !== undefined,
   });
-  const simbadPointIds = new Set<number>();
-  const simbadExtendedIds = new Set<number>();
-  for (const obj of simbad.objects) {
-    const match = obj.image_match;
-    if (!match?.matched) {
-      continue;
-    }
-    if (String(match.object_type) === "point") {
-      simbadPointIds.add(match.source_id);
-    } else if (String(match.object_type) === "extended") {
-      simbadExtendedIds.add(match.source_id);
-    }
-  }
+  const simbadPointIds = simbadMatchedIds(simbad.objects, "point");
+  const simbadExtendedIds = simbadMatchedIds(simbad.objects, "extended");
   const sourceName = imageInfo?.source_name;
   const pageTitle = imageDisplayTitle(sourceName, slug);
   const catalogName = imageInfo?.display_name?.trim() ?? "";

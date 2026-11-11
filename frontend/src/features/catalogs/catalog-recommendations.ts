@@ -59,34 +59,45 @@ export function catalogueMatchLabel(
     : "Catálogo de la región";
 }
 
+function identifierReason(
+  item: CatalogRecommendationItemSchema,
+): CatalogueReason {
+  const columns = item.identifier_columns?.trim();
+  const columnsNote = columns ? ` (columnas ${columns})` : "";
+  const detail = item.object_identifier
+    ? `El identificador ${item.object_identifier} aparece en este catálogo${columnsNote}.`
+    : "El identificador buscado aparece en este catálogo.";
+  return {
+    headline: "El objeto buscado aparece en este catálogo",
+    detail,
+  };
+}
+
+function coverageReason(
+  item: CatalogRecommendationItemSchema,
+): CatalogueReason {
+  const separation = item.separation_arcsec;
+  if (item.spatial_match && separation !== null && separation !== undefined) {
+    return {
+      headline: "El catálogo cubre esta región del cielo",
+      detail: `El centro de la región consultada cae a ${formatArcsec(separation)} de este catálogo.`,
+    };
+  }
+  return {
+    headline: "El catálogo cubre esta región del cielo",
+    detail: undefined,
+  };
+}
+
 export function catalogueReason(
   item: CatalogRecommendationItemSchema,
 ): CatalogueReason {
-  if (item.identifier_match) {
-    const columns = item.identifier_columns?.trim();
-    const columnsNote = columns ? ` (columnas ${columns})` : "";
-    const detail = item.object_identifier
-      ? `El identificador ${item.object_identifier} aparece en este catálogo${columnsNote}.`
-      : "El identificador buscado aparece en este catálogo.";
-    return {
-      headline: "El objeto buscado aparece en este catálogo",
-      detail: detail.length > 0 ? detail : undefined,
-    };
-  }
-  const separation = item.separation_arcsec;
-  const detail =
-    item.spatial_match && separation !== null && separation !== undefined
-      ? `El centro de la región consultada cae a ${formatArcsec(separation)} de este catálogo.`
-      : undefined;
-  return { headline: "El catálogo cubre esta región del cielo", detail };
+  return item.identifier_match ? identifierReason(item) : coverageReason(item);
 }
 
-export function regionDescription(
-  response: CatalogRecommendationBody | undefined,
-): string | undefined {
-  if (!isCatalogRecommendation(response)) {
-    return undefined;
-  }
+function queriedRegion(
+  response: CatalogRecommendationResponse,
+): { ra: number; dec: number; radius: number } | undefined {
   const { ra_deg: ra, dec_deg: dec, radius_arcsec: radius } = response;
   if (
     ra === null ||
@@ -97,7 +108,20 @@ export function regionDescription(
   ) {
     return undefined;
   }
-  return `RA ${formatDegrees(ra)} · Dec ${formatDegrees(dec)} · radio ${formatArcsec(radius)}`;
+  return { ra, dec, radius };
+}
+
+export function regionDescription(
+  response: CatalogRecommendationBody | undefined,
+): string | undefined {
+  if (!isCatalogRecommendation(response)) {
+    return undefined;
+  }
+  const region = queriedRegion(response);
+  if (!region) {
+    return undefined;
+  }
+  return `RA ${formatDegrees(region.ra)} · Dec ${formatDegrees(region.dec)} · radio ${formatArcsec(region.radius)}`;
 }
 
 function formatDegrees(value: number): string {
@@ -185,16 +209,18 @@ function addCataloguePaper(
   });
 }
 
+function presentTexts(values: readonly string[] | null | undefined): string[] {
+  return (values ?? [])
+    .map((raw) => raw.trim())
+    .filter((value) => value.length > 0);
+}
+
 function addReadmeBibcodes(
   publications: Map<string, CatalogPublication>,
   item: CatalogRecommendationItemSchema,
   name: string,
 ): void {
-  for (const raw of item.readme_bibcodes ?? []) {
-    const readmeBibcode = raw.trim();
-    if (readmeBibcode.length === 0) {
-      continue;
-    }
+  for (const readmeBibcode of presentTexts(item.readme_bibcodes)) {
     addPublication(publications, {
       id: publicationKey(readmeBibcode, undefined),
       bibcode: readmeBibcode,
@@ -211,11 +237,7 @@ function addReadmeDois(
   item: CatalogRecommendationItemSchema,
   name: string,
 ): void {
-  for (const raw of item.readme_dois ?? []) {
-    const readmeDoi = raw.trim();
-    if (readmeDoi.length === 0) {
-      continue;
-    }
+  for (const readmeDoi of presentTexts(item.readme_dois)) {
     addPublication(publications, {
       id: publicationKey(undefined, readmeDoi),
       doi: readmeDoi,
@@ -255,31 +277,34 @@ export function publicationHeading(publication: CatalogPublication): string {
   return `${relation} ${names.join(", ")}`;
 }
 
+function textIncludes(needle: string, parts: readonly string[]): boolean {
+  return needle.length === 0 || parts.join(" ").toLowerCase().includes(needle);
+}
+
+const MATCHES_CATALOGUE_FILTER: Record<
+  CatalogueMatchFilter,
+  (item: CatalogRecommendationItemSchema) => boolean
+> = {
+  all: () => true,
+  object: (item) => Boolean(item.identifier_match),
+  catalogue: (item) => !item.identifier_match,
+};
+
 export function filterCatalogues(
   items: readonly CatalogRecommendationItemSchema[],
   options: { query: string; match: CatalogueMatchFilter },
 ): CatalogRecommendationItemSchema[] {
   const needle = options.query.trim().toLowerCase();
-  return items.filter((item) => {
-    if (options.match === "object" && !item.identifier_match) {
-      return false;
-    }
-    if (options.match === "catalogue" && item.identifier_match) {
-      return false;
-    }
-    if (needle.length === 0) {
-      return true;
-    }
-    const haystack = [
-      catalogueName(item),
-      item.catalogue_id,
-      item.catalogue_authors ?? "",
-      item.object_identifier ?? "",
-    ]
-      .join(" ")
-      .toLowerCase();
-    return haystack.includes(needle);
-  });
+  return items.filter(
+    (item) =>
+      MATCHES_CATALOGUE_FILTER[options.match](item) &&
+      textIncludes(needle, [
+        catalogueName(item),
+        item.catalogue_id,
+        item.catalogue_authors ?? "",
+        item.object_identifier ?? "",
+      ]),
+  );
 }
 
 export function filterPublications(
@@ -288,25 +313,18 @@ export function filterPublications(
   kind: PublicationKindFilter = "all",
 ): CatalogPublication[] {
   const needle = query.trim().toLowerCase();
-  return publications.filter((publication) => {
-    if (kind !== "all" && publication.kind !== kind) {
-      return false;
-    }
-    if (needle.length === 0) {
-      return true;
-    }
-    const haystack = [
-      publication.title ?? "",
-      publication.abstract ?? "",
-      publication.bibcode ?? "",
-      publication.doi ?? "",
-      ...publication.catalogueNames,
-      ...publication.catalogueIds,
-    ]
-      .join(" ")
-      .toLowerCase();
-    return haystack.includes(needle);
-  });
+  return publications.filter(
+    (publication) =>
+      (kind === "all" || publication.kind === kind) &&
+      textIncludes(needle, [
+        publication.title ?? "",
+        publication.abstract ?? "",
+        publication.bibcode ?? "",
+        publication.doi ?? "",
+        ...publication.catalogueNames,
+        ...publication.catalogueIds,
+      ]),
+  );
 }
 
 export function shortenText(

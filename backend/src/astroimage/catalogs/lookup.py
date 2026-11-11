@@ -202,33 +202,50 @@ def _narrow_to_cone(
     return narrowed
 
 
+def _with_coordinates(row: CatalogRow) -> tuple[CatalogRow, float, float] | None:
+    if row.ra_deg is None or row.dec_deg is None:
+        return None
+    return (row, row.ra_deg, row.dec_deg)
+
+
+def _separations_arcsec(
+    located: list[tuple[CatalogRow, float, float]],
+    center: SkyCoord,
+) -> dict[int, float]:
+    if not located:
+        return {}
+    coordinates = SkyCoord(
+        ra=[ra for _, ra, _ in located] * u.deg,
+        dec=[dec for _, _, dec in located] * u.deg,
+        frame="icrs",
+    )
+    values = coordinates.separation(center).to_value(u.arcsec)
+    return {
+        row.index: float(separation)
+        for (row, _, _), separation in zip(located, values, strict=True)
+    }
+
+
+def _row_in_cone(
+    row: CatalogRow,
+    separations: dict[int, float],
+    radius_arcsec: float,
+) -> CatalogRow | None:
+    separation = separations.get(row.index)
+    if separation is None:
+        return replace(row, separation_arcsec=None)
+    if separation <= radius_arcsec:
+        return replace(row, separation_arcsec=separation)
+    return None
+
+
 def _narrow_rows(
     rows: tuple[CatalogRow, ...],
     center: SkyCoord,
     radius_arcsec: float,
 ) -> tuple[CatalogRow, ...]:
-    located: list[tuple[CatalogRow, float, float]] = []
-    for row in rows:
-        if row.ra_deg is None or row.dec_deg is None:
-            continue
-        located.append((row, row.ra_deg, row.dec_deg))
-    separations: dict[int, float] = {}
-    if located:
-        coordinates = SkyCoord(
-            ra=[ra for _, ra, _ in located] * u.deg,
-            dec=[dec for _, _, dec in located] * u.deg,
-            frame="icrs",
-        )
-        values = coordinates.separation(center).to_value(u.arcsec)
-        separations = {
-            row.index: float(separation)
-            for (row, _, _), separation in zip(located, values, strict=True)
-        }
-    narrowed: list[CatalogRow] = []
-    for row in rows:
-        separation = separations.get(row.index)
-        if separation is None:
-            narrowed.append(replace(row, separation_arcsec=None))
-        elif separation <= radius_arcsec:
-            narrowed.append(replace(row, separation_arcsec=separation))
-    return tuple(narrowed)
+    located = [position for row in rows if (position := _with_coordinates(row)) is not None]
+    separations = _separations_arcsec(located, center)
+    return tuple(
+        kept for row in rows if (kept := _row_in_cone(row, separations, radius_arcsec)) is not None
+    )

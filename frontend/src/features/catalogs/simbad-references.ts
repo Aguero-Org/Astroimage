@@ -5,41 +5,39 @@ export type SimbadSourceRef = {
   objectType: "point" | "extended";
 };
 
+function matchedImage(obj: SimbadObjectSchema) {
+  const match = obj.image_match;
+  if (!match?.matched) {
+    return undefined;
+  }
+  return match;
+}
+
 export function simbadMatchedIds(
-  objects: SimbadObjectSchema[],
+  objects: readonly SimbadObjectSchema[],
   objectType: "point" | "extended",
 ): Set<number> {
-  const ids = new Set<number>();
-  for (const obj of objects) {
-    const match = obj.image_match;
-    if (!match?.matched) {
-      continue;
-    }
-    if (String(match.object_type) !== objectType) {
-      continue;
-    }
-    ids.add(match.source_id);
-  }
-  return ids;
+  return new Set(
+    objects.flatMap((obj) => {
+      const match = matchedImage(obj);
+      if (!match || String(match.object_type) !== objectType) {
+        return [];
+      }
+      return [match.source_id];
+    }),
+  );
 }
 
 export function simbadObjectsForSource(
-  objects: SimbadObjectSchema[],
+  objects: readonly SimbadObjectSchema[],
   sourceId: number,
   objectType: "point" | "extended",
 ): SimbadObjectSchema[] {
   return objects.filter((obj) => {
-    const match = obj.image_match;
-    if (!match?.matched) {
-      return false;
-    }
-    if (match.source_id !== sourceId) {
-      return false;
-    }
-    if (String(match.object_type) !== objectType) {
-      return false;
-    }
-    return true;
+    const match = matchedImage(obj);
+    return (
+      match?.source_id === sourceId && String(match.object_type) === objectType
+    );
   });
 }
 
@@ -60,22 +58,20 @@ export function simbadSourceForObject(
 }
 
 export function simbadObjectsInView(
-  objects: SimbadObjectSchema[],
-  pointIds: Set<number>,
-  extendedIds: Set<number>,
+  objects: readonly SimbadObjectSchema[],
+  pointIds: ReadonlySet<number>,
+  extendedIds: ReadonlySet<number>,
 ): SimbadObjectSchema[] {
+  const idsByType = { point: pointIds, extended: extendedIds };
   return objects.filter((obj) => {
-    const match = obj.image_match;
-    if (!match?.matched) {
+    const match = matchedImage(obj);
+    if (!match) {
       return false;
     }
     const objectType = String(match.object_type);
-    if (objectType === "point") {
-      return pointIds.has(match.source_id);
+    if (objectType !== "point" && objectType !== "extended") {
+      return false;
     }
-    if (objectType === "extended") {
-      return extendedIds.has(match.source_id);
-    }
-    return false;
+    return idsByType[objectType].has(match.source_id);
   });
 }

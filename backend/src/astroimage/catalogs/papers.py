@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import json
-from collections.abc import Sequence
+from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Any, Protocol
@@ -147,24 +147,45 @@ class AdsPaperLookup:
 def identifiers_from_pairs(
     pairs: Sequence[tuple[str | None, str | None]],
 ) -> list[PaperIdentifier]:
-    seen: set[str] = set()
-    identifiers: list[PaperIdentifier] = []
-    for bibcode, doi in pairs:
-        identifier = PaperIdentifier(
-            bibcode=_usable_bibcode(bibcode),
-            doi=_usable_text(doi),
-        )
+    candidates = [
+        PaperIdentifier(bibcode=_usable_bibcode(bibcode), doi=_usable_text(doi))
+        for bibcode, doi in pairs
+    ]
+    unique: dict[str, PaperIdentifier] = {}
+    for identifier in candidates:
         key = identifier.lookup_key
-        if key is None or key in seen:
-            continue
-        seen.add(key)
-        identifiers.append(identifier)
-    return identifiers
+        if key is not None:
+            unique.setdefault(key, identifier)
+    return list(unique.values())
 
 
 def ads_query(field: str, values: Sequence[str]) -> str:
     quoted = " OR ".join(_quoted(value) for value in values)
     return f"{field}:({quoted})"
+
+
+def _index_ads_docs(
+    docs: Iterable[object],
+) -> tuple[dict[str, dict[str, Any]], dict[str, dict[str, Any]]]:
+    documents = [doc for doc in docs if isinstance(doc, dict)]
+    by_bibcode = {
+        bibcode: doc
+        for doc in documents
+        if (bibcode := _usable_text(doc.get("bibcode"))) is not None
+    }
+    by_doi = {doi.lower(): doc for doc in documents for doi in _string_list(doc.get("doi"))}
+    return by_bibcode, by_doi
+
+
+def _doc_for_identifier(
+    identifier: PaperIdentifier,
+    by_bibcode: dict[str, dict[str, Any]],
+    by_doi: dict[str, dict[str, Any]],
+) -> dict[str, Any] | None:
+    doc = by_bibcode.get(identifier.bibcode or "")
+    if doc is not None or not identifier.doi:
+        return doc
+    return by_doi.get(identifier.doi.lower())
 
 
 def records_from_ads(
@@ -173,26 +194,16 @@ def records_from_ads(
 ) -> list[PaperRecord]:
     response = payload.get("response")
     docs = response.get("docs", []) if isinstance(response, dict) else []
-    by_bibcode: dict[str, dict[str, Any]] = {}
-    by_doi: dict[str, dict[str, Any]] = {}
-    for doc in docs:
-        if not isinstance(doc, dict):
-            continue
-        bibcode = _usable_text(doc.get("bibcode"))
-        if bibcode:
-            by_bibcode[bibcode] = doc
-        for doi in _string_list(doc.get("doi")):
-            by_doi[doi.lower()] = doc
-    records: list[PaperRecord] = []
-    for identifier in identifiers:
-        key = identifier.lookup_key
-        if key is None:
-            continue
-        doc = by_bibcode.get(identifier.bibcode or "")
-        if doc is None and identifier.doi:
-            doc = by_doi.get(identifier.doi.lower())
-        records.append(_record_from_doc(identifier, key, doc))
-    return records
+    by_bibcode, by_doi = _index_ads_docs(docs)
+    return [
+        _record_from_doc(
+            identifier,
+            key,
+            _doc_for_identifier(identifier, by_bibcode, by_doi),
+        )
+        for identifier in identifiers
+        if (key := identifier.lookup_key) is not None
+    ]
 
 
 def _record_from_doc(
@@ -239,12 +250,9 @@ def _usable_text(value: object) -> str | None:
 def _first_text(value: object) -> str | None:
     if isinstance(value, str):
         return _usable_text(value)
-    if isinstance(value, list):
-        for item in value:
-            text = _first_text(item)
-            if text:
-                return text
-    return None
+    if not isinstance(value, list):
+        return None
+    return next((text for item in value if (text := _first_text(item)) is not None), None)
 
 
 def _string_list(value: object) -> list[str]:
@@ -253,12 +261,7 @@ def _string_list(value: object) -> list[str]:
         return [text] if text else []
     if not isinstance(value, list):
         return []
-    texts: list[str] = []
-    for item in value:
-        text = _usable_text(item)
-        if text:
-            texts.append(text)
-    return texts
+    return [text for item in value if (text := _usable_text(item)) is not None]
 
 
 def _quoted(value: str) -> str:

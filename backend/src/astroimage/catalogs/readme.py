@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import re
+from collections.abc import Iterable
 from dataclasses import dataclass
+from itertools import takewhile
 from typing import Protocol
 from urllib import error as urllib_error
 from urllib import request as urllib_request
@@ -100,22 +102,16 @@ def doi_url(value: str | None) -> str | None:
     return DOI_URL.format(doi=cleaned)
 
 
+def _unique_texts(values: Iterable[str]) -> tuple[str, ...]:
+    return tuple(dict.fromkeys(value for value in values if value))
+
+
 def extract_dois(text: str) -> tuple[str, ...]:
-    result: list[str] = []
-    for match in _DOI_PATTERN.findall(text or ""):
-        doi = clean_doi(match)
-        if doi and doi not in result:
-            result.append(doi)
-    return tuple(result)
+    return _unique_texts(clean_doi(match) for match in _DOI_PATTERN.findall(text or ""))
 
 
 def extract_bibcodes(text: str) -> tuple[str, ...]:
-    result: list[str] = []
-    for match in _BIBCODE_PATTERN.findall(text or ""):
-        bibcode = clean_bibcode(match)
-        if bibcode and bibcode not in result:
-            result.append(bibcode)
-    return tuple(result)
+    return _unique_texts(clean_bibcode(match) for match in _BIBCODE_PATTERN.findall(text or ""))
 
 
 def catalogue_readme_candidates(catalogue_id: str) -> tuple[str, ...]:
@@ -129,55 +125,49 @@ def catalogue_readme_candidates(catalogue_id: str) -> tuple[str, ...]:
     return tuple(dict.fromkeys(candidates))
 
 
+def _starts_next_section(line: str) -> bool:
+    stripped = line.strip()
+    return bool(stripped) and not line.startswith(" ") and stripped.endswith(":")
+
+
 def extract_section(readme: str, section_names: tuple[str, ...]) -> str:
-    if not readme:
+    lines = readme.splitlines()
+    start = next((index for index, line in enumerate(lines) if line.strip() in section_names), None)
+    if start is None:
         return ""
-    collecting = False
-    result: list[str] = []
-    for line in readme.splitlines():
-        stripped = line.strip()
-        if stripped in section_names:
-            collecting = True
-            continue
-        if not collecting:
-            continue
-        if stripped and not line.startswith(" ") and stripped.endswith(":"):
-            break
-        if stripped:
-            result.append(stripped)
-    return clean_text(" ".join(result))
+    body = takewhile(lambda line: not _starts_next_section(line), lines[start + 1 :])
+    return clean_text(" ".join(line.strip() for line in body if line.strip()))
+
+
+def _title_line(line: str) -> str:
+    stripped = line.strip()
+    if not stripped or stripped.startswith(_TITLE_SKIP_PREFIXES) or set(stripped) <= set("-=_"):
+        return ""
+    return stripped
 
 
 def extract_title(readme: str) -> str:
-    if not readme:
+    first = next(filter(None, map(_title_line, readme.splitlines())), "")
+    if not first:
         return ""
-    candidates: list[str] = []
-    for line in readme.splitlines():
-        stripped = line.strip()
-        if not stripped:
-            continue
-        if stripped.startswith(_TITLE_SKIP_PREFIXES):
-            continue
-        if set(stripped) <= set("-=_"):
-            continue
-        candidates.append(stripped)
-    if not candidates:
-        return ""
-    title = clean_text(candidates[0])
+    title = clean_text(first)
     return re.sub(r"^Title\s*[:=]\s*", "", title, flags=re.IGNORECASE).strip()
 
 
 def extract_authors(readme: str) -> str:
-    if not readme:
+    labeled = next(
+        (line.strip() for line in readme.splitlines() if line.strip().startswith("Authors:")),
+        None,
+    )
+    if labeled is not None:
+        return clean_text(labeled.split(":", 1)[1])
+    collaboration = next(
+        (line for line in readme.splitlines() if "gaia collaboration" in line.lower()),
+        None,
+    )
+    if collaboration is None:
         return ""
-    for line in readme.splitlines():
-        stripped = line.strip()
-        if stripped.startswith("Authors:"):
-            return clean_text(stripped.split(":", 1)[1])
-    for line in readme.splitlines():
-        if "gaia collaboration" in line.lower():
-            return clean_text(line)
-    return ""
+    return clean_text(collaboration)
 
 
 def extract_reference_blocks(readme: str) -> str:
@@ -207,25 +197,44 @@ def determine_catalogue_bibcode(metadata_origin_article: str | None, readme: Rea
     origin = clean_bibcode(metadata_origin_article or "")
     if origin:
         return origin
-    for code in readme.bibcodes:
-        if is_ycat_bibcode(code):
-            return code
-    return ""
+    return next((code for code in readme.bibcodes if is_ycat_bibcode(code)), "")
+
+
+def _first_paper_bibcode(codes: tuple[str, ...]) -> str:
+    return next(
+        (
+            cleaned
+            for code in codes
+            if (cleaned := clean_bibcode(code)) and not is_ycat_bibcode(cleaned)
+        ),
+        "",
+    )
 
 
 def determine_paper_bibcode(metadata_origin_article: str | None, readme: ReadmeData) -> str:
     origin = clean_bibcode(metadata_origin_article or "")
     if origin and not is_ycat_bibcode(origin):
         return origin
-    for code in readme.reference_bibcodes:
-        cleaned = clean_bibcode(code)
-        if cleaned and not is_ycat_bibcode(cleaned):
-            return cleaned
-    for code in readme.bibcodes:
-        cleaned = clean_bibcode(code)
-        if cleaned and not is_ycat_bibcode(cleaned):
-            return cleaned
-    return ""
+    return _first_paper_bibcode(readme.reference_bibcodes) or _first_paper_bibcode(readme.bibcodes)
+
+
+def _present_dois(dois: tuple[str, ...]) -> list[str]:
+    return [doi for doi in map(clean_doi, dois) if doi]
+
+
+def _bibcode_near(references: str, doi: str, bibcode: str) -> bool:
+    position = references.find(doi)
+    if position < 0:
+        return False
+    start = max(0, position - 500)
+    end = min(len(references), position + 500)
+    return bibcode in references[start:end]
+
+
+def _doi_near_bibcode(dois: list[str], references: str, bibcode: str) -> str:
+    if len(dois) == 1:
+        return dois[0]
+    return next((doi for doi in dois if _bibcode_near(references, doi, bibcode)), "")
 
 
 def determine_paper_doi(
@@ -236,24 +245,16 @@ def determine_paper_doi(
     if not paper_bibcode:
         return ""
     cleaned_bibcode = clean_bibcode(paper_bibcode)
-    if readme.reference_dois:
-        dois = [clean_doi(doi) for doi in readme.reference_dois]
-        dois = [doi for doi in dois if doi]
-        if len(dois) == 1:
-            return dois[0]
-        for doi in dois:
-            position = readme.references.find(doi)
-            if position < 0:
-                continue
-            start = max(0, position - 500)
-            end = min(len(readme.references), position + 500)
-            if cleaned_bibcode in readme.references[start:end]:
-                return doi
-    if readme.dois:
-        dois = [clean_doi(doi) for doi in readme.dois]
-        dois = [doi for doi in dois if doi]
-        if len(dois) == 1:
-            return dois[0]
+    from_references = _doi_near_bibcode(
+        _present_dois(readme.reference_dois),
+        readme.references,
+        cleaned_bibcode,
+    )
+    if from_references:
+        return from_references
+    from_readme = _present_dois(readme.dois)
+    if len(from_readme) == 1:
+        return from_readme[0]
     return clean_doi(metadata_doi)
 
 
