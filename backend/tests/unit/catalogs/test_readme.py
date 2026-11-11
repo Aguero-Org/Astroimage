@@ -52,7 +52,7 @@ def test_parse_readme_keeps_references_after_a_repeated_heading() -> None:
 References:
  2000A&A...357..265F
 History:
- later text
+ 1998A&A...333A...1H
 """
     parsed = parse_readme(readme)
     assert parsed.reference_bibcodes == ("2016A&A...595A...1G", "2000A&A...357..265F")
