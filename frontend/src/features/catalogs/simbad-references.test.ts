@@ -66,6 +66,9 @@ describe("simbad-references", () => {
     expect(simbadObjectsInView(objects, new Set(), new Set([8]))).toEqual([
       extended,
     ]);
+    expect(simbadObjectsInView(objects, new Set([8]), new Set([7]))).toEqual(
+      [],
+    );
   });
 
   it("resolves a source from the object name", () => {
