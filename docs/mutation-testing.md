@@ -304,12 +304,11 @@ con el test de cada archivo:
 | `viewport-source-visibility.tsx` | 102 | 3 | 0 | 105 |
 | `catalog-recommendations.ts` | 296 | 11 | 0 | 307 |
 
-Los 3 de `viewport-source-visibility.tsx` son equivalentes. La firma que evita
-repetir el aviso sale de un `Set` que inserta primero las fuentes puntuales y
-después las extendidas. Quitar el `sort`, o un comparador que no reordena, deja
-esa firma igual. Unir las claves sin `|` tampoco cambia el aviso: cada clave es
-`point:<id>` o `extended:<id>`, y el límite entre dos claves queda en el paso de
-dígitos a letra.
+De los 3 supervivientes de `viewport-source-visibility.tsx`, unir las claves
+sin `|` es equivalente: con el `sort`, la firma no cambia y cada clave es
+`point:<id>` o `extended:<id>`. Quitar el `sort`, o un comparador que no
+reordena, cambia la firma cuando las mismas fuentes llegan en otro orden y el
+aviso se dispara otra vez. El test de reorden cubre ese caso.
 
 De los 11 de `catalog-recommendations.ts`, 5 son equivalentes y ya encajan con
 la nota del 2026-10-21, más el default de `papers`:

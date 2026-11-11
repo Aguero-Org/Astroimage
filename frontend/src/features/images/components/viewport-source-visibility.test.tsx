@@ -248,4 +248,32 @@ describe("ViewportSourceVisibility", () => {
     });
     expect(onVisibleSourceKeysChange).toHaveBeenLastCalledWith(new Set());
   });
+
+  it("keeps the same notice when the same points arrive in another order", async () => {
+    const onVisibleSourceKeysChange = vi.fn();
+    const view = render(
+      <ViewportSourceVisibility
+        pointSources={[pointSource(1, 5, 5), pointSource(2, 4, 5)]}
+        extendedSources={[]}
+        onVisibleSourceKeysChange={onVisibleSourceKeysChange}
+      />,
+    );
+
+    await waitFor(() => {
+      expect(onVisibleSourceKeysChange).toHaveBeenCalledTimes(1);
+    });
+    expect(onVisibleSourceKeysChange).toHaveBeenCalledWith(
+      new Set(["point:1", "point:2"]),
+    );
+
+    view.rerender(
+      <ViewportSourceVisibility
+        pointSources={[pointSource(2, 4, 5), pointSource(1, 5, 5)]}
+        extendedSources={[]}
+        onVisibleSourceKeysChange={onVisibleSourceKeysChange}
+      />,
+    );
+
+    expect(onVisibleSourceKeysChange).toHaveBeenCalledTimes(1);
+  });
 });
