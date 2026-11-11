@@ -46,6 +46,18 @@ def test_extract_dois_and_bibcodes_deduplicate() -> None:
     assert extract_bibcodes(text) == ("2016A&A...595A...1G",)
 
 
+def test_parse_readme_keeps_references_after_a_repeated_heading() -> None:
+    readme = """References:
+ 2016A&A...595A...1G
+References:
+ 2000A&A...357..265F
+History:
+ later text
+"""
+    parsed = parse_readme(readme)
+    assert parsed.reference_bibcodes == ("2016A&A...595A...1G", "2000A&A...357..265F")
+
+
 def test_parse_readme_pulls_title_authors_and_references() -> None:
     readme = parse_readme(_README, url="https://cdsarc.cds.unistra.fr/ftp/cats/I/350/ReadMe")
     assert readme.title.startswith("Gaia DR3 part 1")

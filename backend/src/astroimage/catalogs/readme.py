@@ -135,8 +135,14 @@ def extract_section(readme: str, section_names: tuple[str, ...]) -> str:
     start = next((index for index, line in enumerate(lines) if line.strip() in section_names), None)
     if start is None:
         return ""
-    body = takewhile(lambda line: not _starts_next_section(line), lines[start + 1 :])
-    return clean_text(" ".join(line.strip() for line in body if line.strip()))
+    body = takewhile(
+        lambda line: line.strip() in section_names or not _starts_next_section(line),
+        lines[start + 1 :],
+    )
+    kept = (
+        stripped for line in body if (stripped := line.strip()) and stripped not in section_names
+    )
+    return clean_text(" ".join(kept))
 
 
 def _title_line(line: str) -> str:

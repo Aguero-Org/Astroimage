@@ -60,6 +60,38 @@ def test_records_from_ads_reads_title_and_caches_a_miss() -> None:
     assert records[1].lookup_key == "2018A&A...616A...1G"
 
 
+def test_records_from_ads_matches_doi_ignoring_case_and_prefers_bibcode() -> None:
+    by_doi = PaperIdentifier(doi="10.9999/AbC")
+    by_bibcode = PaperIdentifier(bibcode=_BIBCODE, doi="10.8888/Other")
+    records = records_from_ads(
+        [by_doi, by_bibcode],
+        {
+            "response": {
+                "docs": [
+                    {
+                        "bibcode": "2099A&A...999A...1Z",
+                        "title": ["From the DOI"],
+                        "doi": ["10.9999/abc"],
+                    },
+                    {
+                        "bibcode": "2088A&A...888A...1Z",
+                        "title": ["From the other DOI"],
+                        "doi": ["10.8888/other"],
+                    },
+                    {
+                        "bibcode": _BIBCODE,
+                        "title": ["From the bibcode"],
+                        "doi": ["10.7777/unused"],
+                    },
+                ]
+            }
+        },
+    )
+
+    assert records[0].title == "From the DOI"
+    assert records[1].title == "From the bibcode"
+
+
 def test_ads_lookup_skips_the_network_without_a_token(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:

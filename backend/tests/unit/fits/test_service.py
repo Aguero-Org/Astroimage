@@ -414,7 +414,17 @@ async def test_import_from_url_rejects_a_non_http_address() -> None:
 
 
 def test_normalize_tags_keeps_the_first_spelling_and_drops_blanks() -> None:
-    assert normalize_tags(["  M31  ", "m31", "", "   ", "NGC 224"]) == ["M31", "NGC 224"]
+    assert normalize_tags(["  M31  ", "m31", "", "   ", "NGC  224", "ngc 224"]) == [
+        "M31",
+        "NGC 224",
+    ]
+
+
+def test_normalize_tags_accepts_the_length_and_count_limits() -> None:
+    tag = "x" * 40
+    twenty = [f"tag-{index}" for index in range(20)]
+    assert normalize_tags([tag]) == [tag]
+    assert normalize_tags([*twenty, "tag-0", "  TAG-1  "]) == twenty
 
 
 def test_normalize_tags_rejects_a_long_tag_and_too_many() -> None:

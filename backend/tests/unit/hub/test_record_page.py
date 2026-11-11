@@ -47,12 +47,12 @@ def test_filter_matches_catalog_fields() -> None:
 
 
 def test_page_sorts_filename_and_display_name_apart() -> None:
-    first = _summary("file-b.fits", "WFC3", 10).model_copy(update={"display_name": "Zeta"})
-    second = _summary("file-a.fits", "ACS", 20).model_copy(update={"display_name": "Alpha"})
+    first = _summary("file-b.fits", "WFC3", 10).model_copy(update={"display_name": "Alpha"})
+    second = _summary("file-a.fits", "ACS", 20).model_copy(update={"display_name": "Zeta"})
     by_name = page_summaries([first, second], page=1, limit=2, sort="product_filename", order="asc")
     by_label = page_summaries([first, second], page=1, limit=2, sort="display_name", order="asc")
     assert [record.name for record in by_name.records] == ["file-a.fits", "file-b.fits"]
-    assert [record.display_name for record in by_label.records] == ["Alpha", "Zeta"]
+    assert [record.name for record in by_label.records] == ["file-b.fits", "file-a.fits"]
 
 
 def test_every_sort_field_returns_the_record() -> None:
