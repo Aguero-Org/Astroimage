@@ -117,10 +117,17 @@ describe("catalog-recommendations", () => {
     const withoutSeparation = catalogueReason(
       item({ spatial_match: true, separation_arcsec: null }),
     );
+    expect(withoutSeparation.headline).toMatch(/región del cielo/i);
     expect(withoutSeparation.detail).toBeUndefined();
+    expect(catalogueReason(item({ spatial_match: true })).headline).toMatch(
+      /región del cielo/i,
+    );
     expect(
       catalogueReason(item({ spatial_match: true })).detail,
     ).toBeUndefined();
+    expect(catalogueReason(item({ spatial_match: false })).headline).toMatch(
+      /región del cielo/i,
+    );
   });
 
   it("formats the queried region only for completed responses", () => {
@@ -267,6 +274,69 @@ describe("catalog-recommendations", () => {
     expect(publicationHeading(paper)).toBe("Gaia Early Data Release 3");
   });
 
+  it("names a publication from its catalogues when the title is blank", () => {
+    const base = {
+      catalogueIds: ["X/1"],
+      catalogueNames: ["  Gaia  ", "  ", "2MASS"],
+    } satisfies Pick<CatalogPublication, "catalogueIds" | "catalogueNames">;
+
+    expect(
+      publicationHeading({
+        ...base,
+        id: "paper",
+        kind: "catalogue-paper",
+        title: "  Padded  ",
+      }),
+    ).toBe("Padded");
+    expect(
+      publicationHeading({
+        ...base,
+        id: "paper",
+        kind: "catalogue-paper",
+      }),
+    ).toBe("Artículo de   Gaia  , 2MASS");
+    expect(
+      publicationHeading({
+        ...base,
+        id: "readme",
+        kind: "readme-reference",
+      }),
+    ).toBe("Citada por   Gaia  , 2MASS");
+    expect(
+      publicationHeading({
+        id: "bare",
+        kind: "catalogue-paper",
+        catalogueIds: [],
+        catalogueNames: ["  "],
+        bibcode: "2016A&A...1A",
+      }),
+    ).toBe("2016A&A...1A");
+  });
+
+  it("attaches a paper by DOI and ignores a paper with other identifiers", () => {
+    const matched = collectPublications(
+      [item({ paper_doi: "10.1/only" })],
+      [
+        { title: "Wrong" },
+        { doi: "10.1/only", title: "  From DOI  ", abstract: " Abs " },
+      ],
+    );
+    expect(matched[0]?.title).toBe("From DOI");
+    expect(matched[0]?.abstract).toBe("Abs");
+
+    const mismatched = collectPublications(
+      [item({ paper_bibcode: "2000A&A...1A", paper_doi: "10.1/a" })],
+      [{ bibcode: "1999A&A...1B", doi: "10.9/b", title: "Other" }],
+    );
+    expect(mismatched[0]?.title).toBeUndefined();
+
+    const withoutDoi = collectPublications(
+      [item({ paper_bibcode: "2000A&A...1A" })],
+      [{ bibcode: "1999A&A...1B", title: "Wrong" }],
+    );
+    expect(withoutDoi[0]?.title).toBeUndefined();
+  });
+
   it("filters catalogues by query and match type", () => {
     const items = mockCatalogRecommendation().recommendations ?? [];
     expect(
@@ -322,6 +392,34 @@ describe("catalog-recommendations", () => {
       filterPublications(
         [
           {
+            id: "title",
+            kind: "catalogue-paper",
+            catalogueIds: [],
+            catalogueNames: [],
+            title: "UniqueTitle",
+          },
+        ],
+        "uniquetitle",
+      ),
+    ).toHaveLength(1);
+    expect(
+      filterPublications(
+        [
+          {
+            id: "abstract",
+            kind: "readme-reference",
+            catalogueIds: [],
+            catalogueNames: [],
+            abstract: "UniqueAbstract",
+          },
+        ],
+        "uniqueabstract",
+      ),
+    ).toHaveLength(1);
+    expect(
+      filterPublications(
+        [
+          {
             id: "bibcode:B",
             bibcode: "B",
             kind: "catalogue-paper",
@@ -338,6 +436,8 @@ describe("catalog-recommendations", () => {
     expect(shortenText("short text", 40)).toBe("short text");
     expect(shortenText("uno dos tres cuatro cinco seis", 12)).toBe("uno dos…");
     expect(shortenText("   ", 10)).toBeUndefined();
+    expect(shortenText(null)).toBeUndefined();
+    expect(shortenText(undefined)).toBeUndefined();
   });
 
   it("builds ADS and DOI links from raw identifiers", () => {

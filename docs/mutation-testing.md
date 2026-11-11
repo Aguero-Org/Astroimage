@@ -293,6 +293,41 @@ imagen (UUID exactos, hashes finales, extensiones), y recomendaciones de catálo
 (columnas, región, DOI/ReadMe, filtros, truncado y enlaces). `image-title.ts` queda
 al 100 %.
 
+### Corrida dirigida de la rama `chore/declarative-complexity` (2026-11-11)
+
+`pnpm exec stryker run --mutate` sobre los tres archivos que la rama parte,
+con el test de cada archivo:
+
+| Archivo | Killed | Survived | No coverage | Total |
+| --- | ---: | ---: | ---: | ---: |
+| `simbad-references.ts` | 70 | 0 | 0 | 70 |
+| `viewport-source-visibility.tsx` | 102 | 3 | 0 | 105 |
+| `catalog-recommendations.ts` | 296 | 11 | 0 | 307 |
+
+Los 3 de `viewport-source-visibility.tsx` son equivalentes. La firma que evita
+repetir el aviso sale de un `Set` que inserta primero las fuentes puntuales y
+después las extendidas. Quitar el `sort`, o un comparador que no reordena, deja
+esa firma igual. Unir las claves sin `|` tampoco cambia el aviso: cada clave es
+`point:<id>` o `extended:<id>`, y el límite entre dos claves queda en el paso de
+dígitos a letra.
+
+De los 11 de `catalog-recommendations.ts`, 5 son equivalentes y ya encajan con
+la nota del 2026-10-21, más el default de `papers`:
+
+- `title && true` y `title.length >= 0`: `title` sale de `trim()`; un string
+  vacío ya es falsy y su largo no es negativo.
+- `needle.length === 0` cambiado a `false`: `includes("")` es verdadero.
+- `boundary >= 0` en `shortenText`: tras `trim()`, `lastIndexOf(" ")` es `-1` o
+  mayor que 0.
+- `papers = ["Stryker was here"]`: el elemento no tiene `bibcode` ni `doi`, así
+  que `paperMatches` no lo toma.
+
+Los otros 6 los cuenta Stryker como survived. Aplicados a mano, el test
+existente falla: `MATCHES_CATALOGUE_FILTER = {}` (mutante estático) hace que
+`filterCatalogues` lance `is not a function`; `publication.bibcode || bibcode`
+en `paperMatches` asocia el título "Other" del paper que no corresponde. El
+informe de Stryker no activa esos mutantes al correr el test.
+
 ## Cómo revisar un superviviente
 
 1. Abrir el diff en el reporte o con `mutmut show <mutante>`.
