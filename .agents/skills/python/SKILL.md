@@ -35,7 +35,7 @@ Feature layout, the HTTP session, the error body, and the test mirror live in `b
 
 - Application logs go through `structlog.get_logger`. Do not add `print` or a new `logging.getLogger` for app logs. The stdlib logger that silences the OTLP exporter stays as it is.
 - New filesystem paths use `pathlib`.
-- Add dependencies with `uv add` and commit `uv.lock`. No library outside `AGENTS.md`.
+- Add dependencies with `uv add` and commit `uv.lock`. No library outside the allowed backend stack in the backend-architecture skill.
 - Never `eval` / `exec` / `pickle.loads` on untrusted bytes. `subprocess` takes an argument list, never `shell=True`. Tokens use `secrets`, not `random`.
 
 ## Values

@@ -1,49 +1,38 @@
 # Agent constraints for astroimage
 
-This repository is opinionated. Do not introduce libraries, layers, or patterns outside this document. CI, linters, architecture tests, and pre-commit hooks must stay green.
+This repository is opinionated. Do not introduce libraries, layers, or patterns that this file and the skills it names do not allow. CI, linters, architecture tests, and pre-commit hooks must stay green.
 
 ## Report unsolicited decisions
 
-The user will not specify every UI, API, or implementation choice. When something is
-underspecified and you must pick a path to keep moving, **do not stop to ask** unless
-the choice would violate this file, a skill, or the stated goal.
+The user will not specify every UI, API, or implementation choice. When something is underspecified and you must pick a path to keep moving, **do not stop to ask** unless the choice would violate this file, a skill, or the stated goal.
 
-Keep going, then **notify the user in the same turn's summary** under a heading
-`Decisiones no pedidas` (or `Unsolicited decisions` if the conversation is in English).
-For each item, state:
+Keep going, then **notify the user in the same turn's summary** under a heading `Decisiones no pedidas` (or `Unsolicited decisions` if the conversation is in English). For each item, state:
 
 1. What was not specified
 2. What you chose
 3. Why (one line, tied to existing constraints)
 4. How to change it if they disagree
 
-Do not hide these choices in source comments. Do not skip the report because the
-choice felt "obvious". If there were none, omit the heading.
+Do not hide these choices in source comments. Do not skip the report because the choice felt "obvious". If there were none, omit the heading.
+
+## Declarative Programming Guidelines
+
+Prefer declarative expressions that describe the intended transformation or result rather than every execution step. Use `map`, `filter`, `reduce`, comprehensions, `any`, `all`, `sum`, and `next` when they are easier to read. Prefer immutable data, pure functions, values derived from existing state, small composable functions with one responsibility, and expressions that communicate intent directly.
+
+In React, prefer composition, declarative rendering, and functional state updates. `useEffect` only synchronizes with an external system, not ordinary data derivation (effect skill below). Do not mutate React state or objects used as state. Do not keep state or effects whose only job is to mirror derived values. Do not use deeply nested conditionals or procedural rendering logic.
+
+Do not reimplement a standard-library transformation. Avoid unnecessary imperative loops, manual accumulators, and mutable intermediate collections. Avoid monolithic functions that mix retrieval, transformation, business logic, and presentation. Avoid abstractions that obscure intent or introduce unnecessary complexity.
+
+Do not force declarative constructs when imperative code is more readable. Do not replace a simple loop with a chain of functional operations that is harder to follow. Do not add an abstraction only to eliminate imperative syntax. Readability, maintainability, correctness, and explicit intent come before paradigm purity. Keep imperative code for I/O, resource management, and interactions with external systems.
 
 ## Documented contracts first
 
-Prefer the documented contract of the library that owns the responsibility
-(public API, files it says belong in the repo, documented configuration).
-A style recommendation weighs less than a contract. A written decision in
-this file wins over a generic tutorial. Deviating needs a concrete reason:
-a reproduced bug, a security advisory, a platform limit, or a decision
-already written here.
+Prefer the documented contract of the library that owns the responsibility (public API, files it says belong in the repo, documented configuration). A style recommendation weighs less than a contract. A written decision in this file wins over a generic tutorial. Deviating needs a concrete reason: a reproduced bug, a security advisory, a platform limit, or a decision already written here.
 
-Do not declare a conflict until both sides are quoted and they govern the
-same responsibility in the same situation. A default, an example, and a
-constraint from another layer are not a conflict. If the quotes are missing
-or the mechanism is still unclear, keep reading. Do not redesign and do not
-blame the libraries.
+Do not declare a conflict until both sides are quoted and they govern the same responsibility in the same situation. A default, an example, and a constraint from another layer are not a conflict. If the quotes are missing or the mechanism is still unclear, keep reading. Do not redesign and do not blame the libraries.
 
-That check covers two shapes:
-
-- Two library contracts. Different layers can both hold. The same
-  responsibility cannot have two owners. Overlapping opinions are resolved
-  by assigning the job to one side.
-- This project against a rule it decided to follow. Ask whether that rule
-  still makes sense here: what breaks if it is dropped, and what it costs
-  the project if it is kept. Do not treat the mismatch as proof that the
-  library or the project is wrong.
+- Two library contracts. Different layers can both hold. The same responsibility cannot have two owners. Overlapping opinions are resolved by assigning the job to one side.
+- This project against a rule it decided to follow. Ask whether that rule still makes sense here: what breaks if it is dropped, and what it costs the project if it is kept. Do not treat the mismatch as proof that the library or the project is wrong.
 
 ## Layout
 
@@ -54,150 +43,14 @@ That check covers two shapes:
 - Root `docker-compose.yml` — API + frontend + PostgreSQL + MinIO
 - Root `sonar-project.properties` — SonarQube/SonarCloud monorepo analysis config
 
-## Allowed backend stack
+## Skills
 
-- FastAPI, Pydantic v2, pydantic-settings
-- uv, `pyproject.toml`, `uv.lock`
-- Ruff (lint + format), mypy (strict)
-- pytest, pytest-asyncio, httpx, pytest-cov, hypothesis, schemathesis
-- import-linter + pytestarch
-- structlog (JSON logs)
-- prometheus-fastapi-instrumentator (`/metrics`)
-- OpenTelemetry Python SDK (OTLP traces; Tempo is external)
-- Uvicorn (dev), Gunicorn + Uvicorn workers (prod)
-- SQLAlchemy 2.0 async + asyncpg + PostgreSQL + Alembic (sync driver `psycopg` for migrations)
-- Scientific: Astropy, astroquery, NumPy, SciPy
-- Docker multi-stage for the API
+Load the matching skill before that work. Do not copy its rules back into this file.
 
-## Backend architecture (feature-based, enforced)
-
-Organize `astroimage` by **feature/module**, not by global technical layers.
-
-```text
-src/astroimage/
-├── health/                 # feature
-│   ├── controller.py       # HTTP endpoints
-│   ├── schema.py           # request/response DTOs
-│   ├── service.py          # business orchestration (when needed)
-│   ├── dao.py              # persistence access (when needed)
-│   └── model.py            # ORM / persistence models (when needed)
-├── shared/                 # cross-cutting infrastructure only
-│   ├── database.py
-│   ├── deps.py
-│   ├── logging.py
-│   ├── metrics.py
-│   ├── middleware.py
-│   └── telemetry.py
-├── cli.py                  # project operations CLI (composition root)
-├── config.py               # settings (composition root)
-└── main.py                 # app factory + router composition
-```
-
-### Responsibility rules
-
-Intra-feature dependency direction:
-
-`controller → service → dao/repository → model`
-
-- `controller` — HTTP only; delegates to `service`; may use `schema`
-- `service` — business logic; uses `dao` / `model` / `schema`
-- `dao` / `repository` — data access only; uses `model`
-- `model` — persistence representation; no service/controller/dao imports
-- `schema` — Pydantic DTOs; no imports from controller/service/dao/model
-
-### Cross-cutting rules
-
-- Features may use `astroimage.shared` and `astroimage.config`
-- `shared` must **not** import any feature
-- Features must **not** import `main` (composition root imports features)
-- Features must **not** depend on other features by default
-- If a cross-feature dependency is required, prefer the other feature's **service**
-  (public API), never its `dao` or `model`; document it in architecture tests
-- Do **not** reintroduce global layer packages (`api/`, `services/`, `domain/`,
-  `infrastructure/`, `models/`, `controllers/`, `daos/`, …)
-- File names use Python-safe role modules (`controller.py`), not dotted names
-  (`user.controller.py`)
-
-Enforced by `tests/architecture/test_modules_architecture.py` (pytestarch) and
-import-linter contracts in `backend/pyproject.toml`.
-
-On-demand workflows: `.agents/skills/backend-architecture/SKILL.md` (layout, session, errors) and `.agents/skills/python/SKILL.md` (typing, async, logging). Service shape stays the backend skill.
-
-## Backend tests layout
-
-```text
-tests/
-├── architecture/
-│   ├── test_modules_architecture.py   # global feature-based rules
-│   └── <feature>/                     # feature-specific arch rules (optional)
-├── unit/
-│   ├── <feature>/test_<component>.py
-│   ├── shared/                        # shared infrastructure unit tests
-│   └── config/                        # composition-root unit tests
-└── integration/
-    ├── <feature>/test_<component>.py
-    ├── shared/
-    └── test_openapi_contract.py       # cross-cutting contract suite
-```
-
-Mirror rule: `src/astroimage/<module>/<component>.py` →
-`tests/<unit|integration>/<module>/test_<component>.py`.
-Do not create empty test files for symmetry.
-
-## Allowed frontend stack
-
-- Vite + React 19 + TypeScript (`strict`)
-- pnpm
-- shadcn/ui + Tailwind CSS v4 + Radix primitives
-- TanStack Query (server state only)
-- Zustand (client/UI state only)
-- TanStack Router
-- native `fetch` via the Orval mutator in `src/lib/api-client.ts`
-- Orval client generated from `backend/openapi.json`
-- React Hook Form + Zod
-- Biome (lint + format)
-- Vitest + Testing Library + user-event + MSW
-- Playwright
-
-Do not mix TanStack Query with a global client store for server data.
-
-On-demand workflows: `.agents/skills/react-spa/SKILL.md` (where state and routes live), `.agents/skills/typescript/SKILL.md` (types and tsconfig), `.agents/skills/you-might-not-need-an-effect/SKILL.md`, `.agents/skills/vercel-composition-patterns/SKILL.md`.
-
-Theming is shadcn CSS variables in `frontend/src/index.css` (`:root` / `.dark`).
-Do not hardcode brand colors on components; use tokens (`bg-background`,
-`text-primary`, `border-border`, …). Five brand stops live in
-`frontend/src/lib/palettes.ts` as `--palette-1` (lightest) … `--palette-5`
-(darkest). Add a palette by appending an entry with five hexes; the switcher
-appears when there is more than one. Toggle `.dark` on `<html>` (Zustand +
-`localStorage`). Keep `--destructive` red.
-
-Exclusive choices (one value from a fixed list):
-
-- 2–4 options → radio group (all choices visible)
-- 5 or more → styled `Select` (`components/ui/select.tsx`, Radix). Never a native `<select>`: the option list is painted by the OS and cannot match the UI.
-- 1 option → no control
-- boolean on/off → checkbox or switch, not radios
-
-Dynamic lists (HDU, catalogs) use a select even if the current count is 2–4.
-
-### Image workspace (detail view)
-
-The FITS viewer is the canvas. Controls and metadata live in a hamburger
-inspector drawer with collapsible sections — not extra pages or stacked
-floating cards. Explain labels with the shared `HelpHint` tooltip; keep
-the glossary (`/glossary`, `features/glossary/entries.ts`) in lockstep
-with those concepts (entry + `glossaryId` on the tooltip).
-Viewer overlays are composed as siblings (point sources, later extended
-and other layers), not hard-wired into the viewer.
-
-On-demand workflow: `.agents/skills/frontend-image-workspace/SKILL.md`.
-
-## User-facing copy
-
-Placeholders are one valid example, never an instruction. Help text, toasts,
-errors, glossary, and delivery docs state the fact or the constraint. Load
-`.agents/skills/copy/SKILL.md` before writing or reviewing that prose. The
-skill holds the tell list. Do not keep a second copy of it here.
+- Backend features, modules, tests, imports, architecture, session, errors, allowed stack: `.agents/skills/backend-architecture/SKILL.md`. Typing, async, logging, uv: `.agents/skills/python/SKILL.md`. Service shape stays in the backend skill.
+- Components, queries, routes, client state, allowed stack, theming, exclusive choices: `.agents/skills/react-spa/SKILL.md`. Types and `tsconfig`: `.agents/skills/typescript/SKILL.md`. Effects: `.agents/skills/you-might-not-need-an-effect/SKILL.md`. Compound components and boolean props: `.agents/skills/vercel-composition-patterns/SKILL.md`.
+- Image page, inspector, forms, metadata, markers, glossary: `.agents/skills/frontend-image-workspace/SKILL.md`.
+- Placeholders, labels, HelpHint, toasts, empty states, errors, glossary prose, README, and delivery docs: `.agents/skills/copy/SKILL.md` before writing or reviewing that prose. The skill holds the tell list. Do not keep a second copy of it here.
 
 ## Out of current scope
 
@@ -224,15 +77,9 @@ Every change must pass:
 1. Backend: `ruff format`, `ruff check`, `mypy`, `lint-imports`, `pytest` (unit + integration + architecture; writes `coverage.xml`)
 2. Frontend: `biome check`, `tsc`, `vitest` / `pnpm test:coverage`, Playwright for critical flows
 3. SonarQube: CI starts an ephemeral Community server (no SonarCloud, no external token), scans with `sonar-project.properties`, and uploads `issues.json` and `issues.md`. It does not fail the build on the quality gate (no baseline). Local analysis still waits for the gate (`sonar.qualitygate.wait`).
-4. Mutation testing (local completion gate, not CI yet): before marking branch work as
-   done, run the mutation suite for the affected stack.
+4. Mutation testing (local completion gate, not CI yet): before marking branch work as done, run the mutation suite for the affected stack.
    - Backend: `wsl.exe -d Ubuntu -- bash -lc "cd /mnt/d/repos/tip/Astroimage/backend && UV_PROJECT_ENVIRONMENT=/tmp/astroimage-mutmut-venv ~/.local/bin/uv run mutmut run --max-children 2"`.
-   - Frontend: `pnpm test:mutation:lib` for `src/lib`; the matching
-     `test:mutation:catalogs` / `test:mutation:images` script for feature changes.
-   - Review every new survivor: kill it with a real behavior test or record why it is
-     equivalent. Do not close the branch with unexplained survivors. Reports stay
-     ignored (`backend/mutants/`, `frontend/reports/`); commands and triage live in
-     `docs/mutation-testing.md`.
+   - Frontend: `pnpm test:mutation:lib` for `src/lib`; the matching `test:mutation:catalogs` / `test:mutation:images` script for feature changes.
+   - Review every new survivor: kill it with a real behavior test or record why it is equivalent. Do not close the branch with unexplained survivors. Reports stay ignored (`backend/mutants/`, `frontend/reports/`); commands and triage live in `docs/mutation-testing.md`.
 
-Do not commit `.scannerwork/` or coverage artifacts. Keep generated paths excluded from Sonar
-(`frontend/src/api/generated/**`, `routeTree.gen.ts`, `backend/alembic/**`).
+Do not commit `.scannerwork/` or coverage artifacts. Keep generated paths excluded from Sonar (`frontend/src/api/generated/**`, `routeTree.gen.ts`, `backend/alembic/**`).

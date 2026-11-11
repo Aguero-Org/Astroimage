@@ -1,10 +1,11 @@
 ---
 name: backend-architecture
 description: >-
-  Feature-based FastAPI backend layout for astroimage. Use when adding or
-  changing backend features, modules, tests, imports, architecture rules,
-  shared infrastructure, the request session, error responses, or when
-  unsure where a backend file belongs. Language-level Python is the python skill.
+  Feature-based FastAPI backend layout for astroimage, including the allowed
+  backend stack. Use when adding or changing backend features, modules,
+  tests, imports, architecture rules, shared infrastructure, the request
+  session, error responses, dependencies, or when unsure where a backend
+  file belongs. Language-level Python is the python skill.
 ---
 
 # Backend architecture (feature-based)
@@ -209,22 +210,24 @@ Put code in `shared` only if it is truly cross-cutting infrastructure:
 If it is domain-specific, keep it inside the feature even if two features
 might eventually need something similar — extract later with a clear API.
 
-## Out of scope (do not add without an explicit product decision)
+## Out of scope
 
-- Authentication
-- Rate limiting
-- ARQ / Redis / Celery
-- Extra caches beyond the stdlib
-- MinIO / extra compose app services
-- New HTTP clients, UI kits, or routers on the frontend side of the contract
+Do not add an item under "Out of current scope" in the root `AGENTS.md` without an explicit product decision.
 
-## Stack reminders
+## Allowed backend stack
 
 - FastAPI, Pydantic v2, pydantic-settings
-- SQLAlchemy 2.0 async + asyncpg; Alembic uses sync `psycopg`
-- structlog JSON logs; Prometheus `/metrics`; OTLP traces
-- uv + Ruff + mypy strict + import-linter + pytestarch
-- OpenAPI is the only backend↔frontend contract (`backend/openapi.json`)
+- uv, `pyproject.toml`, `uv.lock`
+- Ruff (lint + format), mypy (strict)
+- pytest, pytest-asyncio, httpx, pytest-cov, hypothesis, schemathesis
+- import-linter + pytestarch
+- structlog (JSON logs)
+- prometheus-fastapi-instrumentator (`/metrics`)
+- OpenTelemetry Python SDK (OTLP traces; Tempo is external)
+- Uvicorn (dev), Gunicorn + Uvicorn workers (prod)
+- SQLAlchemy 2.0 async + asyncpg + PostgreSQL + Alembic (sync driver `psycopg` for migrations)
+- Scientific: Astropy, astroquery, NumPy, SciPy
+- Docker multi-stage for the API
 
 ## HTTP and I/O
 

@@ -20,6 +20,7 @@ dashboard of cards.
 - **Inspector** — hamburger control; a lateral drawer with **collapsible
   sections**. The image stays visible beside the drawer.
 - Do **not** add a new overlay card per endpoint or per data group.
+- Do **not** move controls or metadata onto extra pages or stacked floating cards.
 - Do **not** dump JSON (`<pre>`) for metadata.
 
 ### Inspector sections (stable ids)
@@ -92,7 +93,7 @@ a second glossary or a modal of definitions.
 
 The viewer accepts **composed children** inside the image stage. Point
 sources are one layer (`SourceMarkers`). Extended sources and future
-annotations are **sibling layers**, not extra props on `FitsImageViewer`.
+annotations are **sibling layers**, not props hard-wired into `FitsImageViewer`.
 
 - Point sources have image coordinates (`xcentroid`, `ycentroid`).
 - Extended sources have a box around that centroid (`width_pixels`,
@@ -101,28 +102,9 @@ annotations are **sibling layers**, not extra props on `FitsImageViewer`.
 
 ## Exclusive choice controls
 
-Pick the control from the **size of the closed option set**, not from layout
-preference:
+The option-count rule, the native `<select>` ban, and scrollbar tokens live in `.agents/skills/react-spa/SKILL.md`. On a radio group here, use one `HelpHint`.
 
-| Options | Control |
-|---------|---------|
-| 1 | no control |
-| 2–4 | radio group, all labels visible, one `HelpHint` on the group |
-| 5+ | styled `Select` (Radix list, not native `<select>`) |
-| boolean | checkbox or switch |
-
-Use a select anyway when the list is **dynamic** (HDU indices, catalog names)
-even if the current length is 2–4 — the count will change per file.
-
-The option list of a native `<select>` is OS chrome and cannot be themed.
-Use `frontend/src/components/ui/select.tsx` (Radix). Scrollbars use
-`--scrollbar` / `--scrollbar-hover` from `index.css` (not `--border`: too
-faint on the light Apple gray).
-
-Brand colors live in `frontend/src/lib/palettes.ts` (five hexes, lightest to
-darkest) and map to `--palette-1`…`--palette-5`. Semantic shadcn tokens in
-`index.css` derive from those stops. Light/dark is `.dark` on `<html>`. The
-FITS canvas may stay black; inspector/chrome must use theme tokens.
+The FITS canvas may stay black. Inspector and chrome use theme tokens.
 
 Today: stretch (4) and limits (2) are radios; colormap (5) uses `Select`.
 
@@ -188,6 +170,6 @@ frontend/src/routes/glossary.tsx
 
 ## Out of scope here
 
-- New UI kits, Storybook, extra HTTP clients
+- Project-wide exclusions (new UI kits, Storybook, extra HTTP clients) are in `AGENTS.md`
 - Upload-FITS flow until there is a persisted record
 - Health endpoint in the SPA

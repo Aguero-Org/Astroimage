@@ -1,9 +1,11 @@
 ---
 name: react-spa
 description: >-
-  Where state, server data, and routing live in the Astroimage Vite SPA.
-  Use when adding a component, a query, a route, or client state. Effects,
-  composition, and the image workspace have their own skills.
+  Where state, server data, routing, the allowed frontend stack, theming,
+  and exclusive choice controls live in the Astroimage Vite SPA. Use when
+  adding a component, a query, a route, client state, a form control, or a
+  dependency. Effects, composition, and the image workspace have their own
+  skills.
 ---
 
 # React SPA
@@ -16,6 +18,40 @@ Vite + React 19 client bundle. No server components, no Next.js, no second route
 | Boolean props, compound components, `forwardRef` | `vercel-composition-patterns` |
 | Image page, inspector, glossary, overlays | `frontend-image-workspace` |
 | `tsconfig` and type mechanics | `typescript` |
+
+## Allowed stack
+
+- Vite + React 19 + TypeScript (`strict`)
+- pnpm
+- shadcn/ui + Tailwind CSS v4 + Radix primitives
+- TanStack Query (server state only)
+- Zustand (client/UI state only)
+- TanStack Router
+- native `fetch` via the Orval mutator in `src/lib/api-client.ts` (`frontend/src/lib/api-client.ts`)
+- Orval client generated from `backend/openapi.json`
+- React Hook Form + Zod
+- Biome (lint + format)
+- Vitest + Testing Library + user-event + MSW
+- Playwright
+
+Do not mix TanStack Query with a global client store for server data.
+
+## Theming
+
+Theming is shadcn CSS variables in `frontend/src/index.css` (`:root` / `.dark`). Do not hardcode brand colors on components; use tokens (`bg-background`, `text-primary`, `border-border`, …). Five brand stops live in `frontend/src/lib/palettes.ts` as `--palette-1` (lightest) … `--palette-5` (darkest). Semantic tokens derive from those stops. Add a palette by appending an entry with five hexes; the switcher appears when there is more than one. Toggle `.dark` on `<html>` (Zustand + `localStorage`). Keep `--destructive` red.
+
+## Exclusive choices
+
+One value from a fixed list:
+
+- 2–4 options → radio group (all choices visible)
+- 5 or more → styled `Select` (`frontend/src/components/ui/select.tsx`, Radix). Never a native `<select>`: the option list is painted by the OS and cannot match the UI.
+- 1 option → no control
+- boolean on/off → checkbox or switch, not radios
+
+Dynamic lists (HDU, catalogs) use a select even if the current count is 2–4. The count will change per file.
+
+Scrollbars use `--scrollbar` / `--scrollbar-hover` from `frontend/src/index.css` (not `--border`: too faint on the light Apple gray).
 
 ## Where state lives
 
@@ -30,7 +66,7 @@ Vite + React 19 client bundle. No server components, no Next.js, no second route
 
 Colocate state. Lift it only when two siblings must share it.
 
-The HTTP client is the Orval mutator in `frontend/src/lib/api-client.ts`. Regenerate with `pnpm generate:api` after an OpenAPI change. Do not add axios or a second client.
+Regenerate the Orval client with `pnpm generate:api` after an OpenAPI change. Do not add axios or a second client.
 
 Query keys include every parameter that changes the response.
 
@@ -44,4 +80,4 @@ Query keys include every parameter that changes the response.
 
 - ESLint. Lint and format are Biome. Types are `tsc`.
 - React Compiler. Leave existing `useMemo` / `useCallback` alone unless the component is being rewritten for another reason.
-- A virtualization library, a new UI kit, or a new router.
+- A virtualization library.
