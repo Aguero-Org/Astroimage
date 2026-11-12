@@ -3,6 +3,7 @@ import {
   type CSSProperties,
   type ReactNode,
   type PointerEvent as ReactPointerEvent,
+  type RefObject,
   useCallback,
   useEffect,
   useRef,
@@ -39,17 +40,24 @@ import {
 import { RecommendationContent } from "./scientific-recommendation-content";
 import { SimbadObjectCard } from "./simbad-object-card";
 
+type SourceSelection = {
+  source_id: number;
+  object_type: "point" | "extended";
+};
+
+type FocusSource = (
+  sourceId: number,
+  objectType: SourceSelection["object_type"],
+) => void;
+
 type ScientificWorkspaceProps = {
   recordId: string;
   enabled: boolean;
   params: RecommendCatalogsParams | undefined;
   image: ReactNode;
   preview?: string;
-  selectedSource?: {
-    source_id: number;
-    object_type: "point" | "extended";
-  } | null;
-  onFocusSource?: (sourceId: number, objectType: "point" | "extended") => void;
+  selectedSource?: SourceSelection | null;
+  onFocusSource?: FocusSource;
   simbad: SimbadReferencesView;
 };
 
@@ -492,121 +500,220 @@ function ScientificSidebar({
                 onRetry={refetch}
               />
             </TabsContent>
-            <TabsContent value="simbad">{renderSimbad()}</TabsContent>
+            <TabsContent value="simbad">
+              <SimbadPanel
+                simbad={simbad}
+                selectedSource={selectedSource}
+                showNoMatchToast={showNoMatchToast}
+                listRef={simbadListRef}
+                onShowAll={() => {
+                  setTab("simbad");
+                  setShowNoMatchToast(false);
+                }}
+                onFocusSource={onFocusSource}
+              />
+            </TabsContent>
           </SidebarContent>
         </Tabs>
       </div>
     </Sidebar>
   );
+}
 
-  function renderSimbad() {
-    if (simbad.isError) {
-      return (
-        <RecommendationError
-          message={simbad.errorMessage}
-          onRetry={simbad.refetch}
-        />
-      );
-    }
-    if (simbad.isLoading) {
-      return <RecommendationLoading />;
-    }
-    if (simbad.result?.wcs_present === false) {
-      return (
-        <RecommendationInfo testId="simbad-info">
-          Sin posición en el cielo (WCS) no hay objetos SIMBAD.
-        </RecommendationInfo>
-      );
-    }
-    if (simbad.result?.queried === false) {
-      return (
-        <RecommendationInfo testId="simbad-info">
-          No se pudo consultar SIMBAD para esta región del cielo.
-        </RecommendationInfo>
-      );
-    }
-    if (simbad.result?.error) {
-      return (
-        <RecommendationError
-          message={simbad.result.error}
-          onRetry={simbad.refetch}
-        />
-      );
-    }
-    if (simbad.objects.length === 0) {
-      return (
-        <RecommendationInfo testId="simbad-empty">
-          {selectedSource
-            ? "No hay objetos SIMBAD asociados a la fuente seleccionada."
-            : "Ningún objeto SIMBAD coincide con las fuentes detectadas en esta imagen."}
-        </RecommendationInfo>
-      );
-    }
-    const matchedIds = selectedSource
-      ? new Set(
-          simbadObjectsForSource(
-            simbad.objects,
-            selectedSource.source_id,
-            selectedSource.object_type,
-          ).map((obj) => obj.main_id),
-        )
-      : new Set<string>();
+type SimbadNotice =
+  | { kind: "error"; message: string }
+  | { kind: "loading" }
+  | { kind: "info"; testId: "simbad-info" | "simbad-empty"; message: string }
+  | { kind: "list" };
+
+function simbadNotice(
+  simbad: SimbadReferencesView,
+  selectedSource: SourceSelection | null | undefined,
+): SimbadNotice {
+  if (simbad.isError) {
+    return { kind: "error", message: simbad.errorMessage };
+  }
+  if (simbad.isLoading) {
+    return { kind: "loading" };
+  }
+  if (simbad.result?.wcs_present === false) {
+    return {
+      kind: "info",
+      testId: "simbad-info",
+      message: "Sin posición en el cielo (WCS) no hay objetos SIMBAD.",
+    };
+  }
+  if (simbad.result?.queried === false) {
+    return {
+      kind: "info",
+      testId: "simbad-info",
+      message: "No se pudo consultar SIMBAD para esta región del cielo.",
+    };
+  }
+  if (simbad.result?.error) {
+    return { kind: "error", message: simbad.result.error };
+  }
+  if (simbad.objects.length === 0) {
+    return {
+      kind: "info",
+      testId: "simbad-empty",
+      message: emptySimbadMessage(Boolean(selectedSource)),
+    };
+  }
+  return { kind: "list" };
+}
+
+function emptySimbadMessage(hasSelection: boolean): string {
+  return hasSelection
+    ? "No hay objetos SIMBAD asociados a la fuente seleccionada."
+    : "Ningún objeto SIMBAD coincide con las fuentes detectadas en esta imagen.";
+}
+
+function sourceKindLabel(objectType: SourceSelection["object_type"]): string {
+  return objectType === "point" ? "puntual" : "extendida";
+}
+
+function highlightedSimbadIds(
+  objects: SimbadReferencesView["objects"],
+  selectedSource: SourceSelection | null | undefined,
+): Set<string> {
+  if (!selectedSource) {
+    return new Set();
+  }
+  return new Set(
+    simbadObjectsForSource(
+      objects,
+      selectedSource.source_id,
+      selectedSource.object_type,
+    ).map((object) => object.main_id),
+  );
+}
+
+type SimbadPanelProps = {
+  simbad: SimbadReferencesView;
+  selectedSource?: SourceSelection | null;
+  showNoMatchToast: boolean;
+  listRef: RefObject<HTMLDivElement | null>;
+  onShowAll: () => void;
+  onFocusSource?: FocusSource;
+};
+
+function SimbadPanel({
+  simbad,
+  selectedSource,
+  showNoMatchToast,
+  listRef,
+  onShowAll,
+  onFocusSource,
+}: Readonly<SimbadPanelProps>) {
+  const notice = simbadNotice(simbad, selectedSource);
+  if (notice.kind === "error") {
     return (
-      <div className="relative flex flex-col gap-2 px-2 py-2">
-        {showNoMatchToast ? (
-          <div className="absolute left-2 right-2 top-1 z-10 rounded-md bg-destructive/90 px-2 py-1 text-center text-xs text-destructive-foreground shadow-sm">
-            No se encontró ningún objeto SIMBAD asociado a esta fuente
-          </div>
-        ) : null}
-        {selectedSource ? (
-          <div className="flex items-center justify-between gap-2 rounded-md bg-sidebar-accent/50 px-2 py-1">
-            <span
-              data-testid="simbad-selected-source"
-              className="text-xs text-sidebar-accent-foreground"
-            >
-              Fuente seleccionada:{" "}
-              {selectedSource.object_type === "point" ? "puntual" : "extendida"}{" "}
-              #{selectedSource.source_id}
-            </span>
-            <Button
-              type="button"
-              size="sm"
-              variant="ghost"
-              className="h-6 px-2 text-xs"
-              onClick={() => {
-                setTab("simbad");
-                setShowNoMatchToast(false);
-              }}
-            >
-              Ver todas
-            </Button>
-          </div>
-        ) : null}
-        <div ref={simbadListRef} className="flex flex-col gap-2">
-          {simbad.objects.map((object) => {
-            const isMatched =
-              matchedIds.size > 0 && matchedIds.has(object.main_id);
-            return (
-              <div
-                key={object.main_id}
-                id={`simbad-card-${object.main_id}`}
-                className={
-                  isMatched
-                    ? "rounded-lg ring-2 ring-primary ring-offset-1 ring-offset-sidebar"
-                    : undefined
-                }
-              >
-                <SimbadObjectCard
-                  object={object}
-                  onFocusSource={onFocusSource}
-                />
-              </div>
-            );
-          })}
-        </div>
-      </div>
+      <RecommendationError message={notice.message} onRetry={simbad.refetch} />
     );
   }
+  if (notice.kind === "loading") {
+    return <RecommendationLoading />;
+  }
+  if (notice.kind === "info") {
+    return (
+      <RecommendationInfo testId={notice.testId}>
+        {notice.message}
+      </RecommendationInfo>
+    );
+  }
+  return (
+    <SimbadObjectList
+      objects={simbad.objects}
+      selectedSource={selectedSource}
+      showNoMatchToast={showNoMatchToast}
+      listRef={listRef}
+      onShowAll={onShowAll}
+      onFocusSource={onFocusSource}
+    />
+  );
+}
+
+type SimbadObjectListProps = {
+  objects: SimbadReferencesView["objects"];
+  selectedSource?: SourceSelection | null;
+  showNoMatchToast: boolean;
+  listRef: RefObject<HTMLDivElement | null>;
+  onShowAll: () => void;
+  onFocusSource?: FocusSource;
+};
+
+function SimbadObjectList({
+  objects,
+  selectedSource,
+  showNoMatchToast,
+  listRef,
+  onShowAll,
+  onFocusSource,
+}: Readonly<SimbadObjectListProps>) {
+  const matchedIds = highlightedSimbadIds(objects, selectedSource);
+  return (
+    <div className="relative flex flex-col gap-2 px-2 py-2">
+      {showNoMatchToast ? (
+        <div className="absolute left-2 right-2 top-1 z-10 rounded-md bg-destructive/90 px-2 py-1 text-center text-xs text-destructive-foreground shadow-sm">
+          No se encontró ningún objeto SIMBAD asociado a esta fuente
+        </div>
+      ) : null}
+      {selectedSource ? (
+        <div className="flex items-center justify-between gap-2 rounded-md bg-sidebar-accent/50 px-2 py-1">
+          <span
+            data-testid="simbad-selected-source"
+            className="text-xs text-sidebar-accent-foreground"
+          >
+            Fuente seleccionada: {sourceKindLabel(selectedSource.object_type)} #
+            {selectedSource.source_id}
+          </span>
+          <Button
+            type="button"
+            size="sm"
+            variant="ghost"
+            className="h-6 px-2 text-xs"
+            onClick={onShowAll}
+          >
+            Ver todas
+          </Button>
+        </div>
+      ) : null}
+      <div ref={listRef} className="flex flex-col gap-2">
+        {objects.map((object) => (
+          <SimbadObjectRow
+            key={object.main_id}
+            object={object}
+            matched={matchedIds.size > 0 && matchedIds.has(object.main_id)}
+            onFocusSource={onFocusSource}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function SimbadObjectRow({
+  object,
+  matched,
+  onFocusSource,
+}: Readonly<{
+  object: SimbadReferencesView["objects"][number];
+  matched: boolean;
+  onFocusSource?: FocusSource;
+}>) {
+  return (
+    <div
+      id={`simbad-card-${object.main_id}`}
+      className={
+        matched
+          ? "rounded-lg ring-2 ring-primary ring-offset-1 ring-offset-sidebar"
+          : undefined
+      }
+    >
+      <SimbadObjectCard object={object} onFocusSource={onFocusSource} />
+    </div>
+  );
 }
 
 const TAB_TRIGGER_CLASS =
