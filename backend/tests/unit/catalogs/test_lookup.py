@@ -46,7 +46,9 @@ class _Store:
         dec_deg: float,
         radius_arcsec: float,
         row_limit: int,
+        region_suffix: str | None = None,
     ) -> CatalogDownloadHit | None:
+        del region_suffix
         return self._stored
 
     async def replace(

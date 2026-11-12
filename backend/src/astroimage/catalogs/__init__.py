@@ -1,1 +1,1 @@
-"""VizieR catalog recommendation feature."""
+"""Catalog downloads and VizieR recommendations."""

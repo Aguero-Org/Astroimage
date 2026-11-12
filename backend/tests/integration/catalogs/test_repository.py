@@ -176,6 +176,43 @@ async def test_cone_outside_every_download_is_a_miss(
     assert stored is None
 
 
+async def test_region_suffix_does_not_reuse_another_label(
+    repository: CatalogDownloadRepository,
+) -> None:
+    await repository.replace(
+        source="simbad",
+        region_key="10.000000:20.000000:60.0:25:type=*",
+        ra_deg=10.0,
+        dec_deg=20.0,
+        radius_arcsec=60.0,
+        row_limit=25,
+        tables=[_table()],
+    )
+
+    other_type = await repository.find_fresh(
+        source="simbad",
+        region_key="10.000000:20.000000:30.0:25:type=SNR",
+        ra_deg=10.0,
+        dec_deg=20.0,
+        radius_arcsec=30.0,
+        row_limit=25,
+        region_suffix=":type=SNR",
+    )
+    same_type = await repository.find_fresh(
+        source="simbad",
+        region_key="10.000000:20.000000:30.0:25:type=*",
+        ra_deg=10.0,
+        dec_deg=20.0,
+        radius_arcsec=30.0,
+        row_limit=25,
+        region_suffix=":type=*",
+    )
+
+    assert other_type is None
+    assert same_type is not None
+    assert same_type.covered is True
+
+
 async def test_covered_cone_with_another_row_limit_is_a_miss(
     repository: CatalogDownloadRepository,
 ) -> None:

@@ -5,7 +5,7 @@ from collections.abc import Sequence
 from datetime import UTC, datetime, timedelta
 from uuid import uuid4
 
-from sqlalchemy import delete, func, select
+from sqlalchemy import ColumnElement, delete, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import aliased
 
@@ -37,8 +37,10 @@ class CatalogDownloadRepository:
         dec_deg: float,
         radius_arcsec: float,
         row_limit: int,
+        region_suffix: str | None = None,
     ) -> CatalogDownloadHit | None:
         cutoff = datetime.now(UTC) - timedelta(seconds=self._ttl_s)
+        suffix = _region_suffix(region_suffix)
         exact = (
             (
                 await self._session.execute(
@@ -47,6 +49,7 @@ class CatalogDownloadRepository:
                         CatalogDownload.region_key == region_key,
                         CatalogDownload.row_limit == row_limit,
                         CatalogDownload.fetched_at >= cutoff,
+                        *suffix,
                     )
                 )
             )
@@ -63,6 +66,7 @@ class CatalogDownloadRepository:
                     CatalogDownload.row_limit == row_limit,
                     CatalogDownload.fetched_at >= cutoff,
                     CatalogDownload.radius_arcsec >= radius_arcsec,
+                    *suffix,
                 )
             )
         ).scalar_one_or_none()
@@ -86,6 +90,7 @@ class CatalogDownloadRepository:
                 CatalogDownload.row_limit == row_limit,
                 CatalogDownload.fetched_at >= cutoff,
                 CatalogDownload.radius_arcsec >= radius_arcsec,
+                *suffix,
                 ~truncated,
                 func.ST_DWithin(
                     CatalogDownload.center,
@@ -156,6 +161,12 @@ class CatalogDownloadRepository:
                 )
             )
         await self._session.flush()
+
+
+def _region_suffix(region_suffix: str | None) -> tuple[ColumnElement[bool], ...]:
+    if region_suffix is None:
+        return ()
+    return (func.right(CatalogDownload.region_key, len(region_suffix)) == region_suffix,)
 
 
 def _tables_from_rows(rows: Sequence[CatalogDownload]) -> list[CatalogTable]:

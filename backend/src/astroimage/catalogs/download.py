@@ -121,6 +121,7 @@ class CatalogDownloadStore(Protocol):
         dec_deg: float,
         radius_arcsec: float,
         row_limit: int,
+        region_suffix: str | None = None,
     ) -> CatalogDownloadHit | None: ...
 
     async def replace(

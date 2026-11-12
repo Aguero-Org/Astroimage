@@ -5,6 +5,7 @@ from fastapi import Depends, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from astroimage.catalogs.cache import CatalogRecommendationCache
+from astroimage.catalogs.cone_cache import CatalogConeCache
 from astroimage.catalogs.jobs import CatalogBackgroundRecommend, CatalogJobRegistry
 from astroimage.catalogs.papers import AdsPaperLookup, PaperLookup
 from astroimage.catalogs.readme import CdsReadmeFetcher, ReadmeFetcher
@@ -44,6 +45,14 @@ def catalog_download_repository_dependency(
     settings: Annotated[Settings, Depends(settings_dependency)],
 ) -> CatalogDownloadRepository:
     return CatalogDownloadRepository(session, ttl_s=settings.catalog_download_ttl_s)
+
+
+def catalog_cone_cache_dependency(
+    downloads: Annotated[
+        CatalogDownloadRepository, Depends(catalog_download_repository_dependency)
+    ],
+) -> CatalogConeCache:
+    return CatalogConeCache(downloads)
 
 
 def paper_lookup_dependency(

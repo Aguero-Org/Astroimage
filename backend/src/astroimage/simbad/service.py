@@ -5,6 +5,7 @@ import re
 import warnings
 from collections import defaultdict
 from collections.abc import Sequence
+from dataclasses import dataclass
 from typing import cast
 from uuid import UUID
 
@@ -13,10 +14,16 @@ from astropy.coordinates import SkyCoord
 from astropy.io import fits
 from astropy.wcs import WCS, FITSFixedWarning
 
+from astroimage.catalogs.cone_cache import ConeCache
 from astroimage.fits.reader import FitsMetadata, FitsReader
 from astroimage.fits.service import FitsService
 from astroimage.shared.logging import simbad_service_log as _log
 from astroimage.simbad.cache import SimbadReferenceCache, simbad_cache_key
+from astroimage.simbad.downloads import (
+    objects_from_tables,
+    simbad_download_query,
+    table_from_objects,
+)
 from astroimage.simbad.model import (
     SimbadImageMatch,
     SimbadObject,
@@ -92,6 +99,27 @@ def _fallback_region(wcs: WCS) -> tuple[SkyCoord, float]:
     return center, _MIN_RADIUS_ARCSEC
 
 
+def _same_objects(
+    cached: Sequence[SimbadObjectSchema],
+    objects: Sequence[SimbadObject],
+) -> bool:
+    return sorted(_object_identity(item) for item in cached) == sorted(
+        _object_identity(item) for item in objects
+    )
+
+
+def _object_identity(
+    item: SimbadObject | SimbadObjectSchema,
+) -> tuple[str, float, float, str | None, float | None]:
+    return (
+        item.main_id,
+        item.ra_deg,
+        item.dec_deg,
+        item.otype,
+        item.separation_arcsec,
+    )
+
+
 def _gaia_source_id(aliases: Sequence[str]) -> str | None:
     for alias in aliases:
         match = _GAIA_ID_PATTERN.fullmatch(alias)
@@ -121,6 +149,13 @@ def _reference_schema(reference: SimbadReference) -> SimbadReferenceSchema:
     )
 
 
+@dataclass(frozen=True)
+class _ConeResolution:
+    objects: list[SimbadObject]
+    error: str | None = None
+    reuse: SimbadReferencesResponse | None = None
+
+
 class SimbadReferenceService:
     def __init__(
         self,
@@ -131,6 +166,7 @@ class SimbadReferenceService:
         cache: SimbadReferenceCache,
         reader: FitsReader | None = None,
         query_timeout_s: float = _DEFAULT_QUERY_TIMEOUT_S,
+        downloads: ConeCache | None = None,
     ) -> None:
         self._fits = fits
         self._detection = detection
@@ -138,6 +174,7 @@ class SimbadReferenceService:
         self._cache = cache
         self._reader = reader or FitsReader()
         self._query_timeout_s = query_timeout_s
+        self._downloads = downloads
 
     async def ensure_record(self, record_id: UUID) -> None:
         await self._fits.get_record(record_id)
@@ -158,11 +195,10 @@ class SimbadReferenceService:
             hdu_index=hdu_index,
             config=resolved,
         )
-        if not refresh:
-            cached = self._cache.get(key)
-            if cached is not None:
-                _log.info("simbad_cache_hit", record_id=str(record_id), client_id=client_id)
-                return cached
+        cached = self._cache.get(key) if not refresh else None
+        if self._downloads is None and cached is not None:
+            _log.info("simbad_cache_hit", record_id=str(record_id), client_id=client_id)
+            return cached
         record = await self._fits.get_record(record_id)
         payload = await self._fits.get_payload(record)
         result = await self.references(
@@ -172,6 +208,8 @@ class SimbadReferenceService:
             client_id=client_id,
             config=resolved,
             record_id=record_id,
+            cached=cached if self._downloads is not None else None,
+            refresh=refresh,
         )
         self._cache.set(key, result)
         return result
@@ -185,6 +223,8 @@ class SimbadReferenceService:
         client_id: str = "anonymous",
         config: SimbadReferencesConfigSchema | None = None,
         record_id: UUID | None = None,
+        cached: SimbadReferencesResponse | None = None,
+        refresh: bool = False,
     ) -> SimbadReferencesResponse:
         resolved = config or SimbadReferencesConfigSchema()
         metadata = self._reader.read_metadata_from_bytes(
@@ -204,7 +244,17 @@ class SimbadReferenceService:
                 queried=False,
             )
         center, radius = self._region(metadata, wcs, resolved)
-        objects, error = await self._query_region(center, radius, resolved)
+        resolution = await self._resolve_cone(
+            center,
+            radius,
+            resolved,
+            refresh=refresh,
+            cached=cached,
+        )
+        if resolution.reuse is not None:
+            return resolution.reuse
+        objects = resolution.objects
+        error = resolution.error
         if error is not None:
             return self._response(
                 metadata.source_name,
@@ -283,6 +333,87 @@ class SimbadReferenceService:
             )
         except (AttributeError, TypeError, ValueError):
             return _fallback_region(wcs)
+
+    async def _resolve_cone(
+        self,
+        center: SkyCoord,
+        radius: float,
+        config: SimbadReferencesConfigSchema,
+        *,
+        refresh: bool,
+        cached: SimbadReferencesResponse | None,
+    ) -> _ConeResolution:
+        if self._downloads is not None and not refresh:
+            stored = await self._read_download(center, radius, config)
+            if stored is not None:
+                if cached is not None and _same_objects(cached.objects, stored):
+                    return _ConeResolution(stored, reuse=cached)
+                return _ConeResolution(stored)
+            if cached is not None and cached.error is not None and not cached.queried:
+                return _ConeResolution([], error=cached.error, reuse=cached)
+        objects, error = await self._query_region(center, radius, config)
+        if self._downloads is not None and error is None:
+            await self._write_download(center, radius, config, objects)
+            if cached is not None and _same_objects(cached.objects, objects):
+                return _ConeResolution(objects, reuse=cached)
+        return _ConeResolution(objects, error=error)
+
+    async def _read_download(
+        self,
+        center: SkyCoord,
+        radius: float,
+        config: SimbadReferencesConfigSchema,
+    ) -> list[SimbadObject] | None:
+        if self._downloads is None:
+            return None
+        query = simbad_download_query(
+            ra_deg=float(center.ra.deg),
+            dec_deg=float(center.dec.deg),
+            radius_arcsec=radius,
+            row_limit=config.limit,
+            object_type=config.object_type,
+        )
+        stored = await self._downloads.find(
+            source=query.source,
+            region_key=query.region_key,
+            ra_deg=query.ra_deg,
+            dec_deg=query.dec_deg,
+            radius_arcsec=query.radius_arcsec,
+            row_limit=query.row_limit,
+            region_suffix=query.region_suffix,
+        )
+        if stored is None:
+            return None
+        objects = objects_from_tables(stored.tables)
+        _log.info("simbad_download_hit", covered=stored.covered, objects=len(objects))
+        return objects
+
+    async def _write_download(
+        self,
+        center: SkyCoord,
+        radius: float,
+        config: SimbadReferencesConfigSchema,
+        objects: list[SimbadObject],
+    ) -> None:
+        if self._downloads is None:
+            return
+        query = simbad_download_query(
+            ra_deg=float(center.ra.deg),
+            dec_deg=float(center.dec.deg),
+            radius_arcsec=radius,
+            row_limit=config.limit,
+            object_type=config.object_type,
+        )
+        tables = (table_from_objects(objects),) if objects else ()
+        await self._downloads.save(
+            source=query.source,
+            region_key=query.region_key,
+            ra_deg=query.ra_deg,
+            dec_deg=query.dec_deg,
+            radius_arcsec=query.radius_arcsec,
+            row_limit=query.row_limit,
+            tables=tables,
+        )
 
     async def _query_region(
         self,
