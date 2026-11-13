@@ -15,6 +15,7 @@ from astroimage.render.deps import (
 from astroimage.render.preview import PreviewService
 from astroimage.render.schema import HistogramResponse, RenderConfigSchema
 from astroimage.render.service import RenderService
+from astroimage.shared.media_types import MediaType
 from astroimage.shared.query import HduIndex
 
 router = APIRouter(prefix="/image", tags=["render"])
@@ -29,7 +30,7 @@ BinsParam = Annotated[int, Query(ge=2, le=4096)]
 
 @router.get(
     "/{record_id}",
-    responses={200: {"content": {"image/png": {}}}},
+    responses={200: {"content": {MediaType.PNG: {}}}},
     operation_id="renderFitsImage",
 )
 async def render_fits_image(
@@ -53,13 +54,13 @@ async def render_fits_image(
         png_bytes=len(png),
         elapsed_ms=elapsed_ms,
     )
-    return Response(content=png, media_type="image/png")
+    return Response(content=png, media_type=MediaType.PNG)
 
 
 @router.get(
     "/{record_id}/preview",
     responses={
-        200: {"content": {"image/png": {}}},
+        200: {"content": {MediaType.PNG: {}}},
         304: {"description": "Stored preview is unchanged"},
         400: {"description": "Preview size is not available"},
         404: {"description": "FITS record not found"},
@@ -75,11 +76,11 @@ async def get_fits_preview(
     preview = await service.png(record_id, size)
     headers = {"Cache-Control": "private, no-cache"}
     if preview.etag is None:
-        return Response(content=preview.content, media_type="image/png", headers=headers)
+        return Response(content=preview.content, media_type=MediaType.PNG, headers=headers)
     headers["ETag"] = preview.etag
     if request.headers.get("if-none-match") == preview.etag:
         return Response(status_code=304, headers=headers)
-    return Response(content=preview.content, media_type="image/png", headers=headers)
+    return Response(content=preview.content, media_type=MediaType.PNG, headers=headers)
 
 
 @router.get(

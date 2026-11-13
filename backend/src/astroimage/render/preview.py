@@ -22,6 +22,7 @@ from astroimage.render.spec import RenderConfig
 from astroimage.shared.background import BackgroundTasks
 from astroimage.shared.errors import BadRequestError
 from astroimage.shared.logging import preview_log as _log
+from astroimage.shared.media_types import MediaType
 from astroimage.shared.object_storage import ObjectStorage
 
 PRESET_ID = "equilibrio"
@@ -220,7 +221,7 @@ class PreviewService:
             and await self._object_present(existing.object_key)
         ):
             return
-        await self._storage.put_bytes(object_key, png, content_type="image/png")
+        await self._storage.put_bytes(object_key, png, content_type=MediaType.PNG)
         if existing is None:
             await repository.save(
                 ImagePreview(
