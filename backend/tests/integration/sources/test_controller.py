@@ -428,7 +428,7 @@ async def test_verify_sources_gaia_endpoint_conserves_detection_params(
 
     assert body["summary"]["point"]["count"] >= 3
     assert body["summary"]["point"]["matched"] == 0
-    assert len(provider.searches) == 2
+    assert len(provider.searches) == 1
     assert not any(row["gaia_match"] for row in body["matches"])
 
 
@@ -513,7 +513,7 @@ async def test_verify_sources_gaia_serves_cached_result_on_resubmit(
 
     assert second["queried"] is True
     assert second == first
-    assert len(provider.searches) == 2
+    assert len(provider.searches) == 1
 
 
 @pytest.mark.asyncio

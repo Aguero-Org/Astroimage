@@ -53,11 +53,15 @@ class _SourceEntry:
 
 
 def _mean_coordinate(detected_coords: list[SkyCoord]) -> SkyCoord:
-    return SkyCoord(
-        ra=float(np.mean([coord.ra.deg for coord in detected_coords])) * u.deg,
-        dec=float(np.mean([coord.dec.deg for coord in detected_coords])) * u.deg,
-        frame="icrs",
-    )
+    vectors = np.array([coord.cartesian.xyz.value for coord in detected_coords], dtype=float)
+    mean_vector = vectors.mean(axis=0)
+    norm = float(np.linalg.norm(mean_vector))
+    if norm == 0.0:
+        return detected_coords[0]
+    unit = mean_vector / norm
+    ra_deg = float(np.degrees(np.arctan2(unit[1], unit[0])) % 360.0)
+    dec_deg = float(np.degrees(np.arcsin(np.clip(unit[2], -1.0, 1.0))))
+    return SkyCoord(ra=ra_deg * u.deg, dec=dec_deg * u.deg, frame="icrs")
 
 
 def _empty_match() -> GaiaSourceMatch:
@@ -230,26 +234,6 @@ class GaiaVerificationService:
                 error=f"Gaia query failed: {failures[0]}",
             )
         objects = _merge_gaia_objects([result for result in results if isinstance(result, list)])
-        if not objects:
-            _log.info("gaia_fallback_triggered", record_id=str(record_id))
-            fallback_center = _mean_coordinate(prepared.entry_coords)
-            fallback_radius = search_radius_arcsec(
-                fallback_center,
-                prepared.entry_coords,
-                match_radius_arcsec=prepared.match_config.match_radius_arcsec,
-            )
-            try:
-                fallback_objects = await _search_block(
-                    self.provider,
-                    fallback_center,
-                    fallback_radius,
-                )
-            except GaiaQueryError as exc:
-                _log.warning("gaia_fallback_failed", exc_info=exc)
-                fallback_objects = []
-            if fallback_objects:
-                _log.info("gaia_fallback_recovered", n=len(fallback_objects))
-                objects = _merge_gaia_objects([fallback_objects])
         return self._finish(prepared, objects, queried=True, error=None)
 
     def verify(

@@ -411,7 +411,7 @@ async def test_gaia_covering_query_runs_across_thread_pool() -> None:
     elapsed = time.perf_counter() - started
 
     assert result.queried is True
-    assert len(provider.searches) == 2
+    assert len(provider.searches) == 1
     assert provider.max_concurrent == 1
     assert elapsed < 3.0
 
@@ -461,7 +461,7 @@ async def test_gaia_uses_one_covering_query_for_many_sources() -> None:
 
     assert result.queried is True
     assert result.summary.point.count >= 8
-    assert len(provider.searches) == 2
+    assert len(provider.searches) == 1
     assert provider.max_concurrent == 1
     assert all(radius >= 60.0 for _, _, radius in provider.searches)
     assert elapsed < 3.0
