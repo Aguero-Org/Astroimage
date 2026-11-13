@@ -15,7 +15,14 @@ class Settings(BaseSettings):
     environment: str = "development"
     log_level: str = "info"
     database_url: str = Field(min_length=1)
-    cors_origins: list[str] = Field(default_factory=lambda: ["http://localhost:5173"])
+    cors_origins: list[str] = Field(
+        default_factory=lambda: [
+            "http://localhost:5173",
+            "http://127.0.0.1:5173",
+            "http://localhost:4173",
+            "http://127.0.0.1:4173",
+        ]
+    )
     otlp_endpoint: str | None = None
     minio_endpoint: str = "localhost:9000"
     minio_access_key: str = "minioadmin"
