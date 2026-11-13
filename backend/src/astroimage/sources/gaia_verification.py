@@ -56,7 +56,7 @@ def _mean_coordinate(detected_coords: list[SkyCoord]) -> SkyCoord:
     vectors = np.array([coord.cartesian.xyz.value for coord in detected_coords], dtype=float)
     mean_vector = vectors.mean(axis=0)
     norm = float(np.linalg.norm(mean_vector))
-    if norm == 0.0:
+    if norm <= 0.0:
         return detected_coords[0]
     unit = mean_vector / norm
     ra_deg = float(np.degrees(np.arctan2(unit[1], unit[0])) % 360.0)
