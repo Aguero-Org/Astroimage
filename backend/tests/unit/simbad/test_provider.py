@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from types import SimpleNamespace
+
 import numpy as np
 import pytest
 from astropy import units as u
@@ -11,6 +13,7 @@ from astroimage.simbad.provider import (
     AstroquerySimbadProvider,
     SimbadQueryError,
     _object_type_clause,
+    _with_transport_timeout,
     aliases_from_table,
     objects_from_table,
     references_from_table,
@@ -164,3 +167,28 @@ def test_query_region_raises_when_every_server_fails(
         )
 
     assert len(calls) == 2
+
+
+class _RecordingSession:
+    def __init__(self) -> None:
+        self.calls: list[dict[str, object]] = []
+
+    def request(self, method: str, url: str, **kwargs: object) -> str:
+        self.calls.append({"method": method, "url": url, **kwargs})
+        return "ok"
+
+
+def test_transport_timeout_is_injected_as_the_requests_default() -> None:
+    session = _RecordingSession()
+    client = SimpleNamespace(_session=session)
+
+    _with_transport_timeout(client, 30.0)
+    session.request("GET", "http://example.org")
+    session.request("GET", "http://example.org", timeout=5)
+
+    assert session.calls[0]["timeout"] == 30.0
+    assert session.calls[1]["timeout"] == 5
+
+
+def test_transport_timeout_ignores_clients_without_session() -> None:
+    _with_transport_timeout(SimpleNamespace(), 30.0)

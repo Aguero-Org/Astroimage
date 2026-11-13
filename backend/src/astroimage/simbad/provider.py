@@ -16,6 +16,27 @@ _SIMBAD_SERVERS = ("simbad.cds.unistra.fr", "simbad.harvard.edu")
 _SERVER_TIMEOUT_S = 60
 
 
+def _with_transport_timeout(client: Any, timeout_s: float) -> None:
+    """Bound the TAP HTTP calls astroquery performs through the PyVO session.
+
+    Astroquery's ``SimbadClass.query_tap`` reaches SIMBAD through a PyVO
+    ``TAPService`` that shares the client's ``requests`` session. Capability
+    discovery and synchronous queries would otherwise wait without an HTTP
+    timeout, so a stalled server never yields to the next one. The uppercase
+    ``TIMEOUT`` attribute does not bound those requests.
+    """
+    session = getattr(client, "_session", None)
+    request = getattr(session, "request", None)
+    if session is None or request is None:
+        return
+
+    def timed_request(method: str, url: str, **kwargs: Any) -> Any:
+        kwargs.setdefault("timeout", timeout_s)
+        return request(method, url, **kwargs)
+
+    session.request = timed_request
+
+
 class SimbadQueryError(Exception):
     """SIMBAD did not return a usable result for this query."""
 
@@ -149,7 +170,7 @@ ORDER BY "year" DESC
             try:
                 client = SimbadClass()
                 client.server = server
-                client.TIMEOUT = self._server_timeout_s
+                _with_transport_timeout(client, float(self._server_timeout_s))
                 table = client.query_tap(query, maxrec=maxrec)
             except Exception as exc:
                 _log.warning("simbad_server_failed", server=server, exc_info=exc)
