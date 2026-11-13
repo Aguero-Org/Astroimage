@@ -13,10 +13,14 @@ from astropy.wcs import WCS
 
 from astroimage.fits.service import FitsService
 from astroimage.simbad.cache import SimbadReferenceCache
-from astroimage.simbad.model import SimbadAlias, SimbadObject, SimbadReference
+from astroimage.simbad.model import SimbadAlias, SimbadObject, SimbadReference, SkyDetection
 from astroimage.simbad.provider import SimbadCatalogProvider
 from astroimage.simbad.schema import SimbadReferencesConfigSchema
 from astroimage.simbad.service import SimbadReferenceService
+from astroimage.sources.schema import (
+    ExtendedDetectionConfigSchema,
+    PointDetectionConfigSchema,
+)
 from astroimage.sources.service import SourceDetectionService
 
 
@@ -119,16 +123,24 @@ class _FakeProvider:
 
 
 class _FakeDetection:
+    def __init__(self) -> None:
+        self.configs: list[
+            tuple[PointDetectionConfigSchema | None, ExtendedDetectionConfigSchema | None]
+        ] = []
+
     async def detect_from_record(
         self,
         record_id: UUID,
         *,
         client_id: str,
         hdu_index: int | None,
+        config: PointDetectionConfigSchema | None = None,
+        extended_config: ExtendedDetectionConfigSchema | None = None,
     ) -> object:
         assert record_id
         assert client_id == "alice"
         assert hdu_index is None
+        self.configs.append((config, extended_config))
         return SimpleNamespace(
             point_sources=[SimpleNamespace(source_id=7, xcentroid=2.0, ycentroid=2.0)],
             extended_sources=[],
@@ -192,6 +204,7 @@ async def test_references_enrich_and_crossmatch_objects() -> None:
         config=SimbadReferencesConfigSchema(
             max_references_per_object=1,
             crossmatch_radius_arcsec=10.0,
+            min_probability=0.0,
         ),
     )
 
@@ -203,6 +216,8 @@ async def test_references_enrich_and_crossmatch_objects() -> None:
     assert result.summary.detection_count == 1
     assert result.summary.matched_source_count == 1
     assert result.summary.reference_count == 1
+    assert result.crossmatch_radius_arcsec == 10.0
+    assert result.probability_power == 2.0
 
     obj = result.objects[0]
     assert obj.main_id == "M   1"
@@ -216,6 +231,124 @@ async def test_references_enrich_and_crossmatch_objects() -> None:
     assert provider.region_calls[0][3] == 25
     assert provider.alias_calls == 1
     assert provider.reference_calls == 1
+
+
+@pytest.mark.asyncio
+async def test_references_use_the_detection_config_for_source_ids() -> None:
+    detection = _FakeDetection()
+    service = _service(
+        _FakeProvider(objects=[_object()]),
+        detection=cast(SourceDetectionService, detection),
+    )
+    config = SimbadReferencesConfigSchema(
+        detection=PointDetectionConfigSchema(fwhm=3.0, sigma=5.0),
+        extended_detection=ExtendedDetectionConfigSchema(min_area=100),
+    )
+
+    await service.references(
+        _wcs_payload(),
+        record_id=uuid4(),
+        client_id="alice",
+        config=config,
+    )
+
+    assert detection.configs == [(config.detection, config.extended_detection)]
+
+
+def test_image_match_probability_uses_configured_power() -> None:
+    obj = SimbadObject(main_id="M 1", ra_deg=0.0, dec_deg=0.0)
+    detections = [SkyDetection(source_id=7, object_type="point", ra_deg=0.001, dec_deg=0.0)]
+
+    linear = SimbadReferenceService._image_match(
+        obj,
+        detections,
+        SimbadReferencesConfigSchema(crossmatch_radius_arcsec=10.0, probability_power=1.0),
+    )
+    quadratic = SimbadReferenceService._image_match(
+        obj,
+        detections,
+        SimbadReferencesConfigSchema(crossmatch_radius_arcsec=10.0, probability_power=2.0),
+    )
+
+    assert linear is not None
+    assert quadratic is not None
+    assert linear.matched is True
+    assert quadratic.matched is True
+    assert linear.probability == pytest.approx(1.0 - linear.separation_arcsec / 10.0)
+    assert quadratic.probability == pytest.approx((1.0 - quadratic.separation_arcsec / 10.0) ** 2)
+    assert linear.probability > quadratic.probability > 0.0
+
+
+def test_image_match_accepts_separation_equal_to_radius() -> None:
+    obj = SimbadObject(main_id="M 1", ra_deg=0.0, dec_deg=0.0)
+    detections = [SkyDetection(source_id=7, object_type="point", ra_deg=0.001, dec_deg=0.0)]
+    separation = SimbadReferenceService._image_match(
+        obj,
+        detections,
+        SimbadReferencesConfigSchema(crossmatch_radius_arcsec=10.0, probability_power=2.0),
+    )
+    assert separation is not None
+
+    match = SimbadReferenceService._image_match(
+        obj,
+        detections,
+        SimbadReferencesConfigSchema(
+            crossmatch_radius_arcsec=separation.separation_arcsec,
+            probability_power=2.0,
+            min_probability=0.0,
+        ),
+    )
+
+    assert match is not None
+    assert match.matched is True
+    assert match.probability == pytest.approx(0.0)
+
+
+def test_image_match_requires_the_minimum_probability() -> None:
+    obj = SimbadObject(main_id="M 1", ra_deg=0.0, dec_deg=0.0)
+    detections = [SkyDetection(source_id=7, object_type="point", ra_deg=0.001, dec_deg=0.0)]
+
+    allowed = SimbadReferenceService._image_match(
+        obj,
+        detections,
+        SimbadReferencesConfigSchema(
+            crossmatch_radius_arcsec=10.0,
+            probability_power=2.0,
+            min_probability=0.4,
+        ),
+    )
+    rejected = SimbadReferenceService._image_match(
+        obj,
+        detections,
+        SimbadReferencesConfigSchema(
+            crossmatch_radius_arcsec=10.0,
+            probability_power=2.0,
+            min_probability=0.9,
+        ),
+    )
+
+    assert allowed is not None
+    assert rejected is not None
+    assert allowed.matched is True
+    assert rejected.matched is False
+    assert rejected.probability == allowed.probability
+    assert rejected.probability < 0.9
+
+
+def test_image_match_reports_nearest_separation_when_outside_radius() -> None:
+    obj = SimbadObject(main_id="M 1", ra_deg=0.0, dec_deg=0.0)
+    detections = [SkyDetection(source_id=7, object_type="point", ra_deg=0.001, dec_deg=0.0)]
+
+    match = SimbadReferenceService._image_match(
+        obj,
+        detections,
+        SimbadReferencesConfigSchema(crossmatch_radius_arcsec=1.0, probability_power=2.0),
+    )
+
+    assert match is not None
+    assert match.matched is False
+    assert match.separation_arcsec == pytest.approx(3.6, abs=0.1)
+    assert match.probability == 0.0
 
 
 @pytest.mark.asyncio

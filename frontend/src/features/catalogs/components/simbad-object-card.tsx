@@ -74,22 +74,27 @@ function SimbadFocusRow({
   onFocusSource,
 }: Readonly<SimbadObjectCardProps>) {
   const match = object.image_match;
-  const sourceLabel = matchedSourceLabel(match);
-  if (!match?.matched || sourceLabel === null) {
+  if (!match) {
     return null;
   }
+  const sourceLabel = matchedSourceLabel(match);
   const objectType =
     match.object_type === "point" || match.object_type === "extended"
       ? match.object_type
       : null;
-  const canFocus = onFocusSource !== undefined && objectType !== null;
-  const separation = match.separation_arcsec;
+  const canFocus =
+    match.matched && onFocusSource !== undefined && objectType !== null;
   return (
     <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-      <span>{sourceLabel}</span>
-      {separation !== null && separation !== undefined ? (
-        <span>Δ {separation.toFixed(2)}″</span>
-      ) : null}
+      <span data-testid="simbad-object-match">
+        {sourceLabel ?? "Sin fuente cercana"}
+      </span>
+      <span data-testid="simbad-object-separation">
+        Δ {match.separation_arcsec.toFixed(2)}″
+      </span>
+      <span data-testid="simbad-object-probability">
+        Probabilidad {Math.round((match.probability ?? 0) * 100)}%
+      </span>
       {canFocus ? (
         <Button
           type="button"

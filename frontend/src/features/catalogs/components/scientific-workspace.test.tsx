@@ -3,7 +3,10 @@ import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { HttpResponse, http } from "msw";
 import { describe, expect, it, vi } from "vitest";
-import { MOCK_SIMBAD_OBJECT } from "@/mocks/data/simbad";
+import {
+  MOCK_SIMBAD_OBJECT,
+  simbadReferencesResponse,
+} from "@/mocks/data/simbad";
 import { createTestQueryClient } from "@/test/render";
 import { server } from "@/test/server";
 import type { SimbadReferencesView } from "../use-simbad-references";
@@ -35,6 +38,7 @@ function renderWorkspace(
     source_id: number;
     object_type: "point" | "extended";
   } | null = null,
+  catalogsEnabled?: boolean,
 ) {
   const queryClient = createTestQueryClient();
   const workspace = (nextEnabled: boolean, nextSource = selectedSource) => (
@@ -42,6 +46,7 @@ function renderWorkspace(
       <ScientificWorkspace
         recordId="m31"
         enabled={nextEnabled}
+        catalogsEnabled={catalogsEnabled ?? nextEnabled}
         params={undefined}
         preview={preview}
         simbad={simbad}
@@ -63,7 +68,7 @@ function renderWorkspace(
 }
 
 describe("ScientificWorkspace", () => {
-  it("waits for Gaia before requesting recommendations", () => {
+  it("waits until enabled before requesting recommendations", () => {
     renderWorkspace(false);
 
     expect(screen.getByTestId("catalogs-info")).toHaveTextContent(/Gaia/);
@@ -75,7 +80,7 @@ describe("ScientificWorkspace", () => {
     );
   });
 
-  it("opens when Gaia finishes after the workspace mounted", async () => {
+  it("opens when enabled after the workspace mounted", async () => {
     const { rerenderEnabled } = renderWorkspace(false);
 
     rerenderEnabled(true);
@@ -85,6 +90,26 @@ describe("ScientificWorkspace", () => {
       "aria-expanded",
       "true",
     );
+  });
+
+  it("opens SIMBAD while catalogs still wait for Gaia", async () => {
+    const user = userEvent.setup();
+    renderWorkspace(
+      true,
+      undefined,
+      simbadView({ objects: [MOCK_SIMBAD_OBJECT] }),
+      null,
+      false,
+    );
+
+    expect(screen.getByTestId("scientific-toggle")).toHaveAttribute(
+      "aria-expanded",
+      "true",
+    );
+    expect(screen.getByTestId("catalogs-info")).toHaveTextContent(/Gaia/);
+
+    await user.click(screen.getByTestId("scientific-tab-simbad"));
+    expect(screen.getByTestId("simbad-object-card")).toBeInTheDocument();
   });
 
   it("opens once enabled and closes from the close button", async () => {
@@ -301,7 +326,7 @@ describe("ScientificWorkspace", () => {
     expect(screen.getAllByTestId("catalogue-card")).toHaveLength(1);
   });
 
-  it("shows an error and retries without restarting Gaia", async () => {
+  it("shows an error and retries without redoing the image analysis", async () => {
     server.use(
       http.get(
         CATALOGS_URL,
@@ -332,6 +357,30 @@ describe("ScientificWorkspace", () => {
       "SIMBAD (1)",
     );
     expect(screen.getByTestId("simbad-object-card")).toBeInTheDocument();
+  });
+
+  it("shows the crossmatch parameters used by SIMBAD", async () => {
+    const user = userEvent.setup();
+    renderWorkspace(
+      true,
+      undefined,
+      simbadView({
+        objects: [MOCK_SIMBAD_OBJECT],
+        result: simbadReferencesResponse,
+      }),
+    );
+
+    await screen.findByTestId("catalog-list");
+    expect(
+      screen.queryByTestId("simbad-crossmatch-params"),
+    ).not.toBeInTheDocument();
+
+    await user.click(screen.getByTestId("scientific-tab-simbad"));
+
+    expect(screen.getByTestId("simbad-crossmatch-params")).toHaveTextContent(
+      /Radio 5.*exponente 2.*mínimo 40%/,
+    );
+    expect(screen.getByTestId("help-simbad-crossmatch")).toBeInTheDocument();
   });
 
   it("retries SIMBAD through the view provided by the route", async () => {

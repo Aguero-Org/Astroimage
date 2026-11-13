@@ -1,6 +1,8 @@
+import pytest
 from hypothesis import given
 from hypothesis import settings as hypothesis_settings
 from hypothesis import strategies as st
+from pydantic import ValidationError
 
 from astroimage.config import Settings
 
@@ -40,17 +42,70 @@ def test_vizier_servers_accept_overrides() -> None:
     assert settings.catalog_vizier_servers == ["vizier.example.org"]
 
 
-def test_vizier_servers_require_at_least_one_entry() -> None:
-    import pytest
-    from pydantic import ValidationError
+def test_vizier_servers_default_to_the_primary_list(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.delenv("CATALOG_VIZIER_USE_MIRRORS", raising=False)
+    monkeypatch.delenv("CATALOG_VIZIER_SERVERS", raising=False)
+    monkeypatch.delenv("CATALOG_VIZIER_MIRRORS", raising=False)
+    settings = Settings(_env_file=None, database_url=_TEST_DATABASE_URL)
+    assert settings.catalog_vizier_use_mirrors is False
+    assert settings.catalog_vizier_mirrors == [
+        "vizier.idia.ac.za",
+        "vizier.cfa.harvard.edu",
+        "vizier.nao.ac.jp",
+        "vizier.china-vo.org",
+    ]
+    assert settings.catalog_vizier_active_servers == [
+        "vizier.cds.unistra.fr",
+        "vizier.cfa.harvard.edu",
+    ]
 
+
+def test_vizier_active_servers_use_mirrors_when_enabled() -> None:
+    settings = Settings(
+        database_url=_TEST_DATABASE_URL,
+        catalog_vizier_use_mirrors=True,
+        catalog_vizier_servers=["vizier.example.org"],
+        catalog_vizier_mirrors=["mirror.example.org"],
+    )
+    assert settings.catalog_vizier_active_servers == ["mirror.example.org"]
+
+
+def test_vizier_servers_require_at_least_one_entry() -> None:
     with pytest.raises(ValidationError):
         Settings(database_url=_TEST_DATABASE_URL, catalog_vizier_servers=[])
 
 
-def test_database_url_is_required() -> None:
-    import pytest
-    from pydantic import ValidationError
+def test_vizier_mirrors_require_at_least_one_entry() -> None:
+    with pytest.raises(ValidationError):
+        Settings(database_url=_TEST_DATABASE_URL, catalog_vizier_mirrors=[])
 
+
+def test_simbad_servers_accept_overrides() -> None:
+    settings = Settings(
+        database_url=_TEST_DATABASE_URL,
+        simbad_servers=["simbad.harvard.edu"],
+    )
+    assert settings.simbad_servers == ["simbad.harvard.edu"]
+
+
+def test_simbad_servers_default_to_primary_and_mirror(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.delenv("SIMBAD_SERVERS", raising=False)
+    settings = Settings(_env_file=None, database_url=_TEST_DATABASE_URL)
+    assert settings.simbad_servers == [
+        "simbad.cds.unistra.fr",
+        "simbad.harvard.edu",
+    ]
+
+
+def test_simbad_servers_require_at_least_one_entry() -> None:
+    with pytest.raises(ValidationError):
+        Settings(database_url=_TEST_DATABASE_URL, simbad_servers=[])
+
+
+def test_database_url_is_required() -> None:
     with pytest.raises(ValidationError):
         Settings(database_url="")

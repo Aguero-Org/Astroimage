@@ -3,6 +3,7 @@ import type {
   ExtendedSourceSchema,
   PointSourceSchema,
 } from "@/api/generated/model";
+import { type CrossmatchParams, DEFAULT_CROSSMATCH_PARAMS } from "./crossmatch";
 import { DEFAULT_RENDER_PARAMS, type RenderViewParams } from "./render-view";
 import { DEFAULT_SOURCE_DETECTION_PARAMS } from "./source-detection";
 
@@ -12,6 +13,7 @@ export type ImageWorkspaceUi = {
   selectedSource: PointSourceSchema | ExtendedSourceSchema | null;
   renderParams: RenderViewParams;
   detectionParams: DetectSourcesParams;
+  crossmatchParams: CrossmatchParams;
 };
 
 export type ImageWorkspaceAction =
@@ -22,7 +24,8 @@ export type ImageWorkspaceAction =
     }
   | { type: "set-hdu"; hdu: number | null }
   | { type: "set-render-params"; params: RenderViewParams }
-  | { type: "set-detection-params"; params: DetectSourcesParams };
+  | { type: "set-detection-params"; params: DetectSourcesParams }
+  | { type: "set-crossmatch-params"; params: CrossmatchParams };
 
 export const DEFAULT_IMAGE_WORKSPACE: ImageWorkspaceUi = {
   hdu: null,
@@ -30,6 +33,7 @@ export const DEFAULT_IMAGE_WORKSPACE: ImageWorkspaceUi = {
   selectedSource: null,
   renderParams: DEFAULT_RENDER_PARAMS,
   detectionParams: DEFAULT_SOURCE_DETECTION_PARAMS,
+  crossmatchParams: DEFAULT_CROSSMATCH_PARAMS,
 };
 
 export function imageWorkspaceReducer(
@@ -59,6 +63,8 @@ export function imageWorkspaceReducer(
         detectionParams: action.params,
         selectedSource: null,
       };
+    case "set-crossmatch-params":
+      return { ...state, crossmatchParams: action.params };
   }
 }
 

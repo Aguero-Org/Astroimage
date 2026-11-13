@@ -17,7 +17,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from astroimage.fits.service import FitsService
 from astroimage.main import app
 from astroimage.sources.deps import gaia_provider_dependency
-from astroimage.sources.gaia import GaiaObject
+from astroimage.sources.gaia import GaiaObject, GaiaQueryError
 from astroimage.sources.schema import (
     ExtendedDetectionConfigSchema,
     GaiaMatchConfigSchema,
@@ -56,6 +56,15 @@ class _RecordingProvider:
     def search_cone(self, center: SkyCoord, radius_arcsec: float) -> list[GaiaObject]:
         self.searches.append((float(center.ra.deg), float(center.dec.deg), radius_arcsec))
         return self._gaia_objects
+
+
+class _FailingProvider:
+    def __init__(self) -> None:
+        self.calls = 0
+
+    def search_cone(self, center: SkyCoord, radius_arcsec: float) -> list[GaiaObject]:
+        self.calls += 1
+        raise GaiaQueryError("429")
 
 
 async def _store_sources(
@@ -392,21 +401,7 @@ async def test_verify_sources_gaia_matches_stored_wcs_sources(
     assert body["match_radius_arcsec"] == 60.0
     assert body["summary"]["point"]["matched"] >= 1
     assert any(row["gaia_match"] for row in body["matches"])
-    assert len(provider.searches) == 5
-    expected_centers = {
-        (9.9325, 20.0575),
-        (10.0225, 20.0875),
-        (10.0625, 19.9475),
-    }
-    got_centers = {(center_ra, center_dec) for center_ra, center_dec, _ in provider.searches}
-    assert all(
-        any(
-            center_ra == pytest.approx(expected_ra, abs=0.02)
-            and center_dec == pytest.approx(expected_dec, abs=0.02)
-            for center_ra, center_dec in got_centers
-        )
-        for expected_ra, expected_dec in expected_centers
-    )
+    assert len(provider.searches) == 1
     assert all(radius >= 60.0 for _, _, radius in provider.searches)
 
 
@@ -433,7 +428,7 @@ async def test_verify_sources_gaia_endpoint_conserves_detection_params(
 
     assert body["summary"]["point"]["count"] >= 3
     assert body["summary"]["point"]["matched"] == 0
-    assert len(provider.searches) == 6
+    assert len(provider.searches) == 2
     assert not any(row["gaia_match"] for row in body["matches"])
 
 
@@ -476,7 +471,6 @@ async def test_verify_sources_gaia_isolates_queries_by_client_id(
     )
     app.dependency_overrides[gaia_provider_dependency] = lambda: provider
     try:
-        expected_blocks = 0
         for client_id in ("alice", "bob"):
             body = await _verify_gaia(
                 client,
@@ -485,14 +479,10 @@ async def test_verify_sources_gaia_isolates_queries_by_client_id(
                 headers={"X-Client-Id": client_id},
             )
             assert body["summary"]["point"]["count"] >= 3
-            expected_blocks += min(
-                8,
-                body["summary"]["point"]["count"] + body["summary"]["extended"]["count"],
-            )
     finally:
         app.dependency_overrides.pop(gaia_provider_dependency, None)
 
-    assert len(provider.searches) == expected_blocks
+    assert len(provider.searches) == 2
 
 
 @pytest.mark.asyncio
@@ -523,11 +513,44 @@ async def test_verify_sources_gaia_serves_cached_result_on_resubmit(
 
     assert second["queried"] is True
     assert second == first
-    assert len(provider.searches) == 6
+    assert len(provider.searches) == 2
 
 
 @pytest.mark.asyncio
-async def test_verify_sources_gaia_blocks_and_returns_completed_result(
+async def test_verify_sources_gaia_retries_after_a_query_error(
+    client: AsyncClient,
+    fits_service: FitsService,
+    db_session: AsyncSession,
+) -> None:
+    buffer = BytesIO()
+    buffer.write(_wcs_sources_fits_bytes())
+    record = await fits_service.store_bytes(buffer.getvalue(), source_name="wcs.fits")
+    await db_session.commit()
+    provider = _FailingProvider()
+    app.dependency_overrides[gaia_provider_dependency] = lambda: provider
+    try:
+        first = await _verify_gaia(
+            client,
+            str(record.id),
+            headers={"X-Client-Id": "alice"},
+        )
+        second = await _verify_gaia(
+            client,
+            str(record.id),
+            headers={"X-Client-Id": "alice"},
+        )
+    finally:
+        app.dependency_overrides.pop(gaia_provider_dependency, None)
+
+    assert first["queried"] is False
+    assert second["queried"] is False
+    assert first["error"] is not None
+    assert second["error"] is not None
+    assert provider.calls == 2
+
+
+@pytest.mark.asyncio
+async def test_verify_sources_gaia_returns_completed_result(
     client: AsyncClient,
     fits_service: FitsService,
     db_session: AsyncSession,

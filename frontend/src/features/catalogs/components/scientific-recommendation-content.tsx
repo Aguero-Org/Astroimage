@@ -41,7 +41,8 @@ export function RecommendationContent({
   if (!enabled) {
     return (
       <RecommendationInfo testId="catalogs-info">
-        Las recomendaciones aparecerán cuando termine el análisis de Gaia.
+        Las recomendaciones aparecerán cuando termine el análisis de Gaia. La
+        solapa SIMBAD no espera a Gaia.
       </RecommendationInfo>
     );
   }

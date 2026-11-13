@@ -2,9 +2,14 @@ from __future__ import annotations
 
 import numpy as np
 import pytest
+from astropy import units as u
+from astropy.coordinates import SkyCoord
 from astropy.table import Table
 
+from astroimage.simbad import provider as provider_module
 from astroimage.simbad.provider import (
+    AstroquerySimbadProvider,
+    SimbadQueryError,
     _object_type_clause,
     aliases_from_table,
     objects_from_table,
@@ -92,3 +97,70 @@ def test_object_type_clause_only_accepts_codes() -> None:
     assert _object_type_clause(None) == ""
     with pytest.raises(ValueError):
         _object_type_clause("SNR' OR 1=1")
+
+
+def _fake_simbad_class(calls: list[tuple[str, str, int]]) -> type:
+    class FakeSimbad:
+        def __init__(self) -> None:
+            self.server = ""
+            self.TIMEOUT = 0
+
+        def query_tap(self, query: str, *, maxrec: int) -> Table:
+            calls.append((self.server, query, maxrec))
+            if self.server == "simbad.cds.unistra.fr":
+                raise RuntimeError("primary unavailable")
+            return _region_table()
+
+    return FakeSimbad
+
+
+def test_query_region_falls_back_to_the_next_server(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    calls: list[tuple[str, str, int]] = []
+    monkeypatch.setattr(
+        provider_module,
+        "SimbadClass",
+        _fake_simbad_class(calls),
+    )
+    provider = AstroquerySimbadProvider(servers=["simbad.cds.unistra.fr", "simbad.harvard.edu"])
+
+    objects = provider.query_region(
+        SkyCoord(ra=10.0 * u.deg, dec=20.0 * u.deg, frame="icrs"),
+        60.0,
+        row_limit=5,
+    )
+
+    assert [call[0] for call in calls] == [
+        "simbad.cds.unistra.fr",
+        "simbad.harvard.edu",
+    ]
+    assert calls[1][2] == 5
+    assert objects[0].main_id == "M   1"
+
+
+def test_query_region_raises_when_every_server_fails(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    calls: list[tuple[str, str, int]] = []
+
+    class FailingSimbad:
+        def __init__(self) -> None:
+            self.server = ""
+            self.TIMEOUT = 0
+
+        def query_tap(self, query: str, *, maxrec: int) -> Table:
+            calls.append((self.server, query, maxrec))
+            raise RuntimeError(f"{self.server} unavailable")
+
+    monkeypatch.setattr(provider_module, "SimbadClass", FailingSimbad)
+    provider = AstroquerySimbadProvider(servers=["one.example.org", "two.example.org"])
+
+    with pytest.raises(SimbadQueryError, match="two.example.org unavailable"):
+        provider.query_region(
+            SkyCoord(ra=10.0 * u.deg, dec=20.0 * u.deg, frame="icrs"),
+            60.0,
+            row_limit=5,
+        )
+
+    assert len(calls) == 2

@@ -252,6 +252,73 @@ def test_match_sources_returns_closest_catalog_object() -> None:
     assert misses[0].probability == 0.0
 
 
+def test_match_sources_probability_uses_configured_power() -> None:
+    coordinate = SkyCoord(ra=10.0, dec=20.0, unit="deg")
+    gaia_objects = [GaiaObject(source_id="near", ra_deg=10.0007, dec_deg=20.0)]
+
+    linear = match_sources_to_gaia(
+        [coordinate],
+        gaia_objects,
+        match_radius_arcsec=10.0,
+        probability_power=1.0,
+    )[0]
+    quadratic = match_sources_to_gaia(
+        [coordinate],
+        gaia_objects,
+        match_radius_arcsec=10.0,
+        probability_power=2.0,
+    )[0]
+
+    assert linear.matched is True
+    assert quadratic.matched is True
+    linear_separation = linear.separation_arcsec
+    quadratic_separation = quadratic.separation_arcsec
+    assert linear_separation is not None
+    assert quadratic_separation is not None
+    assert linear.probability == pytest.approx(1.0 - linear_separation / 10.0)
+    assert quadratic.probability == pytest.approx((1.0 - quadratic_separation / 10.0) ** 2)
+    assert linear.probability > quadratic.probability > 0.0
+
+
+def test_match_sources_accepts_separation_equal_to_radius() -> None:
+    coordinate = SkyCoord(ra=10.0, dec=20.0, unit="deg")
+    gaia_objects = [GaiaObject(source_id="near", ra_deg=10.0001, dec_deg=20.0)]
+    separation = match_sources_to_gaia(
+        [coordinate],
+        gaia_objects,
+        match_radius_arcsec=10.0,
+        probability_power=2.0,
+    )[0].separation_arcsec
+    assert separation is not None
+
+    match = match_sources_to_gaia(
+        [coordinate],
+        gaia_objects,
+        match_radius_arcsec=separation,
+        probability_power=2.0,
+    )[0]
+
+    assert match.matched is True
+    assert match.probability == pytest.approx(0.0)
+
+
+def test_match_sources_reports_nearest_separation_when_outside_radius() -> None:
+    coordinate = SkyCoord(ra=10.0, dec=20.0, unit="deg")
+    gaia_objects = [GaiaObject(source_id="far", ra_deg=10.001, dec_deg=20.0)]
+
+    match = match_sources_to_gaia(
+        [coordinate],
+        gaia_objects,
+        match_radius_arcsec=1.0,
+        probability_power=2.0,
+    )[0]
+
+    assert match.matched is False
+    assert match.gaia_source_id is None
+    assert match.separation_arcsec == pytest.approx(3.38, abs=0.05)
+    assert match.probability == 0.0
+
+
 def test_match_sources_with_empty_catalog_returns_unmatched_rows() -> None:
     coordinate = SkyCoord(ra=10.0 * u.deg, dec=20.0 * u.deg)
 
@@ -320,11 +387,12 @@ async def test_verify_from_record_returns_matches() -> None:
     assert result.error is None
     assert result.wcs_present is True
     assert any(row.gaia_match for row in result.matches)
-    assert len(provider.searches) == 5
+    assert len(provider.searches) == 1
+    assert provider.searches[0][2] >= 60.0
 
 
 @pytest.mark.asyncio
-async def test_gaia_block_queries_run_concurrently_across_thread_pool() -> None:
+async def test_gaia_covering_query_runs_across_thread_pool() -> None:
     payload = _wcs_fits_bytes()
     fits_service = cast(FitsService, _FakeFitsService(payload))
     provider = _TrackingProvider(delay_s=1.0)
@@ -343,13 +411,13 @@ async def test_gaia_block_queries_run_concurrently_across_thread_pool() -> None:
     elapsed = time.perf_counter() - started
 
     assert result.queried is True
-    assert len(provider.searches) == 6
-    assert provider.max_concurrent == 5
+    assert len(provider.searches) == 2
+    assert provider.max_concurrent == 1
     assert elapsed < 3.0
 
 
 @pytest.mark.asyncio
-async def test_gaia_splits_many_sources_into_eight_blocks() -> None:
+async def test_gaia_uses_one_covering_query_for_many_sources() -> None:
     positions = (
         (40, 40),
         (40, 90),
@@ -393,8 +461,8 @@ async def test_gaia_splits_many_sources_into_eight_blocks() -> None:
 
     assert result.queried is True
     assert result.summary.point.count >= 8
-    assert len(provider.searches) == 9
-    assert provider.max_concurrent == 8
+    assert len(provider.searches) == 2
+    assert provider.max_concurrent == 1
     assert all(radius >= 60.0 for _, _, radius in provider.searches)
     assert elapsed < 3.0
 

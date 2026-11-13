@@ -1,16 +1,19 @@
 from __future__ import annotations
 
 import re
+from collections.abc import Sequence
 from typing import Any, Protocol
 
 import numpy as np
 from astropy.coordinates import SkyCoord
-from astroquery.simbad import Simbad
+from astroquery.simbad import SimbadClass
 
 from astroimage.shared.logging import simbad_provider_log as _log
 from astroimage.simbad.model import SimbadAlias, SimbadObject, SimbadReference
 
 _OBJECT_TYPE_PATTERN = re.compile(r"^[A-Za-z0-9_+.\-]{1,32}$")
+_SIMBAD_SERVERS = ("simbad.cds.unistra.fr", "simbad.harvard.edu")
+_SERVER_TIMEOUT_S = 60
 
 
 class SimbadQueryError(Exception):
@@ -38,8 +41,18 @@ class SimbadCatalogProvider(Protocol):
 
 
 class AstroquerySimbadProvider:
-    def __init__(self, *, timeout_s: float = 120.0) -> None:
-        self._timeout_s = timeout_s
+    def __init__(
+        self,
+        *,
+        timeout_s: float = 120.0,
+        servers: Sequence[str] | None = None,
+    ) -> None:
+        configured = tuple(server.strip() for server in servers or () if server.strip())
+        self._servers = configured or _SIMBAD_SERVERS
+        self._server_timeout_s = max(
+            1,
+            min(int(timeout_s / len(self._servers)), _SERVER_TIMEOUT_S),
+        )
 
     def query_region(
         self,
@@ -130,13 +143,28 @@ ORDER BY "year" DESC
         return references_from_table(table)
 
     def _query_tap(self, query: str, *, maxrec: int) -> Any:
-        try:
-            client = Simbad()
-            client.TIMEOUT = int(self._timeout_s)
-            return client.query_tap(query, maxrec=maxrec)
-        except Exception as exc:
-            _log.warning("simbad_query_failed", detail=str(exc), exc_info=exc)
-            raise SimbadQueryError(str(exc)) from exc
+        last_error: Exception | None = None
+        for server in self._servers:
+            _log.info("simbad_query", server=server, maxrec=maxrec)
+            try:
+                client = SimbadClass()
+                client.server = server
+                client.TIMEOUT = self._server_timeout_s
+                table = client.query_tap(query, maxrec=maxrec)
+            except Exception as exc:
+                _log.warning(
+                    "simbad_server_failed",
+                    server=server,
+                    detail=str(exc),
+                    exc_info=exc,
+                )
+                last_error = exc
+                continue
+            _log.info("simbad_query_ok", server=server)
+            return table
+        if last_error is not None:
+            raise SimbadQueryError(str(last_error)) from last_error
+        raise SimbadQueryError("No SIMBAD servers configured")
 
 
 def objects_from_table(table: Any) -> list[SimbadObject]:

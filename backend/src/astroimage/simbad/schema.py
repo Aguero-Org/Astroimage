@@ -2,6 +2,11 @@ from __future__ import annotations
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from astroimage.sources.schema import (
+    ExtendedDetectionConfigSchema,
+    PointDetectionConfigSchema,
+)
+
 
 class SimbadImageMatchSchema(BaseModel):
     model_config = ConfigDict(extra="forbid")
@@ -61,8 +66,13 @@ class SimbadReferencesConfigSchema(BaseModel):
     include_aliases: bool = True
     include_bibliography: bool = True
     max_references_per_object: int = Field(default=10, ge=0, le=100)
-    crossmatch_radius_arcsec: float = Field(default=3.0, ge=0.0, le=3600.0)
+    crossmatch_radius_arcsec: float = Field(default=5.0, ge=0.0, le=3600.0)
     probability_power: float = Field(default=2.0, ge=0.1)
+    min_probability: float = Field(default=0.4, ge=0.0, le=1.0)
+    detection: PointDetectionConfigSchema = Field(default_factory=PointDetectionConfigSchema)
+    extended_detection: ExtendedDetectionConfigSchema = Field(
+        default_factory=ExtendedDetectionConfigSchema
+    )
 
 
 class SimbadReferencesSummarySchema(BaseModel):
@@ -81,6 +91,9 @@ class SimbadReferencesResponse(BaseModel):
     ra_deg: float | None = None
     dec_deg: float | None = None
     radius_arcsec: float = 0.0
+    crossmatch_radius_arcsec: float = 5.0
+    probability_power: float = 2.0
+    min_probability: float = 0.4
     limit: int = 25
     include_aliases: bool = True
     include_bibliography: bool = True

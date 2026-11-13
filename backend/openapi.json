@@ -1486,8 +1486,9 @@
             "required": false,
             "schema": {
               "type": "number",
+              "maximum": 3600.0,
               "minimum": 0.0,
-              "default": 4.0,
+              "default": 5.0,
               "title": "Match Radius Arcsec"
             }
           },
@@ -1971,7 +1972,7 @@
               "maximum": 3600.0,
               "minimum": 0.0,
               "description": "Image source crossmatch radius in arcsec",
-              "default": 3.0,
+              "default": 5.0,
               "title": "Crossmatch Radius Arcsec"
             },
             "description": "Image source crossmatch radius in arcsec"
@@ -1990,6 +1991,20 @@
             "description": "Crossmatch probability exponent"
           },
           {
+            "name": "min_probability",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number",
+              "maximum": 1.0,
+              "minimum": 0.0,
+              "description": "Minimum probability to consider a source matched",
+              "default": 0.4,
+              "title": "Min Probability"
+            },
+            "description": "Minimum probability to consider a source matched"
+          },
+          {
             "name": "refresh",
             "in": "query",
             "required": false,
@@ -1997,6 +2012,207 @@
               "type": "boolean",
               "default": false,
               "title": "Refresh"
+            }
+          },
+          {
+            "name": "fwhm",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number",
+              "minimum": 0.5,
+              "default": 5.5,
+              "title": "Fwhm"
+            }
+          },
+          {
+            "name": "sigma",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number",
+              "minimum": 1.0,
+              "default": 9.0,
+              "title": "Sigma"
+            }
+          },
+          {
+            "name": "min_snr",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number",
+              "minimum": 0.0,
+              "default": 6.0,
+              "title": "Min Snr"
+            }
+          },
+          {
+            "name": "min_score",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number",
+              "maximum": 1.0,
+              "minimum": 0.0,
+              "default": 0.18,
+              "title": "Min Score"
+            }
+          },
+          {
+            "name": "min_distance",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number",
+              "minimum": 0.0,
+              "default": 4.0,
+              "title": "Min Distance"
+            }
+          },
+          {
+            "name": "visual_weight",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number",
+              "maximum": 1.0,
+              "minimum": 0.0,
+              "default": 0.8,
+              "title": "Visual Weight"
+            }
+          },
+          {
+            "name": "visual_area_radius",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number",
+              "minimum": 1.0,
+              "default": 7.0,
+              "title": "Visual Area Radius"
+            }
+          },
+          {
+            "name": "visual_area_sigma",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number",
+              "minimum": 0.0,
+              "default": 2.0,
+              "title": "Visual Area Sigma"
+            }
+          },
+          {
+            "name": "max_sources",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 50,
+              "title": "Max Sources"
+            }
+          },
+          {
+            "name": "ext_sigma",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number",
+              "minimum": 0.5,
+              "default": 3.0,
+              "title": "Ext Sigma"
+            }
+          },
+          {
+            "name": "ext_smooth_sigma",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number",
+              "minimum": 0.5,
+              "default": 8.0,
+              "title": "Ext Smooth Sigma"
+            }
+          },
+          {
+            "name": "ext_min_area",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 500,
+              "title": "Ext Min Area"
+            }
+          },
+          {
+            "name": "ext_max_area",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "Ext Max Area"
+            }
+          },
+          {
+            "name": "ext_bin_factor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 8,
+              "title": "Ext Bin Factor"
+            }
+          },
+          {
+            "name": "ext_closing_iterations",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 2,
+              "title": "Ext Closing Iterations"
+            }
+          },
+          {
+            "name": "ext_opening_iterations",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 1,
+              "title": "Ext Opening Iterations"
+            }
+          },
+          {
+            "name": "ext_min_score",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number",
+              "maximum": 1.0,
+              "minimum": 0.0,
+              "default": 0.2,
+              "title": "Ext Min Score"
+            }
+          },
+          {
+            "name": "ext_max_sources",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 3,
+              "title": "Ext Max Sources"
             }
           },
           {
@@ -4834,6 +5050,21 @@
             "type": "number",
             "title": "Radius Arcsec",
             "default": 0.0
+          },
+          "crossmatch_radius_arcsec": {
+            "type": "number",
+            "title": "Crossmatch Radius Arcsec",
+            "default": 5.0
+          },
+          "probability_power": {
+            "type": "number",
+            "title": "Probability Power",
+            "default": 2.0
+          },
+          "min_probability": {
+            "type": "number",
+            "title": "Min Probability",
+            "default": 0.4
           },
           "limit": {
             "type": "integer",

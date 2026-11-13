@@ -85,7 +85,7 @@ class SourceDetectionResponse(BaseModel):
 class GaiaMatchConfigSchema(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    match_radius_arcsec: float = Field(default=4.0, ge=0.0)
+    match_radius_arcsec: float = Field(default=5.0, ge=0.0, le=3600.0)
     probability_power: float = Field(default=2.0, ge=0.1)
 
 

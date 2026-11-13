@@ -7,7 +7,7 @@ export const CATALOGOS_ENTRIES: GlossaryEntry[] = [
     group: "catalogos",
     what: "Panel lateral con catálogos de VizieR y publicaciones sugeridas para la zona del cielo que cubre la imagen.",
     inApp:
-      "Se abre solo cuando termina el análisis de Gaia. Reúne catálogos y publicaciones en dos solapas.",
+      "Se abre cuando termina el análisis de Gaia o cuando llega el cruce con SIMBAD. Reúne catálogos, publicaciones y objetos SIMBAD en tres solapas.",
     where: "Imagen → Exploración científica (lateral derecho)",
   },
   {
@@ -63,5 +63,23 @@ export const CATALOGOS_ENTRIES: GlossaryEntry[] = [
     inApp:
       "La solapa Publicaciones los lista como tarjetas. Pasar el cursor abre el artículo en ADS o por su DOI.",
     where: "Imagen → Exploración científica → Publicaciones",
+  },
+  {
+    id: "radio-cruce",
+    name: "Radio de cruce",
+    group: "catalogos",
+    what: "Distancia máxima, en segundos de arco, entre una detección de la imagen y una fuente del catálogo para considerarlas la misma.",
+    inApp:
+      "Se ajusta en Inspector → Fuentes para Gaia y SIMBAD. Un radio más grande encuentra más contrapartes y también admite más falsos positivos. Selección y las tarjetas de SIMBAD muestran la separación de la mejor contraparte.",
+    where: "Inspector → Fuentes y Selección; Exploración científica → SIMBAD",
+  },
+  {
+    id: "exponente-probabilidad",
+    name: "Exponente de probabilidad",
+    group: "catalogos",
+    what: "Potencia que controla cuánto baja la probabilidad a medida que la contraparte se aleja del centro del radio de cruce.",
+    inApp:
+      "Se ajusta en Inspector → Fuentes. Con un exponente más alto, una separación grande castiga más la probabilidad. Selección y las tarjetas de SIMBAD muestran el valor resultante.",
+    where: "Inspector → Fuentes y Selección; Exploración científica → SIMBAD",
   },
 ];
