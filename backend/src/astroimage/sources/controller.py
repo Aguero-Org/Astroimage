@@ -219,8 +219,6 @@ async def verify_sources_gaia(
     await jobs.wait(key)
     completed = jobs.get(key)
     if completed is not None:
-        if completed.error is not None:
-            jobs.discard(key)
         return completed
     failure = jobs.get_failure(key)
     if failure is not None:
