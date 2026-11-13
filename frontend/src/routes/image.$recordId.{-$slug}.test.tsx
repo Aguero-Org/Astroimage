@@ -323,8 +323,12 @@ describe("ImageDetailPage", () => {
     await waitFor(() => expect(onRequest).toHaveBeenCalledTimes(1), {
       timeout: 8000,
     });
-    expect(screen.getByTestId("scientific-tab-simbad")).toHaveTextContent(
-      "SIMBAD (2)",
+    await waitFor(
+      () =>
+        expect(screen.getByTestId("scientific-tab-simbad")).toHaveTextContent(
+          "SIMBAD (2)",
+        ),
+      { timeout: 8000 },
     );
   });
 
