@@ -42,7 +42,6 @@ from astroimage.sources.schema import (
 _log = structlog.get_logger("astroimage.sources.gaia")
 _tracer = trace.get_tracer("astroimage.sources.gaia")
 _GAIA_QUERY_TIMEOUT_S = 120.0
-_GAIA_CONCURRENCY = 8
 
 
 @dataclass(frozen=True)
@@ -99,38 +98,18 @@ class _Prepared:
     match_config: GaiaMatchConfigSchema
 
 
-def _partition_coords(
-    coords: list[SkyCoord],
-    num_blocks: int,
-) -> list[list[SkyCoord]]:
-    per_block, extra = divmod(len(coords), num_blocks)
-    partitions: list[list[SkyCoord]] = []
-    start = 0
-    for index in range(num_blocks):
-        size = per_block + (1 if index < extra else 0)
-        end = start + size
-        partitions.append(coords[start:end])
-        start = end
-    return partitions
-
-
-def _block_queries(
+def _covering_query(
     coords: list[SkyCoord],
     *,
     match_radius_arcsec: float,
-) -> list[tuple[SkyCoord, float]]:
-    ordered = sorted(coords, key=lambda coord: (float(coord.ra.deg), float(coord.dec.deg)))
-    count = min(_GAIA_CONCURRENCY, len(ordered))
-    queries: list[tuple[SkyCoord, float]] = []
-    for chunk in _partition_coords(ordered, count):
-        center = _mean_coordinate(chunk)
-        radius = search_radius_arcsec(
-            center,
-            chunk,
-            match_radius_arcsec=match_radius_arcsec,
-        )
-        queries.append((center, radius))
-    return queries
+) -> tuple[SkyCoord, float]:
+    center = _mean_coordinate(coords)
+    radius = search_radius_arcsec(
+        center,
+        coords,
+        match_radius_arcsec=match_radius_arcsec,
+    )
+    return center, radius
 
 
 def _merge_gaia_objects(results: list[list[GaiaObject]]) -> list[GaiaObject]:
@@ -219,11 +198,11 @@ class GaiaVerificationService:
     ) -> GaiaVerificationResponse:
         if prepared.wcs is None or not prepared.entry_coords:
             return self._finish(prepared, [], queried=False, error=None)
-        block_queries = _block_queries(
+        center, radius = _covering_query(
             prepared.entry_coords,
             match_radius_arcsec=prepared.match_config.match_radius_arcsec,
         )
-        futures = [_search_block(self.provider, center, radius) for center, radius in block_queries]
+        futures = [_search_block(self.provider, center, radius)]
         try:
             results = await asyncio.wait_for(
                 asyncio.gather(*futures, return_exceptions=True),
@@ -234,7 +213,6 @@ class GaiaVerificationService:
                 "gaia_query_timed_out",
                 record_id=str(record_id),
                 timeout_s=self._query_timeout_s,
-                blocks=len(block_queries),
             )
             return self._finish(
                 prepared,

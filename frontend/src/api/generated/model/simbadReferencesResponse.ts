@@ -12,6 +12,9 @@ export interface SimbadReferencesResponse {
   ra_deg?: number | null;
   dec_deg?: number | null;
   radius_arcsec?: number;
+  crossmatch_radius_arcsec?: number;
+  probability_power?: number;
+  min_probability?: number;
   limit?: number;
   include_aliases?: boolean;
   include_bibliography?: boolean;

@@ -10,6 +10,14 @@ from fastapi import APIRouter, Depends, Header, Path, Query
 from astroimage.simbad.deps import simbad_reference_service_dependency
 from astroimage.simbad.schema import SimbadReferencesConfigSchema, SimbadReferencesResponse
 from astroimage.simbad.service import SimbadReferenceService
+from astroimage.sources.detection_query import (
+    extended_detection_query,
+    point_detection_query,
+)
+from astroimage.sources.schema import (
+    ExtendedDetectionConfigSchema,
+    PointDetectionConfigSchema,
+)
 
 router = APIRouter(prefix="/image", tags=["simbad"])
 _DEFAULTS = SimbadReferencesConfigSchema()
@@ -43,6 +51,10 @@ ProbabilityPowerParam = Annotated[
     float,
     Query(ge=0.1, description="Crossmatch probability exponent"),
 ]
+MinProbabilityParam = Annotated[
+    float,
+    Query(ge=0.0, le=1.0, description="Minimum probability to consider a source matched"),
+]
 
 
 @router.get(
@@ -55,6 +67,14 @@ ProbabilityPowerParam = Annotated[
 async def get_simbad_references(
     record_id: RecordId,
     service: Annotated[SimbadReferenceService, Depends(simbad_reference_service_dependency)],
+    detection_config: Annotated[
+        PointDetectionConfigSchema,
+        Depends(point_detection_query),
+    ],
+    extended_detection_config: Annotated[
+        ExtendedDetectionConfigSchema,
+        Depends(extended_detection_query),
+    ],
     client_id: Annotated[str, Header(alias="X-Client-Id")] = "anonymous",
     hdu: HduIndex = None,  # type: ignore[assignment]
     limit: LimitParam = _DEFAULTS.limit,
@@ -64,6 +84,7 @@ async def get_simbad_references(
     max_references: MaxReferencesParam = _DEFAULTS.max_references_per_object,
     crossmatch_radius_arcsec: CrossmatchRadiusParam = _DEFAULTS.crossmatch_radius_arcsec,
     probability_power: ProbabilityPowerParam = _DEFAULTS.probability_power,
+    min_probability: MinProbabilityParam = _DEFAULTS.min_probability,
     refresh: bool = False,
 ) -> SimbadReferencesResponse:
     config = SimbadReferencesConfigSchema(
@@ -74,6 +95,9 @@ async def get_simbad_references(
         max_references_per_object=max_references,
         crossmatch_radius_arcsec=crossmatch_radius_arcsec,
         probability_power=probability_power,
+        min_probability=min_probability,
+        detection=detection_config,
+        extended_detection=extended_detection_config,
     )
     _log.info(
         "simbad_references_start",

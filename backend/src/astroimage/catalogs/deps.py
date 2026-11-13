@@ -33,7 +33,7 @@ _detection_cache = DetectionCache()
 def vizier_provider_dependency(
     settings: Annotated[Settings, Depends(settings_dependency)],
 ) -> VizierCatalogProvider:
-    return AstroqueryVizierProvider(servers=settings.catalog_vizier_servers)
+    return AstroqueryVizierProvider(servers=settings.catalog_vizier_active_servers)
 
 
 def readme_fetcher_dependency() -> ReadmeFetcher:

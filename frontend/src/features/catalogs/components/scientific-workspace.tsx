@@ -53,6 +53,7 @@ type FocusSource = (
 type ScientificWorkspaceProps = {
   recordId: string;
   enabled: boolean;
+  catalogsEnabled: boolean;
   params: RecommendCatalogsParams | undefined;
   image: ReactNode;
   preview?: string;
@@ -68,6 +69,7 @@ const MIN_VIEWPORT_MARGIN_PX = 160;
 export function ScientificWorkspace({
   recordId,
   enabled,
+  catalogsEnabled,
   params,
   preview,
   image,
@@ -123,6 +125,7 @@ export function ScientificWorkspace({
       <ScientificSidebar
         recordId={recordId}
         enabled={enabled}
+        catalogsEnabled={catalogsEnabled}
         params={params}
         preview={preview}
         selectedSource={selectedSource}
@@ -166,6 +169,7 @@ function ScientificToggle() {
 type ScientificSidebarProps = {
   recordId: string;
   enabled: boolean;
+  catalogsEnabled: boolean;
   params: RecommendCatalogsParams | undefined;
   preview: string | undefined;
   selectedSource?: {
@@ -207,6 +211,7 @@ function tabExplainer(tab: WorkspaceTab): string {
 function ScientificSidebar({
   recordId,
   enabled,
+  catalogsEnabled,
   params,
   preview,
   selectedSource,
@@ -223,7 +228,11 @@ function ScientificSidebar({
     isError,
     errorMessage,
     refetch,
-  } = useCatalogRecommendations({ recordId, enabled, params });
+  } = useCatalogRecommendations({
+    recordId,
+    enabled: catalogsEnabled,
+    params,
+  });
   const [tab, setTab] = useState<"catalogs" | "papers" | "simbad">("catalogs");
   const simbadListRef = useRef<HTMLDivElement>(null);
   const [showNoMatchToast, setShowNoMatchToast] = useState(false);
@@ -420,6 +429,27 @@ function ScientificSidebar({
             {tabExplainer(tab)}
           </p>
 
+          {tab === "simbad" && simbad.result ? (
+            <span className="flex items-center gap-1 px-2 pt-1">
+              <span
+                data-testid="simbad-crossmatch-params"
+                className="text-[11px] text-muted-foreground"
+              >
+                Radio {simbad.result.crossmatch_radius_arcsec}″ · exponente{" "}
+                {simbad.result.probability_power} · mínimo{" "}
+                {Math.round((simbad.result.min_probability ?? 0.4) * 100)}%
+              </span>
+              <HelpHint
+                label="Parámetros del cruce SIMBAD"
+                testId="help-simbad-crossmatch"
+                glossaryId="radio-cruce"
+              >
+                Radio y exponente usados para decidir qué detección coincide con
+                cada objeto SIMBAD y qué probabilidad recibe.
+              </HelpHint>
+            </span>
+          ) : null}
+
           {showControls ? (
             <div className="flex flex-col gap-2 px-2 pt-2">
               <Input
@@ -472,7 +502,7 @@ function ScientificSidebar({
           <SidebarContent className="pb-24">
             <TabsContent value="catalogs">
               <RecommendationContent
-                enabled={enabled}
+                enabled={catalogsEnabled}
                 isError={isError}
                 isLoading={isLoading}
                 result={result}
@@ -487,7 +517,7 @@ function ScientificSidebar({
             </TabsContent>
             <TabsContent value="papers">
               <RecommendationContent
-                enabled={enabled}
+                enabled={catalogsEnabled}
                 isError={isError}
                 isLoading={isLoading}
                 result={result}

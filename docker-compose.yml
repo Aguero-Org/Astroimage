@@ -17,7 +17,10 @@ services:
       MINIO_SECRET_KEY: minioadmin
       MINIO_BUCKET: astroimage
       MINIO_SECURE: "false"
+      CATALOG_VIZIER_USE_MIRRORS: '${CATALOG_VIZIER_USE_MIRRORS:-false}'
       CATALOG_VIZIER_SERVERS: '${CATALOG_VIZIER_SERVERS:-["vizier.cds.unistra.fr","vizier.cfa.harvard.edu"]}'
+      CATALOG_VIZIER_MIRRORS: '${CATALOG_VIZIER_MIRRORS:-["vizier.idia.ac.za","vizier.cfa.harvard.edu","vizier.nao.ac.jp","vizier.china-vo.org"]}'
+      SIMBAD_SERVERS: '${SIMBAD_SERVERS:-["simbad.cds.unistra.fr","simbad.harvard.edu"]}'
       ADS_API_TOKEN: ${ADS_API_TOKEN:-}
     volumes:
       - ./backend:/app

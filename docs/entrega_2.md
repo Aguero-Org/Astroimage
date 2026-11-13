@@ -12,6 +12,8 @@ La consulta de catálogos reutiliza una descarga ya guardada de esa región. El 
 
 - La relación con catálogos externos se hace por un cono en el cielo (posición y radio), no por un índice espacial propio.
 - La descarga de VizieR de una región se guarda y se vuelve a usar mientras siga vigente.
+- El cruce con Gaia y SIMBAD usa un radio de 5″ y un exponente de probabilidad de 2. El radio de Gaia se eligió con un presupuesto de falsos positivos del 7%: una simulación con error de centrado de 1,5–2″ y densidad de 0,0008 fuentes por arcsec² recupera cerca del 98% de las contrapartes con alrededor del 6% de falsos positivos; con 4″ la recuperación baja al 94%. SIMBAD usa el mismo radio, devuelve hasta 25 objetos y descarta contrapartes con menos del 40% de probabilidad. Si el archivo Gaia no responde, el cruce usa Gaia DR3 desde VizieR.
+- SIMBAD no depende de Gaia: consulta con las mismas detecciones y su propio radio; la exploración se abre cuando termina cualquiera de los dos cruces.
 - El título y el abstract del paper se piden a ADS y se guardan por bibcode. Sin token, la publicación se muestra igual, con el nombre del catálogo.
 - La calidad del código se sostiene con lint, tests, arquitectura y mutación.
 
@@ -35,7 +37,7 @@ Usuario.
 
 Como usuario, quiero ver qué catálogos, artículos y objetos de SIMBAD corresponden a la región de mi imagen.
 
-Cuando termina el análisis de Gaia, puedo abrir la exploración científica. Veo catálogos de esa zona y publicaciones asociadas. El nombre del catálogo se entiende sin conocer el identificador técnico. Si el objeto buscado está en el catálogo, eso se indica. La publicación muestra el título del paper y un extracto cuando existen, y puedo abrir el artículo.
+Cuando termina el análisis de Gaia, la exploración científica muestra catálogos y publicaciones de esa zona. La solapa SIMBAD se habilita cuando termina su cruce, sin esperar a Gaia. El nombre del catálogo se entiende sin conocer el identificador técnico. Si el objeto buscado está en el catálogo, eso se indica. La publicación muestra el título del paper y un extracto cuando existen, y puedo abrir el artículo.
 
 En la misma exploración consulto SIMBAD por la zona de la imagen y obtengo el identificador principal, el tipo de objeto y la posición. Si no hay coincidencia, no es un error: simplemente no hay objeto.
 
@@ -52,6 +54,8 @@ Permite saber qué datos externos sirven para esa imagen y nombrar el objeto con
 - Puedo abrir el artículo desde la publicación.
 - Si no hay ficha, la publicación se muestra igual, asociada al catálogo.
 - Puedo pedir un cruce con SIMBAD por coordenadas y radio.
+- Puedo ajustar el radio de cruce y el exponente de probabilidad de Gaia y SIMBAD.
+- Veo la separación y la probabilidad de la mejor contraparte, haya coincidencia o no.
 - Si hay coincidencia, veo identificador, tipo y posición.
 - Si no hay coincidencia, el resultado viene vacío.
 - Si SIMBAD no responde, hay un error entendible.
@@ -71,7 +75,7 @@ Tema `command`, modo claro, fondo blanco.
 
 ### Flujo (imagen analizada → recomendaciones visibles)
 
-1. El usuario abre la exploración científica (`scientific-workspace.tsx`) cuando terminó el análisis de Gaia. El panel pide `GET /image/{id}/catalogs/recommendations`.
+1. El usuario abre la exploración científica (`scientific-workspace.tsx`) cuando terminó el análisis de Gaia o cuando llegó el cruce con SIMBAD. Las recomendaciones piden `GET /image/{id}/catalogs/recommendations` cuando terminó Gaia.
 2. `catalogs/controller.py` solo recibe el HTTP y delega a `CatalogService`.
 3. `CatalogLookup` busca la descarga ya guardada de esa región. Si no hay una vigente, hace un cone search a VizieR y la guarda.
 4. El servicio rankea los catálogos de esa zona. `AdsPaperLookup` completa título y abstract de las publicaciones: usa la ficha guardada o consulta ADS por bibcode.

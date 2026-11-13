@@ -31,8 +31,22 @@ class Settings(BaseSettings):
     minio_secure: bool = False
     candidate_token_secret: str = "astroimage-dev-candidate-token"
     catalog_download_ttl_s: float = 86_400.0
+    catalog_vizier_use_mirrors: bool = False
     catalog_vizier_servers: list[str] = Field(
         default_factory=lambda: ["vizier.cds.unistra.fr", "vizier.cfa.harvard.edu"],
+        min_length=1,
+    )
+    catalog_vizier_mirrors: list[str] = Field(
+        default_factory=lambda: [
+            "vizier.idia.ac.za",
+            "vizier.cfa.harvard.edu",
+            "vizier.nao.ac.jp",
+            "vizier.china-vo.org",
+        ],
+        min_length=1,
+    )
+    simbad_servers: list[str] = Field(
+        default_factory=lambda: ["simbad.cds.unistra.fr", "simbad.harvard.edu"],
         min_length=1,
     )
     ads_api_token: str = ""
@@ -43,6 +57,13 @@ class Settings(BaseSettings):
     @property
     def sync_database_url(self) -> str:
         return self.database_url.replace("postgresql+asyncpg://", "postgresql+psycopg://", 1)
+
+    @computed_field  # type: ignore[prop-decorator]
+    @property
+    def catalog_vizier_active_servers(self) -> list[str]:
+        if self.catalog_vizier_use_mirrors:
+            return self.catalog_vizier_mirrors
+        return self.catalog_vizier_servers
 
 
 @lru_cache(maxsize=1)

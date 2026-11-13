@@ -1,19 +1,25 @@
 from __future__ import annotations
 
+from collections.abc import Sequence
 from dataclasses import dataclass
-from typing import Protocol
+from typing import Any, Protocol
 
 import astropy.units as u
 import numpy as np
 import structlog
 from astropy.coordinates import Angle, SkyCoord
 from astroquery.gaia import Gaia
+from astroquery.vizier import Vizier
 
 _log = structlog.get_logger("astroimage.sources.gaia")
 
 _GAIA_COLUMNS = ("source_id", "ra", "dec", "phot_g_mean_mag")
+_VIZIER_GAIA_CATALOG = "I/355/gaiadr3"
+_VIZIER_GAIA_COLUMNS = ("Source", "RA_ICRS", "DE_ICRS", "Gmag")
+_VIZIER_GAIA_SERVERS = ("vizier.cfa.harvard.edu", "vizier.cds.unistra.fr")
 _MIN_CONES_RADIUS_ARCSEC = 60.0
 _ROW_LIMIT = 50_000
+_VIZIER_TIMEOUT_S = 60
 
 Gaia.ROW_LIMIT = _ROW_LIMIT
 
@@ -59,6 +65,86 @@ class AstroqueryGaiaProvider:
             raise GaiaQueryError(str(exc)) from exc
 
 
+class VizierGaiaProvider:
+    def __init__(
+        self,
+        *,
+        servers: Sequence[str] | None = None,
+        timeout_s: float = _VIZIER_TIMEOUT_S,
+        row_limit: int = _ROW_LIMIT,
+    ) -> None:
+        configured = tuple(server.strip() for server in servers or () if server.strip())
+        self._servers = configured or _VIZIER_GAIA_SERVERS
+        self._timeout_s = max(1, int(timeout_s))
+        self._row_limit = row_limit
+
+    def search_cone(self, center: SkyCoord, radius_arcsec: float) -> list[GaiaObject]:
+        last_error: Exception | None = None
+        for server in self._servers:
+            _log.info(
+                "gaia_vizier_search",
+                server=server,
+                center_ra=float(center.ra.deg),
+                center_dec=float(center.dec.deg),
+                radius_arcsec=radius_arcsec,
+            )
+            try:
+                table = self._query_server(server, center, radius_arcsec)
+            except Exception as exc:  # noqa: BLE001
+                _log.warning(
+                    "gaia_vizier_server_failed",
+                    server=server,
+                    detail=str(exc),
+                    exc_info=exc,
+                )
+                last_error = exc
+                continue
+            return _vizier_gaia_objects(table)
+        raise GaiaQueryError(str(last_error) if last_error is not None else "VizieR unavailable")
+
+    def _query_server(
+        self,
+        server: str,
+        center: SkyCoord,
+        radius_arcsec: float,
+    ) -> Any:
+        vizier = Vizier(
+            columns=list(_VIZIER_GAIA_COLUMNS),
+            row_limit=self._row_limit,
+            vizier_server=server,
+        )
+        vizier.TIMEOUT = self._timeout_s
+        tables = vizier.query_region(
+            center,
+            radius=Angle(radius_arcsec * u.arcsec),
+            catalog=_VIZIER_GAIA_CATALOG,
+            cache=False,
+        )
+        if not tables:
+            return None
+        return tables[0]
+
+
+class FallbackGaiaProvider:
+    def __init__(
+        self,
+        primary: GaiaCatalogProvider,
+        fallback: GaiaCatalogProvider,
+    ) -> None:
+        self._primary = primary
+        self._fallback = fallback
+
+    def search_cone(self, center: SkyCoord, radius_arcsec: float) -> list[GaiaObject]:
+        try:
+            return self._primary.search_cone(center, radius_arcsec)
+        except Exception as exc:  # noqa: BLE001
+            _log.warning("gaia_primary_failed", detail=str(exc), exc_info=exc)
+        try:
+            return self._fallback.search_cone(center, radius_arcsec)
+        except Exception as exc:
+            raise GaiaQueryError(f"Gaia and VizieR failed: {exc}") from exc
+
+
 def _read_cone(center: SkyCoord, radius_arcsec: float) -> list[GaiaObject]:
     radius = Angle(radius_arcsec * u.arcsec)
     job = Gaia.cone_search(center, radius=radius, columns=_GAIA_COLUMNS)
@@ -74,6 +160,22 @@ def _read_cone(center: SkyCoord, radius_arcsec: float) -> list[GaiaObject]:
                 ra_deg=float(row["ra"]),
                 dec_deg=float(row["dec"]),
                 gmag=_optional_gmag(row["phot_g_mean_mag"]),
+            )
+        )
+    return objects
+
+
+def _vizier_gaia_objects(table: Any) -> list[GaiaObject]:
+    if table is None or len(table) == 0:
+        return []
+    objects: list[GaiaObject] = []
+    for row in table:
+        objects.append(
+            GaiaObject(
+                source_id=str(row["Source"]),
+                ra_deg=float(row["RA_ICRS"]),
+                dec_deg=float(row["DE_ICRS"]),
+                gmag=_optional_gmag(row["Gmag"]),
             )
         )
     return objects
