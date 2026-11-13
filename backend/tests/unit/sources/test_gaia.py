@@ -1,14 +1,19 @@
 from __future__ import annotations
 
+from types import SimpleNamespace
+
 import astropy.units as u
 import pytest
 from astropy.coordinates import SkyCoord
 from astropy.table import Table
+from astroquery.gaia import Gaia
 
+from astroimage.sources import gaia as gaia_module
 from astroimage.sources.gaia import (
     FallbackGaiaProvider,
     GaiaObject,
     GaiaQueryError,
+    VizierGaiaProvider,
     _vizier_gaia_objects,
 )
 
@@ -75,3 +80,22 @@ def test_vizier_gaia_rows_are_normalized() -> None:
             gmag=20.599688,
         )
     ]
+
+
+def test_vizier_provider_rejects_truncated_result(monkeypatch: pytest.MonkeyPatch) -> None:
+    provider = VizierGaiaProvider(row_limit=1)
+    table = Table({"Source": [1], "RA_ICRS": [10.0], "DE_ICRS": [20.0], "Gmag": [12.0]})
+    monkeypatch.setattr(provider, "_query_server", lambda *args, **kwargs: table)
+
+    with pytest.raises(GaiaQueryError, match="row limit"):
+        provider.search_cone(_CENTER, 120.0)
+
+
+def test_read_cone_rejects_truncated_result(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(gaia_module, "_ROW_LIMIT", 1)
+    table = Table({"source_id": [1], "ra": [10.0], "dec": [20.0], "phot_g_mean_mag": [12.0]})
+    job = SimpleNamespace(get_results=lambda: table)
+    monkeypatch.setattr(Gaia, "cone_search", lambda *args, **kwargs: job)
+
+    with pytest.raises(GaiaQueryError, match="row limit"):
+        gaia_module._read_cone(_CENTER, 120.0)

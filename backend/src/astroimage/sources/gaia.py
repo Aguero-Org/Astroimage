@@ -99,6 +99,10 @@ class VizierGaiaProvider:
                 )
                 last_error = exc
                 continue
+            if table is not None and len(table) >= self._row_limit:
+                raise GaiaQueryError(
+                    f"VizieR returned the row limit ({self._row_limit}); cone may be truncated"
+                )
             return _vizier_gaia_objects(table)
         raise GaiaQueryError(str(last_error) if last_error is not None else "VizieR unavailable")
 
@@ -151,6 +155,10 @@ def _read_cone(center: SkyCoord, radius_arcsec: float) -> list[GaiaObject]:
     table = job.get_results()
     if table is None or len(table) == 0:
         return []
+    if len(table) >= _ROW_LIMIT:
+        raise GaiaQueryError(
+            f"Gaia cone returned the row limit ({_ROW_LIMIT}); result may be truncated"
+        )
     wanted = [column for column in _GAIA_COLUMNS if column in table.colnames]
     objects: list[GaiaObject] = []
     for row in table[wanted]:
