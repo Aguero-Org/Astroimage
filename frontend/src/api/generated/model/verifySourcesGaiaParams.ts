@@ -87,6 +87,7 @@ ext_min_score?: number;
 ext_max_sources?: number;
 /**
  * @minimum 0
+ * @maximum 3600
  */
 match_radius_arcsec?: number;
 /**

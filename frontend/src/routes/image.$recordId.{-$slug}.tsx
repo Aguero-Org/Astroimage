@@ -4,6 +4,7 @@ import { getGetImageInfoQueryOptions } from "@/api/generated/hub/hub";
 import type {
   DetectSourcesParams,
   RenderFitsImageParams,
+  VerifySourcesGaiaParams,
 } from "@/api/generated/model";
 import { Button } from "@/components/ui/button";
 import { HelpHint } from "@/components/ui/help-hint";
@@ -17,6 +18,7 @@ import {
   useImageRender,
   useSourceDetection,
 } from "@/features/images/api";
+import { CrossmatchSettingsForm } from "@/features/images/components/crossmatch-settings-form";
 import {
   GaiaCrossMatch,
   gaiaMatchedIds,
@@ -140,8 +142,13 @@ function ImageWorkspacePage({
 
   const [workspace, dispatch] = useImageWorkspace();
   const [focusPulse, setFocusPulse] = useState<SourceFocusPulse | null>(null);
-  const { inspectorOpen, selectedSource, renderParams, detectionParams } =
-    workspace;
+  const {
+    inspectorOpen,
+    selectedSource,
+    renderParams,
+    detectionParams,
+    crossmatchParams,
+  } = workspace;
   const infoQuery = useImageInfo(recordId);
   const imageInfo = infoQuery.data;
   const imageHdus = imageInfo?.hdus.images ?? [];
@@ -173,16 +180,27 @@ function ImageWorkspacePage({
   const bestPresetQuery = useBestPreset(recordId, hdu);
   const detected = sourcesQuery.data;
   const detectionSummary = detected?.summary;
+  const gaiaParams: VerifySourcesGaiaParams = {
+    ...sourcesQueryParams,
+    match_radius_arcsec: crossmatchParams.gaiaRadiusArcsec,
+    probability_power: crossmatchParams.gaiaProbabilityPower,
+  };
   const gaia = useGaiaCrossMatch(
     recordId,
-    sourcesQueryParams,
+    gaiaParams,
     detectionSummary !== undefined,
   );
+  const gaiaReady = gaia.queried && gaia.error === null;
   const simbad = useSimbadReferences({
     recordId,
     hdu,
-    enabled: gaia.summary !== undefined,
+    detectionParams,
+    crossmatchRadiusArcsec: crossmatchParams.simbadRadiusArcsec,
+    probabilityPower: crossmatchParams.simbadProbabilityPower,
+    enabled: detectionSummary !== undefined,
   });
+  const simbadReady = simbad.result !== undefined || simbad.isError;
+  const workspaceReady = gaiaReady || simbadReady;
   const simbadPointIds = new Set<number>();
   const simbadExtendedIds = new Set<number>();
   for (const obj of simbad.objects) {
@@ -228,7 +246,8 @@ function ImageWorkspacePage({
     <main className="relative h-svh w-full overflow-hidden bg-black">
       <ScientificWorkspace
         recordId={recordId}
-        enabled={gaia.summary !== undefined}
+        enabled={workspaceReady}
+        catalogsEnabled={gaiaReady}
         params={scientificParams}
         preview={preview}
         selectedSource={
@@ -389,6 +408,15 @@ function ImageWorkspacePage({
                     isFetching={gaia.isFetching}
                     isError={gaia.isError}
                     summary={gaia.summary}
+                    queried={gaia.queried}
+                    error={gaia.error}
+                    onRetry={gaia.refetch}
+                  />
+                  <CrossmatchSettingsForm
+                    params={crossmatchParams}
+                    onSubmit={(params) =>
+                      dispatch({ type: "set-crossmatch-params", params })
+                    }
                   />
                 </>
               }

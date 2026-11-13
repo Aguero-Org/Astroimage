@@ -56,7 +56,7 @@ function renderContent(overrides: Partial<ContentProps> = {}) {
 }
 
 describe("RecommendationContent", () => {
-  it("waits for Gaia before showing results", () => {
+  it("waits until enabled before showing results", () => {
     renderContent({ enabled: false });
 
     expect(screen.getByTestId("catalogs-info")).toHaveTextContent(/Gaia/);

@@ -121,7 +121,7 @@ async def test_simbad_references_returns_objects_and_bibliography(
     try:
         response = await client.get(
             f"/image/{record_id}/simbad-references",
-            params={"limit": "10", "max_references": "1"},
+            params={"limit": "10", "max_references": "1", "min_probability": "0"},
             headers={"X-Client-Id": "alice"},
         )
     finally:

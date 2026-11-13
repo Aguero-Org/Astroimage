@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { MOCK_POINT_SOURCE } from "@/mocks/data/image";
+import { DEFAULT_CROSSMATCH_PARAMS } from "./crossmatch";
 import {
   DEFAULT_IMAGE_WORKSPACE,
   imageWorkspaceReducer,
@@ -16,6 +17,7 @@ describe("ImageWorkspaceUi", () => {
       selectedSource: null,
       renderParams: DEFAULT_RENDER_PARAMS,
       detectionParams: DEFAULT_SOURCE_DETECTION_PARAMS,
+      crossmatchParams: DEFAULT_CROSSMATCH_PARAMS,
     });
   });
 
@@ -35,6 +37,10 @@ describe("ImageWorkspaceUi", () => {
     expect(resolveWorkspaceHdu(null, [{ index: 1 }, { index: 2 }], null)).toBe(
       1,
     );
+  });
+
+  it("returns no hdu when the file has no image planes", () => {
+    expect(resolveWorkspaceHdu(null, [], null)).toBeNull();
   });
 
   it("opens and closes the inspector explicitly", () => {
@@ -85,6 +91,24 @@ describe("ImageWorkspaceUi", () => {
 
     expect(next.detectionParams).toBe(params);
     expect(next.selectedSource).toBeNull();
+  });
+
+  it("stores crossmatch params without touching the selection", () => {
+    const params = {
+      ...DEFAULT_CROSSMATCH_PARAMS,
+      gaiaRadiusArcsec: 6,
+    };
+    const selected = {
+      ...DEFAULT_IMAGE_WORKSPACE,
+      selectedSource: MOCK_POINT_SOURCE,
+    };
+    const next = imageWorkspaceReducer(selected, {
+      type: "set-crossmatch-params",
+      params,
+    });
+
+    expect(next.crossmatchParams).toBe(params);
+    expect(next.selectedSource).toBe(MOCK_POINT_SOURCE);
   });
 
   it("selects a source and opens the inspector", () => {

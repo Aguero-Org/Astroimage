@@ -9,7 +9,12 @@ from astroimage.fits.service import FitsService
 from astroimage.shared.deps import object_storage_dependency
 from astroimage.shared.object_storage import ObjectStorage
 from astroimage.sources.cache import DetectionCache
-from astroimage.sources.gaia import AstroqueryGaiaProvider, GaiaCatalogProvider
+from astroimage.sources.gaia import (
+    AstroqueryGaiaProvider,
+    FallbackGaiaProvider,
+    GaiaCatalogProvider,
+    VizierGaiaProvider,
+)
 from astroimage.sources.gaia_jobs import GaiaBackgroundVerify, GaiaJobRegistry
 from astroimage.sources.service import GaiaVerificationService, SourceDetectionService
 
@@ -24,7 +29,7 @@ def source_service_dependency(
 
 
 def gaia_provider_dependency() -> GaiaCatalogProvider:
-    return AstroqueryGaiaProvider()
+    return FallbackGaiaProvider(AstroqueryGaiaProvider(), VizierGaiaProvider())
 
 
 def gaia_service_dependency(

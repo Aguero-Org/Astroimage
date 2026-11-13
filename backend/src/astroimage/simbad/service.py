@@ -198,6 +198,9 @@ class SimbadReferenceService:
             return SimbadReferencesResponse(
                 source_name=metadata.source_name,
                 limit=resolved.limit,
+                crossmatch_radius_arcsec=resolved.crossmatch_radius_arcsec,
+                probability_power=resolved.probability_power,
+                min_probability=resolved.min_probability,
                 include_aliases=resolved.include_aliases,
                 include_bibliography=resolved.include_bibliography,
                 wcs_present=False,
@@ -248,6 +251,7 @@ class SimbadReferenceService:
             wcs,
             hdu_index,
             client_id=client_id,
+            config=resolved,
         )
         warnings = [
             warning
@@ -382,6 +386,7 @@ class SimbadReferenceService:
         hdu_index: int | None,
         *,
         client_id: str,
+        config: SimbadReferencesConfigSchema,
     ) -> tuple[list[SkyDetection], str | None]:
         if self._detection is None or record_id is None:
             return [], None
@@ -390,6 +395,8 @@ class SimbadReferenceService:
                 record_id,
                 client_id=client_id,
                 hdu_index=hdu_index,
+                config=config.detection,
+                extended_config=config.extended_detection,
             )
         except Exception as exc:
             _log.warning("simbad_detection_failed", detail=str(exc), exc_info=exc)
@@ -472,8 +479,11 @@ class SimbadReferenceService:
         )
         indexes, separations, _ = object_coord.match_to_catalog_sky(detection_coords)
         separation_arcsec = float(separations[0].to_value(u.arcsec))
-        matched = separation_arcsec <= radius
-        probability = (1.0 - min(separation_arcsec / radius, 1.0)) ** power if matched else 0.0
+        within_radius = separation_arcsec <= radius
+        probability = (
+            (1.0 - min(separation_arcsec / radius, 1.0)) ** power if within_radius else 0.0
+        )
+        matched = within_radius and probability >= config.min_probability
         detection = detections[int(indexes[0])]
         match = SimbadImageMatch(
             source_id=detection.source_id,
@@ -508,6 +518,9 @@ class SimbadReferenceService:
             ra_deg=float(center.ra.deg),
             dec_deg=float(center.dec.deg),
             radius_arcsec=radius,
+            crossmatch_radius_arcsec=config.crossmatch_radius_arcsec,
+            probability_power=config.probability_power,
+            min_probability=config.min_probability,
             limit=config.limit,
             include_aliases=config.include_aliases,
             include_bibliography=config.include_bibliography,

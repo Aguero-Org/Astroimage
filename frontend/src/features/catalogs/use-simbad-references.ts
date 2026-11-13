@@ -1,4 +1,5 @@
 import type {
+  DetectSourcesParams,
   GetSimbadReferencesParams,
   SimbadReferencesResponse,
 } from "@/api/generated/model";
@@ -7,6 +8,9 @@ import { useGetSimbadReferences } from "@/api/generated/simbad/simbad";
 type UseSimbadReferencesOptions = {
   recordId: string;
   hdu: number | null;
+  detectionParams: DetectSourcesParams;
+  crossmatchRadiusArcsec: number;
+  probabilityPower: number;
   enabled: boolean;
 };
 
@@ -15,10 +19,17 @@ const STALE_TIME_MS = 5 * 60 * 1000;
 export function useSimbadReferences({
   recordId,
   hdu,
+  detectionParams,
+  crossmatchRadiusArcsec,
+  probabilityPower,
   enabled,
 }: UseSimbadReferencesOptions) {
-  const params: GetSimbadReferencesParams | undefined =
-    hdu === null ? undefined : { hdu };
+  const params: GetSimbadReferencesParams = {
+    ...detectionParams,
+    hdu: hdu ?? undefined,
+    crossmatch_radius_arcsec: crossmatchRadiusArcsec,
+    probability_power: probabilityPower,
+  };
   const query = useGetSimbadReferences(recordId, params, {
     query: {
       enabled,
