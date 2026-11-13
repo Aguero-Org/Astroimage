@@ -19,6 +19,7 @@ type GaiaCrossMatchProps = {
   summary: GaiaVerificationResponse["summary"];
   queried: boolean;
   error: string | null;
+  completed: boolean;
   onRetry: () => void;
 };
 
@@ -50,6 +51,7 @@ export function useGaiaCrossMatch(
     summary: result?.summary,
     queried: result?.queried ?? false,
     error: result?.error ?? null,
+    completed: result !== undefined,
     isFetching,
     isError,
     refetch,
@@ -62,6 +64,7 @@ export function GaiaCrossMatch({
   summary,
   queried,
   error,
+  completed,
   onRetry,
 }: Readonly<GaiaCrossMatchProps>) {
   const failed = !!(isError || error !== null);
@@ -101,7 +104,7 @@ export function GaiaCrossMatch({
           {summary.extended?.count ?? 0}.
         </p>
       )}
-      {!failed && !queried && !isFetching && (
+      {!failed && completed && !queried && !isFetching && (
         <p
           data-testid="gaia-unqueried"
           className="text-sm text-muted-foreground"

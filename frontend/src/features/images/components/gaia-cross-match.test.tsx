@@ -35,6 +35,7 @@ function GaiaHarness({ enabled }: { enabled: boolean }) {
         summary={gaia.summary}
         queried={gaia.queried}
         error={gaia.error}
+        completed={gaia.completed}
         onRetry={gaia.refetch}
       />
       <ul data-testid="gaia-matches">

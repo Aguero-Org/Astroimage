@@ -193,7 +193,7 @@ function ImageWorkspacePage({
     gaiaParams,
     detectionSummary !== undefined,
   );
-  const gaiaReady = gaia.queried && gaia.error === null;
+  const gaiaReady = gaia.completed && gaia.error === null;
   const simbad = useSimbadReferences({
     recordId,
     hdu,
@@ -402,6 +402,7 @@ function ImageWorkspacePage({
                     summary={gaia.summary}
                     queried={gaia.queried}
                     error={gaia.error}
+                    completed={gaia.completed}
                     onRetry={gaia.refetch}
                   />
                   <CrossmatchSettingsForm
