@@ -348,19 +348,32 @@ class SimbadReferenceService:
         cached: SimbadReferencesResponse | None,
     ) -> _ConeResolution:
         if self._downloads is not None and not refresh:
-            stored = await self._read_download(center, radius, config)
-            if stored is not None:
-                if cached is not None and _same_objects(cached.objects, stored):
-                    return _ConeResolution(stored, reuse=cached)
-                return _ConeResolution(stored)
-            if cached is not None and cached.error is not None and not cached.queried:
-                return _ConeResolution([], error=cached.error, reuse=cached)
+            reused = await self._reuse_download(center, radius, config, cached=cached)
+            if reused is not None:
+                return reused
         objects, error = await self._query_region(center, radius, config)
         if self._downloads is not None and error is None:
             await self._write_download(center, radius, config, objects)
             if cached is not None and _same_objects(cached.objects, objects):
                 return _ConeResolution(objects, reuse=cached)
         return _ConeResolution(objects, error=error)
+
+    async def _reuse_download(
+        self,
+        center: SkyCoord,
+        radius: float,
+        config: SimbadReferencesConfigSchema,
+        *,
+        cached: SimbadReferencesResponse | None,
+    ) -> _ConeResolution | None:
+        stored = await self._read_download(center, radius, config)
+        if stored is None:
+            if cached is not None and cached.error is not None and not cached.queried:
+                return _ConeResolution([], error=cached.error, reuse=cached)
+            return None
+        if cached is not None and _same_objects(cached.objects, stored):
+            return _ConeResolution(stored, reuse=cached)
+        return _ConeResolution(stored)
 
     async def _read_download(
         self,
