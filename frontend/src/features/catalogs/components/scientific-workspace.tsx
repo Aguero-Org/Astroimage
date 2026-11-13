@@ -587,16 +587,12 @@ function simbadNotice(
     return {
       kind: "info",
       testId: "simbad-empty",
-      message: emptySimbadMessage(Boolean(selectedSource)),
+      message: selectedSource
+        ? "No hay objetos SIMBAD asociados a la fuente seleccionada."
+        : "Ningún objeto SIMBAD coincide con las fuentes detectadas en esta imagen.",
     };
   }
   return { kind: "list" };
-}
-
-function emptySimbadMessage(hasSelection: boolean): string {
-  return hasSelection
-    ? "No hay objetos SIMBAD asociados a la fuente seleccionada."
-    : "Ningún objeto SIMBAD coincide con las fuentes detectadas en esta imagen.";
 }
 
 function sourceKindLabel(objectType: SourceSelection["object_type"]): string {
