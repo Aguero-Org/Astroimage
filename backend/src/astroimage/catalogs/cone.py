@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from dataclasses import replace
-
 import astropy.units as u
 from astropy.coordinates import SkyCoord
 
@@ -58,10 +56,20 @@ def _row_in_cone(
 ) -> CatalogRow | None:
     separation = separations.get(row.index)
     if separation is None:
-        return replace(row, separation_arcsec=None)
+        return _with_separation(row, None)
     if separation <= radius_arcsec:
-        return replace(row, separation_arcsec=separation)
+        return _with_separation(row, separation)
     return None
+
+
+def _with_separation(row: CatalogRow, separation_arcsec: float | None) -> CatalogRow:
+    return CatalogRow(
+        index=row.index,
+        ra_deg=row.ra_deg,
+        dec_deg=row.dec_deg,
+        separation_arcsec=separation_arcsec,
+        values=row.values,
+    )
 
 
 def _narrow_rows(
