@@ -244,7 +244,7 @@ class GaiaVerificationService:
             )
         failures = [result for result in results if isinstance(result, Exception)]
         if failures:
-            _log.warning("gaia_provider_error", detail=str(failures[0]))
+            _log.warning("gaia_provider_error", exc_info=failures[0])
             return self._finish(
                 prepared,
                 [],
@@ -267,7 +267,7 @@ class GaiaVerificationService:
                     fallback_radius,
                 )
             except GaiaQueryError as exc:
-                _log.warning("gaia_fallback_failed", detail=str(exc))
+                _log.warning("gaia_fallback_failed", exc_info=exc)
                 fallback_objects = []
             if fallback_objects:
                 _log.info("gaia_fallback_recovered", n=len(fallback_objects))
@@ -313,7 +313,7 @@ class GaiaVerificationService:
                 try:
                     objects = self.provider.search_cone(center, radius)
                 except GaiaQueryError as exc:
-                    _log.warning("gaia_provider_error", detail=str(exc))
+                    _log.warning("gaia_provider_error", exc_info=exc)
                     error = f"Gaia query failed: {exc}"
                 queried = error is None
             response = self._finish(prepared, objects, queried=queried, error=error)

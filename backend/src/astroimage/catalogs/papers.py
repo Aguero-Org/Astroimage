@@ -132,12 +132,12 @@ class AdsPaperLookup:
                     return None
                 payload = response.read()
         except (urllib_error.URLError, TimeoutError, ValueError) as exc:
-            _log.warning("ads_query_failed", field=field, count=len(terms), detail=str(exc))
+            _log.warning("ads_query_failed", field=field, count=len(terms), exc_info=exc)
             return None
         try:
             parsed = json.loads(payload.decode("utf-8", errors="replace"))
         except json.JSONDecodeError as exc:
-            _log.warning("ads_query_failed", field=field, count=len(terms), detail=str(exc))
+            _log.warning("ads_query_failed", field=field, count=len(terms), exc_info=exc)
             return None
         if not isinstance(parsed, dict):
             return None

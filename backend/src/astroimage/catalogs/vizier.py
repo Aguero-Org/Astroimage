@@ -66,7 +66,7 @@ class AstroqueryVizierProvider:
             try:
                 tables = self._query_server(server, center, radius_arcsec, row_limit)
             except Exception as exc:
-                _log.warning("vizier_server_failed", server=server, detail=str(exc), exc_info=exc)
+                _log.info("vizier_server_failed", server=server, exc_info=exc)
                 last_error = exc
                 continue
             catalogs = _tables_to_catalogs(tables)
@@ -101,11 +101,10 @@ class AstroqueryVizierProvider:
             try:
                 metadata = Vizier.get_catalog_metadata(catalog=candidate)
             except Exception as exc:
-                _log.warning(
+                _log.info(
                     "vizier_metadata_failed",
                     catalogue_id=catalogue_id,
                     candidate=candidate,
-                    detail=str(exc),
                     exc_info=exc,
                 )
                 continue

@@ -98,7 +98,7 @@ class CatalogLookup:
                 "Probá de nuevo en unos minutos."
             )
         except Exception as exc:
-            _log.warning("vizier_query_failed", detail=str(exc), exc_info=exc)
+            _log.warning("vizier_query_failed", exc_info=exc)
             return [], (
                 "La consulta a VizieR falló en todos sus servidores. "
                 "Probá de nuevo en unos minutos."
@@ -173,7 +173,7 @@ class CatalogLookup:
                 _log.warning(
                     "vizier_catalogue_failed",
                     catalogue_id=table.catalogue_id,
-                    detail=str(result),
+                    exc_info=result,
                 )
                 pairs.append((self.fallback_evaluation(table, config), table))
             else:

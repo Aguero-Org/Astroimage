@@ -135,7 +135,7 @@ ORDER BY "year" DESC
             client.TIMEOUT = int(self._timeout_s)
             return client.query_tap(query, maxrec=maxrec)
         except Exception as exc:
-            _log.warning("simbad_query_failed", detail=str(exc), exc_info=exc)
+            _log.warning("simbad_query_failed", exc_info=exc)
             raise SimbadQueryError(str(exc)) from exc
 
 

@@ -436,7 +436,7 @@ class SimbadReferenceService:
             _log.warning("simbad_query_timed_out", timeout_s=self._query_timeout_s)
             return [], f"SIMBAD query timed out after {self._query_timeout_s} seconds"
         except Exception as exc:
-            _log.warning("simbad_query_failed", detail=str(exc), exc_info=exc)
+            _log.warning("simbad_query_failed", exc_info=exc)
             return [], f"SIMBAD query failed: {exc}"
         return list(objects), None
 
@@ -462,7 +462,7 @@ class SimbadReferenceService:
             _log.warning("simbad_aliases_timed_out", timeout_s=self._query_timeout_s)
             return {}, "SIMBAD identifier query timed out"
         except Exception as exc:
-            _log.warning("simbad_aliases_failed", detail=str(exc), exc_info=exc)
+            _log.warning("simbad_aliases_failed", exc_info=exc)
             return {}, f"SIMBAD identifier query failed: {exc}"
         grouped: dict[str, list[str]] = defaultdict(list)
         for alias in aliases:
@@ -495,7 +495,7 @@ class SimbadReferenceService:
             _log.warning("simbad_references_timed_out", timeout_s=self._query_timeout_s)
             return {}, "SIMBAD bibliography query timed out"
         except Exception as exc:
-            _log.warning("simbad_references_failed", detail=str(exc), exc_info=exc)
+            _log.warning("simbad_references_failed", exc_info=exc)
             return {}, f"SIMBAD bibliography query failed: {exc}"
         grouped: dict[str, list[SimbadReference]] = defaultdict(list)
         for reference in references:
