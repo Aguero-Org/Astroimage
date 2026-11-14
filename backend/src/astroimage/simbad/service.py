@@ -110,13 +110,19 @@ def _same_objects(
 
 def _object_identity(
     item: SimbadObject | SimbadObjectSchema,
-) -> tuple[str, float, float, str | None, float | None]:
+) -> tuple[str, float, float, str | None, float | None, float | None, str | None, int | None]:
+    reference_count = (
+        item.reference_count if isinstance(item, SimbadObject) else item.total_reference_count
+    )
     return (
         item.main_id,
         item.ra_deg,
         item.dec_deg,
         item.otype,
         item.separation_arcsec,
+        item.parallax_mas,
+        item.spectral_type,
+        reference_count,
     )
 
 
