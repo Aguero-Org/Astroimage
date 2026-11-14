@@ -217,7 +217,8 @@ class SimbadReferenceService:
             cached=cached if self._downloads is not None else None,
             refresh=refresh,
         )
-        self._cache.set(key, result)
+        if result is not cached:
+            self._cache.set(key, result)
         return result
 
     async def references(
