@@ -1,8 +1,12 @@
 from __future__ import annotations
 
+import io
+import logging
 from typing import Any
 
-from astroimage.shared.logging import enrich_exceptions
+import structlog
+
+from astroimage.shared.logging import enrich_exceptions, setup_logging
 
 
 class _FakeUrl:
@@ -101,3 +105,29 @@ def test_keeps_explicit_detail() -> None:
         {"event": "x", "level": "warning", "exc_info": ValueError("boom"), "detail": "already set"}
     )
     assert result["detail"] == "already set"
+
+
+def test_configured_logger_omits_the_traceback_outside_debug() -> None:
+    setup_logging("INFO")
+    stream = io.StringIO()
+    handlers = [
+        handler
+        for handler in logging.getLogger().handlers
+        if isinstance(handler, logging.StreamHandler)
+    ]
+    originals = [handler.stream for handler in handlers]
+    for handler in handlers:
+        handler.stream = stream
+    try:
+        logger = structlog.get_logger("boundary")
+        try:
+            raise ValueError("boom")
+        except ValueError:
+            logger.exception("probe_failed")
+    finally:
+        for handler, original in zip(handlers, originals, strict=True):
+            handler.stream = original
+
+    output = stream.getvalue()
+    assert "probe_failed" in output
+    assert "Traceback" not in output

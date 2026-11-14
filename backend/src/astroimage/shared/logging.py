@@ -5,6 +5,7 @@ from collections.abc import MutableMapping
 from typing import Any
 
 import structlog
+from structlog.stdlib import _FixedFindCallerLogger
 
 _OTLP_EXPORTER_LOGGER = "opentelemetry.exporter.otlp.proto.http.trace_exporter"
 
@@ -96,6 +97,14 @@ def _quiet_third_party_loggers() -> None:
     logging.getLogger(_OTLP_EXPORTER_LOGGER).setLevel(logging.CRITICAL)
 
 
+class _StructuredLogger(_FixedFindCallerLogger):
+    """Keep the traceback out of the record; structlog renders it only at DEBUG."""
+
+    def exception(self, msg: object, *args: object, **kwargs: Any) -> None:
+        kwargs.setdefault("exc_info", False)
+        self.error(msg, *args, **kwargs)
+
+
 def setup_logging(log_level: str) -> None:
     level = getattr(logging, log_level.upper(), logging.INFO)
     logging.basicConfig(format="%(message)s", stream=sys.stdout, level=level)
@@ -118,3 +127,4 @@ def setup_logging(log_level: str) -> None:
         logger_factory=structlog.stdlib.LoggerFactory(),
         cache_logger_on_first_use=True,
     )
+    logging.setLoggerClass(_StructuredLogger)
