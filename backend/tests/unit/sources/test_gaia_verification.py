@@ -91,6 +91,29 @@ class _TrackingProvider:
                 self._in_flight -= 1
 
 
+class _GatedProvider:
+    def __init__(self) -> None:
+        self._lock = threading.Lock()
+        self._in_flight = 0
+        self.searches: list[tuple[float, float, float]] = []
+        self.max_concurrent = 0
+        self.started = threading.Event()
+        self.release = threading.Event()
+
+    def search_cone(self, center: SkyCoord, radius_arcsec: float) -> list[GaiaObject]:
+        with self._lock:
+            self._in_flight += 1
+            self.max_concurrent = max(self.max_concurrent, self._in_flight)
+        self.searches.append((float(center.ra.deg), float(center.dec.deg), radius_arcsec))
+        try:
+            self.started.set()
+            self.release.wait(timeout=5.0)
+            return []
+        finally:
+            with self._lock:
+                self._in_flight -= 1
+
+
 class _FakeFitsService:
     def __init__(self, payload: bytes) -> None:
         self._payload = payload
@@ -395,25 +418,41 @@ async def test_verify_from_record_returns_matches() -> None:
 async def test_gaia_covering_query_runs_across_thread_pool() -> None:
     payload = _wcs_fits_bytes()
     fits_service = cast(FitsService, _FakeFitsService(payload))
-    provider = _TrackingProvider(delay_s=1.0)
+    provider = _GatedProvider()
     service = GaiaVerificationService(
         detection_service=SourceDetectionService(fits=fits_service),
         fits=fits_service,
         provider=provider,
         query_timeout_s=30.0,
     )
+    loop_ticks = 0
 
-    started = time.perf_counter()
-    result = await service.verify_from_record(
-        uuid4(),
-        config=PointDetectionConfigSchema(sigma=6.0, fwhm=5.0),
+    async def ticker() -> None:
+        nonlocal loop_ticks
+        while not provider.release.is_set():
+            loop_ticks += 1
+            await asyncio.sleep(0.01)
+
+    ticker_task = asyncio.create_task(ticker())
+    verify_task = asyncio.create_task(
+        service.verify_from_record(
+            uuid4(),
+            config=PointDetectionConfigSchema(sigma=6.0, fwhm=5.0),
+        )
     )
-    elapsed = time.perf_counter() - started
+    try:
+        assert await asyncio.to_thread(provider.started.wait, 5.0)
+        await asyncio.sleep(0.05)
+        ticks_before_release = loop_ticks
+    finally:
+        provider.release.set()
+        result = await verify_task
+        await ticker_task
 
+    assert ticks_before_release > 0
     assert result.queried is True
     assert len(provider.searches) == 1
     assert provider.max_concurrent == 1
-    assert elapsed < 3.0
 
 
 @pytest.mark.asyncio
