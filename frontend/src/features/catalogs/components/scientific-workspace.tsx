@@ -573,15 +573,15 @@ function simbadNotice(
       message: "Sin posición en el cielo (WCS) no hay objetos SIMBAD.",
     };
   }
+  if (simbad.result?.error) {
+    return { kind: "error", message: simbad.result.error };
+  }
   if (simbad.result?.queried === false) {
     return {
       kind: "info",
       testId: "simbad-info",
       message: "No se pudo consultar SIMBAD para esta región del cielo.",
     };
-  }
-  if (simbad.result?.error) {
-    return { kind: "error", message: simbad.result.error };
   }
   if (simbad.objects.length === 0) {
     return {
