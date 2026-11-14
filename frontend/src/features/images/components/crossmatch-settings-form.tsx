@@ -141,10 +141,10 @@ function CrossmatchFieldGroup({
   onChange: (key: keyof CrossmatchDraft, value: string) => void;
 }>) {
   return (
-    <section className="flex flex-col gap-2">
-      <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+    <fieldset className="flex flex-col gap-2">
+      <legend className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
         {title}
-      </h4>
+      </legend>
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         {fields.map((field) => (
           <div key={field.key} className="flex flex-col gap-1 text-sm">
@@ -173,6 +173,6 @@ function CrossmatchFieldGroup({
           </div>
         ))}
       </div>
-    </section>
+    </fieldset>
   );
 }
