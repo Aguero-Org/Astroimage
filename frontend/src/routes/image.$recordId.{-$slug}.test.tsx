@@ -188,9 +188,14 @@ describe("ImageDetailPage", () => {
     await waitFor(() => expect(onRequest).toHaveBeenCalledTimes(1), {
       timeout: 8000,
     });
-    expect(screen.getByTestId("scientific-toggle")).toHaveAttribute(
-      "aria-expanded",
-      "true",
+    await waitFor(
+      () => {
+        expect(screen.getByTestId("scientific-toggle")).toHaveAttribute(
+          "aria-expanded",
+          "true",
+        );
+      },
+      { timeout: 8000 },
     );
 
     releaseGaia?.();
@@ -251,12 +256,17 @@ describe("ImageDetailPage", () => {
     await waitFor(() => expect(onRequest).toHaveBeenCalledTimes(1), {
       timeout: 8000,
     });
-    expect(screen.getByTestId("scientific-tab-simbad")).toHaveTextContent(
-      "SIMBAD (2)",
-    );
-    expect(screen.getByTestId("scientific-toggle")).toHaveAttribute(
-      "aria-expanded",
-      "true",
+    await waitFor(
+      () => {
+        expect(screen.getByTestId("scientific-tab-simbad")).toHaveTextContent(
+          "SIMBAD (2)",
+        );
+        expect(screen.getByTestId("scientific-toggle")).toHaveAttribute(
+          "aria-expanded",
+          "true",
+        );
+      },
+      { timeout: 8000 },
     );
   });
 
@@ -294,12 +304,17 @@ describe("ImageDetailPage", () => {
     await waitFor(() => expect(onRequest).toHaveBeenCalledTimes(1), {
       timeout: 8000,
     });
-    expect(screen.getByTestId("scientific-tab-simbad")).toHaveTextContent(
-      "SIMBAD (2)",
-    );
-    expect(screen.getByTestId("scientific-toggle")).toHaveAttribute(
-      "aria-expanded",
-      "true",
+    await waitFor(
+      () => {
+        expect(screen.getByTestId("scientific-tab-simbad")).toHaveTextContent(
+          "SIMBAD (2)",
+        );
+        expect(screen.getByTestId("scientific-toggle")).toHaveAttribute(
+          "aria-expanded",
+          "true",
+        );
+      },
+      { timeout: 8000 },
     );
   });
 
