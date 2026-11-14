@@ -21,7 +21,7 @@ export type BestPreset = {
 };
 
 export const NO_MEASUREMENT_SUMMARY =
-  "No se pudo medir el núcleo en esta imagen: quedan los valores que ya tenías.";
+  "No se pudo medir el núcleo en esta imagen";
 
 export function bestPresetPointParams(
   preset: SourcePresetResponse,
