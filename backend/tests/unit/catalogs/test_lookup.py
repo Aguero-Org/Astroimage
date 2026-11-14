@@ -157,6 +157,37 @@ async def test_query_region_narrows_a_covered_download() -> None:
     assert provider.calls == 0
 
 
+async def test_query_region_drops_rows_without_coordinates_when_narrowing() -> None:
+    stored = [
+        CatalogTable(
+            catalogue_id="I/350",
+            rows=(
+                CatalogRow(index=0, ra_deg=10.0, dec_deg=20.0),
+                CatalogRow(index=1, ra_deg=None, dec_deg=None),
+            ),
+        ),
+        CatalogTable(
+            catalogue_id="II/1",
+            rows=(CatalogRow(index=0, ra_deg=None, dec_deg=None),),
+        ),
+    ]
+    lookup = CatalogLookup(
+        provider=_Provider(),  # type: ignore[arg-type]
+        readme_fetcher=_Readme(),
+        query_timeout_s=1,
+        downloads=_Store(CatalogDownloadHit(tables=stored, covered=True)),
+    )
+
+    tables, error = await lookup.query_region(
+        SkyCoord(10, 20, unit="deg"),
+        CatalogRecommendationConfigSchema(search_radius_arcsec=30.0),
+    )
+
+    assert error is None
+    assert [table.catalogue_id for table in tables] == ["I/350"]
+    assert [row.index for row in tables[0].rows] == [0]
+
+
 async def test_query_region_stores_a_miss() -> None:
     provider = _Provider()
     store = _Store(None)

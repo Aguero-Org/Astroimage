@@ -56,7 +56,7 @@ def _row_in_cone(
 ) -> CatalogRow | None:
     separation = separations.get(row.index)
     if separation is None:
-        return _with_separation(row, None)
+        return None
     if separation <= radius_arcsec:
         return _with_separation(row, separation)
     return None
