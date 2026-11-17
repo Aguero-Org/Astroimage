@@ -304,7 +304,7 @@ def test_intra_feature_layer_dependencies(
 
     architecture: LayeredArchitecture = LayeredArchitecture()
     for name, modules in present:
-        architecture = architecture.layer(name).containing_modules(modules)  # type: ignore[assignment]
+        architecture = architecture.layer(name).containing_modules(modules)
 
     def forbid(source_layer: str, *target_layers: str) -> None:
         existing_targets = [layer for layer in target_layers if layer in dict(present)]
