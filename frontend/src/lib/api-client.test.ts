@@ -147,7 +147,7 @@ describe("customFetch — FormData", () => {
     );
 
     const formData = new FormData();
-    formData.append("file", new Blob(["data"]), "test.fits");
+    formData.append("file", "data");
 
     await customFetch("/upload", { method: "POST", body: formData });
 

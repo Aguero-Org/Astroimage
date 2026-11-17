@@ -1,7 +1,26 @@
 import { fireEvent, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { renderWithRouter } from "@/test/router";
+
+// jsdom 31 ships its own FormData/Blob while fetch/Request come from undici, so
+// a File inside FormData breaks the request interceptor. The local import is
+// stubbed here; the network path is covered elsewhere.
+vi.mock("@/features/images/api", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/features/images/api")>();
+  return {
+    ...actual,
+    useImportLocalFits: (() => ({
+      isPending: false,
+      mutate: (
+        _variables: unknown,
+        options?: { onSuccess?: (imported: { slug: string }[]) => void },
+      ) => {
+        options?.onSuccess?.([{ slug: "local" }]);
+      },
+    })) as unknown as typeof actual.useImportLocalFits,
+  };
+});
 
 describe("ImportFitsControl", () => {
   it("uploads a local fits file from the home list", async () => {
