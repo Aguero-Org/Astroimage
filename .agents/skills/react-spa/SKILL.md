@@ -30,6 +30,7 @@ Vite + React 19 client bundle. No server components, no Next.js, no second route
 - native `fetch` via the Orval mutator in `src/lib/api-client.ts` (`frontend/src/lib/api-client.ts`)
 - Orval client generated from `backend/openapi.json`
 - React Hook Form + Zod
+- react-joyride (product tours, `steps`-driven; owns tour overlay/spotlight and popover positioning via Floating UI)
 - Biome (lint + format)
 - Vitest + Testing Library + user-event + MSW
 - Playwright

@@ -36,7 +36,7 @@ export function DeleteImageDialog({
             <strong className="font-semibold text-foreground">
               {target?.name}
             </strong>{" "}
-            del servidor. El original en MAST no se toca.
+            del servidor.
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>

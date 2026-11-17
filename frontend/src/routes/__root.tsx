@@ -10,6 +10,9 @@ import { Navbar } from "@/components/navbar";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { TransfersTray } from "@/features/images/components/transfers-tray";
+import { OnboardingLauncher } from "@/features/onboarding/components/onboarding-launcher";
+import { Onboarding } from "@/features/onboarding/onboarding";
+import { tourForRoute } from "@/features/onboarding/tours";
 
 export const Route = createRootRouteWithContext<{
   queryClient: QueryClient;
@@ -23,6 +26,7 @@ function RootLayout() {
   const isImage = location.pathname.startsWith("/image/");
   const showDevtools =
     import.meta.env.DEV && import.meta.env.VITE_E2E !== "true";
+  const tour = tourForRoute(location.pathname);
 
   return (
     <TooltipProvider delayDuration={200}>
@@ -37,6 +41,8 @@ function RootLayout() {
       )}
       <Outlet />
       <TransfersTray />
+      <OnboardingLauncher tourId={tour?.id} />
+      <Onboarding />
       <Toaster />
       {showDevtools ? (
         <>
