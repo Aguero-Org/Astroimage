@@ -1,0 +1,147 @@
+@startuml modelo-entidades
+' Astroimage - Modelo de entidades.
+' Solo objetos de negocio. Sin componentes arquitectonicos.
+
+skinparam backgroundColor #FFFFFF
+skinparam monochrome true
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam classAttributeIconSize 0
+skinparam arrowThickness 1
+skinparam nodesep 26
+skinparam ranksep 40
+skinparam linetype ortho
+hide circle
+hide empty members
+
+title Astroimage - Modelo de entidades
+
+package "Persistencia - PostgreSQL" {
+  class FitsRecord <<fits_records>> {
+    + id : uuid <<PK>>
+    object_key : varchar <<UQ>>
+    original_filename : varchar
+    size_bytes : bigint
+    content_hash : varchar <<UQ>>
+    source_url : text <<UQ>>
+    metadata_payload : jsonb
+    created_at : timestamptz
+  }
+
+  class ImagePreview <<image_previews>> {
+    + id : uuid <<PK>>
+    record_id : uuid <<FK>>
+    preset_id : varchar
+    edge_px : int
+    config_hash : varchar
+    object_key : varchar <<UQ>>
+    created_at : timestamptz
+  }
+
+  class ImageTransfer <<image_transfers>> {
+    + id : uuid <<PK>>
+    status : varchar
+    data_uri : varchar
+    product_filename : varchar
+    observation_id : varchar
+    bytes_transferred : bigint
+    total_bytes : bigint
+    record_id : uuid <<FK logica>>
+    samples : jsonb
+    created_at : timestamptz
+  }
+
+  class CatalogDownload <<catalog_downloads>> {
+    + id : uuid <<PK>>
+    source : varchar
+    catalogue_id : varchar
+    region_key : varchar
+    center : geography(Point 4326)
+    radius_arcsec : float
+    row_limit : int
+    version : varchar
+    payload : jsonb
+    fetched_at : timestamptz
+  }
+
+  class PaperMetadata <<paper_metadata>> {
+    + id : uuid <<PK>>
+    lookup_key : varchar <<UQ>>
+    bibcode : text
+    doi : varchar
+    title : text
+    abstract : text
+    fetched_at : timestamptz
+  }
+}
+
+package "Dominio - calculado por request" {
+  class PointSource {
+    source_id : int
+    rank : int
+    snr : float
+    relevance_score : float
+  }
+
+  class ExtendedSource {
+    source_id : int
+    area_pixels : int
+    relevance_score : float
+  }
+
+  class CatalogTable {
+    catalogue_id : varchar
+  }
+
+  class CatalogRow {
+    index : int
+    ra_deg : float
+    dec_deg : float
+  }
+
+  class CatalogEvaluation {
+    catalogue_id : varchar
+    total_score : float
+    object_found_in_table : bool
+  }
+
+  class SimbadObject {
+    main_id : varchar
+    ra_deg : float
+    dec_deg : float
+    otype : varchar
+  }
+
+  class SimbadAlias {
+    name : varchar
+  }
+
+  class SimbadReference {
+    bibcode : varchar
+  }
+}
+
+FitsRecord "1" *-- "0..*" ImagePreview : record_id
+ImageTransfer "0..*" ..> "0..1" FitsRecord : record_id
+CatalogDownload "1" *-- "0..1" CatalogTable : payload
+CatalogTable "1" *-- "0..*" CatalogRow : rows
+CatalogEvaluation "0..*" --> "0..1" PaperMetadata : bibcode
+FitsRecord "1" ..> "0..*" PointSource : deteccion
+FitsRecord "1" ..> "0..*" ExtendedSource : deteccion
+SimbadObject "1" *-- "0..*" SimbadAlias
+SimbadObject "1" *-- "0..*" SimbadReference
+SimbadObject "0..*" ..> "0..*" PointSource : cruce
+
+note bottom of FitsRecord
+  metadata_payload (JSONB) guarda display_name,
+  description y tags. En un DER estricto, tags
+  seria una tabla hija para respetar 1FN.
+end note
+
+note bottom of ImageTransfer
+  samples (JSONB) guarda la curva de velocidad.
+  record_id enlaza el FITS creado al completar,
+  sin foreign key fisica.
+end note
+
+@enduml
